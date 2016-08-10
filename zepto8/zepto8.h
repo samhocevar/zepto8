@@ -79,8 +79,8 @@ namespace z8
                         && m_data[OFFSET_CODE + length] != '\0')
                     ++length;
 
-                m_code.resize(length + 1);
-                memcpy(m_code.data(), m_data.data() + OFFSET_CODE, length);
+                m_code.resize(length);
+                memcpy(m_code.C(), m_data.data() + OFFSET_CODE, length);
                 m_code[length] = '\0';
             }
             else if (version == 1 || version >= 5)
@@ -99,24 +99,28 @@ namespace z8
                         int a = (m_data[i] - 0x3c) * 16 + (m_data[i + 1] & 0xf);
                         int b = m_data[i + 1] / 16 + 2;
                         while (b--)
-                            m_code.push(m_code[m_code.count() - a]);
+                            m_code += m_code[m_code.count() - a];
                         ++i;
                     }
                     else
                     {
-                        m_code.push(m_data[i] ? lut[m_data[i]] : m_data[++i]);
+                        m_code += m_data[i] ? lut[m_data[i]] : m_data[++i];
                     }
                 }
-                m_code.push('\n');
+                m_code += '\n';
             }
 
             // Dump code to stdout
-            for (int c : m_code)
-                printf("%c", c);
+            printf(m_code.C());
+
+            // Execute code
+            lol::LuaLoader lua;
+            lua.ExecLuaCode(m_code.C());
         }
 
     private:
-        array<uint8_t> m_data, m_code;
+        array<uint8_t> m_data;
+        lol::String m_code;
     };
 }
 
