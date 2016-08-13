@@ -27,6 +27,9 @@ int main(int argc, char **argv)
 
     z8::cartridge cart(argv[1]);
 
+    //pegtl::analyze< lua53::grammar >();
+    //pegtl::parse_file<lua53::grammar>(argv[1], "argv");
+
     //lol::Application app("ZEPTO-8", ivec2(512, 512), 60.0f);
 
     //app.Run();

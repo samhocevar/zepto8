@@ -14,11 +14,15 @@
 
 #include <lol/engine.h>
 
+#define WITH_PICO8
+#include "lua53_parse.h"
+
 namespace z8
 {
     using lol::array;
     using lol::array2d;
     using lol::ivec2;
+    using lol::msg;
     using lol::u8vec4;
     using lol::PixelFormat;
 
@@ -111,11 +115,17 @@ namespace z8
             }
 
             // Dump code to stdout
-            printf(m_code.C());
+            msg::info("Cartridge code:\n%s\n", m_code.C());
+
+            msg::info("Checking grammar\n");
+            pegtl::analyze< lua53::grammar >();
+            msg::info("Checking code for cart %s\n", filename);
+            pegtl::parse_string<lua53::grammar>(m_code.C(), "argv");
+            msg::info("Cartridge seems valid\n");
 
             // Execute code
-            lol::LuaLoader lua;
-            lua.ExecLuaCode(m_code.C());
+            //lol::LuaLoader lua;
+            //lua.ExecLuaCode(m_code.C());
         }
 
     private:
