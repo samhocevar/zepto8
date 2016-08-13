@@ -278,18 +278,21 @@ namespace lua53
    struct expr_five : left_assoc< expr_six, pegtl::one< '&' > > {};
    struct expr_four : left_assoc< expr_five, op_one< '~', '=' > > {};
    struct expr_three : left_assoc< expr_four, pegtl::one< '|' > > {};
-   struct operators_two : pegtl::sor< pegtl::two< '=' >,
-                                      pegtl::string< '<', '=' >,
-                                      pegtl::string< '>', '=' >,
-                                      op_one< '<', '<' >,
-                                      op_one< '>', '>' >,
 #if defined WITH_PICO8
    // From the PICO-8 documentation:
    //
    //  3. != operator
    //
    // Not shorthand, but pico-8 also accepts != instead of ~= for "not equal to"
-                                      pegtl::string< '!', '=' >,
+   struct operator_notequal : pegtl::string< '!', '=' > {};
+#endif
+   struct operators_two : pegtl::sor< pegtl::two< '=' >,
+                                      pegtl::string< '<', '=' >,
+                                      pegtl::string< '>', '=' >,
+                                      op_one< '<', '<' >,
+                                      op_one< '>', '>' >,
+#if defined WITH_PICO8
+                                      operator_notequal,
 #endif
                                       pegtl::string< '~', '=' > > {};
    struct expr_two : left_assoc< expr_three, operators_two > {};
@@ -313,7 +316,15 @@ namespace lua53
    //
    // -- is equivalent to: IF (NOT B) THEN I=1 J=2 END
    // -- note that the condition must be surrounded by brackets.
-   struct short_if_statement : pegtl::seq< key_if, seps, bracket_expr, seps, statement_list< pegtl::sor< pegtl::at< key_end >, pegtl::eolf > > > {};
+   //
+   // From Sam’s observations:
+   //
+   //  FOR I=0,9 DO IF(I>5) PRINT(I) END    -- this is valid
+   //  FOR I=0,9 DO IF(I>5) DO FOR J=0,9 IF(J>5) PRINT(J) END END  -- so is this
+   // FIXME: doesn’t work
+   struct short_if_statement : pegtl::seq< key_if, seps, bracket_expr, seps, pegtl::not_at< key_then >, pegtl::until< pegtl::at< pegtl::sor< pegtl::eolf, key_end > > > > {};
+   //struct short_if_statement : pegtl::seq< key_if, seps, bracket_expr, seps, statement_list< pegtl::eolf >, pegtl::eolf > {};
+   //struct short_if_statement : pegtl::seq< key_if, seps, bracket_expr, seps, statement_list< pegtl::sor< pegtl::at< key_end >, pegtl::eolf > > > {};
 #endif
 
    struct for_statement_one : pegtl::seq< name, seps, pegtl::one< '=' >, seps, expression, seps, pegtl::one< ',' >, seps, expression, pegtl::pad_opt< pegtl::if_must< pegtl::one< ',' >, seps, expression >, sep >, key_do, statement_list< key_end > > {};
@@ -362,7 +373,7 @@ namespace lua53
                                   repeat_statement,
 #if defined WITH_PICO8
                                   // FIXME: doesn’t work properly yet
-                                  short_if_statement,
+                                  //short_if_statement,
 #endif
                                   if_statement,
                                   for_statement,

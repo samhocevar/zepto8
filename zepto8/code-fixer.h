@@ -10,32 +10,23 @@
 //  See http://www.wtfpl.net/ for more details.
 //
 
-#if HAVE_CONFIG_H
-#   include "config.h"
-#endif
+#pragma once
 
 #include <lol/engine.h>
 
-#include "zepto8.h"
-
-int main(int argc, char **argv)
+namespace z8
 {
-    lol::System::Init(argc, argv);
+    class code_fixer
+    {
+    public:
+        code_fixer(lol::String const &code);
+        lol::String fix();
 
-    if (argc < 2)
-        return EXIT_FAILURE;
+        lol::array<lol::ivec2> m_notequals;
+        lol::array<lol::ivec3> m_reassignments;
 
-    z8::cartridge cart(argv[1]);
-
-    cart.run();
-
-    //pegtl::analyze< lua53::grammar >();
-    //pegtl::parse_file<lua53::grammar>(argv[1], "argv");
-
-    //lol::Application app("ZEPTO-8", ivec2(512, 512), 60.0f);
-
-    //app.Run();
-
-    return EXIT_SUCCESS;
+    private:
+        lol::String m_code;
+    };
 }
 

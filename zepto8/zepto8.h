@@ -14,8 +14,7 @@
 
 #include <lol/engine.h>
 
-#define WITH_PICO8
-#include "lua53_parse.h"
+#include "code-fixer.h"
 
 namespace z8
 {
@@ -115,17 +114,20 @@ namespace z8
             }
 
             // Dump code to stdout
-            msg::info("Cartridge code:\n%s\n", m_code.C());
+            //msg::info("Cartridge code:\n%s\n", m_code.C());
 
-            msg::info("Checking grammar\n");
-            pegtl::analyze< lua53::grammar >();
-            msg::info("Checking code for cart %s\n", filename);
-            pegtl::parse_string<lua53::grammar>(m_code.C(), "argv");
-            msg::info("Cartridge seems valid\n");
+            // Fix code
+            code_fixer fixer(m_code);
+            m_code = fixer.fix();
+            //msg::info("Fixed cartridge code:\n%s\n", m_code.C());
+            printf("%s", m_code.C());
+        }
 
+        void run()
+        {
             // Execute code
-            //lol::LuaLoader lua;
-            //lua.ExecLuaCode(m_code.C());
+            lol::LuaLoader lua;
+            lua.ExecLuaCode(m_code.C());
         }
 
     private:
