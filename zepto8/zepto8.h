@@ -44,7 +44,7 @@ namespace z8
         OFFSET_VERSION    = 0x8000,
     };
 
-    class cartridge
+    class cartridge : public lol::LuaLoader
     {
     public:
         cartridge(char const *filename)
@@ -72,6 +72,7 @@ namespace z8
 
             // Retrieve code, with optional decompression
             int version = m_data[OFFSET_VERSION];
+            msg::info("Found cartridge version %d\n", version);
             if (version == 0 || m_data[OFFSET_CODE] != ':'
                              || m_data[OFFSET_CODE + 1] != 'c'
                              || m_data[OFFSET_CODE + 2] != ':'
@@ -88,9 +89,7 @@ namespace z8
             }
             else if (version == 1 || version >= 5)
             {
-                static char const *lut = "#\n 0123456789abcdef"
-                    "ghijklmnopqrstuvwxyz!#%(){}[]<>+=/*:;.,~_";
-
+                // Expected data length
                 int length = m_data[OFFSET_CODE + 4] * 256
                            + m_data[OFFSET_CODE + 5];
 
@@ -107,27 +106,234 @@ namespace z8
                     }
                     else
                     {
+                        static char const *lut = "#\n 0123456789abcdef"
+                            "ghijklmnopqrstuvwxyz!#%(){}[]<>+=/*:;.,~_";
+
                         m_code += m_data[i] ? lut[m_data[i]] : m_data[++i];
                     }
                 }
-                m_code += '\n';
+                msg::info("Expected %d bytes, got %d\n", length, (int)m_code.count());
             }
 
             // Dump code to stdout
-            //msg::info("Cartridge code:\n%s\n", m_code.C());
+            //msg::info("Cartridge code:\n");
+            //printf("%s", m_code.C());
 
             // Fix code
             code_fixer fixer(m_code);
             m_code = fixer.fix();
             //msg::info("Fixed cartridge code:\n%s\n", m_code.C());
-            printf("%s", m_code.C());
+            //printf("%s", m_code.C());
         }
+
+        class lua_object : public lol::LuaObject
+        {
+        public:
+            lua_object(lol::String const& name) {}
+            virtual ~lua_object() {}
+
+            static lua_object* New(lol::LuaState* l, int arg_nb)
+            {
+            }
+
+            static const lol::LuaObjectLib* GetLib()
+            {
+                static const lol::LuaObjectLib lib = lol::LuaObjectLib(
+                    "_z8",
+
+                    // Statics
+                    {
+                        { "btn",    &lua_object::btn },
+                        { "btnp",   &lua_object::btnp },
+                        { "cls",    &lua_object::cls },
+                        { "cos",    &lua_object::cos },
+                        { "cursor", &lua_object::cursor },
+                        { "flr",    &lua_object::flr },
+                        { "music",  &lua_object::music },
+                        { "pget",   &lua_object::pget },
+                        { "pset",   &lua_object::pset },
+                        { "rnd",    &lua_object::rnd },
+                        { "sget",   &lua_object::sget },
+                        { "sset",   &lua_object::sset },
+                        { "sin",    &lua_object::sin },
+                        { "spr",    &lua_object::spr },
+                        { "sspr",   &lua_object::sspr },
+                        { nullptr, nullptr }
+                    },
+
+                    // Methods
+                    {
+                        { nullptr, nullptr },
+                    },
+
+                    // Variables
+                    {
+                        { nullptr, nullptr, nullptr },
+                    });
+
+                return &lib;
+            }
+
+            static int btn(lol::LuaState *l)
+            {
+                lol::LuaStack s(l);
+                lol::LuaFloat x;
+                lol::LuaBool ret;
+                s >> x;
+                ret = false;
+                msg::info("z8:stub:btn(%d)\n", (int)x.GetValue());
+                return s << ret;
+            }
+
+            static int btnp(lol::LuaState *l)
+            {
+                lol::LuaStack s(l);
+                lol::LuaFloat x;
+                lol::LuaBool ret;
+                s >> x;
+                ret = false;
+                msg::info("z8:stub:btnp(%d)\n", (int)x.GetValue());
+                return s << ret;
+            }
+
+            static int cls(lol::LuaState *l)
+            {
+                lol::LuaStack s(l);
+                msg::info("z8:stub:cls()\n");
+                return 0;
+            }
+
+            static int cos(lol::LuaState *l)
+            {
+                lol::LuaStack s(l);
+                lol::LuaFloat x, ret;
+                s >> x;
+                ret = lol::cos(x.GetValue() / lol::F_TAU);
+                return s << ret;
+            }
+
+            static int cursor(lol::LuaState *l)
+            {
+                lol::LuaStack s(l);
+                lol::LuaFloat x, y;
+                s >> x >> y;
+                msg::info("z8:stub:cursor(%f,%f)\n", x.GetValue(), y.GetValue());
+                return 0;
+            }
+
+            static int flr(lol::LuaState *l)
+            {
+                lol::LuaStack s(l);
+                lol::LuaFloat x, ret;
+                s >> x;
+                ret = lol::floor(x.GetValue());
+                return s << ret;
+            }
+
+            static int music(lol::LuaState *l)
+            {
+                lol::LuaStack s(l);
+                msg::info("z8:stub:music()\n");
+                return 0;
+            }
+
+            static int pget(lol::LuaState *l)
+            {
+                lol::LuaStack s(l);
+                lol::LuaFloat x, y, ret;
+                s >> x >> y;
+                ret = 0;
+                msg::info("z8:stub:pget(%d, %d)\n", (int)x.GetValue(), (int)y.GetValue());
+                return s << ret;
+            }
+
+            static int pset(lol::LuaState *l)
+            {
+                lol::LuaStack s(l);
+                lol::LuaFloat x, y;
+                s >> x >> y;
+                msg::info("z8:stub:pset(%d, %d...)\n", (int)x.GetValue(), (int)y.GetValue());
+                return 0;
+            }
+
+            static int rnd(lol::LuaState *l)
+            {
+                lol::LuaStack s(l);
+                lol::LuaFloat x, ret;
+                s >> x;
+                ret = lol::rand(x.GetValue());
+                return s << ret;
+            }
+
+            static int sget(lol::LuaState *l)
+            {
+                lol::LuaStack s(l);
+                lol::LuaFloat x, y, ret;
+                s >> x >> y;
+                ret = 0;
+                msg::info("z8:stub:sget(%d, %d)\n", (int)x.GetValue(), (int)y.GetValue());
+                return s << ret;
+            }
+
+            static int sset(lol::LuaState *l)
+            {
+                lol::LuaStack s(l);
+                lol::LuaFloat x, y;
+                s >> x >> y;
+                msg::info("z8:stub:sset(%d, %d...)\n", (int)x.GetValue(), (int)y.GetValue());
+                return 0;
+            }
+
+            static int sin(lol::LuaState *l)
+            {
+                lol::LuaStack s(l);
+                lol::LuaFloat x, ret;
+                s >> x;
+                ret = lol::sin(x.GetValue() / -lol::F_TAU);
+                return s << ret;
+            }
+
+            static int spr(lol::LuaState *l)
+            {
+                lol::LuaStack s(l);
+                lol::LuaFloat n, x, y, w, h, flip_x, flip_y;
+                s >> n >> x >> y >> w >> h >> flip_x >> flip_y;
+                msg::info("z8:stub:spr(%d, %d, %d...)\n", (int)n, (int)x, (int)y);
+                return 0;
+            }
+
+            static int sspr(lol::LuaState *l)
+            {
+                lol::LuaStack s(l);
+                lol::LuaFloat sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y;
+                s >> sx >> sy >> sw >> sh >> dx >> dy;
+                msg::info("z8:stub:sspr(%d, %d, %d, %d, %d, %d...)\n", (int)sx, (int)sy, (int)sw, (int)sh, (int)dx, (int)dy);
+                return 0;
+            }
+
+            static int test_stuff(lol::LuaState* l)
+            {
+                lol::LuaStack s(l);
+                return 0;
+            }
+        };
 
         void run()
         {
-            // Execute code
-            lol::LuaLoader lua;
-            lua.ExecLuaCode(m_code.C());
+            // FIXME: not required yet because we inherit from LuaLoader
+            //lol::LuaLoader lua;
+
+            // Register our Lua module
+            lol::LuaObjectDef::Register<lua_object>(GetLuaState());
+            ExecLuaFile("zepto8.lua");
+
+            // Execute cartridge code
+            ExecLuaCode(m_code.C());
+
+            // Initialize cartridge code
+            ExecLuaCode("_init()");
+            ExecLuaCode("_draw()");
+            ExecLuaCode("_update()");
         }
 
     private:
