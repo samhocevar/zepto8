@@ -25,27 +25,26 @@ vm::vm()
     lol::LuaObjectDef::Register<vm>(GetLuaState());
     ExecLuaFile("zepto8.lua");
 
+    // Initialise VM memory
     m_memory.resize(OFFSET_VERSION);
     m_screen.resize(128 * 128);
 
     for (int n = OFFSET_SCREEN; n < OFFSET_VERSION; ++n)
-        m_memory[n] = lol::rand(0, 256);
+        m_memory[n] = lol::rand(0, 2);
 
+    // Create an ortho camera
     m_camera = new lol::Camera();
     m_camera->SetView(lol::mat4(1.f));
-    m_camera->SetProjection(lol::mat4::ortho(0.f, 640.f, 0.f, 640.f, -100.f, 100.f));
+    m_camera->SetProjection(lol::mat4::ortho(0.f, 600.f, 0.f, 600.f, -100.f, 100.f));
     lol::Scene& scene = lol::Scene::GetScene();
     scene.PushCamera(m_camera);
     lol::Ticker::Ref(m_camera);
 
     // FIXME: the image gets deleted by TextureImage class, it
     // does not seem right to me.
-    //m_tile = lol::Tiler::Register("fuck", new lol::Image(*m_screen));
     auto img = new lol::Image(lol::ivec2(128, 128));
-    img->Unlock(img->Lock<lol::PixelFormat::RGBA_8>());
-    m_tile = lol::Tiler::Register("fuck", new lol::Image(*img));
-    //m_tile = lol::Tiler::Register("rulez.p8.png");
-    m_tile->define_tile(lol::ibox2(0, 0, 128, 128));
+    img->Unlock(img->Lock<lol::PixelFormat::RGBA_8>()); // ensure RGBA_8 is present
+    m_tile = lol::Tiler::Register("fuck", new lol::Image(*img), lol::ivec2(128, 128), lol::ivec2(1, 1));
 }
 
 vm::~vm()
@@ -60,11 +59,16 @@ vm::~vm()
 void vm::TickGame(float seconds)
 {
     lol::WorldEntity::TickGame(seconds);
+
+    ExecLuaCode("_update()");
+    ExecLuaCode("_draw()");
 }
 
 void vm::TickDraw(float seconds, lol::Scene &scene)
 {
     lol::WorldEntity::TickDraw(seconds, scene);
+
+    lol::Renderer::Get()->SetClearColor(lol::Color::black);
 
     static lol::u8vec4 const palette[] =
     {
@@ -89,14 +93,54 @@ void vm::TickDraw(float seconds, lol::Scene &scene)
     for (int n = 0; n < 128 * 128 / 2; ++n)
     {
         uint8_t data = m_memory[OFFSET_SCREEN + n];
-        m_screen[2 * n] = palette[data >> 4];
-        m_screen[2 * n + 1] = palette[data & 0xf];
+        m_screen[2 * n] = palette[data & 0xf];
+        m_screen[2 * n + 1] = palette[data >> 4];
     }
 
     m_tile->GetTexture()->SetData(m_screen.data());
 
-    int delta = (640 - 512) / 2;
+    int delta = (600 - 512) / 2;
     scene.AddTile(m_tile, 0, lol::vec3(delta, delta, 10.f), 0, lol::vec2(4.f), 0.f);
+}
+
+void vm::setpixel(int x, int y, int color)
+{
+    if (x < 0 || x >= 128 || y < 0 || y >= 128)
+        return;
+
+    int offset = OFFSET_SCREEN + (128 * y + x) / 2;
+    int m1 = (x & 1) ? 0x0f : 0xf0;
+    int m2 = (x & 1) ? color << 4 : color;
+    m_memory[offset] = (m_memory[offset] & m1) | m2;
+}
+
+int vm::getpixel(int x, int y)
+{
+    if (x < 0 || x >= 128 || y < 0 || y >= 128)
+        return 0;
+
+    int offset = OFFSET_SCREEN + (128 * y + x) / 2;
+    return (x & 1) ? m_memory[offset] >> 4 : m_memory[offset] & 0xf;
+}
+
+void vm::setspixel(int x, int y, int color)
+{
+    if (x < 0 || x >= 128 || y < 0 || y >= 128)
+        return;
+
+    int offset = OFFSET_GFX + (128 * y + x) / 2;
+    int m1 = (x & 1) ? 0x0f : 0xf0;
+    int m2 = (x & 1) ? color << 4 : color;
+    m_memory[offset] = (m_memory[offset] & m1) | m2;
+}
+
+int vm::getspixel(int x, int y)
+{
+    if (x < 0 || x >= 128 || y < 0 || y >= 128)
+        return 0;
+
+    int offset = OFFSET_GFX + (128 * y + x) / 2;
+    return (x & 1) ? m_memory[offset] >> 4 : m_memory[offset] & 0xf;
 }
 
 const lol::LuaObjectLib* vm::GetLib()
@@ -112,11 +156,15 @@ const lol::LuaObjectLib* vm::GetLib()
             { "cos",    &vm::cos },
             { "cursor", &vm::cursor },
             { "flr",    &vm::flr },
+            { "max",    &vm::max },
+            { "mid",    &vm::mid },
+            { "min",    &vm::min },
             { "music",  &vm::music },
             { "pget",   &vm::pget },
             { "pset",   &vm::pset },
             { "rnd",    &vm::rnd },
             { "sget",   &vm::sget },
+            { "srand",  &vm::srand },
             { "sset",   &vm::sset },
             { "sin",    &vm::sin },
             { "spr",    &vm::spr },
@@ -149,7 +197,7 @@ int vm::btn(lol::LuaState *l)
     lol::LuaBool ret;
     s >> x;
     ret = false;
-    msg::info("z8:stub:btn(%d)\n", (int)x.GetValue());
+    msg::info("z8:stub:btn(%d)\n", (int)x);
     return s << ret;
 }
 
@@ -160,14 +208,15 @@ int vm::btnp(lol::LuaState *l)
     lol::LuaBool ret;
     s >> x;
     ret = false;
-    msg::info("z8:stub:btnp(%d)\n", (int)x.GetValue());
+    msg::info("z8:stub:btnp(%d)\n", (int)x);
     return s << ret;
 }
 
 int vm::cls(lol::LuaState *l)
 {
     lol::LuaStack s(l);
-    msg::info("z8:stub:cls()\n");
+    vm *that = (vm *)vm::Find(l);
+    memset(that->m_memory.data() + OFFSET_SCREEN, 0, SIZE_SCREEN);
     return 0;
 }
 
@@ -176,7 +225,7 @@ int vm::cos(lol::LuaState *l)
     lol::LuaStack s(l);
     lol::LuaFloat x, ret;
     s >> x;
-    ret = lol::cos(x.GetValue() / lol::F_TAU);
+    ret = lol::cos((float)x * -lol::F_TAU);
     return s << ret;
 }
 
@@ -185,7 +234,7 @@ int vm::cursor(lol::LuaState *l)
     lol::LuaStack s(l);
     lol::LuaFloat x, y;
     s >> x >> y;
-    msg::info("z8:stub:cursor(%f,%f)\n", x.GetValue(), y.GetValue());
+    msg::info("z8:stub:cursor(%f,%f)\n", (float)x, (float)y);
     return 0;
 }
 
@@ -194,7 +243,37 @@ int vm::flr(lol::LuaState *l)
     lol::LuaStack s(l);
     lol::LuaFloat x, ret;
     s >> x;
-    ret = lol::floor(x.GetValue());
+    ret = lol::floor((float)x);
+    return s << ret;
+}
+
+int vm::max(lol::LuaState *l)
+{
+    lol::LuaStack s(l);
+    lol::LuaFloat x, y, ret;
+    s >> x >> y;
+    ret = lol::max((float)x, (float)y);
+    return s << ret;
+}
+
+int vm::mid(lol::LuaState *l)
+{
+    lol::LuaStack s(l);
+    lol::LuaFloat x, y, z, ret;
+    s >> x >> y >> z;
+    ret = (float)x > (float)y ? (float)y > (float)z ? (float)y
+                                                    : lol::min((float)x, (float)z)
+                              : (float)x > (float)z ? (float)x
+                                                    : lol::min((float)y, (float)z);
+    return s << ret;
+}
+
+int vm::min(lol::LuaState *l)
+{
+    lol::LuaStack s(l);
+    lol::LuaFloat x, y, ret;
+    s >> x >> y;
+    ret = lol::min((float)x, (float)y);
     return s << ret;
 }
 
@@ -210,17 +289,22 @@ int vm::pget(lol::LuaState *l)
     lol::LuaStack s(l);
     lol::LuaFloat x, y, ret;
     s >> x >> y;
-    ret = 0;
-    msg::info("z8:stub:pget(%d, %d)\n", (int)x.GetValue(), (int)y.GetValue());
+
+    vm *that = (vm *)vm::Find(l);
+    ret = that->getpixel((int)x, (int)y);
+
     return s << ret;
 }
 
 int vm::pset(lol::LuaState *l)
 {
     lol::LuaStack s(l);
-    lol::LuaFloat x, y;
-    s >> x >> y;
-    msg::info("z8:stub:pset(%d, %d...)\n", (int)x.GetValue(), (int)y.GetValue());
+    lol::LuaFloat x, y, c(true);
+    s >> x >> y >> c;
+
+    vm *that = (vm *)vm::Find(l);
+    that->setpixel((int)x, (int)y, (int)c & 0xf);
+
     return 0;
 }
 
@@ -229,7 +313,7 @@ int vm::rnd(lol::LuaState *l)
     lol::LuaStack s(l);
     lol::LuaFloat x, ret;
     s >> x;
-    ret = lol::rand(x.GetValue());
+    ret = lol::rand((float)x);
     return s << ret;
 }
 
@@ -238,17 +322,31 @@ int vm::sget(lol::LuaState *l)
     lol::LuaStack s(l);
     lol::LuaFloat x, y, ret;
     s >> x >> y;
-    ret = 0;
-    msg::info("z8:stub:sget(%d, %d)\n", (int)x.GetValue(), (int)y.GetValue());
+
+    vm *that = (vm *)vm::Find(l);
+    ret = that->getspixel((int)x, (int)y);
+
     return s << ret;
+}
+
+int vm::srand(lol::LuaState *l)
+{
+    lol::LuaStack s(l);
+    lol::LuaFloat x;
+    s >> x;
+    /* FIXME: we do nothing; is this right? */
+    return 0;
 }
 
 int vm::sset(lol::LuaState *l)
 {
     lol::LuaStack s(l);
-    lol::LuaFloat x, y;
-    s >> x >> y;
-    msg::info("z8:stub:sset(%d, %d...)\n", (int)x.GetValue(), (int)y.GetValue());
+    lol::LuaFloat x, y, c(true);
+    s >> x >> y >> c;
+
+    vm *that = (vm *)vm::Find(l);
+    that->setpixel((int)x, (int)y, (int)c & 0xf);
+
     return 0;
 }
 
@@ -257,16 +355,30 @@ int vm::sin(lol::LuaState *l)
     lol::LuaStack s(l);
     lol::LuaFloat x, ret;
     s >> x;
-    ret = lol::sin(x.GetValue() / -lol::F_TAU);
+    ret = lol::sin((float)x * -lol::F_TAU);
     return s << ret;
 }
 
 int vm::spr(lol::LuaState *l)
 {
     lol::LuaStack s(l);
-    lol::LuaFloat n, x, y, w, h, flip_x, flip_y;
+    lol::LuaFloat n, x, y, w(true), h(true), flip_x(true), flip_y(true);
     s >> n >> x >> y >> w >> h >> flip_x >> flip_y;
-    msg::info("z8:stub:spr(%d, %d, %d...)\n", (int)n, (int)x, (int)y);
+    if ((float)w == 0)
+        w = 1;
+    if ((float)h == 0)
+        h = 1;
+
+    vm *that = (vm *)vm::Find(l);
+    for (int j = 0; j < (int)((float)h * 8); ++j)
+        for (int i = 0; i < (int)((float)w * 8); ++i)
+        {
+            int c = that->getspixel((int)n % 16 * 8 + i, (int)n / 16 * 8 + j);
+            that->setpixel((int)x + i, (int)y + j, c);
+        }
+
+    //msg::info("z8:stub:spr(%d, %d, %d, %f, %f, %d, %d)\n", (int)n, (int)x, (int)y, (float)w, (float)h, (int)flip_x, (int)flip_y);
+
     return 0;
 }
 

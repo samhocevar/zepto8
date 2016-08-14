@@ -33,13 +33,15 @@ public:
     virtual ~vm();
 
     virtual void TickGame(float seconds);
-
     virtual void TickDraw(float seconds, lol::Scene &scene);
 
     void load(char const *name)
     {
         // FIXME: we only know PNG for now
         m_cart.load_png(name);
+
+        // Copy everything into memory up to the code
+        memcpy(m_memory.data(), m_cart.get_data().data(), OFFSET_CODE);
     }
 
     void run()
@@ -58,8 +60,6 @@ public:
 
         // Initialize cartridge code
         ExecLuaCode("_init()");
-        ExecLuaCode("_draw()");
-        ExecLuaCode("_update()");
     }
 
     static const lol::LuaObjectLib* GetLib();
@@ -71,15 +71,25 @@ public:
     static int cos(lol::LuaState *l);
     static int cursor(lol::LuaState *l);
     static int flr(lol::LuaState *l);
+    static int max(lol::LuaState *l);
+    static int mid(lol::LuaState *l);
+    static int min(lol::LuaState *l);
     static int music(lol::LuaState *l);
     static int pget(lol::LuaState *l);
     static int pset(lol::LuaState *l);
     static int rnd(lol::LuaState *l);
     static int sget(lol::LuaState *l);
+    static int srand(lol::LuaState *l);
     static int sset(lol::LuaState *l);
     static int sin(lol::LuaState *l);
     static int spr(lol::LuaState *l);
     static int sspr(lol::LuaState *l);
+
+    int getpixel(int x, int y);
+    void setpixel(int x, int y, int color);
+
+    int getspixel(int x, int y);
+    void setspixel(int x, int y, int color);
 
 private:
     array<uint8_t> m_memory;

@@ -26,7 +26,7 @@ int main(int argc, char **argv)
     if (argc < 2)
         return EXIT_FAILURE;
 
-    lol::Application app("ZEPTO-8", lol::ivec2(640, 640), 60.0f);
+    lol::Application app("zepto-8", lol::ivec2(600, 600), 60.0f);
 
     z8::vm *vm = new z8::vm();
     vm->load(argv[1]);
