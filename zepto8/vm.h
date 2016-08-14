@@ -14,6 +14,7 @@
 
 #include <lol/engine.h>
 
+#include "zepto8.h"
 #include "cart.h"
 #include "code-fixer.h"
 
@@ -21,20 +22,19 @@ namespace z8
 {
 
 using lol::array;
+using lol::u8vec4;
 
-class vm : public lol::LuaLoader, public lol::LuaObject, public lol::Entity
+class vm : public lol::LuaLoader,
+           public lol::LuaObject,
+           public lol::WorldEntity
 {
 public:
-    vm()
-    {
-        // Register our Lua module
-        lol::LuaObjectDef::Register<vm>(GetLuaState());
-        ExecLuaFile("zepto8.lua");
-    }
+    vm();
+    virtual ~vm();
 
-    virtual ~vm()
-    {
-    }
+    virtual void TickGame(float seconds);
+
+    virtual void TickDraw(float seconds, lol::Scene &scene);
 
     void load(char const *name)
     {
@@ -83,7 +83,11 @@ public:
 
 private:
     array<uint8_t> m_memory;
+    array<u8vec4> m_screen;
     cart m_cart;
+
+    lol::Camera *m_camera;
+    lol::TileSet *m_tile;
 };
 
 } // namespace z8

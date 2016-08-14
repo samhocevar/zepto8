@@ -26,12 +26,12 @@ int main(int argc, char **argv)
     if (argc < 2)
         return EXIT_FAILURE;
 
-    z8::vm *vm = new z8::vm();
+    lol::Application app("ZEPTO-8", lol::ivec2(640, 640), 60.0f);
 
+    z8::vm *vm = new z8::vm();
     vm->load(argv[1]);
     vm->run();
 
-    lol::Application app("ZEPTO-8", lol::ivec2(512, 512), 60.0f);
     app.Run();
 
     return EXIT_SUCCESS;
