@@ -76,22 +76,22 @@ void vm::TickDraw(float seconds, lol::Scene &scene)
 
     static lol::u8vec4 const palette[] =
     {
-        lol::u8vec4(  0,   0,   0, 255), // black
-        lol::u8vec4( 32,  51, 123, 255), // dark_blue
-        lol::u8vec4(126,  37,  83, 255), // dark_purple
-        lol::u8vec4(  0, 144,  61, 255), // dark_green
-        lol::u8vec4(171,  82,  54, 255), // brown
-        lol::u8vec4( 52,  54,  53, 255), // dark_gray
-        lol::u8vec4(194, 195, 199, 255), // light_gray
-        lol::u8vec4(255, 241, 232, 255), // white
-        lol::u8vec4(255,   0,  77, 255), // red
-        lol::u8vec4(255, 155,   0, 255), // orange
-        lol::u8vec4(255, 231,  39, 255), // yellow
-        lol::u8vec4(  0, 226,  50, 255), // green
-        lol::u8vec4( 41, 173, 255, 255), // blue
-        lol::u8vec4(132, 112, 169, 255), // indigo
-        lol::u8vec4(255, 119, 168, 255), // pink
-        lol::u8vec4(255, 214, 197, 255), // peach
+        lol::u8vec4(0x00, 0x00, 0x00, 0xff), // black
+        lol::u8vec4(0x1d, 0x2b, 0x53, 0xff), // dark_blue
+        lol::u8vec4(0x7e, 0x25, 0x53, 0xff), // dark_purple
+        lol::u8vec4(0x00, 0x87, 0x51, 0xff), // dark_green
+        lol::u8vec4(0xab, 0x52, 0x36, 0xff), // brown
+        lol::u8vec4(0x5f, 0x57, 0x4f, 0xff), // dark_gray
+        lol::u8vec4(0xc2, 0xc3, 0xc7, 0xff), // light_gray
+        lol::u8vec4(0xff, 0xf1, 0xe8, 0xff), // white
+        lol::u8vec4(0xff, 0x00, 0x4d, 0xff), // red
+        lol::u8vec4(0xff, 0xa3, 0x00, 0xff), // orange
+        lol::u8vec4(0xff, 0xec, 0x27, 0xff), // yellow
+        lol::u8vec4(0x00, 0xe4, 0x36, 0xff), // green
+        lol::u8vec4(0x29, 0xad, 0xff, 0xff), // blue
+        lol::u8vec4(0x83, 0x76, 0x9c, 0xff), // indigo
+        lol::u8vec4(0xff, 0x77, 0xa8, 0xff), // pink
+        lol::u8vec4(0xff, 0xcc, 0xaa, 0xff), // peach
     };
 
     for (int n = 0; n < 128 * 128 / 2; ++n)
