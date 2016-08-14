@@ -11,12 +11,51 @@
 --
 
 
--- Make all our C++ static methods global
+--
+-- Aliases for PICO-8 compatibility
+--
+printh = print
+count = function(a) return a ~= nil and #a or 0 end
+add = table.insert
+sub = string.sub
+table = nil
+string = nil
+io = nil
+
+--
+-- According to https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0 :
+--  coroutine.[create|resume|status|yield]() was removed in 0.1.3 but added
+--  in 0.1.6 as coroutine(), cocreate(), coresume(), costatus() and yield()
+--  respectively.
+--
+cocreate = coroutine.create
+coresume = coroutine.resume
+costatus = coroutine.status
+yield = coroutine.yield
+coroutine.create = nil
+coroutine.resume = nil
+coroutine.status = nil
+coroutine.yield = nil
+
+
+--
+-- Make all our C++ static methods global then hide _G
+-- According to https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0 :
+--  _G global table has been removed.
+--
 for k, v in pairs(_z8) do _G[k] = v end
+_G = nil
 
 
--- This is easily implemented in Lua
+--
+-- These are easily implemented in Lua
+--
 function foreach(t, f)
     for k, v in ipairs(t) do f(v) end
+end
+
+function all(a)
+    local i = 0
+    return function() if i < count(a) then return a[i] end i = i + 1 end
 end
 
