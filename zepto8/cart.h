@@ -10,30 +10,36 @@
 //  See http://www.wtfpl.net/ for more details.
 //
 
-#if HAVE_CONFIG_H
-#   include "config.h"
-#endif
+#pragma once
 
 #include <lol/engine.h>
 
-#include "zepto8.h"
-#include "vm.h"
-
-int main(int argc, char **argv)
+namespace z8
 {
-    lol::System::Init(argc, argv);
 
-    if (argc < 2)
-        return EXIT_FAILURE;
+class cart
+{
+public:
+    cart()
+    {
+    }
 
-    z8::vm *vm = new z8::vm();
+    lol::array<uint8_t> const &get_data() const
+    {
+        return m_data;
+    }
 
-    vm->load(argv[1]);
-    vm->run();
+    lol::String const &get_code() const
+    {
+        return m_code;
+    }
 
-    lol::Application app("ZEPTO-8", lol::ivec2(512, 512), 60.0f);
-    app.Run();
+    void load_png(char const *filename);
 
-    return EXIT_SUCCESS;
-}
+private:
+    lol::array<uint8_t> m_data;
+    lol::String m_code;
+};
+
+} // namespace z8
 
