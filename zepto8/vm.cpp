@@ -381,9 +381,20 @@ int vm::camera(lol::LuaState *l)
 int vm::circ(lol::LuaState *l)
 {
     lol::LuaStack s(l);
-    lol::LuaFloat x, y, r, col(true);
-    s >> x >> y >> r >> col;
-    msg::info("z8:stub:circ %d %d %d [%d]\n", (int)x, (int)y, (int)r, (int)col);
+    lol::LuaFloat in_x, in_y, in_r, col(true);
+    s >> in_x >> in_y >> in_r >> col;
+
+    vm *that = (vm *)vm::Find(l);
+
+    int x = (int)in_x, y = (int)in_y, r = (int)in_r;
+    for (int dy = -r; dy <= r; ++dy)
+        for (int dx = -r; dx <= r; ++dx)
+        {
+            if (dx * dx + dy * dy >= r * r - r
+                 && dx * dx + dy * dy <= r * r + r)
+                that->setpixel(x + dx, y + dy, (int)col & 0xf);
+        }
+
     return 0;
 }
 
@@ -436,10 +447,11 @@ int vm::color(lol::LuaState *l)
 
 int vm::line(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaFloat x0, y0, x1, y1, col(true);
-    s >> x0 >> y0 >> x1 >> y1 >> col;
-    msg::info("z8:stub:line %d %d %d %d [%d]\n", (int)x0, (int)y0, (int)x1, (int)y1, (int)col);
+    int x0 = lua_tonumber(l, 1);
+    int y0 = lua_tonumber(l, 2);
+    int x1 = lua_tonumber(l, 3);
+    int y1 = lua_tonumber(l, 4);
+    int col = lua_tonumber(l, 5);
 
     vm *that = (vm *)vm::Find(l);
     // FIXME this is shitty temp code
@@ -604,8 +616,6 @@ int vm::spr(lol::LuaState *l)
             if (c)
                 that->setpixel(x + i, y + j, c);
         }
-
-    msg::info("z8:stub:spr(%d, %d, %d, %f, %f, %d, %d)\n", (int)n, (int)x, (int)y, (float)w, (float)h, (int)flip_x, (int)flip_y);
 
     return 0;
 }
