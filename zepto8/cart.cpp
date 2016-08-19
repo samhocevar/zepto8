@@ -12,6 +12,8 @@
 
 #include <lol/engine.h>
 
+#include "pegtl.hh"
+
 #include "zepto8.h"
 #include "cart.h"
 
@@ -87,9 +89,148 @@ void cart::load_png(char const *filename)
         msg::info("Expected %d bytes, got %d\n", length, (int)m_code.count());
     }
 
+    m_version = version;
+
     // Dump code to stdout
     //msg::info("Cartridge code:\n");
     //printf("%s", m_code.C());
+}
+
+//
+// A speacial parser object for the .p8 format
+//
+
+struct p8_reader
+{
+    //
+    // Grammar rules
+    //
+
+    struct r_bom : pegtl::opt<pegtl_string_t("\xef\xbb\xbf")> {};
+
+    struct r_lua : pegtl_string_t("__lua__") {};
+    struct r_gfx : pegtl_string_t("__gfx__") {};
+    struct r_gff : pegtl_string_t("__gff__") {};
+    struct r_map : pegtl_string_t("__map__") {};
+    struct r_sfx : pegtl_string_t("__sfx__") {};
+    struct r_music : pegtl_string_t("__music__") {};
+
+    struct r_section_name : pegtl::sor<r_lua,
+                                       r_gfx,
+                                       r_gff,
+                                       r_map,
+                                       r_sfx,
+                                       r_music> {};
+    struct r_section_line : pegtl::seq<r_section_name, pegtl::eol> {};
+
+    struct r_data_line : pegtl::seq<pegtl::not_at<r_section_line>,
+                                    pegtl::until<pegtl::eolf>> {};
+    struct r_data : pegtl::star<r_data_line> {};
+
+    struct r_section : pegtl::seq<r_section_line, r_data> {};
+    struct r_version : pegtl::star<pegtl::digit> {};
+
+    struct r_header: pegtl::seq<pegtl_string_t("pico-8 cartridge"), pegtl::until<pegtl::eol>,
+                                pegtl_string_t("version "), r_version, pegtl::until<pegtl::eol>> {};
+    struct r_file : pegtl::seq<r_bom, r_header, pegtl::star<r_section>, pegtl::eof> {};
+
+    //
+    // Grammar actions
+    //
+
+    template<typename R>
+    struct action : pegtl::nothing<R> {};
+
+    //
+    // Parser state
+    //
+
+    int m_version;
+
+    enum class section : int8_t
+    {
+        error = -1,
+        header = 0,
+        lua,
+        gfx,
+        gff,
+        map,
+        sfx,
+        music,
+    };
+
+    section m_section;
+
+    //
+    // Actual reader
+    //
+
+    void parse(char const *str)
+    {
+        pegtl::parse_string<r_file, action>(str, "p8", *this);
+    }
+};
+
+template<>
+struct p8_reader::action<p8_reader::r_version>
+{
+    static void apply(pegtl::action_input const &in, p8_reader &r)
+    {
+        r.m_version = std::atoi(in.string().c_str());
+    }
+};
+
+template<>
+struct p8_reader::action<p8_reader::r_section_name>
+{
+    static void apply(pegtl::action_input const &in, p8_reader &r)
+    {
+        if (in.string().find("lua") != std::string::npos)
+            r.m_section = section::lua;
+        else if (in.string().find("gfx") != std::string::npos)
+            r.m_section = section::gfx;
+        else if (in.string().find("gff") != std::string::npos)
+            r.m_section = section::gff;
+        else if (in.string().find("map") != std::string::npos)
+            r.m_section = section::map;
+        else if (in.string().find("sfx") != std::string::npos)
+            r.m_section = section::sfx;
+        else if (in.string().find("music") != std::string::npos)
+            r.m_section = section::music;
+        else
+            r.m_section = section::error;
+    }
+};
+
+template<>
+struct p8_reader::action<p8_reader::r_data>
+{
+    static void apply(pegtl::action_input const &in, p8_reader &r)
+    {
+        UNUSED(in, r);
+        //printf("DATA: %s", in.string().c_str());
+    }
+};
+
+void cart::load_p8(char const *filename)
+{
+    lol::File f;
+    for (auto candidate : lol::System::GetPathList(filename))
+    {
+        f.Open(candidate, lol::FileAccess::Read);
+        if (f.IsValid())
+        {
+            lol::String s = f.ReadString();
+            f.Close();
+
+            msg::debug("loaded file %s\n", candidate.C());
+
+            p8_reader reader;
+            reader.parse(s.C());
+
+            break;
+        }
+    }
 }
 
 } // namespace z8

@@ -15,3 +15,5 @@ zepto8_LDFLAGS = $(AM_LDFLAGS)
 zepto8_DEPENDENCIES = @LOL_DEPS@
 zepto8_DATA = data/zepto8.lua data/font.png
 
+EXTRA_DIST += rulez.p8 rulez.p8.png
+

@@ -21,8 +21,8 @@ class cart
 {
 public:
     cart()
-    {
-    }
+      : m_version(0)
+    {}
 
     lol::array<uint8_t> const &get_data() const
     {
@@ -34,11 +34,18 @@ public:
         return m_code;
     }
 
+    int get_version() const
+    {
+        return m_version;
+    }
+
     void load_png(char const *filename);
+    void load_p8(char const *filename);
 
 private:
     lol::array<uint8_t> m_data;
     lol::String m_code;
+    int m_version;
 };
 
 } // namespace z8
