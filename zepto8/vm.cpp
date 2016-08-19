@@ -532,7 +532,7 @@ int vm::rect(lol::LuaState *l)
         that->setpixel(x1, y, (int)col & 0xf);
     }
 
-    for (int x = x0; x <= x1; ++x)
+    for (int x = x0 + 1; x <= x1 - 1; ++x)
     {
         that->setpixel(x, y0, (int)col & 0xf);
         that->setpixel(x, y1, (int)col & 0xf);
@@ -586,25 +586,26 @@ int vm::sset(lol::LuaState *l)
 
 int vm::spr(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaFloat n, x, y, w(true), h(true), flip_x(true), flip_y(true);
-    s >> n >> x >> y >> w >> h >> flip_x >> flip_y;
-    if ((float)w == 0)
-        w = 1;
-    if ((float)h == 0)
-        h = 1;
+    int n = lua_tonumber(l, 1);
+    int x = lua_tonumber(l, 2);
+    int y = lua_tonumber(l, 3);
+    float w = lua_isnoneornil(l, 4) ? 1 : lua_tonumber(l, 4);
+    float h = lua_isnoneornil(l, 5) ? 1 : lua_tonumber(l, 5);
+    int flip_x = lua_toboolean(l, 6);
+    int flip_y = lua_toboolean(l, 7);
 
     // FIXME: Handle transparency better than that
+    // FIXME: implement flip_x and flip_w
     vm *that = (vm *)vm::Find(l);
-    for (int j = 0; j < (int)((float)h * 8); ++j)
-        for (int i = 0; i < (int)((float)w * 8); ++i)
+    for (int j = 0; j < h * 8; ++j)
+        for (int i = 0; i < w * 8; ++i)
         {
-            int c = that->getspixel((int)n % 16 * 8 + i, (int)n / 16 * 8 + j);
+            int c = that->getspixel(n % 16 * 8 + i, n / 16 * 8 + j);
             if (c)
-                that->setpixel((int)x + i, (int)y + j, c);
+                that->setpixel(x + i, y + j, c);
         }
 
-    //msg::info("z8:stub:spr(%d, %d, %d, %f, %f, %d, %d)\n", (int)n, (int)x, (int)y, (float)w, (float)h, (int)flip_x, (int)flip_y);
+    msg::info("z8:stub:spr(%d, %d, %d, %f, %f, %d, %d)\n", (int)n, (int)x, (int)y, (float)w, (float)h, (int)flip_x, (int)flip_y);
 
     return 0;
 }

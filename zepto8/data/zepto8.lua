@@ -55,7 +55,7 @@ function foreach(t, f)
 end
 
 function all(a)
-    local i = 0
-    return function() if i < count(a) then return a[i] end i = i + 1 end
+    local i, n = 0, a ~= nil and #a or 0
+    return function() if i < n then return a[i] end i = i + 1 end
 end
 
