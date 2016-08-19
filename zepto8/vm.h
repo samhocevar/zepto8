@@ -136,6 +136,7 @@ private:
 private:
     array<uint8_t> m_memory;
     array<u8vec4> m_screen;
+    lol::Image m_font;
     cart m_cart;
 
     uint8_t m_color;

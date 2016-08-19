@@ -13,5 +13,5 @@ zepto8_SOURCES = \
 zepto8_CPPFLAGS = $(AM_CPPFLAGS)
 zepto8_LDFLAGS = $(AM_LDFLAGS)
 zepto8_DEPENDENCIES = @LOL_DEPS@
-zepto8_DATA = zepto8.lua
+zepto8_DATA = data/zepto8.lua data/font.png
 

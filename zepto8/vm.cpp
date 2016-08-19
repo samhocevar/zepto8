@@ -23,7 +23,10 @@ vm::vm()
 {
     // Register our Lua module
     lol::LuaObjectDef::Register<vm>(GetLuaState());
-    ExecLuaFile("zepto8.lua");
+    ExecLuaFile("data/zepto8.lua");
+
+    // Load font
+    m_font.Load("data/font.png");
 
     // Initialise VM memory and state
     m_memory.resize(OFFSET_VERSION);
@@ -313,7 +316,9 @@ int vm::cursor(lol::LuaState *l)
     lol::LuaStack s(l);
     lol::LuaFloat x, y;
     s >> x >> y;
-    msg::info("z8:stub:cursor %f %f\n", (float)x, (float)y);
+    vm *that = (vm *)vm::Find(l);
+    that->m_cursor.x = x;
+    that->m_cursor.y = y;
     return 0;
 }
 
@@ -323,7 +328,40 @@ int vm::print(lol::LuaState *l)
     lol::LuaString str;
     lol::LuaFloat x(true), y(true), col(true);
     s >> str >> x >> y >> col;
-    msg::info("z8:stub:print \"%s\" [%d %d [%d]]\n", str.GetValue().C(), (int)x, (int)y, (int)col);
+
+    vm *that = (vm *)vm::Find(l);
+
+    auto pixels = that->m_font.Lock<lol::PixelFormat::RGBA_8>();
+    // FIXME: implement optional x and y
+    //lol::ivec2 pos = that->m_cursor;
+    lol::ivec2 pos(x, y);
+    for (int n = 0; n < str.GetValue().count(); ++n)
+    {
+        int c = str.GetValue()[n];
+
+        if (c == '\n')
+        {
+            pos.x = that->m_cursor.x;
+            pos.y += 6;
+        }
+        else
+        {
+            int index = c > 0x20 && c < 0x9a ? c - 0x20 : 0;
+            int w = index < 0x80 ? 4 : 8;
+            int h = 6;
+
+            for (int dy = 0; dy < h - 1; ++dy)
+                for (int dx = 0; dx < w - 1; ++dx)
+                {
+                    if (pixels[(index / 16 * h + dy) * 128 + (index % 16 * w + dx)].r > 0)
+                        that->setpixel(pos.x + dx, pos.y + dy, (int)col & 0xf);
+                }
+
+            pos.x += w;
+        }
+    }
+    //that->m_cursor = pos;
+    that->m_font.Unlock(pixels);
     return 0;
 }
 
