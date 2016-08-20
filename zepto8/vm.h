@@ -110,6 +110,8 @@ private:
     static int clip(lol::LuaState *l);
     static int cls(lol::LuaState *l);
     static int color(lol::LuaState *l);
+    static int fget(lol::LuaState *l);
+    static int fset(lol::LuaState *l);
     static int line(lol::LuaState *l);
     static int map(lol::LuaState *l);
     static int mget(lol::LuaState *l);

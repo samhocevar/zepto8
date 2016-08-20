@@ -193,6 +193,8 @@ const lol::LuaObjectLib* vm::GetLib()
             { "clip",     &vm::clip },
             { "cls",      &vm::cls },
             { "color",    &vm::color },
+            { "fget",     &vm::fget },
+            { "fset",     &vm::fset },
             { "line",     &vm::line },
             { "map",      &vm::map },
             { "mget",     &vm::mget },
@@ -442,6 +444,54 @@ int vm::color(lol::LuaState *l)
     s >> col;
     vm *that = (vm *)vm::Find(l);
     that->m_color = (int)col & 0xf;
+    return 0;
+}
+
+int vm::fget(lol::LuaState *l)
+{
+    if (lua_isnone(l, 1))
+        return 0;
+
+    int n = lua_tonumber(l, 1);
+    uint8_t bits = 0;
+
+    if (n >= 0 && n < SIZE_GFX_PROPS)
+    {
+        vm *that = (vm *)vm::Find(l);
+        bits = that->m_memory[OFFSET_GFX_PROPS + n];
+    }
+
+    if (lua_isnone(l, 2))
+        lua_pushnumber(l, bits);
+    else
+        lua_pushboolean(l, bits & (1 << (int)lua_tonumber(l, 2)));
+
+    return 1;
+}
+
+int vm::fset(lol::LuaState *l)
+{
+    if (lua_isnone(l, 1) || lua_isnone(l, 2))
+        return 0;
+
+    int n = lua_tonumber(l, 1);
+
+    if (n >= 0 && n < SIZE_GFX_PROPS)
+    {
+        vm *that = (vm *)vm::Find(l);
+        uint8_t bits = that->m_memory[OFFSET_GFX_PROPS + n];
+        int f = lua_tonumber(l, 2);
+
+        if (lua_isnone(l, 3))
+            bits = f;
+        else if (lua_toboolean(l, 3))
+            bits |= 1 << (int)f;
+        else
+            bits &= ~(1 << (int)f);
+
+        that->m_memory[OFFSET_GFX_PROPS + n] = bits;
+    }
+
     return 0;
 }
 
