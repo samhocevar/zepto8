@@ -51,8 +51,8 @@ public:
         code_fixer fixer(m_cart.get_code());
         lol::String new_code = fixer.fix();
 
-        //msg::info("Fixed cartridge code:\n%s\n", m_code.C());
-        //printf("%s", m_code.C());
+        //msg::info("Fixed cartridge code:\n%s\n", new_code.C());
+        //printf("%s", new_code.C());
         // FIXME: not required yet because we inherit from LuaLoader
         //lol::LuaLoader lua;
 
@@ -128,6 +128,7 @@ private:
 
     // Sound
     static int music(lol::LuaState *l);
+    static int sfx(lol::LuaState *l);
 
 private:
     int getpixel(int x, int y);
@@ -144,10 +145,13 @@ private:
 
     uint8_t m_color;
     lol::ivec2 m_camera, m_cursor;
+    int m_buttons[16];
     uint8_t m_palette[2][16];
 
     lol::Camera *m_scenecam;
     lol::TileSet *m_tile;
+    lol::Controller *m_controller;
+    lol::InputProfile m_input;
 };
 
 } // namespace z8

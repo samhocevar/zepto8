@@ -28,6 +28,35 @@ vm::vm()
     // Load font
     m_font.Load("data/font.png");
 
+    // Bind controls
+    m_controller = new lol::Controller("default controller");
+
+    m_input << lol::InputProfile::Keyboard(0, "Left");
+    m_input << lol::InputProfile::Keyboard(1, "Right");
+    m_input << lol::InputProfile::Keyboard(2, "Up");
+    m_input << lol::InputProfile::Keyboard(3, "Down");
+    m_input << lol::InputProfile::Keyboard(4, "Z");
+    m_input << lol::InputProfile::Keyboard(4, "C");
+    m_input << lol::InputProfile::Keyboard(4, "N");
+    m_input << lol::InputProfile::Keyboard(4, "Insert");
+    m_input << lol::InputProfile::Keyboard(5, "X");
+    m_input << lol::InputProfile::Keyboard(5, "V");
+    m_input << lol::InputProfile::Keyboard(5, "M");
+    m_input << lol::InputProfile::Keyboard(5, "Del");
+
+    m_input << lol::InputProfile::Keyboard(6, "Enter");
+
+    m_input << lol::InputProfile::Keyboard(8, "S");
+    m_input << lol::InputProfile::Keyboard(9, "F");
+    m_input << lol::InputProfile::Keyboard(10, "E");
+    m_input << lol::InputProfile::Keyboard(11, "D");
+    m_input << lol::InputProfile::Keyboard(12, "LeftShift");
+    m_input << lol::InputProfile::Keyboard(12, "A");
+    m_input << lol::InputProfile::Keyboard(13, "Tab");
+    m_input << lol::InputProfile::Keyboard(13, "Q");
+
+    m_controller->Init(m_input);
+
     // Initialise VM memory and state
     m_memory.resize(OFFSET_VERSION);
     m_screen.resize(128 * 128);
@@ -38,6 +67,7 @@ vm::vm()
     m_color = 15;
     m_camera = lol::ivec2(0, 0);
     m_cursor = lol::ivec2(0, 0);
+    memset(m_buttons, 0, sizeof(m_buttons));
 
     // Create an ortho camera
     m_scenecam = new lol::Camera();
@@ -66,6 +96,15 @@ vm::~vm()
 void vm::TickGame(float seconds)
 {
     lol::WorldEntity::TickGame(seconds);
+
+    // Update button state
+    for (int i = 0; i < 16; ++i)
+    {
+        if (m_controller->IsKeyPressed(i))
+            ++m_buttons[i];
+        else
+            m_buttons[i] = 0;
+    }
 
     ExecLuaCode("_update()");
     ExecLuaCode("_draw()");
@@ -210,6 +249,7 @@ const lol::LuaObjectLib* vm::GetLib()
             { "sspr",     &vm::sspr },
 
             { "music", &vm::music },
+            { "sfx",   &vm::sfx },
 
             { nullptr, nullptr }
         },
@@ -289,24 +329,53 @@ int vm::poke(lol::LuaState *l)
 
 int vm::btn(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaFloat x;
-    lol::LuaBool ret;
-    s >> x;
-    ret = false;
-    msg::info("z8:stub:btn %d\n", (int)x);
-    return s << ret;
+    vm *that = (vm *)vm::Find(l);
+
+    if (lua_isnone(l, 1))
+    {
+        int bits = 0;
+        for (int i = 0; i < 16; ++i)
+            bits |= that->m_buttons[i] ? 1 << i : 0;
+        lua_pushnumber(l, bits);
+    }
+    else
+    {
+        int index = (int)lua_tonumber(l, 1) + 8 * (int)lua_tonumber(l, 2);
+        lua_pushboolean(l, that->m_buttons[index]);
+    }
+
+    return 1;
 }
 
 int vm::btnp(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaFloat x;
-    lol::LuaBool ret;
-    s >> x;
-    ret = false;
-    msg::info("z8:stub:btnp %d\n", (int)x);
-    return s << ret;
+    auto was_pressed = [](int i)
+    {
+        // “Same as btn() but only true when the button was not pressed the last frame”
+        if (i == 1)
+            return true;
+        // “btnp() also returns true every 4 frames after the button is held for 15 frames.”
+        if (i > 15 && i % 4 == 0)
+            return true;
+        return false;
+    };
+
+    vm *that = (vm *)vm::Find(l);
+
+    if (lua_isnone(l, 1))
+    {
+        int bits = 0;
+        for (int i = 0; i < 16; ++i)
+            bits |= was_pressed(that->m_buttons[i]) ? 1 << i : 0;
+        lua_pushnumber(l, bits);
+    }
+    else
+    {
+        int index = (int)lua_tonumber(l, 1) + 8 * (int)lua_tonumber(l, 2);
+        lua_pushboolean(l, was_pressed(that->m_buttons[index]));
+    }
+
+    return 1;
 }
 
 //
@@ -685,8 +754,13 @@ int vm::sspr(lol::LuaState *l)
 
 int vm::music(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
     msg::info("z8:stub:music\n");
+    return 0;
+}
+
+int vm::sfx(lol::LuaState *l)
+{
+    msg::info("z8:stub:sfx\n");
     return 0;
 }
 
