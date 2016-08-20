@@ -355,8 +355,12 @@ int vm::map(lol::LuaState *l)
                            : OFFSET_MAP2 + 128 * (cy - 32);
         int sprite = that->m_memory[line + cx];
 
-        int c = that->getspixel(sprite % 16 * 8 + dx % 8, sprite / 16 * 8 + dy % 8);
-        that->setpixel(sx + dx, sy + dy, c);
+        if (sprite)
+        {
+            int c = that->getspixel(sprite % 16 * 8 + dx % 8, sprite / 16 * 8 + dy % 8);
+            if (!that->m_palt[c])
+                that->setpixel(sx + dx, sy + dy, c);
+        }
     }
 
     return 0;
@@ -540,6 +544,7 @@ int vm::spr(lol::LuaState *l)
 {
     vm *that = (vm *)vm::Find(l);
 
+    // FIXME: should we abort if n == 0?
     int n = lua_tonumber(l, 1);
     int x = lua_tonumber(l, 2);
     int y = lua_tonumber(l, 3);
