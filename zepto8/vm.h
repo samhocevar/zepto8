@@ -63,6 +63,8 @@ private:
     static int poke(lol::LuaState *l);
     static int memcpy(lol::LuaState *l);
     static int memset(lol::LuaState *l);
+    static int dget(lol::LuaState *l);
+    static int dset(lol::LuaState *l);
 
     // I/O
     static int btn(lol::LuaState *l);

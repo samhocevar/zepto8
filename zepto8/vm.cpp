@@ -156,6 +156,8 @@ const lol::LuaObjectLib* vm::GetLib()
             { "poke",     &vm::poke },
             { "memcpy",   &vm::memcpy },
             { "memset",   &vm::memset },
+            { "dget",     &vm::dget },
+            { "dset",     &vm::dset },
 
             { "btn",  &vm::btn },
             { "btnp", &vm::btnp },
@@ -340,6 +342,19 @@ int vm::memset(lol::LuaState *l)
         ::memset(that->m_memory.data() + dst, val, size);
     }
 
+    return 0;
+}
+
+int vm::dget(lol::LuaState *l)
+{
+    msg::info("z8:stub:dget\n");
+    lua_pushnumber(l, 0);
+    return 1;
+}
+
+int vm::dset(lol::LuaState *l)
+{
+    msg::info("z8:stub:dset\n");
     return 0;
 }
 
