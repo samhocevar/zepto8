@@ -47,20 +47,8 @@ public:
 
     void run()
     {
-        // Fix code
-        code_fixer fixer(m_cart.get_code());
-        lol::String new_code = fixer.fix();
-
-        //msg::info("Fixed cartridge code:\n%s\n", new_code.C());
-        //printf("%s", new_code.C());
-        // FIXME: not required yet because we inherit from LuaLoader
-        //lol::LuaLoader lua;
-
-        // Execute cartridge code
-        ExecLuaCode(new_code.C());
-
-        // Initialize cartridge code
-        ExecLuaCode("_init()");
+        // Start the cartridge!
+        ExecLuaCode("run()");
     }
 
     static const lol::LuaObjectLib* GetLib();
@@ -68,6 +56,7 @@ public:
 
 private:
     // System
+    static int run(lol::LuaState *l);
     static int cartdata(lol::LuaState *l);
     static int reload(lol::LuaState *l);
     static int peek(lol::LuaState *l);
@@ -119,6 +108,7 @@ private:
     static int mget(lol::LuaState *l);
     static int mset(lol::LuaState *l);
     static int pal(lol::LuaState *l);
+    static int palt(lol::LuaState *l);
     static int pget(lol::LuaState *l);
     static int pset(lol::LuaState *l);
     static int rect(lol::LuaState *l);
@@ -147,8 +137,9 @@ private:
 
     uint8_t m_color;
     lol::ivec2 m_camera, m_cursor;
-    int m_buttons[16];
-    uint8_t m_palette[2][16];
+    lol::ibox2 m_clip;
+    int m_buttons[64];
+    uint8_t m_pal[2][16], m_palt[16];
 
     lol::Camera *m_scenecam;
     lol::TileSet *m_tile;

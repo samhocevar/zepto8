@@ -42,32 +42,21 @@ vm::vm()
     m_input << lol::InputProfile::Keyboard(5, "X");
     m_input << lol::InputProfile::Keyboard(5, "V");
     m_input << lol::InputProfile::Keyboard(5, "M");
-    m_input << lol::InputProfile::Keyboard(5, "Del");
+    m_input << lol::InputProfile::Keyboard(5, "Delete");
 
-    m_input << lol::InputProfile::Keyboard(6, "Enter");
+    m_input << lol::InputProfile::Keyboard(6, "Return");
 
     m_input << lol::InputProfile::Keyboard(8, "S");
     m_input << lol::InputProfile::Keyboard(9, "F");
     m_input << lol::InputProfile::Keyboard(10, "E");
     m_input << lol::InputProfile::Keyboard(11, "D");
-    m_input << lol::InputProfile::Keyboard(12, "LeftShift");
+    m_input << lol::InputProfile::Keyboard(12, "LShift");
     m_input << lol::InputProfile::Keyboard(12, "A");
     m_input << lol::InputProfile::Keyboard(13, "Tab");
     m_input << lol::InputProfile::Keyboard(13, "Q");
 
     m_controller->Init(m_input);
-
-    // Initialise VM memory and state
-    m_memory.resize(OFFSET_VERSION);
-    m_screen.resize(128 * 128);
-
-    for (int n = OFFSET_SCREEN; n < OFFSET_VERSION; ++n)
-        m_memory[n] = lol::rand(0, 2);
-
-    m_color = 15;
-    m_camera = lol::ivec2(0, 0);
-    m_cursor = lol::ivec2(0, 0);
-    ::memset(m_buttons, 0, sizeof(m_buttons));
+    m_controller->SetInputCount(64 /* keys */, 0 /* axes */);
 
     // Create an ortho camera
     m_scenecam = new lol::Camera();
@@ -82,6 +71,10 @@ vm::vm()
     auto img = new lol::Image(lol::ivec2(128, 128));
     img->Unlock(img->Lock<lol::PixelFormat::RGBA_8>()); // ensure RGBA_8 is present
     m_tile = lol::Tiler::Register("fuck", new lol::Image(*img), lol::ivec2(128, 128), lol::ivec2(1, 1));
+
+    // Allocate memory
+    m_memory.resize(OFFSET_VERSION);
+    m_screen.resize(128 * 128);
 }
 
 vm::~vm()
@@ -98,7 +91,7 @@ void vm::TickGame(float seconds)
     lol::WorldEntity::TickGame(seconds);
 
     // Update button state
-    for (int i = 0; i < 16; ++i)
+    for (int i = 0; i < 64; ++i)
     {
         if (m_controller->IsKeyPressed(i))
             ++m_buttons[i];
@@ -106,8 +99,8 @@ void vm::TickGame(float seconds)
             m_buttons[i] = 0;
     }
 
-    ExecLuaCode("_update()");
-    ExecLuaCode("_draw()");
+    ExecLuaCode("if _update ~= nil then _update() end");
+    ExecLuaCode("if _draw ~= nil then _draw() end");
 }
 
 void vm::TickDraw(float seconds, lol::Scene &scene)
@@ -139,8 +132,8 @@ void vm::TickDraw(float seconds, lol::Scene &scene)
     for (int n = 0; n < 128 * 128 / 2; ++n)
     {
         uint8_t data = m_memory[OFFSET_SCREEN + n];
-        m_screen[2 * n] = palette[data & 0xf];
-        m_screen[2 * n + 1] = palette[data >> 4];
+        m_screen[2 * n] = palette[m_pal[1][data & 0xf]];
+        m_screen[2 * n + 1] = palette[m_pal[1][data >> 4]];
     }
 
     m_tile->GetTexture()->SetData(m_screen.data());
@@ -151,7 +144,8 @@ void vm::TickDraw(float seconds, lol::Scene &scene)
 
 void vm::setpixel(int x, int y, int color)
 {
-    if (x < 0 || x >= 128 || y < 0 || y >= 128)
+    if (x < m_clip.aa.x || x >= m_clip.bb.x
+         || y < m_clip.aa.y || y >= m_clip.bb.y)
         return;
 
     int offset = OFFSET_SCREEN + (128 * y + x) / 2;
@@ -196,6 +190,7 @@ const lol::LuaObjectLib* vm::GetLib()
 
         // Statics
         {
+            { "run",      &vm::run },
             { "cartdata", &vm::cartdata },
             { "reload",   &vm::reload },
             { "peek",     &vm::peek },
@@ -241,6 +236,7 @@ const lol::LuaObjectLib* vm::GetLib()
             { "mget",     &vm::mget },
             { "mset",     &vm::mset },
             { "pal",      &vm::pal },
+            { "palt",     &vm::palt },
             { "pget",     &vm::pget },
             { "pset",     &vm::pset },
             { "rect",     &vm::rect },
@@ -280,6 +276,38 @@ vm* vm::New(lol::LuaState* l, int argc)
 //
 // System
 //
+
+int vm::run(lol::LuaState *l)
+{
+    vm *that = (vm *)vm::Find(l);
+
+    // Initialise VM memory and state
+    for (int n = OFFSET_SCREEN; n < OFFSET_SCREEN + SIZE_SCREEN; ++n)
+        that->m_memory[n] = lol::rand(0, 0);
+
+    ::memset(that->m_buttons, 0, sizeof(that->m_buttons));
+
+    // “The draw state is reset each time a program is run. This is equivalent to calling:
+    // clip() camera() pal() color()”
+    that->ExecLuaCode("clip() camera() pal() color(1)");
+
+    // Fix code
+    code_fixer fixer(that->m_cart.get_code());
+    lol::String new_code = fixer.fix();
+
+    //msg::info("Fixed cartridge code:\n%s\n", new_code.C());
+    //printf("%s", new_code.C());
+    // FIXME: not required yet because we inherit from LuaLoader
+    //lol::LuaLoader lua;
+
+    // Execute cartridge code
+    that->ExecLuaCode(new_code.C());
+
+    // Run cartridge initialisation routine
+    that->ExecLuaCode("if _init ~= nil then _init() end");
+
+    return 0;
+}
 
 int vm::cartdata(lol::LuaState *l)
 {
@@ -428,29 +456,33 @@ int vm::cursor(lol::LuaState *l)
 
 int vm::print(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaString str;
-    lol::LuaFloat x(true), y(true), col(true);
-    s >> str >> x >> y >> col;
-
     vm *that = (vm *)vm::Find(l);
 
-    auto pixels = that->m_font.Lock<lol::PixelFormat::RGBA_8>();
-    // FIXME: implement optional x and y
-    //lol::ivec2 pos = that->m_cursor;
-    lol::ivec2 pos(x, y);
-    for (int n = 0; n < str.GetValue().count(); ++n)
-    {
-        int c = str.GetValue()[n];
+    if (lua_isnoneornil(l, 1))
+        return 0;
 
-        if (c == '\n')
+    char const *str = lua_tostring(l, 1);
+    bool use_cursor = lua_isnone(l, 2) || lua_isnone(l, 3);
+    int x = use_cursor ? that->m_cursor.x : lua_tonumber(l, 2);
+    int y = use_cursor ? that->m_cursor.y : lua_tonumber(l, 3);
+    int col = lua_isnone(l, 4) ? that->m_color : lua_tonumber(l, 4);
+
+    int c = that->m_pal[0][col & 0xf];
+    int initial_x = x;
+
+    auto pixels = that->m_font.Lock<lol::PixelFormat::RGBA_8>();
+    for (int n = 0; str[n]; ++n)
+    {
+        int ch = str[n];
+
+        if (ch == '\n')
         {
-            pos.x = that->m_cursor.x;
-            pos.y += 6;
+            x = initial_x;
+            y += 6;
         }
         else
         {
-            int index = c > 0x20 && c < 0x9a ? c - 0x20 : 0;
+            int index = ch > 0x20 && ch < 0x9a ? ch - 0x20 : 0;
             int w = index < 0x80 ? 4 : 8;
             int h = 6;
 
@@ -458,14 +490,19 @@ int vm::print(lol::LuaState *l)
                 for (int dx = 0; dx < w - 1; ++dx)
                 {
                     if (pixels[(index / 16 * h + dy) * 128 + (index % 16 * w + dx)].r > 0)
-                        that->setpixel(pos.x + dx, pos.y + dy, (int)col & 0xf);
+                        that->setpixel(x + dx, y + dy, c);
                 }
 
-            pos.x += w;
+            x += w;
         }
     }
-    //that->m_cursor = pos;
+
     that->m_font.Unlock(pixels);
+
+    // Add implicit carriage return to the cursor position
+    if (use_cursor)
+        that->m_cursor = lol::ivec2(initial_x, y + 6);
+
     return 0;
 }
 
@@ -475,28 +512,29 @@ int vm::print(lol::LuaState *l)
 
 int vm::camera(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaFloat x, y;
-    s >> x >> y;
-    msg::info("z8:stub:camera %d %d\n", (int)x, (int)y);
+    vm *that = (vm *)vm::Find(l);
+    that->m_camera = lol::ivec2(lua_tonumber(l, 1), lua_tonumber(l, 2));
     return 0;
 }
 
 int vm::circ(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaFloat in_x, in_y, in_r, col(true);
-    s >> in_x >> in_y >> in_r >> col;
-
+    // FIXME: use Bresenham or something nice like that
     vm *that = (vm *)vm::Find(l);
 
-    int x = (int)in_x, y = (int)in_y, r = (int)in_r;
+    int x = lua_tonumber(l, 1) - that->m_camera.x;
+    int y = lua_tonumber(l, 2) - that->m_camera.y;
+    int r = lua_tonumber(l, 3);
+    int col = lua_isnone(l, 4) ? that->m_color : lua_tonumber(l, 4);
+
+    int c = that->m_pal[0][col & 0xf];
+
     for (int dy = -r; dy <= r; ++dy)
         for (int dx = -r; dx <= r; ++dx)
         {
             if (dx * dx + dy * dy >= r * r - r
                  && dx * dx + dy * dy <= r * r + r)
-                that->setpixel(x + dx, y + dy, (int)col & 0xf);
+                that->setpixel(x + dx, y + dy, c);
         }
 
     return 0;
@@ -504,30 +542,44 @@ int vm::circ(lol::LuaState *l)
 
 int vm::circfill(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaFloat in_x, in_y, in_r, col(true);
-    s >> in_x >> in_y >> in_r >> col;
-
+    // FIXME: use Bresenham or something nice like that
     vm *that = (vm *)vm::Find(l);
 
-    int x = (int)in_x, y = (int)in_y, r = (int)in_r;
+    int x = lua_tonumber(l, 1) - that->m_camera.x;
+    int y = lua_tonumber(l, 2) - that->m_camera.y;
+    int r = lua_tonumber(l, 3);
+    int col = lua_isnone(l, 4) ? that->m_color : lua_tonumber(l, 4);
+
+    int c = that->m_pal[0][col & 0xf];
+
     for (int dy = -r; dy <= r; ++dy)
         for (int dx = -r; dx <= r; ++dx)
         {
-            if (dx * dx + dy * dy <= r * r)
-                that->setpixel(x + dx, y + dy, (int)col & 0xf);
+            if (dx * dx + dy * dy <= r * r + r)
+                that->setpixel(x + dx, y + dy, c);
         }
 
-    //msg::info("z8:stub:circfill %d %d %d [%d]\n", (int)x, (int)y, (int)r, (int)col);
     return 0;
 }
 
 int vm::clip(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaFloat x(true), y(true), w(true), h(true);
-    s >> x >> y >> w >> h;
-    msg::info("z8:stub:clip [%d %d %d %d]\n", (int)x, (int)y, (int)w, (int)h);
+    vm *that = (vm *)vm::Find(l);
+
+    if (lua_isnone(l, 1))
+    {
+        that->m_clip = lol::ibox2(0, 0, 128, 128);
+    }
+    else
+    {
+        int x0 = lua_tonumber(l, 1);
+        int y0 = lua_tonumber(l, 2);
+        int x1 = x0 + lua_tonumber(l, 3);
+        int y1 = y0 + lua_tonumber(l, 4);
+
+        that->m_clip = lol::ibox2(x0, y0, x1, y1);
+    }
+
     return 0;
 }
 
@@ -541,11 +593,8 @@ int vm::cls(lol::LuaState *l)
 
 int vm::color(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaFloat col;
-    s >> col;
     vm *that = (vm *)vm::Find(l);
-    that->m_color = (int)col & 0xf;
+    that->m_color = (int)lua_tonumber(l, 1) & 0xf;
     return 0;
 }
 
@@ -609,8 +658,8 @@ int vm::line(lol::LuaState *l)
     // FIXME this is shitty temp code
     for (float t = 0.f; t <= 1.0f; t += 1.f / 256)
     {
-        that->setpixel((int)lol::mix((float)x0, (float)x1, t),
-                       (int)lol::mix((float)y0, (float)y1, t), col);
+        that->setpixel((int)lol::mix((float)x0, (float)x1, t) - that->m_camera.x,
+                       (int)lol::mix((float)y0, (float)y1, t) - that->m_camera.y, col);
     }
 
     return 0;
@@ -618,39 +667,110 @@ int vm::line(lol::LuaState *l)
 
 int vm::map(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaFloat cel_x, cel_y, sx, sy, cel_w, cel_h, layer(true);
-    s >> cel_x >> cel_y >> sx >> sy >> cel_w >> cel_h >> layer;
-    msg::info("z8:stub:map %d %d %d %d %d %d [%d]\n", (int)cel_x, (int)cel_y, (int)sx, (int)sy, (int)cel_w, (int)cel_h, (int)layer);
+    int cel_x = lua_tonumber(l, 1);
+    int cel_y = lua_tonumber(l, 2);
+    int sx = lua_tonumber(l, 3);
+    int sy = lua_tonumber(l, 4);
+    int cel_w = lua_tonumber(l, 5);
+    int cel_h = lua_tonumber(l, 6);
+    int layer = lua_isnone(l, 7) ? 0xff : lua_tonumber(l, 7);
+
+    vm *that = (vm *)vm::Find(l);
+
+    for (int dy = 0; dy < cel_h * 8; ++dy)
+    for (int dx = 0; dx < cel_w * 8; ++dx)
+    {
+        int cx = cel_x + dx / 8;
+        int cy = cel_y + dy / 8;
+        if (cx < 0 || cx >= 128 || cy < 0 || cy >= 64)
+            continue;
+
+        int line = cy < 32 ? OFFSET_MAP + 128 * cy
+                           : OFFSET_MAP2 + 128 * (cy - 32);
+        int sprite = that->m_memory[line + cx];
+
+        int c = that->getspixel(sprite % 16 * 8 + dx % 8, sprite / 16 * 8 + dy % 8);
+        that->setpixel(sx - that->m_camera.x + dx, sy - that->m_camera.y + dy, c);
+    }
+
     return 0;
 }
 
 int vm::mget(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaFloat x, y, ret;
-    s >> x >> y;
-    msg::info("z8:stub:mget %d %d\n", (int)x, (int)y);
-    ret = 0;
-    return s << ret;
+    int x = lua_tonumber(l, 1);
+    int y = lua_tonumber(l, 2);
+    int n = 0;
+
+    if (x >= 0 && x < 128 && y >= 0 && y < 64)
+    {
+        vm *that = (vm *)vm::Find(l);
+        int line = y < 32 ? OFFSET_MAP + 128 * y
+                          : OFFSET_MAP2 + 128 * (y - 32);
+        n = that->m_memory[line + x];
+    }
+
+    lua_pushnumber(l, n);
+    return 1;
 }
 
 int vm::mset(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaFloat x, y, v;
-    s >> x >> y >> v;
-    msg::info("z8:stub:mset %d %d %d\n", (int)x, (int)y, (int)v);
+    int x = lua_tonumber(l, 1);
+    int y = lua_tonumber(l, 2);
+    int n = lua_tonumber(l, 3);
+
+    if (x >= 0 && x < 128 && y >= 0 && y < 64)
+    {
+        vm *that = (vm *)vm::Find(l);
+        int line = y < 32 ? OFFSET_MAP + 128 * y
+                          : OFFSET_MAP2 + 128 * (y - 32);
+        that->m_memory[line + x] = n;
+    }
+
     return 0;
 }
 
 int vm::pal(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaFloat c0(true), c1(true), p(true);
-    s >> c0 >> c1 >> p;
+    vm *that = (vm *)vm::Find(l);
 
-    msg::info("z8:stub:pal [%d %d [%d]]\n", (int)c0, (int)c1, (int)p);
+    if (lua_isnone(l, 1))
+    {
+        for (int i = 0; i < 16; ++i)
+        {
+            that->m_pal[0][i] = that->m_pal[1][i] = i;
+            that->m_palt[i] = i ? 0 : 1;
+        }
+    }
+    else
+    {
+        int c0 = lua_tonumber(l, 1);
+        int c1 = lua_tonumber(l, 2);
+        int p = lua_tonumber(l, 3);
+
+        that->m_pal[p & 1][c0 & 0xf] = c1 & 0xf;
+    }
+
+    return 0;
+}
+
+int vm::palt(lol::LuaState *l)
+{
+    vm *that = (vm *)vm::Find(l);
+
+    if (lua_isnone(l, 1))
+    {
+        for (int i = 0; i < 16; ++i)
+            that->m_palt[i] = i ? 0 : 1;
+    }
+    else
+    {
+        int c = lua_tonumber(l, 1);
+        int t = lua_toboolean(l, 2);
+        that->m_palt[c & 0xf] = t;
+    }
+
     return 0;
 }
 
@@ -661,7 +781,7 @@ int vm::pget(lol::LuaState *l)
     s >> x >> y;
 
     vm *that = (vm *)vm::Find(l);
-    ret = that->getpixel((int)x, (int)y);
+    ret = that->getpixel((int)x - that->m_camera.x, (int)y - that->m_camera.y);
 
     return s << ret;
 }
@@ -673,33 +793,32 @@ int vm::pset(lol::LuaState *l)
     s >> x >> y >> c;
 
     vm *that = (vm *)vm::Find(l);
-    that->setpixel((int)x, (int)y, (int)c & 0xf);
+    that->setpixel((int)x - that->m_camera.x, (int)y - that->m_camera.y, (int)c & 0xf);
 
     return 0;
 }
 
 int vm::rect(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaFloat in_x0, in_y0, in_x1, in_y1, col(true);
-    s >> in_x0 >> in_y0 >> in_x1 >> in_y1 >> col;
-
-    int x0 = lol::max(0, lol::min(int(in_x0), int(in_x1)));
-    int y0 = lol::max(0, lol::min(int(in_y0), int(in_y1)));
-    int x1 = lol::min(127, lol::max(int(in_x0), int(in_x1)));
-    int y1 = lol::min(127, lol::max(int(in_y0), int(in_y1)));
-
     vm *that = (vm *)vm::Find(l);
-    for (int y = y0; y <= y1; ++y)
+
+    int x0 = lua_tonumber(l, 1) - that->m_camera.x;
+    int y0 = lua_tonumber(l, 2) - that->m_camera.y;
+    int x1 = lua_tonumber(l, 3) - that->m_camera.x;
+    int y1 = lua_tonumber(l, 4) - that->m_camera.y;
+    int col = lua_isnone(l, 5) ? that->m_color : lua_tonumber(l, 5);
+    int c = that->m_pal[0][col & 0xf];
+
+    for (int y = lol::min(y0, y1); y <= lol::max(y0, y1); ++y)
     {
-        that->setpixel(x0, y, (int)col & 0xf);
-        that->setpixel(x1, y, (int)col & 0xf);
+        that->setpixel(x0, y, c);;
+        that->setpixel(x1, y, c);;
     }
 
-    for (int x = x0 + 1; x <= x1 - 1; ++x)
+    for (int x = lol::min(x0, x1); x <= lol::max(x0, x1); ++x)
     {
-        that->setpixel(x, y0, (int)col & 0xf);
-        that->setpixel(x, y1, (int)col & 0xf);
+        that->setpixel(x, y0, c);;
+        that->setpixel(x, y1, c);;
     }
 
     return 0;
@@ -707,19 +826,18 @@ int vm::rect(lol::LuaState *l)
 
 int vm::rectfill(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaFloat in_x0, in_y0, in_x1, in_y1, col(true);
-    s >> in_x0 >> in_y0 >> in_x1 >> in_y1 >> col;
-
-    int x0 = lol::max(0, lol::min(int(in_x0), int(in_x1)));
-    int y0 = lol::max(0, lol::min(int(in_y0), int(in_y1)));
-    int x1 = lol::min(127, lol::max(int(in_x0), int(in_x1)));
-    int y1 = lol::min(127, lol::max(int(in_y0), int(in_y1)));
-
     vm *that = (vm *)vm::Find(l);
-    for (int y = y0; y <= y1; ++y)
-        for (int x = x0; x <= x1; ++x)
-            that->setpixel(x, y, (int)col & 0xf);
+
+    int x0 = lua_tonumber(l, 1) - that->m_camera.x;
+    int y0 = lua_tonumber(l, 2) - that->m_camera.y;
+    int x1 = lua_tonumber(l, 3) - that->m_camera.x;
+    int y1 = lua_tonumber(l, 4) - that->m_camera.y;
+    int col = lua_isnone(l, 5) ? that->m_color : lua_tonumber(l, 5);
+    int c = that->m_pal[0][col & 0xf];
+
+    for (int y = lol::min(y0, y1); y <= lol::max(y0, y1); ++y)
+        for (int x = lol::min(x0, x1); x <= lol::max(x0, x1); ++x)
+            that->setpixel(x, y, c);
 
     return 0;
 }
@@ -743,16 +861,18 @@ int vm::sset(lol::LuaState *l)
     s >> x >> y >> c;
 
     vm *that = (vm *)vm::Find(l);
-    that->setpixel((int)x, (int)y, (int)c & 0xf);
+    that->setspixel((int)x, (int)y, (int)c & 0xf);
 
     return 0;
 }
 
 int vm::spr(lol::LuaState *l)
 {
+    vm *that = (vm *)vm::Find(l);
+
     int n = lua_tonumber(l, 1);
-    int x = lua_tonumber(l, 2);
-    int y = lua_tonumber(l, 3);
+    int x = lua_tonumber(l, 2) - that->m_camera.x;
+    int y = lua_tonumber(l, 3) - that->m_camera.y;
     float w = lua_isnoneornil(l, 4) ? 1 : lua_tonumber(l, 4);
     float h = lua_isnoneornil(l, 5) ? 1 : lua_tonumber(l, 5);
     int flip_x = lua_toboolean(l, 6);
@@ -760,13 +880,14 @@ int vm::spr(lol::LuaState *l)
 
     // FIXME: Handle transparency better than that
     // FIXME: implement flip_x and flip_w
-    vm *that = (vm *)vm::Find(l);
     for (int j = 0; j < h * 8; ++j)
         for (int i = 0; i < w * 8; ++i)
         {
-            int c = that->getspixel(n % 16 * 8 + i, n / 16 * 8 + j);
-            if (c)
-                that->setpixel(x + i, y + j, c);
+            int di = flip_x ? w * 8 - 1 - i : i;
+            int dj = flip_y ? h * 8 - 1 - j : j;
+            int c = that->getspixel(n % 16 * 8 + di, n / 16 * 8 + dj);
+            if (!that->m_palt[c])
+                that->setpixel(x - that->m_camera.x + i, y - that->m_camera.y + j, c);
         }
 
     return 0;
