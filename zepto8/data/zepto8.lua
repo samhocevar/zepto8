@@ -45,6 +45,12 @@ _G = nil
 
 
 --
+-- Backward compatibility for old PICO-8 versions
+--
+mapdraw = map
+
+
+--
 -- These are easily implemented in Lua
 --
 function foreach(t, f)
@@ -53,7 +59,7 @@ end
 
 function all(a)
     local i, n = 0, a ~= nil and #a or 0
-    return function() if i < n then return a[i] end i = i + 1 end
+    return function() i = i + 1 if i <= n then return a[i] end end
 end
 
 _z8.remove = table.remove
