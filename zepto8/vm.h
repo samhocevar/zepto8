@@ -42,7 +42,7 @@ public:
         //m_cart.load_p8(name);
 
         // Copy everything into memory up to the code
-        memcpy(m_memory.data(), m_cart.get_data().data(), OFFSET_CODE);
+        ::memcpy(m_memory.data(), m_cart.get_data().data(), OFFSET_CODE);
     }
 
     void run()
@@ -72,6 +72,8 @@ private:
     static int reload(lol::LuaState *l);
     static int peek(lol::LuaState *l);
     static int poke(lol::LuaState *l);
+    static int memcpy(lol::LuaState *l);
+    static int memset(lol::LuaState *l);
 
     // I/O
     static int btn(lol::LuaState *l);

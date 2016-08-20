@@ -67,7 +67,7 @@ vm::vm()
     m_color = 15;
     m_camera = lol::ivec2(0, 0);
     m_cursor = lol::ivec2(0, 0);
-    memset(m_buttons, 0, sizeof(m_buttons));
+    ::memset(m_buttons, 0, sizeof(m_buttons));
 
     // Create an ortho camera
     m_scenecam = new lol::Camera();
@@ -200,6 +200,8 @@ const lol::LuaObjectLib* vm::GetLib()
             { "reload",   &vm::reload },
             { "peek",     &vm::peek },
             { "poke",     &vm::poke },
+            { "memcpy",   &vm::memcpy },
+            { "memset",   &vm::memset },
 
             { "btn",  &vm::btn },
             { "btnp", &vm::btnp },
@@ -320,6 +322,37 @@ int vm::poke(lol::LuaState *l)
 
     vm *that = (vm *)vm::Find(l);
     that->m_memory[addr] = (uint16_t)(int)(float)in_val;
+    return 0;
+}
+
+int vm::memcpy(lol::LuaState *l)
+{
+    int dst = lua_tonumber(l, 1);
+    int src = lua_tonumber(l, 2);
+    int size = lua_tonumber(l, 3);
+
+    if (dst >= 0 && src >= 0 && size > 0 && dst < 0x8000
+         && src < 0x8000 && src + size < 0x8000 && dst + size < 0x8000)
+    {
+        vm *that = (vm *)vm::Find(l);
+        memmove(that->m_memory.data() + dst, that->m_memory.data() + src, size);
+    }
+
+    return 0;
+}
+
+int vm::memset(lol::LuaState *l)
+{
+    int dst = lua_tonumber(l, 1);
+    int val = lua_tonumber(l, 2);
+    int size = lua_tonumber(l, 3);
+
+    if (dst >= 0 && size > 0 && dst < 0x8000 && dst + size < 0x8000)
+    {
+        vm *that = (vm *)vm::Find(l);
+        ::memset(that->m_memory.data() + dst, val, size);
+    }
+
     return 0;
 }
 
@@ -502,7 +535,7 @@ int vm::cls(lol::LuaState *l)
 {
     lol::LuaStack s(l);
     vm *that = (vm *)vm::Find(l);
-    memset(that->m_memory.data() + OFFSET_SCREEN, 0, SIZE_SCREEN);
+    ::memset(that->m_memory.data() + OFFSET_SCREEN, 0, SIZE_SCREEN);
     return 0;
 }
 
