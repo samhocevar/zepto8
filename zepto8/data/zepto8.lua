@@ -18,9 +18,6 @@ printh = print
 count = function(a) return a ~= nil and #a or 0 end
 add = table.insert
 sub = string.sub
-table = nil
-string = nil
-io = nil
 
 --
 -- According to https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0 :
@@ -59,3 +56,19 @@ function all(a)
     return function() if i < n then return a[i] end i = i + 1 end
 end
 
+_z8.remove = table.remove
+function del(t, v)
+    if t ~= nil then
+        for k, v2 in ipairs(t) do
+            if v == v2 then _z8.remove(t, k) return end
+        end
+    end
+end
+
+
+--
+-- Hide these modules, they shouldnot be accessible
+--
+table = nil
+string = nil
+io = nil
