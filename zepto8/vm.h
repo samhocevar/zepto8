@@ -37,12 +37,10 @@ public:
 
     void load(char const *name)
     {
-        // FIXME: we only know PNG for now
-        m_cart.load_png(name);
-        //m_cart.load_p8(name);
+        m_cart.load(name);
 
-        // Copy everything into memory up to the code
-        ::memcpy(m_memory.data(), m_cart.get_data().data(), OFFSET_CODE);
+        // Copy everything up to the code section into memory
+        ::memcpy(m_memory.data(), m_cart.get_rom().data(), OFFSET_CODE);
     }
 
     void run()

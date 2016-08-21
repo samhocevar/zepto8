@@ -24,9 +24,11 @@ public:
       : m_version(0)
     {}
 
-    lol::array<uint8_t> const &get_data() const
+    bool load(char const *filename);
+
+    lol::array<uint8_t> const &get_rom() const
     {
-        return m_data;
+        return m_rom;
     }
 
     lol::String const &get_code() const
@@ -39,11 +41,11 @@ public:
         return m_version;
     }
 
-    void load_png(char const *filename);
-    void load_p8(char const *filename);
-
 private:
-    lol::array<uint8_t> m_data;
+    bool load_png(char const *filename);
+    bool load_p8(char const *filename);
+
+    lol::array<uint8_t> m_rom;
     lol::String m_code;
     int m_version;
 };
