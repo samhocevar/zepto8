@@ -339,7 +339,7 @@ int vm::map(lol::LuaState *l)
     int sy = lua_tonumber(l, 4);
     int cel_w = lua_tonumber(l, 5);
     int cel_h = lua_tonumber(l, 6);
-    int layer = lua_isnone(l, 7) ? 0xff : lua_tonumber(l, 7);
+    int layer = lua_tonumber(l, 7);
 
     vm *that = (vm *)vm::Find(l);
 
@@ -355,9 +355,14 @@ int vm::map(lol::LuaState *l)
                            : OFFSET_MAP2 + 128 * (cy - 32);
         int sprite = that->m_memory[line + cx];
 
+        uint8_t bits = that->m_memory[OFFSET_GFX_PROPS + sprite];
+        if (layer && !(bits & layer))
+            continue;
+
         if (sprite)
         {
-            int c = that->getspixel(sprite % 16 * 8 + dx % 8, sprite / 16 * 8 + dy % 8);
+            int col = that->getspixel(sprite % 16 * 8 + dx % 8, sprite / 16 * 8 + dy % 8);
+            int c = that->m_pal[0][col & 0xf];
             if (!that->m_palt[c])
                 that->setpixel(sx + dx, sy + dy, c);
         }
