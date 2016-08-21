@@ -199,7 +199,6 @@ struct p8_reader::action<p8_reader::r_section_name>
 {
     static void apply(pegtl::action_input const &in, p8_reader &r)
     {
-        msg::info("section %s\n", in.string().c_str());
         if (in.string().find("lua") != std::string::npos)
             r.m_current_section = section::lua;
         else if (in.string().find("gfx") != std::string::npos)

@@ -215,7 +215,10 @@ int vm::clip(lol::LuaState *l)
 {
     vm *that = (vm *)vm::Find(l);
 
-    if (lua_isnone(l, 1))
+    /* XXX: there were rendering issues with Hyperspace by J.Fry when we were
+     * only checking for lua_isnone(l,1) (instead of 4) because first argument
+     * was actually "" instead of nil. */
+    if (lua_isnone(l, 4))
     {
         that->m_clip = lol::ibox2(0, 0, 128, 128);
     }
@@ -235,9 +238,9 @@ int vm::clip(lol::LuaState *l)
 
 int vm::cls(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
+    int c = lua_tonumber(l, 1);
     vm *that = (vm *)vm::Find(l);
-    ::memset(that->m_memory.data() + OFFSET_SCREEN, 0, SIZE_SCREEN);
+    ::memset(that->m_memory.data() + OFFSET_SCREEN, (c & 0xf) * 0x11, SIZE_SCREEN);
     return 0;
 }
 

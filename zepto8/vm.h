@@ -63,6 +63,7 @@ private:
     static int memset(lol::LuaState *l);
     static int dget(lol::LuaState *l);
     static int dset(lol::LuaState *l);
+    static int stat(lol::LuaState *l);
 
     // I/O
     static int btn(lol::LuaState *l);
@@ -122,6 +123,9 @@ private:
     static int music(lol::LuaState *l);
     static int sfx(lol::LuaState *l);
 
+    // Deprecated
+    static int time(lol::LuaState *l);
+
 private:
     int getpixel(int x, int y);
     void setpixel(int x, int y, int color);
@@ -145,6 +149,7 @@ private:
     lol::TileSet *m_tile;
     lol::Controller *m_controller;
     lol::InputProfile m_input;
+    lol::Timer m_timer;
 };
 
 } // namespace z8

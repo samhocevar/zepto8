@@ -158,6 +158,7 @@ const lol::LuaObjectLib* vm::GetLib()
             { "memset",   &vm::memset },
             { "dget",     &vm::dget },
             { "dset",     &vm::dset },
+            { "stat",     &vm::stat },
 
             { "btn",  &vm::btn },
             { "btnp", &vm::btnp },
@@ -209,6 +210,8 @@ const lol::LuaObjectLib* vm::GetLib()
 
             { "music", &vm::music },
             { "sfx",   &vm::sfx },
+
+            { "time", &vm::time },
 
             { nullptr, nullptr }
         },
@@ -320,8 +323,9 @@ int vm::memcpy(lol::LuaState *l)
     int src = lua_tonumber(l, 2);
     int size = lua_tonumber(l, 3);
 
+    /* FIXME: should the memory wrap around maybe? */
     if (dst >= 0 && src >= 0 && size > 0 && dst < 0x8000
-         && src < 0x8000 && src + size < 0x8000 && dst + size < 0x8000)
+         && src < 0x8000 && src + size <= 0x8000 && dst + size <= 0x8000)
     {
         vm *that = (vm *)vm::Find(l);
         memmove(that->m_memory.data() + dst, that->m_memory.data() + src, size);
@@ -356,6 +360,13 @@ int vm::dset(lol::LuaState *l)
 {
     msg::info("z8:stub:dset\n");
     return 0;
+}
+
+int vm::stat(lol::LuaState *l)
+{
+    msg::info("z8:stub:stat\n");
+    lua_pushnumber(l, 0);
+    return 1;
 }
 
 //
@@ -427,6 +438,18 @@ int vm::sfx(lol::LuaState *l)
 {
     msg::info("z8:stub:sfx\n");
     return 0;
+}
+
+//
+// Deprecated
+//
+
+int vm::time(lol::LuaState *l)
+{
+    vm *that = (vm *)vm::Find(l);
+    float time = lol::fmod(that->m_timer.Poll(), 65536.0f);
+    lua_pushnumber(l, time < 32768.f ? time : time - 65536.0f);
+    return 1;
 }
 
 } // namespace z8
