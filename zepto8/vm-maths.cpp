@@ -83,7 +83,7 @@ int vm::abs(lol::LuaState *l)
 
 int vm::sgn(lol::LuaState *l)
 {
-    lua_pushnumber(l, lua_tonumber(l, 1) > 0 ? 1.f : 0.f);
+    lua_pushnumber(l, lua_tonumber(l, 1) > 0 ? 1.f : -1.f);
     return 1;
 }
 

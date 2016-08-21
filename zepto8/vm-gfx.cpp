@@ -94,7 +94,7 @@ int vm::print(lol::LuaState *l)
     auto pixels = that->m_font.Lock<lol::PixelFormat::RGBA_8>();
     for (int n = 0; str[n]; ++n)
     {
-        int ch = str[n];
+        int ch = (int)(uint8_t)str[n];
 
         if (ch == '\n')
         {
@@ -104,7 +104,7 @@ int vm::print(lol::LuaState *l)
         else
         {
             int index = ch > 0x20 && ch < 0x9a ? ch - 0x20 : 0;
-            int w = index < 0x80 ? 4 : 8;
+            int w = index < 0x60 ? 4 : 8;
             int h = 6;
 
             for (int dy = 0; dy < h - 1; ++dy)
@@ -362,9 +362,11 @@ int vm::map(lol::LuaState *l)
         if (sprite)
         {
             int col = that->getspixel(sprite % 16 * 8 + dx % 8, sprite / 16 * 8 + dy % 8);
-            int c = that->m_pal[0][col & 0xf];
-            if (!that->m_palt[c])
+            if (!that->m_palt[col])
+            {
+                int c = that->m_pal[0][col & 0xf];
                 that->setpixel(sx + dx, sy + dy, c);
+            }
         }
     }
 
@@ -564,9 +566,11 @@ int vm::spr(lol::LuaState *l)
             int di = flip_x ? w * 8 - 1 - i : i;
             int dj = flip_y ? h * 8 - 1 - j : j;
             int col = that->getspixel(n % 16 * 8 + di, n / 16 * 8 + dj);
-            int c = that->m_pal[0][col];
-            if (!that->m_palt[c])
+            if (!that->m_palt[col])
+            {
+                int c = that->m_pal[0][col];
                 that->setpixel(x + i, y + j, c);
+            }
         }
 
     return 0;
@@ -599,9 +603,11 @@ int vm::sspr(lol::LuaState *l)
         int y = sy + sh * dj / dh;
 
         int col = that->getspixel(x, y);
-        int c = that->m_pal[0][col];
-        if (!that->m_palt[c])
+        if (!that->m_palt[col])
+        {
+            int c = that->m_pal[0][col];
             that->setpixel(dx + i, dy + j, c);
+        }
     }
 
     return 0;
