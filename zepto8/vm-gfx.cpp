@@ -415,7 +415,7 @@ int vm::pal(lol::LuaState *l)
 {
     vm *that = (vm *)vm::Find(l);
 
-    if (lua_isnone(l, 1))
+    if (lua_isnone(l, 1) || lua_isnone(l, 2))
     {
         for (int i = 0; i < 16; ++i)
         {
@@ -439,7 +439,7 @@ int vm::palt(lol::LuaState *l)
 {
     vm *that = (vm *)vm::Find(l);
 
-    if (lua_isnone(l, 1))
+    if (lua_isnone(l, 1) || lua_isnone(l, 2))
     {
         for (int i = 0; i < 16; ++i)
             that->m_palt[i] = i ? 0 : 1;

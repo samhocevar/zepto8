@@ -89,7 +89,11 @@ int vm::sgn(lol::LuaState *l)
 
 int vm::rnd(lol::LuaState *l)
 {
-    lua_pushnumber(l, lol::rand(float(lua_tonumber(l, 1))));
+    /* FIXME: behaves incorrectly when b is negative */
+    float a = 0.f;
+    float b = lua_isnone(l, 1) ? 1.f
+            : lol::min(float(lua_tonumber(l, 1)), 32767.99f);
+    lua_pushnumber(l, lol::rand(a, b));
     return 1;
 }
 

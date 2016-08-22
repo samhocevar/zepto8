@@ -247,7 +247,7 @@ int vm::run(lol::LuaState *l)
 
     // Initialise VM memory and state
     for (int n = OFFSET_SCREEN; n < OFFSET_SCREEN + SIZE_SCREEN; ++n)
-        that->m_memory[n] = lol::rand(0, 0);
+        that->m_memory[n] = 0;
 
     ::memset(that->m_buttons, 0, sizeof(that->m_buttons));
 
