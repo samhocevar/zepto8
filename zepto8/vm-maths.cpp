@@ -58,13 +58,15 @@ int vm::flr(lol::LuaState *l)
 
 int vm::cos(lol::LuaState *l)
 {
-    lua_pushnumber(l, lol::cos(-lol::F_TAU * float(lua_tonumber(l, 1))));
+    double x = clamp64(lua_tonumber(l, 1));
+    lua_pushnumber(l, clamp64(lol::cos(-lol::D_TAU * clamp64(x))));
     return 1;
 }
 
 int vm::sin(lol::LuaState *l)
 {
-    lua_pushnumber(l, lol::sin(-lol::F_TAU * float(lua_tonumber(l, 1))));
+    double x = clamp64(lua_tonumber(l, 1));
+    lua_pushnumber(l, clamp64(lol::sin(-lol::D_TAU * clamp64(x))));
     return 1;
 }
 

@@ -9,9 +9,10 @@ function tostr(x)
 end
 
 function section(name)
-    printh("### ")
+    printh("")
+    printh("##########################")
     printh("### "..name)
-    printh("### ")
+    printh("")
 end
 
 
@@ -25,6 +26,27 @@ for i = 1,#values do
     for j = 1,#values do
         x, y = values[i], values[j]
         printh("atan2 "..tostr(x).." "..tostr(y).." = "..atan2(x,y))
+    end
+end
+
+
+section("sin/cos")
+
+values = { -32768, -32767, -128, -127, -5, -4, -3, -2, -1, 0 }
+steps = { 0, 1/4, 2/4, 3/4 }
+printh("sin = "..sin())
+printh("cos = "..cos())
+printh("sin nil = "..sin(nil))
+printh("cos nil = "..cos(nil))
+for i = 1,#values do
+    for j = 1,#steps do
+        x = values[i] + steps[j]
+        printh("sin "..tostr(x).." = "..sin(x))
+        printh("cos "..tostr(x).." = "..cos(x))
+        if (x ~= 0) and (x >= -32767) then
+            printh("sin "..tostr(-x).." = "..sin(-x))
+            printh("cos "..tostr(-x).." = "..cos(-x))
+        end
     end
 end
 
