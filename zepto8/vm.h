@@ -152,5 +152,24 @@ private:
     lol::Timer m_timer;
 };
 
+// Clamp a double to the nearest value that can be represented as a 16:16
+// fixed point number (the ones used in PICO-8).
+static double const multiplier = 65536.0;
+
+static inline int32_t double2fixed(double x)
+{
+    return (int32_t)lol::round(x * multiplier);
+}
+
+static inline double fixed2double(int32_t x)
+{
+    return x / multiplier;
+}
+
+static inline double clamp64(double x)
+{
+    return fixed2double(double2fixed(x));
+}
+
 } // namespace z8
 
