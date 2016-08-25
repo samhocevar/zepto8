@@ -19,6 +19,15 @@ namespace z8
 
 using lol::msg;
 
+// Clamp a double to the nearest value that can be represented as a 16:16
+// fixed point number (the ones used in PICO-8).
+static inline double clamp64(double x)
+{
+    static double const m = 65536.0;
+    x = (double)(int32_t)lol::round(x * m) / m;
+    return x;
+}
+
 int vm::max(lol::LuaState *l)
 {
     lua_pushnumber(l, lol::max(lua_tonumber(l, 1), lua_tonumber(l, 2)));
@@ -61,9 +70,12 @@ int vm::sin(lol::LuaState *l)
 
 int vm::atan2(lol::LuaState *l)
 {
-    float x = lua_tonumber(l, 1);
-    float y = lua_tonumber(l, 2);
-    lua_pushnumber(l, lol::F_TAU * lol::atan2(-y, x));
+    double x = clamp64(lua_tonumber(l, 1));
+    double y = clamp64(lua_tonumber(l, 2));
+    // This could simply be atan2(-y,x) but since PICO-8 decided that
+    // atan2(0,0) = 0.75 we need to do the same in our version.
+    double a = 0.75 + clamp64(lol::atan2(x, y) / lol::D_TAU);
+    lua_pushnumber(l, a >= 1 ? a - 1 : a);
     return 1;
 }
 
