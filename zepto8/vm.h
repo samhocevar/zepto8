@@ -158,7 +158,7 @@ static double const multiplier = 65536.0;
 
 static inline int32_t double2fixed(double x)
 {
-    return (int32_t)lol::round(x * multiplier);
+    return (int32_t)(int64_t)lol::round(x * multiplier);
 }
 
 static inline double fixed2double(int32_t x)
