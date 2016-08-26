@@ -51,6 +51,23 @@ for i = 1,#values do
 end
 
 
+section("boolean ops")
+
+for i = 0,256 do
+    -- use flr() to make sure the wrap around at 32768 happens
+    x = flr(i * 257)
+    for j = 1,256 do
+        y = flr(j * 257)
+        printh("band "..tostr(x).." "..tostr(y).." = "..band(x, y))
+        printh("bor "..tostr(x).." "..tostr(y).." = "..bor(x, y))
+        printh("bxor "..tostr(x).." "..tostr(y).." = "..bxor(x, y))
+    end
+    -- bnot(x) can’t be represented exactly so we compute this value instead
+    z = flr((bnot(x) - x) * 256 * 256)
+    printh("bnot "..tostr(x).." = "..tostr(flr(-x)).." + "..tostr(z).." / 65536")
+end
+
+
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

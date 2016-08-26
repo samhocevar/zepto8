@@ -115,31 +115,32 @@ int vm::srand(lol::LuaState *l)
 
 int vm::band(lol::LuaState *l)
 {
-    double x = lua_tonumber(l, 1);
-    double y = lua_tonumber(l, 2);
-    lua_pushnumber(l, (int16_t)x & (int16_t)y);
+    int32_t x = double2fixed(lua_tonumber(l, 1));
+    int32_t y = double2fixed(lua_tonumber(l, 2));
+    lua_pushnumber(l, fixed2double(x & y));
     return 1;
 }
 
 int vm::bor(lol::LuaState *l)
 {
-    double x = lua_tonumber(l, 1);
-    double y = lua_tonumber(l, 2);
-    lua_pushnumber(l, (int16_t)x | (int16_t)y);
+    int32_t x = double2fixed(lua_tonumber(l, 1));
+    int32_t y = double2fixed(lua_tonumber(l, 2));
+    lua_pushnumber(l, fixed2double(x | y));
     return 1;
 }
 
 int vm::bxor(lol::LuaState *l)
 {
-    double x = lua_tonumber(l, 1);
-    double y = lua_tonumber(l, 2);
-    lua_pushnumber(l, (int16_t)x ^ (int16_t)y);
+    int32_t x = double2fixed(lua_tonumber(l, 1));
+    int32_t y = double2fixed(lua_tonumber(l, 2));
+    lua_pushnumber(l, fixed2double(x ^ y));
     return 1;
 }
 
 int vm::bnot(lol::LuaState *l)
 {
-    lua_pushnumber(l, ~uint16_t(lua_tonumber(l, 1)));
+    int32_t x = double2fixed(lua_tonumber(l, 1));
+    lua_pushnumber(l, fixed2double(~x));
     return 1;
 }
 
