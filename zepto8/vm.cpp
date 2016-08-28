@@ -73,7 +73,7 @@ vm::vm()
     m_tile = lol::Tiler::Register("fuck", new lol::Image(*img), lol::ivec2(128, 128), lol::ivec2(1, 1));
 
     // Allocate memory
-    m_memory.resize(OFFSET_VERSION);
+    m_memory.resize(SIZE_MEMORY);
     m_screen.resize(128 * 128);
 }
 
@@ -295,7 +295,7 @@ int vm::peek(lol::LuaState *l)
     lol::LuaFloat in_addr, ret;
     s >> in_addr;
     int addr = (int)(float)in_addr;
-    if (addr < 0 || addr > 0x7fff)
+    if (addr < 0 || addr >= SIZE_MEMORY)
         return 0;
 
     vm *that = (vm *)vm::Find(l);
@@ -309,7 +309,7 @@ int vm::poke(lol::LuaState *l)
     lol::LuaFloat in_addr, in_val;
     s >> in_addr >> in_val;
     int addr = (int)(float)in_addr;
-    if (addr < 0 || addr > 0x7fff)
+    if (addr < 0 || addr >= SIZE_MEMORY)
         return 0;
 
     vm *that = (vm *)vm::Find(l);
@@ -324,8 +324,9 @@ int vm::memcpy(lol::LuaState *l)
     int size = lua_tonumber(l, 3);
 
     /* FIXME: should the memory wrap around maybe? */
-    if (dst >= 0 && src >= 0 && size > 0 && dst < 0x8000
-         && src < 0x8000 && src + size <= 0x8000 && dst + size <= 0x8000)
+    if (dst >= 0 && src >= 0 && size > 0
+         && dst < SIZE_MEMORY && src < SIZE_MEMORY
+         && src + size <= SIZE_MEMORY && dst + size <= SIZE_MEMORY)
     {
         vm *that = (vm *)vm::Find(l);
         memmove(that->m_memory.data() + dst, that->m_memory.data() + src, size);
@@ -340,7 +341,7 @@ int vm::memset(lol::LuaState *l)
     int val = lua_tonumber(l, 2);
     int size = lua_tonumber(l, 3);
 
-    if (dst >= 0 && size > 0 && dst < 0x8000 && dst + size < 0x8000)
+    if (dst >= 0 && size > 0 && dst < SIZE_MEMORY && dst + size < SIZE_MEMORY)
     {
         vm *that = (vm *)vm::Find(l);
         ::memset(that->m_memory.data() + dst, val, size);

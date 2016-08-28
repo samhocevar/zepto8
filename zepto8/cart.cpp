@@ -59,7 +59,7 @@ bool cart::load_png(char const *filename)
     img.Unlock(pixels);
 
     // Retrieve code, with optional decompression
-    int version = m_rom[OFFSET_VERSION];
+    int version = m_rom[SIZE_MEMORY];
     msg::info("Found cartridge version %d\n", version);
     if (version == 0 || m_rom[OFFSET_CODE] != ':'
                      || m_rom[OFFSET_CODE + 1] != 'c'
@@ -67,7 +67,7 @@ bool cart::load_png(char const *filename)
                      || m_rom[OFFSET_CODE + 3] != '\0')
     {
         int length = 0;
-        while (OFFSET_CODE + length < OFFSET_VERSION
+        while (OFFSET_CODE + length < SIZE_MEMORY
                 && m_rom[OFFSET_CODE + length] != '\0')
             ++length;
 
