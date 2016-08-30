@@ -1,7 +1,7 @@
 
 include $(top_srcdir)/build/autotools/common.am
 
-bin_PROGRAMS = zepto8
+bin_PROGRAMS = zepto8 dither
 
 zepto8dir = $(datarootdir)/zepto8
 
@@ -18,4 +18,10 @@ zepto8_DATA = data/zepto8.lua data/font.png
 EXTRA_DIST += zepto8.vcxproj \
               rulez.p8 rulez.p8.png \
               tut.p8 tut.p8.png
+
+dither_SOURCES = \
+    dither.cpp
+dither_CPPFLAGS = $(AM_CPPFLAGS)
+dither_LDFLAGS = $(AM_LDFLAGS)
+dither_DEPENDENCIES = @LOL_DEPS@
 
