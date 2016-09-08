@@ -1,5 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="LolMacros">
+    <LolDir Condition="Exists('$(SolutionDir)\lol')">$(SolutionDir)\lol</LolDir>
+    <LolDir Condition="!Exists('$(SolutionDir)\lol')">$(SolutionDir)\..</LolDir>
+  </PropertyGroup>
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|ORBIS">
       <Configuration>Debug</Configuration>
@@ -35,41 +39,41 @@
     <ClCompile Include="zepto8.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(SolutionDir)\..\src\lol-core.vcxproj">
-      <Project>{9e62f2fe-3408-4eae-8238-fd84238ceeda}</Project>
-    </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)\..\src\bullet\lol-bullet.vcxproj">
-      <Project>{83d3b207-c601-4025-8f41-01dedc354661}</Project>
-    </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)\..\src\lua\lol-lua.vcxproj">
-      <Project>{d84021ca-b233-4e0f-8a52-071b83bbccc4}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="cart.h" />
     <ClInclude Include="code-fixer.h" />
     <ClInclude Include="lua53-parse.h" />
     <ClInclude Include="vm.h" />
     <ClInclude Include="zepto8.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(LolDir)\src\lol-core.vcxproj">
+      <Project>{9e62f2fe-3408-4eae-8238-fd84238ceeda}</Project>
+    </ProjectReference>
+    <ProjectReference Include="$(LolDir)\src\3rdparty\lol-bullet.vcxproj">
+      <Project>{83d3b207-c601-4025-8f41-01dedc354661}</Project>
+    </ProjectReference>
+    <ProjectReference Include="$(LolDir)\src\3rdparty\lol-lua.vcxproj">
+      <Project>{d84021ca-b233-4e0f-8a52-071b83bbccc4}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{28F5DE0F-B162-4833-8F61-A1AF782850A2}</ProjectGuid>
     <ConfigurationType>Application</ConfigurationType>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
-  <Import Project="$(SolutionDir)\msbuild\lol.config.props" />
+  <Import Project="$(LolDir)\build\msbuild\lol.config.props" />
   <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(SolutionDir)\msbuild\lolfx.props" />
+    <Import Project="$(LolDir)\build\msbuild\lolfx.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)\msbuild\lol.vars.props" />
+    <Import Project="$(LolDir)\build\msbuild\lol.vars.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <Import Project="$(SolutionDir)\msbuild\lol.rules.props" />
+  <Import Project="$(LolDir)\build\msbuild\lol.rules.props" />
   <ItemDefinitionGroup />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(SolutionDir)\msbuild\lolfx.targets" />
+    <Import Project="$(LolDir)\build\msbuild\lolfx.targets" />
   </ImportGroup>
 </Project>

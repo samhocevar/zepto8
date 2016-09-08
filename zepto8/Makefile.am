@@ -1,5 +1,5 @@
 
-include $(top_srcdir)/build/autotools/common.am
+include $(top_srcdir)/lol/build/autotools/common.am
 
 bin_PROGRAMS = zepto8 dither
 

@@ -2,7 +2,7 @@ dnl
 dnl  Configure script for a Lol Engine project
 dnl
 
-AC_INIT(roflmao, 0.0)
+AC_INIT(zepto8, 0.0)
 
 dnl
 dnl  Standard autoconf setup and tools requirements
@@ -20,7 +20,7 @@ AC_LIBTOOL_CXX
 
 AC_CONFIG_FILES(
  [Makefile
-  roflmao/Makefile
+  zepto8/Makefile
 ])
 
 dnl
