@@ -1,0 +1,60 @@
+# Autotools cruft
+*.o
+*.lo
+*.a
+*.la
+*.exe
+*.so
+*.elf
+*.self
+*.nexe
+*.userprefs
+*.usertasks
+*.pidb
+.auto
+.libs
+.deps
+.dirstamp
+.*.androiddir
+.*.androidstamp
+Makefile
+Makefile.in
+aclocal.m4
+autom4te.cache
+config.h.in
+config.h
+config.log
+config.status
+configure
+libtool
+stamp-*
+*-stamp
+test-suite.log
+# Personal stuff
+patch-*.diff
+# Debugging cruft
+core
+!core/
+core.*
+vgcore.*
+callgrind.out.*
+perf.data*
+*.gcda
+*.gcno
+# Editor cruft
+.*.swp
+*~
+.ycm_extra_conf.pyc
+# Visual Studio cruft
+*.vcxproj.user
+*.csproj.user
+binaries/*Debug
+binaries/*Release
+.vs
+*.VC.VC.opendb
+*.VC.db
+*.sdf
+*.suo
+*.opensdf
+# ReSharper cruft
+_ReSharper.*
