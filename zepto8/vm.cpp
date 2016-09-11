@@ -136,6 +136,7 @@ void vm::TickDraw(float seconds, lol::Scene &scene)
         m_screen[2 * n + 1] = palette[m_pal[1][data >> 4]];
     }
 
+    m_tile->GetTexture()->Bind();
     m_tile->GetTexture()->SetData(m_screen.data());
 
     int delta = (600 - 512) / 2;
