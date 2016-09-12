@@ -69,6 +69,17 @@ int vm::atan2(lol::LuaState *l)
 {
     double x = clamp64(lua_tonumber(l, 1));
     double y = clamp64(lua_tonumber(l, 2));
+
+    // Emulate the official PICO-8 behaviour (as of 0.1.9)
+    if (lol::abs(x) == 1.0 && y == -32768.0)
+    {
+        msg::debug("\x1b[93;41mcrashing due to atan2(%g,%g) call (LOL)\x1b[0m\n", x, y);
+        lol::Ticker::Shutdown();
+        lua_pushstring(l, "PICO-8 atan2() bug");
+        lua_error(l);
+        return 0;
+    }
+
     // This could simply be atan2(-y,x) but since PICO-8 decided that
     // atan2(0,0) = 0.75 we need to do the same in our version.
     double a = 0.75 + clamp64(lol::atan2(x, y) / lol::D_TAU);
