@@ -21,6 +21,7 @@ AC_LIBTOOL_CXX
 AC_CONFIG_FILES(
  [Makefile
   zepto8/Makefile
+  carts/Makefile
 ])
 
 dnl
