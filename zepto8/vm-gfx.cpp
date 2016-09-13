@@ -81,6 +81,8 @@ int vm::print(lol::LuaState *l)
 
     if (lua_isnoneornil(l, 1))
         return 0;
+    if (!lua_isstring(l, 1))
+        return 0;
 
     char const *str = lua_tostring(l, 1);
     bool use_cursor = lua_isnone(l, 2) || lua_isnone(l, 3);
