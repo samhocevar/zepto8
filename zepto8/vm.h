@@ -64,6 +64,7 @@ private:
     static int dget(lol::LuaState *l);
     static int dset(lol::LuaState *l);
     static int stat(lol::LuaState *l);
+    static int printh(lol::LuaState *l);
 
     // I/O
     static int btn(lol::LuaState *l);

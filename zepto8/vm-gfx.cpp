@@ -79,12 +79,23 @@ int vm::print(lol::LuaState *l)
 {
     vm *that = (vm *)vm::Find(l);
 
-    if (lua_isnoneornil(l, 1))
-        return 0;
-    if (!lua_isstring(l, 1))
+    if (lua_isnone(l, 1))
         return 0;
 
-    char const *str = lua_tostring(l, 1);
+    char const *str;
+    if (lua_isnil(l, 1))
+        str = "nil";
+    else if (lua_isstring(l, 1))
+        str = lua_tostring(l, 1);
+    else if (lua_istable(l, 1))
+        str = "table";
+    else if (lua_isthread(l, 1))
+        str = "thread";
+    else if (lua_isfunction(l, 1))
+        str = "function";
+    else
+        str = lua_toboolean(l, 1) ? "true" : "false";
+
     bool use_cursor = lua_isnone(l, 2) || lua_isnone(l, 3);
     int x = use_cursor ? that->m_cursor.x : lua_tonumber(l, 2);
     int y = use_cursor ? that->m_cursor.y : lua_tonumber(l, 3);

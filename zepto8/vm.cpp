@@ -160,6 +160,7 @@ const lol::LuaObjectLib* vm::GetLib()
             { "dget",     &vm::dget },
             { "dset",     &vm::dset },
             { "stat",     &vm::stat },
+            { "printh",   &vm::printh },
 
             { "btn",  &vm::btn },
             { "btnp", &vm::btnp },
@@ -373,6 +374,22 @@ int vm::stat(lol::LuaState *l)
     msg::info("z8:stub:stat\n");
     lua_pushnumber(l, 0);
     return 1;
+}
+
+int vm::printh(lol::LuaState *l)
+{
+    char const *str;
+    if (lua_isnoneornil(l, 1))
+        str = "false";
+    else if (lua_isstring(l, 1))
+        str = lua_tostring(l, 1);
+    else
+        str = lua_toboolean(l, 1) ? "true" : "false";
+
+    fprintf(stdout, "%s\n", str);
+    fflush(stdout);
+
+    return 0;
 }
 
 //

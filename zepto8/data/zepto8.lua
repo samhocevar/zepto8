@@ -14,7 +14,6 @@
 --
 -- Aliases for PICO-8 compatibility
 --
-printh = print
 count = function(a) return a ~= nil and #a or 0 end
 add = table.insert
 sub = string.sub
