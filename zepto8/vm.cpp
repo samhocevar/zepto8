@@ -265,6 +265,9 @@ int vm::run(lol::LuaState *l)
     // FIXME: not required yet because we inherit from LuaLoader
     //lol::LuaLoader lua;
 
+    // Initialise the PRNG
+    that->ExecLuaCode("srand(0)");
+
     // Execute cartridge code
     that->ExecLuaCode(new_code.C());
 

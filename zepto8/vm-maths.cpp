@@ -109,18 +109,25 @@ int vm::sgn(lol::LuaState *l)
 
 int vm::rnd(lol::LuaState *l)
 {
+    vm *that = (vm *)vm::Find(l);
+    uint32_t x = ((uint64_t)that->m_seed * 279470273ul) % 4294967291ul;
+    that->m_seed = x;
+
     /* FIXME: behaves incorrectly when b is negative */
     double a = 0.f;
     double b = lua_isnone(l, 1) ? 1.0
              : clamp64(lol::min(lua_tonumber(l, 1), 32767.99));
-    lua_pushnumber(l, clamp64(lol::rand(a, b)));
+    double c = lol::mix(a, b, x / (1.0 + (uint32_t)-1));
+    lua_pushnumber(l, clamp64(c));
     return 1;
 }
 
 int vm::srand(lol::LuaState *l)
 {
-    /* FIXME: we do nothing; is this right? */
-    lua_tonumber(l, 1);
+    vm *that = (vm *)vm::Find(l);
+    that->m_seed = double2fixed(lua_tonumber(l, 1));
+    if (that->m_seed == 0)
+        that->m_seed = 0xdeadbeef;
     return 0;
 }
 

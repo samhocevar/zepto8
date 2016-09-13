@@ -139,6 +139,7 @@ private:
     lol::Image m_font;
     cart m_cart;
 
+    uint32_t m_seed;
     uint8_t m_color;
     lol::ivec2 m_camera, m_cursor;
     lol::ibox2 m_clip;
