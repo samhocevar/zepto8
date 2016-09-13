@@ -345,7 +345,8 @@ int vm::memset(lol::LuaState *l)
     int val = lua_tonumber(l, 2);
     int size = lua_tonumber(l, 3);
 
-    if (dst >= 0 && size > 0 && dst < SIZE_MEMORY && dst + size < SIZE_MEMORY)
+    if (dst >= 0 && size > 0
+         && dst < SIZE_MEMORY && dst + size <= SIZE_MEMORY)
     {
         vm *that = (vm *)vm::Find(l);
         ::memset(that->m_memory.data() + dst, val, size);
