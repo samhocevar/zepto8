@@ -13,7 +13,7 @@
 #include <lol/engine.h>
 
 #include "code-fixer.h"
-#define WITH_PICO8
+#define WITH_PICO8 1
 #include "lua53-parse.h"
 
 using lol::String;
@@ -36,6 +36,7 @@ struct analyze_action<lua53::short_if_statement>
 {
     static void apply(pegtl::action_input const &in, code_fixer &that)
     {
+        UNUSED(that);
         msg::info("unsupported short_if_statement at line %ld:%ld: %s\n", in.line(), in.byte_in_line(), in.string().c_str());
     }
 };

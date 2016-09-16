@@ -278,7 +278,7 @@ namespace lua53
    struct expr_five : left_assoc< expr_six, pegtl::one< '&' > > {};
    struct expr_four : left_assoc< expr_five, op_one< '~', '=' > > {};
    struct expr_three : left_assoc< expr_four, pegtl::one< '|' > > {};
-#if defined WITH_PICO8
+#if WITH_PICO8
    // From the PICO-8 documentation:
    //
    //  3. != operator
@@ -291,7 +291,7 @@ namespace lua53
                                       pegtl::string< '>', '=' >,
                                       op_one< '<', '<' >,
                                       op_one< '>', '>' >,
-#if defined WITH_PICO8
+#if WITH_PICO8
                                       operator_notequal,
 #endif
                                       pegtl::string< '~', '=' > > {};
@@ -307,7 +307,7 @@ namespace lua53
    struct elseif_statement : pegtl::if_must< key_elseif, seps, expression, seps, key_then, statement_list< at_elseif_else_end > > {};
    struct else_statement : pegtl::if_must< key_else, statement_list< key_end > > {};
    struct if_statement : pegtl::if_must< key_if, seps, expression, seps, key_then, statement_list< at_elseif_else_end >, seps, pegtl::until< pegtl::sor< else_statement, key_end >, elseif_statement, seps > > {};
-#if defined WITH_PICO8
+#if WITH_PICO8
    // From the PICO-8 documentation:
    //
    // 1. IF THEN END statements on a single line can be expressed without the THEN & END
@@ -321,17 +321,14 @@ namespace lua53
    //
    //  FOR I=0,9 DO IF(I>5) PRINT(I) END    -- this is valid
    //  FOR I=0,9 DO IF(I>5) DO FOR J=0,9 IF(J>5) PRINT(J) END END  -- so is this
-   // FIXME: doesn’t work
-   struct short_if_statement : pegtl::seq< key_if, seps, bracket_expr, seps, pegtl::not_at< key_then >, pegtl::until< pegtl::at< pegtl::sor< pegtl::eolf, key_end > > > > {};
-   //struct short_if_statement : pegtl::seq< key_if, seps, bracket_expr, seps, statement_list< pegtl::eolf >, pegtl::eolf > {};
-   //struct short_if_statement : pegtl::seq< key_if, seps, bracket_expr, seps, statement_list< pegtl::sor< pegtl::at< key_end >, pegtl::eolf > > > {};
+   struct short_if_statement : pegtl::seq< key_if, seps, bracket_expr, seps, pegtl::not_at< key_then >, statement_list< pegtl::eolf > > {};
 #endif
 
    struct for_statement_one : pegtl::seq< name, seps, pegtl::one< '=' >, seps, expression, seps, pegtl::one< ',' >, seps, expression, pegtl::pad_opt< pegtl::if_must< pegtl::one< ',' >, seps, expression >, sep >, key_do, statement_list< key_end > > {};
    struct for_statement_two : pegtl::seq< name_list_must, seps, key_in, seps, expr_list_must, seps, key_do, statement_list< key_end > > {};
    struct for_statement : pegtl::if_must< key_for, seps, pegtl::sor< for_statement_one, for_statement_two > > {};
 
-#if defined WITH_PICO8
+#if WITH_PICO8
    // From the PICO-8 documentation:
    //
    //  2. unary math operators
@@ -361,7 +358,7 @@ namespace lua53
    struct semicolon : pegtl::one< ';' > {};
    struct statement : pegtl::sor< semicolon,
                                   assignments,
-#if defined WITH_PICO8
+#if WITH_PICO8
                                   reassignment,
 #endif
                                   function_call,
@@ -371,9 +368,8 @@ namespace lua53
                                   do_statement,
                                   while_statement,
                                   repeat_statement,
-#if defined WITH_PICO8
-                                  // FIXME: doesn’t work properly yet
-                                  //short_if_statement,
+#if WITH_PICO8
+                                  short_if_statement,
 #endif
                                   if_statement,
                                   for_statement,
@@ -385,7 +381,7 @@ namespace lua53
 
 } // lua53
 
-#if !defined WITH_PICO8
+#if !WITH_PICO8
 int main( int argc, char ** argv )
 {
    pegtl::analyze< lua53::grammar >();
