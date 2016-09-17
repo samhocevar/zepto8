@@ -77,7 +77,7 @@ bool cart::load_png(char const *filename)
     }
     else if (version == 1 || version >= 5)
     {
-        // Expected data length
+        // Expected data length (including trailing zero)
         int length = m_rom[OFFSET_CODE + 4] * 256
                    + m_rom[OFFSET_CODE + 5];
 
@@ -102,6 +102,9 @@ bool cart::load_png(char const *filename)
         }
         msg::info("Expected %d bytes, got %d\n", length, (int)m_code.count());
     }
+
+    // Remove possible trailing zeroes
+    m_code.resize(strlen(m_code.C()));
 
     m_version = version;
 

@@ -67,6 +67,7 @@ private:
     static int printh(lol::LuaState *l);
 
     // I/O
+    static int update_buttons(lol::LuaState *l);
     static int btn(lol::LuaState *l);
     static int btnp(lol::LuaState *l);
 

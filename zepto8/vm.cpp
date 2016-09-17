@@ -90,15 +90,7 @@ void vm::TickGame(float seconds)
 {
     lol::WorldEntity::TickGame(seconds);
 
-    // Update button state
-    for (int i = 0; i < 64; ++i)
-    {
-        if (m_controller->IsKeyPressed(i))
-            ++m_buttons[i];
-        else
-            m_buttons[i] = 0;
-    }
-
+    ExecLuaCode("_update_buttons()");
     ExecLuaCode("if _update ~= nil then _update() end");
     ExecLuaCode("if _draw ~= nil then _draw() end");
 }
@@ -162,6 +154,7 @@ const lol::LuaObjectLib* vm::GetLib()
             { "stat",     &vm::stat },
             { "printh",   &vm::printh },
 
+            { "_update_buttons", &vm::update_buttons },
             { "btn",  &vm::btn },
             { "btnp", &vm::btnp },
 
@@ -395,6 +388,22 @@ int vm::printh(lol::LuaState *l)
 //
 // I/O
 //
+
+int vm::update_buttons(lol::LuaState *l)
+{
+    vm *that = (vm *)vm::Find(l);
+
+    // Update button state
+    for (int i = 0; i < 64; ++i)
+    {
+        if (that->m_controller->IsKeyPressed(i))
+            ++that->m_buttons[i];
+        else
+            that->m_buttons[i] = 0;
+    }
+
+    return 0;
+}
 
 int vm::btn(lol::LuaState *l)
 {

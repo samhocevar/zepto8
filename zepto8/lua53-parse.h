@@ -369,7 +369,7 @@ namespace lua53
                                   while_statement,
                                   repeat_statement,
 #if WITH_PICO8
-                                  short_if_statement,
+                                  //short_if_statement,
 #endif
                                   if_statement,
                                   for_statement,

@@ -85,13 +85,13 @@ code_fixer::code_fixer(String const &code)
     // to fix it to use the old syntax, but we also have to add a carriage
     // return before it, otherwise we may end up with invalid tokens such as
     // “endif” if there is no carriage return after the last “end”.
-    static char const *invalid = "if(_update60)_update=function()_update60()_update60()end";
-    static char const *valid = "\nif(_update60)then _update=function()_update60()_update60()end end";
+    static char const *invalid = "if(_update60)_update=function()";
+    static char const *valid = "\nif(_update60)then _update=function()";
 
     int tofix = m_code.index_of(invalid);
     if (tofix != lol::INDEX_NONE)
     {
-        m_code = m_code.sub(0, tofix) + valid + m_code.sub(tofix + strlen(invalid));
+        m_code = m_code.sub(0, tofix) + valid + m_code.sub(tofix + strlen(invalid)) + " end";
     }
 }
 
