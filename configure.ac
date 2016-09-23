@@ -23,6 +23,7 @@ AC_CONFIG_HEADER(config.h)
 AC_CONFIG_FILES(
  [Makefile
   zepto8/Makefile
+  t/Makefile
   carts/Makefile
 ])
 

@@ -9,7 +9,7 @@ zepto8_SOURCES = \
     zepto8.cpp zepto8.h \
     cart.cpp cart.h \
     vm.cpp vm.h vm-maths.cpp vm-gfx.cpp \
-    code-fixer.cpp code-fixer.h lua53_parse.h
+    code-fixer.cpp code-fixer.h lua53-parse.h
 zepto8_CPPFLAGS = $(AM_CPPFLAGS)
 zepto8_LDFLAGS = $(AM_LDFLAGS)
 zepto8_DEPENDENCIES = @LOL_DEPS@
