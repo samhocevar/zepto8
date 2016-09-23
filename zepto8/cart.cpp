@@ -258,7 +258,7 @@ bool cart::load_p8(char const *filename)
 {
     lol::String s;
     lol::File f;
-    for (auto candidate : lol::System::GetPathList(filename))
+    for (auto candidate : lol::sys::get_path_list(filename))
     {
         f.Open(candidate, lol::FileAccess::Read);
         if (f.IsValid())
