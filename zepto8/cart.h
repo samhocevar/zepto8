@@ -14,6 +14,8 @@
 
 #include <lol/engine.h>
 
+#include "code-fixer.h"
+
 namespace z8
 {
 
@@ -36,6 +38,13 @@ public:
         return m_code;
     }
 
+    lol::String const &get_lua()
+    {
+        if (m_lua.count() == 0)
+            m_lua = code_fixer(m_code).fix();
+        return m_lua;
+    }
+
     int get_version() const
     {
         return m_version;
@@ -46,7 +55,7 @@ private:
     bool load_p8(char const *filename);
 
     lol::array<uint8_t> m_rom;
-    lol::String m_code;
+    lol::String m_code, m_lua;
     int m_version;
 };
 

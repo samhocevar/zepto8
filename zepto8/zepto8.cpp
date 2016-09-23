@@ -55,14 +55,9 @@ int main(int argc, char **argv)
 
     if (run_mode == mode::pico2lua)
     {
-        std::ifstream t(argv[2]);
-        std::stringstream buffer;
-        buffer << t.rdbuf();
-
-        z8::code_fixer fixer(buffer.str().c_str());
-        lol::String new_code = fixer.fix();
-
-        printf("%s", new_code.C());
+        z8::cart cart;
+        cart.load(argv[2]);
+        printf("%s", cart.get_lua().C());
     }
     else if (run_mode == mode::cart)
     {

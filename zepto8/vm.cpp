@@ -250,12 +250,6 @@ int vm::run(lol::LuaState *l)
     // clip() camera() pal() color()”
     that->ExecLuaCode("clip() camera() pal() color(1)");
 
-    // Fix code
-    code_fixer fixer(that->m_cart.get_code());
-    lol::String new_code = fixer.fix();
-
-    //msg::info("Fixed cartridge code:\n%s\n", new_code.C());
-    //printf("%s", new_code.C());
     // FIXME: not required yet because we inherit from LuaLoader
     //lol::LuaLoader lua;
 
@@ -263,7 +257,7 @@ int vm::run(lol::LuaState *l)
     that->ExecLuaCode("srand(0)");
 
     // Execute cartridge code
-    that->ExecLuaCode(new_code.C());
+    that->ExecLuaCode(that->m_cart.get_lua().C());
 
     // Run cartridge initialisation routine
     that->ExecLuaCode("if _init ~= nil then _init() end");
