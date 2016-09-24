@@ -72,8 +72,33 @@ end
 
 
 --
--- Hide these modules, they shouldnot be accessible
+-- Hide these modules, they should not be accessible
 --
 table = nil
 string = nil
 io = nil
+
+
+--
+-- Utility functions
+--
+_z8.draw = function()
+    if _draw ~= nil then _draw() end
+end
+
+_z8.doframe = true
+_z8.tick = function()
+    if _update60 ~= nil then
+        _update_buttons()
+        _update60()
+        _z8.draw()
+    elseif _update ~= nil then
+        if _z8.doframe then
+            _update_buttons()
+            _update()
+            _z8.draw()
+        end
+        _z8.doframe = ~_z8.doframe
+    end
+end
+

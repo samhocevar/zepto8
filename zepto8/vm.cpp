@@ -90,9 +90,7 @@ void vm::TickGame(float seconds)
 {
     lol::WorldEntity::TickGame(seconds);
 
-    ExecLuaCode("_update_buttons()");
-    ExecLuaCode("if _update ~= nil then _update() end");
-    ExecLuaCode("if _draw ~= nil then _draw() end");
+    ExecLuaCode("_z8.tick()");
 }
 
 void vm::TickDraw(float seconds, lol::Scene &scene)
