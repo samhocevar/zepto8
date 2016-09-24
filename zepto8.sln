@@ -14,7 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Engine", "Engine", "{1AFD58
 		msbuild\config-build.xml = msbuild\config-build.xml
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zepto8", "zepto8\zepto8.vcxproj", "{28F5DE0F-B162-4833-8F61-A1AF782850A2}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zepto8", "src\zepto8.vcxproj", "{28F5DE0F-B162-4833-8F61-A1AF782850A2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "zepto8", "zepto8", "{03B9D2E1-AFBA-4F66-8DE0-6499C9F9155F}"
 EndProject
