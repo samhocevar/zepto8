@@ -12,6 +12,9 @@
 
 #include <lol/engine.h>
 
+#include <pegtl.hh>
+#include <pegtl/trace.hh>
+
 #include "code-fixer.h"
 #define WITH_PICO8 1
 #include "lua53-parse.h"
@@ -34,9 +37,9 @@ struct analyze_action : pegtl::nothing<R> {};
 template<>
 struct analyze_action<lua53::short_if_statement>
 {
-    static void apply(pegtl::action_input const &in, code_fixer &that)
+    static void apply(pegtl::action_input const &in, code_fixer &f)
     {
-        UNUSED(that);
+        UNUSED(f);
         msg::info("unsupported short_if_statement at line %ld:%ld: %s\n", in.line(), in.byte_in_line(), in.string().c_str());
     }
 };
@@ -44,18 +47,24 @@ struct analyze_action<lua53::short_if_statement>
 template<>
 struct analyze_action<lua53::reassignment>
 {
-    static void apply(pegtl::action_input const &in, code_fixer &that)
+    static void apply(pegtl::action_input const &in, code_fixer &f)
     {
-        that.m_reassignments.push(ivec3(in.line(), in.byte_in_line(), in.size()));
+        msg::info("reassignment operator %ld:%ld byte %ld: %s\n", in.line(), in.byte_in_line(), in.byte(), in.string().c_str());
+        f.m_reassignments.push(ivec3(in.line(), in.byte_in_line(), in.size()));
     }
 };
 
 template<>
 struct analyze_action<lua53::operator_notequal>
 {
-    static void apply(pegtl::action_input const &in, code_fixer &that)
+    static void apply(pegtl::action_input const &in, code_fixer &f)
     {
-        that.m_notequals.push(ivec2(in.line(), in.byte_in_line()));
+        /* XXX: Try to remove elements that are now invalid because
+         * of backtracking. See https://github.com/ColinH/PEGTL/issues/32 */
+        while (f.m_notequals.count() &&
+               f.m_notequals.last() >= (int)in.byte())
+            f.m_notequals.pop();
+        f.m_notequals.push(in.byte());
     }
 };
 
@@ -106,24 +115,22 @@ String code_fixer::fix()
     pegtl::parse_string<lua53::grammar, analyze_action>(m_code.C(), "code", *this);
     msg::info("Code seems valid\n");
 
-    //pegtl::parse_string<lua53::grammar, translate_action>(m_code.C(), "code", *this);
+    String new_code = m_code;
 
-    String new_code;
-    auto lines = m_code.split('\n');
+    /* Fix != → ~= */
+    for (auto offset : m_notequals)
+    {
+        ASSERT(new_code[offset] == '!');
+        new_code[offset] = '~';
+    }
+
+    /* Fix a+=b → a=a+(b) etc. */
+    auto lines = new_code.split('\n');
+    new_code = "";
     for (int l = 0; l < lines.count(); ++l)
     {
         String line = lines[l];
 
-        /* Fix != → ~= */
-        for (auto item : m_notequals)
-            if (item[0] == l + 1)
-            {
-                int byte = line.index_of("!=");
-                ASSERT(byte != -1);
-                line[byte] = '~';
-            }
-
-        /* Fix a+=b → a=a+(b) etc. */
         for (auto item : m_reassignments)
             if (item[0] == l + 1)
             {

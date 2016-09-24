@@ -22,7 +22,7 @@ namespace z8
         code_fixer(lol::String const &code);
         lol::String fix();
 
-        lol::array<lol::ivec2> m_notequals;
+        lol::array<int> m_notequals;
         lol::array<lol::ivec3> m_reassignments;
 
     private:
