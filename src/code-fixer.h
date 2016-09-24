@@ -23,9 +23,13 @@ namespace z8
         lol::String fix();
 
         lol::array<int> m_notequals;
-        lol::array<lol::ivec3> m_reassignments;
+
+        lol::array<int> m_reassign_ops;
+        lol::array<lol::ivec3> m_reassigns;
 
     private:
+        void bump(int offset, int delta);
+
         lol::String m_code;
     };
 }

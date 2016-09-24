@@ -338,12 +338,14 @@ namespace lua53
    // a *= 2  -- equivalent to: a = a * 2
    // a /= 2  -- equivalent to: a = a / 2
    // a %= 2  -- equivalent to: a = a % 2
-   struct operators_reassign : pegtl::sor< pegtl::string< '+', '=' >,
-                                           pegtl::string< '-', '=' >,
-                                           pegtl::string< '*', '=' >,
-                                           pegtl::string< '/', '=' >,
-                                           pegtl::string< '%', '=' > > {};
-   struct reassignment : pegtl::seq< variable, seps, operators_reassign, seps, expr_list_must > {};
+   struct reassign_var : variable {};
+   struct reassign_op : pegtl::sor< pegtl::string< '+', '=' >,
+                                    pegtl::string< '-', '=' >,
+                                    pegtl::string< '*', '=' >,
+                                    pegtl::string< '/', '=' >,
+                                    pegtl::string< '%', '=' > > {};
+   struct reassign_expr : expr_list_must {};
+   struct reassignment : pegtl::seq< reassign_var, seps, reassign_op, seps, reassign_expr > {};
 #endif
    struct assignment_variable_list : pegtl::list_must< variable, pegtl::one< ',' >, sep > {};
    struct assignments_one : pegtl::if_must< pegtl::one< '=' >, seps, expr_list_must > {};

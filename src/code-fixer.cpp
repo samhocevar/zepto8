@@ -45,12 +45,24 @@ struct analyze_action<lua53::short_if_statement>
 };
 
 template<>
+struct analyze_action<lua53::reassign_op>
+{
+    static void apply(pegtl::action_input const &in, code_fixer &f)
+    {
+#if 0
+        msg::info("reassignment operator %ld:%ld(%ld): %s\n", in.line(), in.byte_in_line(), in.byte(), in.string().c_str());
+#endif
+        f.m_reassign_ops.push(in.byte());
+    }
+};
+
+template<>
 struct analyze_action<lua53::reassignment>
 {
     static void apply(pegtl::action_input const &in, code_fixer &f)
     {
-        msg::info("reassignment operator %ld:%ld byte %ld: %s\n", in.line(), in.byte_in_line(), in.byte(), in.string().c_str());
-        f.m_reassignments.push(ivec3(in.line(), in.byte_in_line(), in.size()));
+        lol::ivec3 pos(in.byte(), f.m_reassign_ops.pop(), in.byte() + in.size());
+        f.m_reassigns.push(pos);
     }
 };
 
@@ -72,21 +84,6 @@ struct analyze_action<lua53::operator_notequal>
 // Actions executed during translation
 //
 
-#if 0
-template<typename R>
-struct translate_action : pegtl::nothing<R> {};
-
-struct translate_action_verbatim
-{
-    static void apply(pegtl::action_input const &in, code_fixer &that)
-    {
-        printf("[%s]", in.string().c_str());
-    }
-};
-
-template<> struct translate_action<lua53::str_keyword> : translate_action_verbatim {};
-#endif
-
 code_fixer::code_fixer(String const &code)
   : m_code(code)
 {
@@ -104,10 +101,27 @@ code_fixer::code_fixer(String const &code)
     }
 }
 
+void code_fixer::bump(int offset, int delta)
+{
+    for (int &pos : m_notequals)
+        if (pos >= offset)
+            pos += delta;
+
+    for (ivec3 &pos : m_reassigns)
+    {
+        if (pos[0] >= offset)
+            pos[0] += delta;
+        if (pos[1] >= offset)
+            pos[1] += delta;
+        if (pos[2] >= offset)
+            pos[2] += delta;
+    }
+}
+
 String code_fixer::fix()
 {
     m_notequals.empty();
-    m_reassignments.empty();
+    m_reassigns.empty();
 
     msg::info("Checking grammar\n");
     pegtl::analyze< lua53::grammar >();
@@ -115,61 +129,47 @@ String code_fixer::fix()
     pegtl::parse_string<lua53::grammar, analyze_action>(m_code.C(), "code", *this);
     msg::info("Code seems valid\n");
 
-    String new_code = m_code;
-
-    /* Fix != → ~= */
-    for (auto offset : m_notequals)
-    {
-        ASSERT(new_code[offset] == '!');
-        new_code[offset] = '~';
-    }
+    String code = m_code;
 
     /* Fix a+=b → a=a+(b) etc. */
-    auto lines = new_code.split('\n');
-    new_code = "";
-    for (int l = 0; l < lines.count(); ++l)
+    for (ivec3 const &pos : m_reassigns)
     {
-        String line = lines[l];
-
-        for (auto item : m_reassignments)
-            if (item[0] == l + 1)
-            {
-                for (int byte = item[1]; byte < line.count(); ++byte)
-                {
-                    if (line[byte] == '=' && strchr("+-*/%", line[byte - 1]))
-                    {
-                        line = String::format("%s=%s%c(%s)%s",
-                                              line.sub(0, byte - 1).C(),
-                                              line.sub(item[1], byte - 1 - item[1]).C(),
-                                              line[byte - 1],
-                                              line.sub(byte + 1, item[1] + item[2] - byte - 1).C(),
-                                              line.sub(item[1] + item[2]).C());
-                        break;
-                    }
-                }
-            }
-
-        new_code += line + '\n';
-    }
-
-    return new_code;
-}
+        ASSERT(code[pos[1]] == '+' ||
+               code[pos[1]] == '-' ||
+               code[pos[1]] == '*' ||
+               code[pos[1]] == '/' ||
+               code[pos[1]] == '%');
+        ASSERT(code[pos[1] + 1] == '=');
 
 #if 0
-size_t code_fixer::pos_to_offset(size_t line, size_t byte_in_line)
-{
-    char const *parser = m_code.C();
-    for (; line > 1; --line)
-    {
-        char const *eol = strchr(parser, '\n');
-        if (eol == nullptr)
-            return parser - m_code.C();
-        parser = eol + 1;
-    }
-
-    return (parser - m_code.C()) + byte_in_line - 1;
-}
+        String var = code.sub(pos[0], pos[1] - pos[0]);
+        String op = code.sub(pos[1], 2);
+        String arg = code.sub(pos[1] + 2, pos[2] - pos[1] - 2);
+        msg::info("Reassignment %d/%d/%d: “%s”  “%s”  “%s”\n", pos[0], pos[1], pos[2], var.C(), op.C(), arg.C());
 #endif
 
+        /* 1. build the string ‘=a+(b)’ */
+        String dst = "=" // FIXME: Lol Engine is missing +(char,String)
+                   + code.sub(pos[0], pos[1] - pos[0])
+                   + code[pos[1]]
+                   + '(' + code.sub(pos[1] + 2, pos[2] - pos[1] - 2) + ')';
+
+        /* 2. insert that string where ‘+=b’ is currently */
+        code = code.sub(0, pos[1])
+                 + dst
+                 + code.sub(pos[2]);
+        bump(pos[1] + 2, dst.count() - (pos[2] - pos[1]));
+    }
+
+    /* Fix != → ~= */
+    for (int const &offset : m_notequals)
+    {
+        ASSERT(code[offset] == '!');
+        code[offset] = '~';
+    }
+
+    return code;
 }
+
+} // namespace z8
 
