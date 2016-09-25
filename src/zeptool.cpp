@@ -22,11 +22,25 @@
 #include "zepto8.h"
 #include "vm.h"
 
+enum class mode
+{
+    cart,
+    pico2lua,
+};
+
+static void usage()
+{
+    printf("Usage: zeptool --pico2lua <cart>\n");
+}
+
 int main(int argc, char **argv)
 {
     lol::sys::init(argc, argv);
 
     lol::getopt opt(argc, argv);
+    opt.add_opt(128, "pico2lua", true);
+
+    mode run_mode = mode::cart;
 
     for (;;)
     {
@@ -36,21 +50,25 @@ int main(int argc, char **argv)
 
         switch (c)
         {
+        case 128: /* --pico2lua */
+            run_mode = mode::pico2lua;
+            break;
         default:
             return EXIT_FAILURE;
         }
     }
 
-    if (argc < 2)
+    if (run_mode == mode::pico2lua)
+    {
+        z8::cart cart;
+        cart.load(argv[2]);
+        printf("%s", cart.get_lua().C());
+    }
+    else
+    {
+        usage();
         return EXIT_FAILURE;
-
-    lol::Application app("zepto-8", lol::ivec2(600, 600), 60.0f);
-
-    z8::vm *vm = new z8::vm();
-    vm->load(argv[1]);
-    vm->run();
-
-    app.Run();
+    }
 
     return EXIT_SUCCESS;
 }
