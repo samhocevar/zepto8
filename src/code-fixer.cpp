@@ -93,7 +93,7 @@ struct analyze_action<lua53::reassign_op>
 };
 
 template<>
-struct analyze_action<lua53::reassignment>
+struct analyze_action<lua53::reassign_body>
 {
     static void apply(pegtl::action_input const &in, code_fixer &f)
     {

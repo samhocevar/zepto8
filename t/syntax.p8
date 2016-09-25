@@ -91,6 +91,11 @@ fixture "t2.11" -- nested reassignments and ugliness!
 x+=1x+=(function(x)x+=1x+=x return x end)(1)
 test_equal(x, 5)
 
+fixture "t2.12"
+do a=1 local a+=2 x=a end
+test_equal(x, 3)
+  
+
 --
 -- t3. check several variations of if/then or if without then
 --

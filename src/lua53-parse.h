@@ -395,7 +395,8 @@ namespace lua53
                                     pegtl::string< '/', '=' >,
                                     pegtl::string< '%', '=' > > {};
    struct reassign_expr : expr_list_must {};
-   struct reassignment : pegtl::seq< reassign_var, seps, reassign_op, seps, reassign_expr > {};
+   struct reassign_body : pegtl::seq< reassign_var, seps, reassign_op, seps, reassign_expr > {};
+   struct reassignment : pegtl::seq< pegtl::opt< key_local, seps >, reassign_body > {};
 #endif
    struct assignment_variable_list : pegtl::list_must< variable, pegtl::one< ',' >, sep > {};
    struct assignments_one : pegtl::if_must< pegtl::one< '=' >, seps, expr_list_must > {};
