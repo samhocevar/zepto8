@@ -155,22 +155,31 @@ void code_fixer::bump(int offset, int delta)
 
 String code_fixer::fix()
 {
+    String code = m_code;
+
+    /* PNG carts have a “if(_update60)_update…” code snippet added by PICO-8
+     * for backwards compatibility. But some buggy versions apparently miss
+     * a carriage return or space, leading to syntax errors or maybe this
+     * code being lost in a comment. */
+    int index = code.last_index_of("if(_update60)_update");
+    if (index > 0 && code[index] != '\n')
+        code = code.sub(0, index) + '\n' + code.sub(index);
+
 #if 0
+    /* Some useful debugging code when tweaking the grammar */
     msg::info("Checking grammar\n");
     pegtl::analyze< lua53::grammar >();
     int y = 0;
-    for (auto line : m_code.split('\n'))
+    for (auto line : code.split('\n'))
         msg::info("% 4d: %s\n", y++, line.C());
     msg::info("Checking code\n");
-    pegtl::trace_string<lua53::grammar, analyze_action>(m_code.C(), "code", *this);
+    pegtl::trace_string<lua53::grammar, analyze_action>(code.C(), "code", *this);
 #endif
 
     m_notequals.empty();
     m_reassigns.empty();
     m_short_ifs.empty();
-    pegtl::parse_string<lua53::grammar, analyze_action>(m_code.C(), "code", *this);
-
-    String code = m_code;
+    pegtl::parse_string<lua53::grammar, analyze_action>(code.C(), "code", *this);
 
     /* Fix a+=b → a=a+(b) etc. */
     for (ivec3 const &pos : m_reassigns)
