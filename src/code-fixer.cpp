@@ -67,12 +67,12 @@ template<typename R>
 struct analyze_action : pegtl::nothing<R> {};
 
 template<>
-struct analyze_action<lua53::short_if_tail>
+struct analyze_action<lua53::short_if_body>
 {
     static void apply(pegtl::action_input const &in, code_fixer &f)
     {
 #if 0
-        msg::info("short_if_tail at line %ld:%ld(%ld): %s\n", in.line(), in.byte_in_line(), in.byte(), in.string().c_str());
+        msg::info("short_if_body at line %ld:%ld(%ld): %s\n", in.line(), in.byte_in_line(), in.byte(), in.string().c_str());
 #endif
         lol::ivec2 pos(in.byte(), in.byte() + in.size());
         // FIXME: push_unique is a hack; we need to ensure single step
