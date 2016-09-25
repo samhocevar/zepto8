@@ -246,9 +246,12 @@ int vm::run(lol::LuaState *l)
 
     ::memset(that->m_buttons, 0, sizeof(that->m_buttons));
 
+    // From the PICO-8 documentation:
     // “The draw state is reset each time a program is run. This is equivalent to calling:
     // clip() camera() pal() color()”
-    that->ExecLuaCode("clip() camera() pal() color(1)");
+    //
+    // Note from Sam: this should probably be color(6) instead.
+    that->ExecLuaCode("clip() camera() pal() color(6)");
 
     // FIXME: not required yet because we inherit from LuaLoader
     //lol::LuaLoader lua;
