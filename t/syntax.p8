@@ -93,12 +93,49 @@ test_equal(x, 5)
 -- TODO: Check several variations of if/then or if without then
 --
 
---fixture("t3.01")
---if (x == 0) then x=1 end
---if (x == 1) x=2
---if (x != 2) then x=2 else x=3 end
---if (x != 3) x=3 else x=4
---test_equal(x, 4)
+fixture("t3.01")
+if (x == 0) x = 1
+test_equal(x, 1)
+
+fixture("t3.02")
+if (x == 0) x = 1 if (x == 1) x = 2
+test_equal(x, 2)
+
+fixture("t3.03")
+for i=0,9 do if (i != 0) x = i end
+test_equal(x, 9)
+
+fixture("t3.04")
+for i=0,9 do if (i > 5) for j=0,9 do if (j > 5) x = i + j end end
+test_equal(x, 18)
+
+fixture("t3.05")
+if ((x == 0)
+  ) then x = 1 end
+test_equal(x, 1)
+
+fixture("t3.06")
+if ((x != 1) and
+    (x != 2)) then x = 1 end
+test_equal(x, 1)
+
+fixture("t3.07")
+function f()
+   if (x != 0) return
+   x = 1
+end
+f()
+test_equal(x, 1)
+
+fixture("t3.08")
+if (true) or (true) then
+    x = 1
+end
+test_equal(x, 1)
+
+--
+-- Print report
+--
 
 summary()
 

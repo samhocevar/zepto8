@@ -93,7 +93,13 @@ namespace lua53
    struct long_string : pegtl::raw_string< '[', '=', ']' > {};
    struct comment : pegtl::disable< pegtl::two< '-' >, pegtl::sor< long_string, short_comment > > {};
 
+#if WITH_PICO8
+   struct sep_normal : pegtl::sor< pegtl::ascii::space, comment > {};
+   struct sep_horiz : pegtl::ascii::blank {};
+   struct sep;
+#else
    struct sep : pegtl::sor< pegtl::ascii::space, comment > {};
+#endif
    struct seps : pegtl::star< sep > {};
 
    struct str_and : pegtl_string_t( "and" ) {};
@@ -307,6 +313,7 @@ namespace lua53
    struct elseif_statement : pegtl::if_must< key_elseif, seps, expression, seps, key_then, statement_list< at_elseif_else_end > > {};
    struct else_statement : pegtl::if_must< key_else, statement_list< key_end > > {};
    struct if_statement : pegtl::if_must< key_if, seps, expression, seps, key_then, statement_list< at_elseif_else_end >, seps, pegtl::until< pegtl::sor< else_statement, key_end >, elseif_statement, seps > > {};
+
 #if WITH_PICO8
    // From the PICO-8 documentation:
    //
@@ -319,9 +326,25 @@ namespace lua53
    //
    // From Sam’s observations:
    //
-   //  FOR I=0,9 DO IF(I>5) PRINT(I) END    -- this is valid
-   //  FOR I=0,9 DO IF(I>5) DO FOR J=0,9 IF(J>5) PRINT(J) END END  -- so is this
-   struct short_if_statement : pegtl::seq< key_if, seps, bracket_expr, seps, pegtl::not_at< key_then >, statement_list< pegtl::eolf > > {};
+   //  for i=0,9 do if(i>5) print(i) end    -- this is valid
+   //  for i=0,9 do if(i>5) for j=0,9 do if(j>5) print(j) end end   -- so is this
+   //
+   // Parsing strategy is to match “if”, verify that this is not a standard
+   // “if-then”, temporarily disable CRLF, match “if (expression)”, then match
+   // either:
+   //  - any number of statements followed by a return statement
+   //  - at least one statement followed by any number of statements
+   // Once the match is performed, we re-enable CRLF (even when rule failed).
+   struct short_if_tail_one : pegtl::seq< seps, pegtl::until< pegtl::if_must< key_return, statement_return >, statement, seps > > {};
+   struct short_if_tail_two : pegtl::seq< seps, statement, seps, pegtl::until< pegtl::sor< pegtl::eof, pegtl::not_at< statement > >, statement, seps > > {};
+   struct short_if_tail : pegtl::sor< short_if_tail_one, short_if_tail_two > {};
+
+   template<bool B> struct disable_crlf;
+   struct short_if_statement : pegtl::seq< key_if, seps,
+                                           pegtl::not_at< pegtl::seq< expression, seps, key_then > >,
+                                           disable_crlf< true >,
+                                           pegtl::sor< pegtl::seq< pegtl::try_catch< bracket_expr >, seps, short_if_tail, disable_crlf< false > >,
+                                                       pegtl::seq< disable_crlf< false >, pegtl::failure > > > {};
 #endif
 
    struct for_statement_one : pegtl::seq< name, seps, pegtl::one< '=' >, seps, expression, seps, pegtl::one< ',' >, seps, expression, pegtl::pad_opt< pegtl::if_must< pegtl::one< ',' >, seps, expression >, sep >, key_do, statement_list< key_end > > {};
@@ -371,7 +394,7 @@ namespace lua53
                                   while_statement,
                                   repeat_statement,
 #if WITH_PICO8
-                                  //short_if_statement,
+                                  short_if_statement,
 #endif
                                   if_statement,
                                   for_statement,

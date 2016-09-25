@@ -27,6 +27,9 @@ namespace z8
         lol::array<int> m_reassign_ops;
         lol::array<lol::ivec3> m_reassigns;
 
+        int m_disable_crlf = 0;
+        lol::array<lol::ivec2> m_short_ifs;
+
     private:
         void bump(int offset, int delta);
 
