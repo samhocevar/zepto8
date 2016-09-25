@@ -94,7 +94,12 @@ namespace lua53
    struct comment : pegtl::disable< pegtl::two< '-' >, pegtl::sor< long_string, short_comment > > {};
 
 #if WITH_PICO8
-   struct sep_normal : pegtl::sor< pegtl::ascii::space, comment > {};
+   // PICO-8 accepts “//” as a comment prefix, too, but doesn’t accept
+   // multiline long strings in this variation
+   struct cpp_comment : pegtl::disable< pegtl::two< '/' >, short_comment > {};
+
+   // We need to be able to switch separator parsing to single-line
+   struct sep_normal : pegtl::sor< pegtl::ascii::space, comment, cpp_comment > {};
    struct sep_horiz : pegtl::ascii::blank {};
    struct sep;
 #else
@@ -275,8 +280,15 @@ namespace lua53
    struct expr_eleven : pegtl::seq< expr_twelve, seps, pegtl::opt< pegtl::one< '^' >, seps, expr_ten, seps > > {};
    struct unary_apply : pegtl::if_must< unary_operators, seps, expr_ten, seps > {};
    struct expr_ten : pegtl::sor< unary_apply, expr_eleven > {};
+#if WITH_PICO8
+   // PICO-8 doesn’t accept “//” as an operator and instead uses it
+   // as a C++-like comment delimiter, so we only support “/” here
+   // and we prevent it from matching “//”.
+   struct operators_nine : pegtl::sor< op_one< '/', '/' >,
+#else
    struct operators_nine : pegtl::sor< pegtl::two< '/' >,
                                        pegtl::one< '/' >,
+#endif
                                        pegtl::one< '*' >,
                                        pegtl::one< '%' > > {};
    struct expr_nine : left_assoc< expr_ten, operators_nine > {};

@@ -115,7 +115,20 @@ struct analyze_action<lua53::operator_notequal>
         while (f.m_notequals.count() &&
                f.m_notequals.last() >= (int)in.byte())
             f.m_notequals.pop();
-        f.m_notequals.push_unique(in.byte());
+        f.m_notequals.push(in.byte());
+    }
+};
+
+template<>
+struct analyze_action<lua53::cpp_comment>
+{
+    static void apply(pegtl::action_input const &in, code_fixer &f)
+    {
+        /* FIXME: see above for why this loop */
+        while (f.m_cpp_comments.count() &&
+               f.m_cpp_comments.last() >= (int)in.byte())
+            f.m_cpp_comments.pop();
+        f.m_cpp_comments.push(in.byte());
     }
 };
 
@@ -131,6 +144,10 @@ code_fixer::code_fixer(String const &code)
 void code_fixer::bump(int offset, int delta)
 {
     for (int &pos : m_notequals)
+        if (pos >= offset)
+            pos += delta;
+
+    for (int &pos : m_cpp_comments)
         if (pos >= offset)
             pos += delta;
 
@@ -171,12 +188,13 @@ String code_fixer::fix()
     pegtl::analyze< lua53::grammar >();
     int y = 0;
     for (auto line : code.split('\n'))
-        msg::info("% 4d: %s\n", y++, line.C());
+        msg::info("%4d: %s\n", y++, line.C());
     msg::info("Checking code\n");
     pegtl::trace_string<lua53::grammar, analyze_action>(code.C(), "code", *this);
 #endif
 
     m_notequals.empty();
+    m_cpp_comments.empty();
     m_reassigns.empty();
     m_short_ifs.empty();
     pegtl::parse_string<lua53::grammar, analyze_action>(code.C(), "code", *this);
@@ -215,7 +233,17 @@ String code_fixer::fix()
     for (int const &offset : m_notequals)
     {
         ASSERT(code[offset] == '!');
+        ASSERT(code[offset + 1] == '=');
         code[offset] = '~';
+    }
+
+    /* Fix // → -- */
+    for (int const &offset : m_cpp_comments)
+    {
+        ASSERT(code[offset] == '/');
+        ASSERT(code[offset + 1] == '/');
+        code[offset] = '-';
+        code[offset + 1] = '-';
     }
 
     /* Fix if(x)y → if(x)then y end */

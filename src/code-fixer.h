@@ -23,6 +23,7 @@ namespace z8
         lol::String fix();
 
         lol::array<int> m_notequals;
+        lol::array<int> m_cpp_comments;
 
         lol::array<int> m_reassign_ops;
         lol::array<lol::ivec3> m_reassigns;
