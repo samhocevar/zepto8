@@ -355,10 +355,10 @@ namespace lua53
    struct short_if_body : pegtl::seq< short_if_tail, seps, pegtl::if_then_else< key_else, short_if_tail, pegtl::success > > {};
 
    template<bool B> struct disable_crlf;
-   struct short_if_statement : pegtl::seq< key_if, seps,
-                                           pegtl::not_at< pegtl::seq< expression, seps, key_then > >,
+   struct short_if_statement : pegtl::seq< key_if,
+                                           pegtl::not_at< pegtl::seq< seps, expression, seps, key_then > >,
                                            disable_crlf< true >,
-                                           pegtl::sor< pegtl::seq< pegtl::try_catch< bracket_expr >, seps, short_if_body, disable_crlf< false > >,
+                                           pegtl::sor< pegtl::seq< seps, pegtl::try_catch< bracket_expr >, seps, short_if_body, disable_crlf< false > >,
                                                        pegtl::seq< disable_crlf< false >, pegtl::failure > > > {};
 #endif
 
