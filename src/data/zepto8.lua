@@ -98,7 +98,7 @@ _z8.tick = function()
             _update()
             _z8.draw()
         end
-        _z8.doframe = ~_z8.doframe
+        _z8.doframe = not _z8.doframe
     end
 end
 

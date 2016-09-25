@@ -141,6 +141,8 @@ const lol::LuaObjectLib* vm::GetLib()
         // Statics
         {
             { "run",      &vm::run },
+            { "flip",     &vm::flip },
+            { "menuitem", &vm::menuitem },
             { "cartdata", &vm::cartdata },
             { "reload",   &vm::reload },
             { "peek",     &vm::peek },
@@ -260,6 +262,22 @@ int vm::run(lol::LuaState *l)
     // Run cartridge initialisation routine
     that->ExecLuaCode("if _init ~= nil then _init() end");
 
+    return 0;
+}
+
+int vm::flip(lol::LuaState *l)
+{
+    // Only print stub message the first time, or we’ll flood the console
+    static bool show_stub = true;
+    if (show_stub)
+        msg::info("z8:stub:flip\n");
+    show_stub = false;
+    return 0;
+}
+
+int vm::menuitem(lol::LuaState *l)
+{
+    msg::info("z8:stub:menuitem\n");
     return 0;
 }
 

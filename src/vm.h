@@ -54,6 +54,8 @@ public:
 private:
     // System
     static int run(lol::LuaState *l);
+    static int flip(lol::LuaState *l);
+    static int menuitem(lol::LuaState *l);
     static int cartdata(lol::LuaState *l);
     static int reload(lol::LuaState *l);
     static int peek(lol::LuaState *l);
