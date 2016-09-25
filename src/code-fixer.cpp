@@ -199,6 +199,35 @@ String code_fixer::fix()
     m_short_ifs.empty();
     pegtl::parse_string<lua53::grammar, analyze_action>(code.C(), "code", *this);
 
+    /* Fix if(x)y → if(x)then y end */
+    for (ivec2 const &pos : m_short_ifs)
+    {
+        code = code.sub(0, pos[0])
+             + " then "
+             + code.sub(pos[0], pos[1] - pos[0])
+             + " end "
+             + code.sub(pos[1]);
+
+        bump(pos[0], 6);
+        bump(pos[1], 5);
+    }
+
+    /* Fix != → ~= */
+    for (int const &pos : m_notequals)
+    {
+        ASSERT(code[pos] == '!' && code[pos + 1] == '=',
+               "invalid operator %c%c", code[pos], code[pos + 1]);
+        code[pos] = '~';
+    }
+
+    /* Fix // → -- */
+    for (int const &pos : m_cpp_comments)
+    {
+        ASSERT(code[pos] == '/' && code[pos + 1] == '/',
+               "invalid operator %c%c", code[pos], code[pos + 1]);
+        code[pos] = code[pos + 1] = '-';
+    }
+
     /* Fix a+=b → a=a+(b) etc. */
     for (ivec3 const &pos : m_reassigns)
     {
@@ -215,7 +244,7 @@ String code_fixer::fix()
         String var = code.sub(pos[0], pos[1] - pos[0]);
         String op = code.sub(pos[1], 2);
         String arg = code.sub(pos[1] + 2, pos[2] - pos[1] - 2);
-        msg::info("Reassignment %d/%d/%d: “%s”  “%s”  “%s”\n", pos[0], pos[1], pos[2], var.C(), op.C(), arg.C());
+        msg::info("Reassignment %d/%d/%d: “%s” “%s” “%s”\n", pos[0], pos[1], pos[2], var.C(), op.C(), arg.C());
 #endif
 
         /* 1. build the string ‘=a+(b)’ */
@@ -226,37 +255,8 @@ String code_fixer::fix()
 
         /* 2. insert that string where ‘+=b’ is currently */
         code = code.sub(0, pos[1]) + dst + code.sub(pos[2]);
+        /* XXX: this bump will mess up what’s between pos[1] and pos[2] */
         bump(pos[1] + 2, dst.count() - (pos[2] - pos[1]));
-    }
-
-    /* Fix != → ~= */
-    for (int const &offset : m_notequals)
-    {
-        ASSERT(code[offset] == '!');
-        ASSERT(code[offset + 1] == '=');
-        code[offset] = '~';
-    }
-
-    /* Fix // → -- */
-    for (int const &offset : m_cpp_comments)
-    {
-        ASSERT(code[offset] == '/');
-        ASSERT(code[offset + 1] == '/');
-        code[offset] = '-';
-        code[offset + 1] = '-';
-    }
-
-    /* Fix if(x)y → if(x)then y end */
-    for (ivec2 const &pos : m_short_ifs)
-    {
-        code = code.sub(0, pos[0])
-             + " then "
-             + code.sub(pos[0], pos[1] - pos[0])
-             + " end "
-             + code.sub(pos[1]);
-
-        bump(pos[0], 6);
-        bump(pos[1], 5);
     }
 
     return code;

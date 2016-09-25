@@ -149,6 +149,18 @@ if (x == 0) x = 1-- intrusive comment
 test_equal(x, 1)
 
 --
+-- t4. check that C++ comments work properly
+--
+
+fixture "t4.01"
+x = 4 // 2
+test_equal(x, 4)
+
+fixture "t4.02"
+x += 4//2
+test_equal(x, 4)
+
+--
 -- print report
 --
 
