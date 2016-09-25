@@ -250,7 +250,13 @@ namespace lua53
    template< typename S, typename O >
    struct right_assoc : pegtl::seq< S, seps, pegtl::opt< pegtl::if_must< O, seps, right_assoc< S, O > > > > {};
 
+#if WITH_PICO8
+   // Prevent “--” from matching two consecutive “-” when comments
+   // and CRLF are disabled.
+   struct unary_operators : pegtl::sor< op_one< '-', '-' >,
+#else
    struct unary_operators : pegtl::sor< pegtl::one< '-' >,
+#endif
                                         pegtl::one< '#' >,
                                         op_one< '~', '=' >,
                                         key_not > {};
@@ -274,8 +280,15 @@ namespace lua53
                                        pegtl::one< '*' >,
                                        pegtl::one< '%' > > {};
    struct expr_nine : left_assoc< expr_ten, operators_nine > {};
+#if WITH_PICO8
+   // Prevent “--” from matching two consecutive “-” when comments
+   // and CRLF are disabled.
+   struct operators_eight : pegtl::sor< pegtl::one< '+' >,
+                                        op_one< '-', '-' > > {};
+#else
    struct operators_eight : pegtl::sor< pegtl::one< '+' >,
                                         pegtl::one< '-' > > {};
+#endif
    struct expr_eight : left_assoc< expr_nine, operators_eight > {};
    struct expr_seven : right_assoc< expr_eight, op_two< '.', '.', '.' > > {};
    struct operators_six : pegtl::sor< pegtl::two< '<' >,

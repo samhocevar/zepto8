@@ -133,6 +133,14 @@ if (true) or (true) then
 end
 test_equal(x, 1)
 
+fixture("t3.09")
+if (x == 1) x = 0 else x = 1
+test_equal(x, 1)
+
+fixture("t3.10")
+if (x == 0) x = 1-- intrusive comment
+test_equal(x, 1)
+
 --
 -- Print report
 --
