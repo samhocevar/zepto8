@@ -14,24 +14,44 @@
 --
 -- Aliases for PICO-8 compatibility
 --
-count = function(a) return a ~= nil and #a or 0 end
-add = table.insert
-sub = string.sub
+do
+    -- use closure so that we don’t need “table” later
+    local insert = table.insert
+    local remove = table.remove
 
---
--- According to https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0 :
---  coroutine.[create|resume|status|yield]() was removed in 0.1.3 but added
---  in 0.1.6 as coroutine(), cocreate(), coresume(), costatus() and yield()
---  respectively.
---
-cocreate = coroutine.create
-coresume = coroutine.resume
-costatus = coroutine.status
-yield = coroutine.yield
-coroutine.create = nil
-coroutine.resume = nil
-coroutine.status = nil
-coroutine.yield = nil
+    count = function(a) return a ~= nil and #a or 0 end
+    add = function(a, x) if a ~= nil then insert(a, x) end end
+    sub = string.sub
+
+    foreach = function(t, f)
+        for k, v in ipairs(t) do f(v) end
+    end
+
+    all = function(a)
+        local i, n = 0, a ~= nil and #a or 0
+        return function() i = i + 1 if i <= n then return a[i] end end
+    end
+
+    del = function(t, v)
+        if t ~= nil then
+            for k, v2 in ipairs(t) do
+                if v == v2 then remove(t, k) return end
+            end
+        end
+    end
+
+    -- According to https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0 :
+    --  coroutine.[create|resume|status|yield]() was removed in 0.1.3 but added
+    --  in 0.1.6 as coroutine(), cocreate(), coresume(), costatus() and yield()
+    --  respectively.
+    cocreate = coroutine.create
+    coresume = coroutine.resume
+    costatus = coroutine.status
+    yield = coroutine.yield
+
+    -- Backward compatibility for old PICO-8 versions
+    mapdraw = map
+end
 
 
 --
@@ -44,39 +64,12 @@ _G = nil
 
 
 --
--- Backward compatibility for old PICO-8 versions
---
-mapdraw = map
-
-
---
--- These are easily implemented in Lua
---
-function foreach(t, f)
-    for k, v in ipairs(t) do f(v) end
-end
-
-function all(a)
-    local i, n = 0, a ~= nil and #a or 0
-    return function() i = i + 1 if i <= n then return a[i] end end
-end
-
-_z8.remove = table.remove
-function del(t, v)
-    if t ~= nil then
-        for k, v2 in ipairs(t) do
-            if v == v2 then _z8.remove(t, k) return end
-        end
-    end
-end
-
-
---
 -- Hide these modules, they should not be accessible
 --
 table = nil
 string = nil
 io = nil
+coroutine = nil
 
 
 --
