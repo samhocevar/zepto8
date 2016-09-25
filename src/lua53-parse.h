@@ -372,6 +372,19 @@ namespace lua53
                                            disable_crlf< true >,
                                            pegtl::sor< pegtl::seq< seps, pegtl::try_catch< bracket_expr >, seps, short_if_body, disable_crlf< false > >,
                                                        pegtl::seq< disable_crlf< false >, pegtl::failure > > > {};
+
+   // Undocumented feature: short print
+   //
+   // If a line starts with “?” then the rest of the line is used as arguments
+   // to the print() function. The line must not start with whitespace.
+   struct query : pegtl::one< '?' > {};
+   struct query_at_sol;
+
+   struct short_print : pegtl::seq< query_at_sol,
+                                    disable_crlf< true >,
+                                    pegtl::sor< pegtl::seq< seps, pegtl::try_catch< expr_list_must >, seps, disable_crlf< false > >,
+                                                pegtl::seq< disable_crlf< false >, pegtl::failure > >,
+                                    pegtl::at< pegtl::sor< pegtl::eolf, comment, cpp_comment > > > {};
 #endif
 
    struct for_statement_one : pegtl::seq< name, seps, pegtl::one< '=' >, seps, expression, seps, pegtl::one< ',' >, seps, expression, pegtl::pad_opt< pegtl::if_must< pegtl::one< ',' >, seps, expression >, sep >, key_do, statement_list< key_end > > {};
@@ -413,6 +426,7 @@ namespace lua53
                                   assignments,
 #if WITH_PICO8
                                   reassignment,
+                                  short_print,
 #endif
                                   function_call,
                                   label_statement,

@@ -42,15 +42,26 @@ struct disable_crlf
 
 struct sep
 {
-    using analyze_t = lua53::sep_normal::analyze_t;
+    using analyze_t = sep_normal::analyze_t;
 
     template< pegtl::apply_mode A, template< typename ... > class Action, template< typename ... > class Control, typename Input >
     static bool match(Input & in, z8::code_fixer &f)
     {
         if (f.m_disable_crlf > 0)
-            return lua53::sep_horiz::match(in);
+            return sep_horiz::match(in);
 
-        return lua53::sep_normal::match<A, Action, Control>(in, f);
+        return sep_normal::match<A, Action, Control>(in, f);
+    }
+};
+
+struct query_at_sol
+{
+    using analyze_t = query::analyze_t;
+
+    template< pegtl::apply_mode A, template< typename ... > class Action, template< typename ... > class Control, typename Input >
+    static bool match(Input & in, z8::code_fixer &)
+    {
+        return in.byte_in_line() == 0 && query::match(in);
     }
 };
 
@@ -65,6 +76,20 @@ namespace z8
 
 template<typename R>
 struct analyze_action : pegtl::nothing<R> {};
+
+template<>
+struct analyze_action<lua53::short_print>
+{
+    static void apply(pegtl::action_input const &in, code_fixer &f)
+    {
+#if 0
+        msg::info("short_print at line %ld:%ld(%ld): %s\n", in.line(), in.byte_in_line(), in.byte(), in.string().c_str());
+#endif
+        lol::ivec2 pos(in.byte(), in.byte() + in.size());
+        // FIXME: push_unique is a hack; we need to ensure single step
+        f.m_short_prints.push_unique(pos);
+    }
+};
 
 template<>
 struct analyze_action<lua53::short_if_body>
@@ -144,29 +169,28 @@ code_fixer::code_fixer(String const &code)
 void code_fixer::bump(int offset, int delta)
 {
     for (int &pos : m_notequals)
-        if (pos >= offset)
-            pos += delta;
+        if (pos >= offset) pos += delta;
 
     for (int &pos : m_cpp_comments)
-        if (pos >= offset)
-            pos += delta;
+        if (pos >= offset) pos += delta;
 
     for (ivec3 &pos : m_reassigns)
     {
-        if (pos[0] >= offset)
-            pos[0] += delta;
-        if (pos[1] >= offset)
-            pos[1] += delta;
-        if (pos[2] >= offset)
-            pos[2] += delta;
+        if (pos[0] >= offset) pos[0] += delta;
+        if (pos[1] >= offset) pos[1] += delta;
+        if (pos[2] > offset) pos[2] += delta;
+    }
+
+    for (ivec2 &pos : m_short_prints)
+    {
+        if (pos[0] >= offset) pos[0] += delta;
+        if (pos[1] > offset) pos[1] += delta;
     }
 
     for (ivec2 &pos : m_short_ifs)
     {
-        if (pos[0] >= offset)
-            pos[0] += delta;
-        if (pos[1] >= offset)
-            pos[1] += delta;
+        if (pos[0] >= offset) pos[0] += delta;
+        if (pos[1] > offset) pos[1] += delta;
     }
 }
 
@@ -196,6 +220,7 @@ String code_fixer::fix()
     m_notequals.empty();
     m_cpp_comments.empty();
     m_reassigns.empty();
+    m_short_prints.empty();
     m_short_ifs.empty();
     pegtl::parse_string<lua53::grammar, analyze_action>(code.C(), "code", *this);
 
@@ -210,6 +235,20 @@ String code_fixer::fix()
 
         bump(pos[0], 6);
         bump(pos[1], 5);
+    }
+
+    /* Fix ?… → print(…) */
+    for (ivec2 const &pos : m_short_prints)
+    {
+        ASSERT(code[pos[0]] == '?')
+        code = code.sub(0, pos[0])
+             + "print("
+             + code.sub(pos[0] + 1, pos[1] - pos[0] - 1)
+             + ")"
+             + code.sub(pos[1]);
+
+        bump(pos[0], 5); // len("print(") - len("?")
+        bump(pos[1], 1); // len(")")
     }
 
     /* Fix != → ~= */

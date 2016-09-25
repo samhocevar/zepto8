@@ -148,6 +148,10 @@ fixture "t3.10"
 if (x == 0) x = 1-- intrusive comment
 test_equal(x, 1)
 
+fixture "t3.11"
+if (x == 0) x = 1// intrusive comment
+test_equal(x, 1)
+
 --
 -- t4. check that C++ comments work properly
 --
@@ -159,6 +163,21 @@ test_equal(x, 4)
 fixture "t4.02"
 x += 4//2
 test_equal(x, 4)
+
+--
+-- t5. check that short prints are supported
+
+fixture "t5.01"
+?""
+test_equal(true, true)
+
+fixture "t5.02"
+?""-- intrusive comment
+test_equal(true, true)
+
+fixture "t5.03"
+?""// intrusive comment
+test_equal(true, true)
 
 --
 -- print report

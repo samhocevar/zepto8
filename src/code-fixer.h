@@ -30,6 +30,7 @@ namespace z8
 
         int m_disable_crlf = 0;
         lol::array<lol::ivec2> m_short_ifs;
+        lol::array<lol::ivec2> m_short_prints;
 
     private:
         void bump(int offset, int delta);
