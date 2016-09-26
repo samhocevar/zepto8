@@ -31,11 +31,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="player.cpp" />
-    <ClCompile Include="zepto8.cpp" />
+    <ClCompile Include="zeptool.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="player.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(LolDir)\src\lol-core.vcxproj">
@@ -52,7 +50,7 @@
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{28F5DE0F-B162-4833-8F61-A1AF782850A2}</ProjectGuid>
+    <ProjectGuid>{cc700045-8e2c-4516-9159-43fc4ffd4783}</ProjectGuid>
     <ConfigurationType>Application</ConfigurationType>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
