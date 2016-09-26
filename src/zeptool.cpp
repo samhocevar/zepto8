@@ -21,18 +21,23 @@
 
 #include "zepto8.h"
 #include "vm.h"
+#include "telnet.h"
 
 enum class mode
 {
     none,
     pico2lua = 128,
     run      = 129,
+    telnet   = 130,
 };
 
 static void usage()
 {
     printf("Usage: zeptool --pico2lua <cart>\n");
     printf("               --run <cart>\n");
+#if HAVE_UNISTD_H
+    printf("               --telnet <cart>\n");
+#endif
 }
 
 int main(int argc, char **argv)
@@ -42,6 +47,9 @@ int main(int argc, char **argv)
     lol::getopt opt(argc, argv);
     opt.add_opt(128, "pico2lua", true);
     opt.add_opt(129, "run", true);
+#if HAVE_UNISTD_H
+    opt.add_opt(130, "telnet", true);
+#endif
 
     mode run_mode = mode::none;
     char const *arg = nullptr;
@@ -56,6 +64,7 @@ int main(int argc, char **argv)
         {
         case (int)mode::pico2lua:
         case (int)mode::run:
+        case (int)mode::telnet:
             run_mode = mode(c);
             arg = opt.arg;
             break;
@@ -83,6 +92,12 @@ int main(int argc, char **argv)
             t.Wait(1.f / 60.f);
         }
     }
+#if HAVE_UNISTD_H
+    else if (run_mode == mode::telnet)
+    {
+        z8::telnet::run(arg);
+    }
+#endif
     else
     {
         usage();
