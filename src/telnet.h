@@ -96,7 +96,7 @@ struct telnet
             0xff, 0xfe, 0x22, // DONT linemode (no idea what it does)
 
             // This will break rendering :/
-            //0xff, 0xfb, 0x01, // WILL echo (actually disables local echo)
+            0xff, 0xfb, 0x01, // WILL echo (actually disables local echo)
         };
 
         write(STDOUT_FILENO, message, sizeof(message));

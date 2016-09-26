@@ -73,12 +73,9 @@ void vm::print_ansi() const
 
     int oldfg = -1, oldbg = -1;
 
-    printf("\x1b[1;1H");
-
     for (int y = 0; y < 128; y += 2)
     {
-        if (y)
-            printf("\n");
+        printf("\x1b[%d;1H", y / 2 + 1);
 
         for (int x = 0; x < 128; ++x)
         {
