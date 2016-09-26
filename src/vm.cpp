@@ -25,6 +25,9 @@ vm::vm()
     lol::LuaObjectDef::Register<vm>(GetLuaState());
     ExecLuaFile("data/zepto8.lua");
 
+    // Initialise the PRNG
+    ExecLuaCode("srand(0)");
+
     // Load font
     m_font.Load("data/font.png");
 
@@ -75,6 +78,9 @@ vm::vm()
     // Allocate memory
     m_memory.resize(SIZE_MEMORY);
     m_screen.resize(128 * 128);
+
+    // Clear screen
+    ::memset(m_memory.data() + OFFSET_SCREEN, 0, SIZE_SCREEN);
 }
 
 vm::~vm()
@@ -90,7 +96,7 @@ void vm::TickGame(float seconds)
 {
     lol::WorldEntity::TickGame(seconds);
 
-    ExecLuaCode("_z8.tick()");
+    luaL_dostring(GetLuaState(), "_z8.tick()");
 }
 
 void vm::TickDraw(float seconds, lol::Scene &scene)
@@ -240,10 +246,7 @@ int vm::run(lol::LuaState *l)
 {
     vm *that = (vm *)vm::Find(l);
 
-    // Initialise VM memory and state
-    for (int n = OFFSET_SCREEN; n < OFFSET_SCREEN + SIZE_SCREEN; ++n)
-        that->m_memory[n] = 0;
-
+    // Initialise VM state (TODO: check what else to init)
     ::memset(that->m_buttons, 0, sizeof(that->m_buttons));
 
     // From the PICO-8 documentation:
@@ -251,25 +254,23 @@ int vm::run(lol::LuaState *l)
     // clip() camera() pal() color()”
     //
     // Note from Sam: this should probably be color(6) instead.
-    that->ExecLuaCode("clip() camera() pal() color(6)");
-
-    // FIXME: not required yet because we inherit from LuaLoader
-    //lol::LuaLoader lua;
-
-    // Initialise the PRNG
-    that->ExecLuaCode("srand(0)");
+    if (luaL_loadstring(l, "clip() camera() pal() color(6)") == 0)
+        lua_pcall(l, 0, LUA_MULTRET, 0);
 
     // Execute cartridge code
-    that->ExecLuaCode(that->m_cart.get_lua().C());
+    if (luaL_loadstring(l, that->m_cart.get_lua().C()) == 0)
+        lua_pcall(l, 0, LUA_MULTRET, 0);
 
     // Run cartridge initialisation routine
-    that->ExecLuaCode("if _init ~= nil then _init() end");
+    if (luaL_loadstring(l, "if _init ~= nil then _init() end") == 0)
+        lua_pcall(l, 0, LUA_MULTRET, 0);
 
     return 0;
 }
 
 int vm::flip(lol::LuaState *l)
 {
+    UNUSED(l);
     // Only print stub message the first time, or we’ll flood the console
     static bool show_stub = true;
     if (show_stub)
@@ -280,51 +281,45 @@ int vm::flip(lol::LuaState *l)
 
 int vm::menuitem(lol::LuaState *l)
 {
+    UNUSED(l);
     msg::info("z8:stub:menuitem\n");
     return 0;
 }
 
 int vm::cartdata(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaFloat x;
-    s >> x;
-    msg::info("z8:stub:cartdata %d\n", (int)x);
+    int x = (int)lua_tonumber(l, 1);
+    msg::info("z8:stub:cartdata %d\n", x);
     return 0;
 }
 
 int vm::reload(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
+    UNUSED(l);
     msg::info("z8:stub:reload\n");
     return 0;
 }
 
 int vm::peek(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaFloat in_addr, ret;
-    s >> in_addr;
-    int addr = (int)(float)in_addr;
+    int addr = (int)lua_tonumber(l, 1);
     if (addr < 0 || addr >= SIZE_MEMORY)
         return 0;
 
     vm *that = (vm *)vm::Find(l);
-    ret = that->m_memory[addr];
-    return s << ret;
+    lua_pushnumber(l, that->m_memory[addr]);
+    return 1;
 }
 
 int vm::poke(lol::LuaState *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaFloat in_addr, in_val;
-    s >> in_addr >> in_val;
-    int addr = (int)(float)in_addr;
+    int addr = (int)lua_tonumber(l, 1);
+    int val = (int)lua_tonumber(l, 2);
     if (addr < 0 || addr >= SIZE_MEMORY)
         return 0;
 
     vm *that = (vm *)vm::Find(l);
-    that->m_memory[addr] = (uint16_t)(int)(float)in_val;
+    that->m_memory[addr] = (uint16_t)val;
     return 0;
 }
 
@@ -371,6 +366,7 @@ int vm::dget(lol::LuaState *l)
 
 int vm::dset(lol::LuaState *l)
 {
+    UNUSED(l);
     msg::info("z8:stub:dset\n");
     return 0;
 }
@@ -475,12 +471,14 @@ int vm::btnp(lol::LuaState *l)
 
 int vm::music(lol::LuaState *l)
 {
+    UNUSED(l);
     msg::info("z8:stub:music\n");
     return 0;
 }
 
 int vm::sfx(lol::LuaState *l)
 {
+    UNUSED(l);
     msg::info("z8:stub:sfx\n");
     return 0;
 }

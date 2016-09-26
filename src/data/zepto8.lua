@@ -50,7 +50,7 @@ do
     yield = coroutine.yield
 
     -- Backward compatibility for old PICO-8 versions
-    mapdraw = map
+    mapdraw = _z8.map
 end
 
 
