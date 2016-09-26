@@ -20,7 +20,7 @@
 #include <sstream>
 
 #include "zepto8.h"
-#include "vm.h"
+#include "player.h"
 
 int main(int argc, char **argv)
 {
@@ -44,11 +44,11 @@ int main(int argc, char **argv)
     if (argc < 2)
         return EXIT_FAILURE;
 
-    lol::Application app("zepto-8", lol::ivec2(600, 600), 60.0f);
+    lol::Application app("zepto-8", lol::ivec2(150, 150), 60.0f);
 
-    z8::vm *vm = new z8::vm();
-    vm->load(argv[1]);
-    vm->run();
+    z8::player *player = new z8::player();
+    player->load(argv[1]);
+    player->run();
 
     app.Run();
 

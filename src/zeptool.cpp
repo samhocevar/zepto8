@@ -24,13 +24,15 @@
 
 enum class mode
 {
-    cart,
-    pico2lua,
+    none,
+    pico2lua = 128,
+    run      = 129,
 };
 
 static void usage()
 {
     printf("Usage: zeptool --pico2lua <cart>\n");
+    printf("               --run <cart>\n");
 }
 
 int main(int argc, char **argv)
@@ -39,8 +41,10 @@ int main(int argc, char **argv)
 
     lol::getopt opt(argc, argv);
     opt.add_opt(128, "pico2lua", true);
+    opt.add_opt(129, "run", true);
 
-    mode run_mode = mode::cart;
+    mode run_mode = mode::none;
+    char const *arg = nullptr;
 
     for (;;)
     {
@@ -50,8 +54,10 @@ int main(int argc, char **argv)
 
         switch (c)
         {
-        case 128: /* --pico2lua */
-            run_mode = mode::pico2lua;
+        case (int)mode::pico2lua:
+        case (int)mode::run:
+            run_mode = mode(c);
+            arg = opt.arg;
             break;
         default:
             return EXIT_FAILURE;
@@ -61,8 +67,21 @@ int main(int argc, char **argv)
     if (run_mode == mode::pico2lua)
     {
         z8::cart cart;
-        cart.load(argv[2]);
+        cart.load(arg);
         printf("%s", cart.get_lua().C());
+    }
+    else if (run_mode == mode::run)
+    {
+        z8::vm vm;
+        vm.load(arg);
+        vm.run();
+        while (true)
+        {
+            lol::Timer t;
+            vm.step(1.f / 60.f);
+            vm.print_ansi();
+            t.Wait(1.f / 60.f);
+        }
     }
     else
     {

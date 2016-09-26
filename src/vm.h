@@ -24,29 +24,20 @@ using lol::array;
 using lol::u8vec4;
 
 class vm : public lol::LuaLoader,
-           public lol::LuaObject,
-           public lol::WorldEntity
+           public lol::LuaObject
 {
 public:
     vm();
-    virtual ~vm();
+    ~vm();
 
-    virtual void TickGame(float seconds);
-    virtual void TickDraw(float seconds, lol::Scene &scene);
+    void load(char const *name);
+    void run();
+    void step(float seconds);
 
-    void load(char const *name)
-    {
-        m_cart.load(name);
+    void render(lol::u8vec4 *screen) const;
+    void print_ansi() const;
 
-        // Copy everything up to the code section into memory
-        ::memcpy(m_memory.data(), m_cart.get_rom().data(), OFFSET_CODE);
-    }
-
-    void run()
-    {
-        // Start the cartridge!
-        ExecLuaCode("run()");
-    }
+    void button(int index, int state) { m_buttons[1][index] = state; }
 
     static const lol::LuaObjectLib* GetLib();
     static vm* New(lol::LuaState* l, int arg_nb);
@@ -138,7 +129,6 @@ private:
 
 private:
     array<uint8_t> m_memory;
-    array<u8vec4> m_screen;
     lol::Image m_font;
     cart m_cart;
 
@@ -146,13 +136,9 @@ private:
     uint8_t m_color;
     lol::ivec2 m_camera, m_cursor;
     lol::ibox2 m_clip;
-    int m_buttons[64];
+    int m_buttons[2][64];
     uint8_t m_pal[2][16], m_palt[16];
 
-    lol::Camera *m_scenecam;
-    lol::TileSet *m_tile;
-    lol::Controller *m_controller;
-    lol::InputProfile m_input;
     lol::Timer m_timer;
 };
 

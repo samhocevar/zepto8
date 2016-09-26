@@ -31,53 +31,8 @@ vm::vm()
     // Load font
     m_font.Load("data/font.png");
 
-    // Bind controls
-    m_controller = new lol::Controller("default controller");
-
-    m_input << lol::InputProfile::Keyboard(0, "Left");
-    m_input << lol::InputProfile::Keyboard(1, "Right");
-    m_input << lol::InputProfile::Keyboard(2, "Up");
-    m_input << lol::InputProfile::Keyboard(3, "Down");
-    m_input << lol::InputProfile::Keyboard(4, "Z");
-    m_input << lol::InputProfile::Keyboard(4, "C");
-    m_input << lol::InputProfile::Keyboard(4, "N");
-    m_input << lol::InputProfile::Keyboard(4, "Insert");
-    m_input << lol::InputProfile::Keyboard(5, "X");
-    m_input << lol::InputProfile::Keyboard(5, "V");
-    m_input << lol::InputProfile::Keyboard(5, "M");
-    m_input << lol::InputProfile::Keyboard(5, "Delete");
-
-    m_input << lol::InputProfile::Keyboard(6, "Return");
-
-    m_input << lol::InputProfile::Keyboard(8, "S");
-    m_input << lol::InputProfile::Keyboard(9, "F");
-    m_input << lol::InputProfile::Keyboard(10, "E");
-    m_input << lol::InputProfile::Keyboard(11, "D");
-    m_input << lol::InputProfile::Keyboard(12, "LShift");
-    m_input << lol::InputProfile::Keyboard(12, "A");
-    m_input << lol::InputProfile::Keyboard(13, "Tab");
-    m_input << lol::InputProfile::Keyboard(13, "Q");
-
-    m_controller->Init(m_input);
-    m_controller->SetInputCount(64 /* keys */, 0 /* axes */);
-
-    // Create an ortho camera
-    m_scenecam = new lol::Camera();
-    m_scenecam->SetView(lol::mat4(1.f));
-    m_scenecam->SetProjection(lol::mat4::ortho(0.f, 600.f, 0.f, 600.f, -100.f, 100.f));
-    lol::Scene& scene = lol::Scene::GetScene();
-    scene.PushCamera(m_scenecam);
-    lol::Ticker::Ref(m_scenecam);
-
-    // FIXME: the image gets deleted by TextureImage class, it
-    // does not seem right to me.
-    auto img = new lol::Image(lol::ivec2(128, 128));
-    img->Unlock(img->Lock<lol::PixelFormat::RGBA_8>()); // ensure RGBA_8 is present
-    m_tile = lol::Tiler::Register("fuck", new lol::Image(*img), lol::ivec2(128, 128), lol::ivec2(1, 1));
-
     // Allocate memory
     m_memory.resize(SIZE_MEMORY);
-    m_screen.resize(128 * 128);
 
     // Clear screen
     ::memset(m_memory.data() + OFFSET_SCREEN, 0, SIZE_SCREEN);
@@ -85,58 +40,27 @@ vm::vm()
 
 vm::~vm()
 {
-    lol::Tiler::Deregister(m_tile);
-
-    lol::Scene& scene = lol::Scene::GetScene();
-    lol::Ticker::Unref(m_scenecam);
-    scene.PopCamera(m_scenecam);
 }
 
-void vm::TickGame(float seconds)
+void vm::load(char const *name)
 {
-    lol::WorldEntity::TickGame(seconds);
+    m_cart.load(name);
+
+    // Copy everything up to the code section into memory
+    ::memcpy(m_memory.data(), m_cart.get_rom().data(), OFFSET_CODE);
+}
+
+void vm::run()
+{
+    // Start the cartridge!
+    ExecLuaCode("run()");
+}
+
+void vm::step(float seconds)
+{
+    UNUSED(seconds);
 
     luaL_dostring(GetLuaState(), "_z8.tick()");
-}
-
-void vm::TickDraw(float seconds, lol::Scene &scene)
-{
-    lol::WorldEntity::TickDraw(seconds, scene);
-
-    lol::Renderer::Get()->SetClearColor(lol::Color::black);
-
-    static lol::u8vec4 const palette[] =
-    {
-        lol::u8vec4(0x00, 0x00, 0x00, 0xff), // black
-        lol::u8vec4(0x1d, 0x2b, 0x53, 0xff), // dark_blue
-        lol::u8vec4(0x7e, 0x25, 0x53, 0xff), // dark_purple
-        lol::u8vec4(0x00, 0x87, 0x51, 0xff), // dark_green
-        lol::u8vec4(0xab, 0x52, 0x36, 0xff), // brown
-        lol::u8vec4(0x5f, 0x57, 0x4f, 0xff), // dark_gray
-        lol::u8vec4(0xc2, 0xc3, 0xc7, 0xff), // light_gray
-        lol::u8vec4(0xff, 0xf1, 0xe8, 0xff), // white
-        lol::u8vec4(0xff, 0x00, 0x4d, 0xff), // red
-        lol::u8vec4(0xff, 0xa3, 0x00, 0xff), // orange
-        lol::u8vec4(0xff, 0xec, 0x27, 0xff), // yellow
-        lol::u8vec4(0x00, 0xe4, 0x36, 0xff), // green
-        lol::u8vec4(0x29, 0xad, 0xff, 0xff), // blue
-        lol::u8vec4(0x83, 0x76, 0x9c, 0xff), // indigo
-        lol::u8vec4(0xff, 0x77, 0xa8, 0xff), // pink
-        lol::u8vec4(0xff, 0xcc, 0xaa, 0xff), // peach
-    };
-
-    for (int n = 0; n < 128 * 128 / 2; ++n)
-    {
-        uint8_t data = m_memory[OFFSET_SCREEN + n];
-        m_screen[2 * n] = palette[m_pal[1][data & 0xf]];
-        m_screen[2 * n + 1] = palette[m_pal[1][data >> 4]];
-    }
-
-    m_tile->GetTexture()->Bind();
-    m_tile->GetTexture()->SetData(m_screen.data());
-
-    int delta = (600 - 512) / 2;
-    scene.AddTile(m_tile, 0, lol::vec3(delta, delta, 10.f), 0, lol::vec2(4.f), 0.f);
 }
 
 const lol::LuaObjectLib* vm::GetLib()
@@ -412,10 +336,10 @@ int vm::update_buttons(lol::LuaState *l)
     // Update button state
     for (int i = 0; i < 64; ++i)
     {
-        if (that->m_controller->IsKeyPressed(i))
-            ++that->m_buttons[i];
+        if (that->m_buttons[1][i])
+            ++that->m_buttons[0][i];
         else
-            that->m_buttons[i] = 0;
+            that->m_buttons[0][i] = 0;
     }
 
     return 0;
@@ -429,13 +353,13 @@ int vm::btn(lol::LuaState *l)
     {
         int bits = 0;
         for (int i = 0; i < 16; ++i)
-            bits |= that->m_buttons[i] ? 1 << i : 0;
+            bits |= that->m_buttons[0][i] ? 1 << i : 0;
         lua_pushnumber(l, bits);
     }
     else
     {
         int index = (int)lua_tonumber(l, 1) + 8 * (int)lua_tonumber(l, 2);
-        lua_pushboolean(l, that->m_buttons[index]);
+        lua_pushboolean(l, that->m_buttons[0][index]);
     }
 
     return 1;
@@ -460,13 +384,13 @@ int vm::btnp(lol::LuaState *l)
     {
         int bits = 0;
         for (int i = 0; i < 16; ++i)
-            bits |= was_pressed(that->m_buttons[i]) ? 1 << i : 0;
+            bits |= was_pressed(that->m_buttons[0][i]) ? 1 << i : 0;
         lua_pushnumber(l, bits);
     }
     else
     {
         int index = (int)lua_tonumber(l, 1) + 8 * (int)lua_tonumber(l, 2);
-        lua_pushboolean(l, was_pressed(that->m_buttons[index]));
+        lua_pushboolean(l, was_pressed(that->m_buttons[0][index]));
     }
 
     return 1;

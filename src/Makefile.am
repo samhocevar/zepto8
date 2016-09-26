@@ -8,7 +8,7 @@ zepto8dir = $(datarootdir)/zepto8
 
 zepto8_SOURCES = \
     zepto8.cpp zepto8.h \
-    vm.cpp vm.h vm-maths.cpp vm-gfx.cpp \
+    player.cpp player.h \
     $(NULL)
 zepto8_CPPFLAGS = $(AM_CPPFLAGS)
 zepto8_LDFLAGS = libzepto8.a $(AM_LDFLAGS)
@@ -23,6 +23,7 @@ zeptool_LDFLAGS = libzepto8.a $(AM_LDFLAGS)
 zeptool_DEPENDENCIES = libzepto8.a @LOL_DEPS@
 
 libzepto8_a_SOURCES = \
+    vm.cpp vm.h vm-maths.cpp vm-gfx.cpp vm-render.cpp \
     cart.cpp cart.h \
     code-fixer.cpp code-fixer.h lua53-parse.h \
     $(NULL)
