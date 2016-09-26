@@ -257,9 +257,16 @@ int vm::run(lol::LuaState *l)
     if (luaL_loadstring(l, "clip() camera() pal() color(6)") == 0)
         lua_pcall(l, 0, LUA_MULTRET, 0);
 
-    // Execute cartridge code
+    // Load cartridge code into a global identifier
     if (luaL_loadstring(l, that->m_cart.get_lua().C()) == 0)
-        lua_pcall(l, 0, LUA_MULTRET, 0);
+    {
+        lua_pushvalue(l, -1);
+        lua_setglobal(l, ".code");
+    }
+
+    // Execute cartridge code
+    lua_getglobal(l, ".code");
+    lua_pcall(l, 0, LUA_MULTRET, 0);
 
     // Run cartridge initialisation routine
     if (luaL_loadstring(l, "if _init ~= nil then _init() end") == 0)
