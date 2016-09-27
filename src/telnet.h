@@ -26,7 +26,9 @@ namespace z8
 
 struct telnet
 {
-    static void run(char const *cart)
+    lol::ivec2 m_term_size = lol::ivec2(128, 64);
+
+    void run(char const *cart)
     {
         disable_echo();
 
@@ -80,40 +82,32 @@ struct telnet
             vm.step(1.f / 60.f);
             vm.step(1.f / 60.f);
 
-            vm.print_ansi();
+            vm.print_ansi(m_term_size);
 
             /* Wait for 30fps */
             t.Wait(1.f / 30.f);
         }
     }
 
-    static void disable_echo()
+    void disable_echo()
     {
 #if HAVE_UNISTD_H
         uint8_t const message[] =
         {
             0xff, 0xfb, 0x03, // WILL suppress go ahead (no line buffering)
             0xff, 0xfe, 0x22, // DONT linemode (no idea what it does)
-
-            // This will break rendering :/
             0xff, 0xfb, 0x01, // WILL echo (actually disables local echo)
+            0xff, 0xfd, 0x1f, // DO NAWS (window size negociation)
         };
 
         write(STDOUT_FILENO, message, sizeof(message));
 #endif
     }
 
-    static int get_key()
+    int get_key()
     {
 #if HAVE_UNISTD_H
-        static int frames_since_esc = 0;
-
-        /* Handle standalone Esc after 10 frames */
-        if (frames_since_esc && ++frames_since_esc > 10)
-        {
-            frames_since_esc = 0;
-            return 0x1b;
-        }
+        static lol::String seq;
 
         fd_set fds;
         FD_ZERO(&fds);
@@ -131,25 +125,64 @@ struct telnet
         if (read(STDIN_FILENO, &ch, 1) <= 0)
             exit(EXIT_SUCCESS);
 
-        if (frames_since_esc)
-        {
-            if (ch == 0x5b)
-                return -1; // Skip this one
+        if (ch != '\x1b' && ch != '\xff' && seq.count() == 0)
+            return ch;
 
-            frames_since_esc = 0;
-            return 0x100 + ch;
-        }
+        seq += ch;
 
-        if (ch == 0x1b)
+        // TELNET commands
+        if (seq[0] == '\xff') // telnet commands
         {
-            ++frames_since_esc;
+            if (seq[1] >= '\xfb' && seq[1] <= '\xfe')
+            {
+                if (seq[2] == 0)
+                    return -1; // wait for more data
+                goto reset;
+            }
+            else if (seq[1] == '\xfa') // subnegociation
+            {
+                if (seq[2] == 0)
+                    return -1; // wait for more data
+                if (seq[2] != '\x1f')
+                    goto reset; // can’t happen
+                if (seq.count() < 9)
+                    return -1; // wait for more data
+                m_term_size.x = (uint8_t)seq[3] * 256 + (uint8_t)seq[4];
+                m_term_size.y = (uint8_t)seq[5] * 256 + (uint8_t)seq[6];
+                goto reset;
+            }
+            else if (seq.count() >= 3)
+            {
+                goto reset;
+            }
+
             return -1;
         }
 
-        return ch;
-#else
-        return -1;
+        // Escape sequences
+        if (seq[0] == '\x1b')
+        {
+            if (seq[1] == '\x5b')
+            {
+                if (seq[2] == 0)
+                    return -1; // wait for more data
+                int ret = 0x100 + seq[2];
+                seq = "";
+                return ret;
+            }
+            else if (seq[1] == '\x1b')
+            {
+                seq = "";
+                return '\x1b';
+            }
+
+            return -1;
+        }
+
+reset:
+        seq = "";
 #endif
+        return -1;
     }
 };
 

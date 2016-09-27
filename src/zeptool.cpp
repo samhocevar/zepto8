@@ -95,7 +95,8 @@ int main(int argc, char **argv)
 #if HAVE_UNISTD_H
     else if (run_mode == mode::telnet)
     {
-        z8::telnet::run(arg);
+        z8::telnet telnet;
+        telnet.run(arg);
     }
 #endif
     else

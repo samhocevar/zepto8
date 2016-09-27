@@ -49,7 +49,7 @@ void vm::render(lol::u8vec4 *screen) const
     }
 }
 
-void vm::print_ansi() const
+void vm::print_ansi(lol::ivec2 term_size) const
 {
     static int const ansi_palette[] =
     {
@@ -71,13 +71,13 @@ void vm::print_ansi() const
         223, // ffccaa → ffdfaf
     };
 
-    int oldfg = -1, oldbg = -1;
-
-    for (int y = 0; y < 128; y += 2)
+    for (int y = 0; y < 2 * lol::min(64, term_size.y); y += 2)
     {
         printf("\x1b[%d;1H", y / 2 + 1);
 
-        for (int x = 0; x < 128; ++x)
+        int oldfg = -1, oldbg = -1;
+
+        for (int x = 0; x < lol::min(128, term_size.x); ++x)
         {
             int offset = y * 64 + x / 2;
             int shift = 4 * (x & 1);
@@ -109,6 +109,8 @@ void vm::print_ansi() const
             oldfg = fg;
             oldbg = bg;
         }
+
+        printf("\x1b[0m\x1b[K"); // reset properties and clear to end of line
     }
 }
 
