@@ -26,6 +26,7 @@ namespace z8
 
 struct telnet
 {
+    lol::array<uint8_t> m_screen;
     lol::ivec2 m_term_size = lol::ivec2(128, 64);
 
     void run(char const *cart)
@@ -78,14 +79,15 @@ struct telnet
                 }
             }
 
-            /* Do two full steps at 60fps */
-            vm.step(1.f / 60.f);
             vm.step(1.f / 60.f);
 
-            vm.print_ansi(m_term_size);
+            vm.print_ansi(m_term_size,
+                          m_screen.count() ? m_screen.data() : nullptr);
 
-            /* Wait for 30fps */
-            t.Wait(1.f / 30.f);
+            m_screen.resize(SIZE_SCREEN);
+            ::memcpy(m_screen.data(), vm.memory() + OFFSET_SCREEN, SIZE_SCREEN);
+
+            t.Wait(1.f / 60.f);
         }
     }
 
@@ -149,6 +151,8 @@ struct telnet
                     return -1; // wait for more data
                 m_term_size.x = (uint8_t)seq[3] * 256 + (uint8_t)seq[4];
                 m_term_size.y = (uint8_t)seq[5] * 256 + (uint8_t)seq[6];
+                printf("\x1b[2J"); // clear screen
+                m_screen.empty();
                 goto reset;
             }
             else if (seq.count() >= 3)

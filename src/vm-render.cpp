@@ -49,7 +49,8 @@ void vm::render(lol::u8vec4 *screen) const
     }
 }
 
-void vm::print_ansi(lol::ivec2 term_size) const
+void vm::print_ansi(lol::ivec2 term_size,
+                    uint8_t const *prev_screen) const
 {
     static int const ansi_palette[] =
     {
@@ -71,8 +72,14 @@ void vm::print_ansi(lol::ivec2 term_size) const
         223, // ffccaa → ffdfaf
     };
 
+    printf("\x1b[?25l"); // hide cursor
+
     for (int y = 0; y < 2 * lol::min(64, term_size.y); y += 2)
     {
+        if (prev_screen && !memcmp(m_memory.data() + OFFSET_SCREEN + y * 64,
+                                   prev_screen + y * 64, 128))
+            continue;
+
         printf("\x1b[%d;1H", y / 2 + 1);
 
         int oldfg = -1, oldbg = -1;
@@ -112,6 +119,9 @@ void vm::print_ansi(lol::ivec2 term_size) const
 
         printf("\x1b[0m\x1b[K"); // reset properties and clear to end of line
     }
+
+    printf("\x1b[?25h"); // show cursor
+    fflush(stdout);
 }
 
 } // namespace z8

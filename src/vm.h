@@ -34,8 +34,11 @@ public:
     void run();
     void step(float seconds);
 
+    uint8_t const *memory() const { return m_memory.data(); }
+
     void render(lol::u8vec4 *screen) const;
-    void print_ansi(lol::ivec2 term_size = lol::ivec2(128, 128)) const;
+    void print_ansi(lol::ivec2 term_size = lol::ivec2(128, 128),
+                    uint8_t const *prev_screen = nullptr) const;
 
     void button(int index, int state) { m_buttons[1][index] = state; }
 
