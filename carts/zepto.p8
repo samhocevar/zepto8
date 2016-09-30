@@ -20,6 +20,8 @@ function _init()
 		str[i].x=rnd(256)-128
 		str[i].y=rnd(256)-128
 		str[i].z=rnd(256)+256+32
+		str[i].tx={}
+		str[i].ty={}
 	end
 	grd={} --grid
 	for i=0,5 do
@@ -48,31 +50,27 @@ function _draw()
 				if(v.z<232-s) then
 					if(c<2) then
 						color(sget(c+6,0))
-						line(v.x8,v.y8,v.x6,v.y6)
+						line(v.tx[8],v.ty[8],v.tx[6],v.ty[6])
 					end
 					if(c<4) then
 						color(sget(c+4,0))
-						line(v.x6,v.y6,v.x4,v.y4)
+						line(v.tx[6],v.ty[6],v.tx[4],v.ty[4])
 					end
 					if(c<6) then
 						color(sget(c+2,0))
-						line(v.x4,v.y4,v.x2,v.y2)
+						line(v.tx[4],v.ty[4],v.tx[2],v.ty[2])
 					end
 					color(sget(c,0))
-					line(v.x2,v.y2,x,y)
+					line(v.tx[2],v.ty[2],x,y)
 				else
 					color(sget(c,0))
 					pset(x,y)
 				end
 			end
-			v.x8=v.x7 v.y8=v.y7
-			v.x7=v.x6 v.y7=v.y6
-			v.x6=v.x5 v.y6=v.y5
-			v.x5=v.x4 v.y5=v.y4
-			v.x4=v.x3 v.y4=v.y3
-			v.x3=v.x2 v.y3=v.y2
-			v.x2=v.x1 v.y2=v.y1
-			v.x1=x v.y1=y
+			for j=8,2,-1 do
+				v.tx[j],v.ty[j] = v.tx[j-1],v.ty[j-1]
+			end
+			v.tx[1],v.ty[1] = x,y
 	 end)
 	---------------------draw grid
 	foreach(grd,
