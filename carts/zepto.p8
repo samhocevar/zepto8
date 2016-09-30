@@ -116,42 +116,13 @@ function _update60()
 	a+=0.05
 	r=128+64*sin(a*ar)
 	s=4-3*sin(a*ar)
+
 	--------------------------keys
-	if(btn(0)) then
-		foreach(str,
-			function(v) v.x-=1 end)
-		foreach(grd,
-			function(v)
-				v.x1-=1
-				v.x2-=1
-			end)
-	end
-	if(btn(1)) then
-		foreach(str,
-			function(v) v.x+=1 end)
-		foreach(grd,
-			function(v)
-				v.x1+=1
-				v.x2+=1
-			end)
-	end
-	if(btn(2)) then
-		foreach(str,
-			function(v) v.y-=1 end)
-		foreach(grd,
-			function(v)
-				v.y1-=1
-				v.y2-=1
-			end)
-	end
-	if(btn(3)) then
-		foreach(str,
-			function(v) v.y+=1 end)
-		foreach(grd,
-			function(v)
-				v.y1+=1
-				v.y2+=1
-			end)
+	local dx = (btn(0) and -1 or 0) + (btn(1) and 1 or 0)
+	local dy = (btn(2) and -1 or 0) + (btn(3) and 1 or 0)
+	if dx != 0 or dy != 0 then
+		foreach(str, function(v) v.x+=dx v.y+=dy end)
+		foreach(grd, function(v) v.x1+=dx v.x2+=dx v.y1+=dy v.y2+=dy end)
 	end
 	if(btnp(4)) then
 	end
