@@ -36,15 +36,15 @@ end
 function _draw()
 	cls()
 	--------------------draw stars
+	camera(-64,-64)
 	foreach(str,
 		function(v)
 			v.z-=s
 			if(v.z<s) then v.z+=256 end
-			local x=64+(v.x/v.z)*r
-			local y=64+(v.y/v.z)*r
-			local c=flr(v.z/32)
-			if(x>-m and x<128+m and
-			   y>-m and y<128+m) then
+			local x=v.x/v.z*r
+			local y=v.y/v.z*r
+			if max(abs(x),abs(y))<64+m then
+				local c=flr(v.z/32)
 				if(v.z<232-s) then
 					if(c<2) then
 						color(sget(c+6,0))
@@ -69,42 +69,37 @@ function _draw()
 				v.tx[j],v.ty[j] = v.tx[j-1],v.ty[j-1]
 			end
 			v.tx[1],v.ty[1] = x,y
-	 end)
+		end)
 	---------------------draw grid
+	camera(-64,-64)
 	foreach(grd,
 		function(v)
-			local z=0
 			v.z-=s
 			if(v.z<s) then v.z+=256 end
-			local x1=64+(v.x1/v.z)*r
-			local x2=64+(v.x2/v.z)*r
-			local y1=64+(v.y1/v.z)*r
-			local y2=64+(v.y2/v.z)*r
+			local x1=v.x1/v.z*r
+			local x2=v.x2/v.z*r
+			local y1=v.y1/v.z*r
+			local y2=v.y2/v.z*r
 			local c=flr(v.z/32)
-			if(y1>-m and y1<128+m and
-			   v.z<256-s) then
+			if(abs(y1)<64+m and v.z<256-s) then
 				color(sget(c,1))
 				line(x1,y1,x2,y1)
 			end
-			if(y2>-m and y2<128+m and
-			   v.z<256-s) then
+			if(abs(y2)<64+m and v.z<256-s) then
 				color(sget(c,1))
 				line(x1,y2,x2,y2)
 			end
 		end)
 	--------------------------logo
+	camera(-24,-58)
 	local tc=flr(t/4+40)%128
 	for j=0,13 do
 		local c1=sget(tc+j,2)
 		local c2=sget(tc-j,3)
 		for i=0,78 do
 			local c=sget(i,j+16)
-			if(c==3 and c1!=0) then
-				pset(24+i,58+j,c1)
-			end
-			if(c==11 and c2!=0) then
-				pset(24+i,58+j,c2)
-			end
+			if(c==3 and c1!=0) pset(i,j,c1)
+			if(c==11 and c2!=0) pset(i,j,c2)
 		end
 	end
 end
