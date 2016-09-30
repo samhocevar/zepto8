@@ -16,21 +16,19 @@ function _init()
 	m=16   --margin
 	str={} --stars
 	for i=0,255 do
-		str[i]={}
-		str[i].x=rnd(256)-128
-		str[i].y=rnd(256)-128
-		str[i].z=rnd(256)+256+32
-		str[i].tx={}
-		str[i].ty={}
+		str[i]={
+			x=rnd(256)-128,
+			y=rnd(256)-128,
+			z=rnd(256)+256+32,
+			tx={},ty={}
+		}
 	end
 	grd={} --grid
 	for i=0,5 do
-		grd[i]={}
-		grd[i].x1=-32
-		grd[i].x2=32
-		grd[i].y1=-32
-		grd[i].y2=32
-		grd[i].z=256/5*i+256+32
+		grd[i]={
+			x1=-32, x2=32, y1=-32, y2=32,
+			z=256/5*i+256+32
+		}
 	end
 	if not debug then music(0) end
 end
