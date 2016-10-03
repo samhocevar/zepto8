@@ -15,6 +15,15 @@
 -- Aliases for PICO-8 compatibility
 --
 do
+    -- According to https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0 :
+    --  coroutine.[create|resume|status|yield]() was removed in 0.1.3 but added
+    --  in 0.1.6 as coroutine(), cocreate(), coresume(), costatus() and yield()
+    --  respectively.
+    cocreate = coroutine.create
+    coresume = coroutine.resume
+    costatus = coroutine.status
+    yield = coroutine.yield
+
     -- use closure so that we don’t need “table” later
     local insert = table.insert
     local remove = table.remove
@@ -40,14 +49,11 @@ do
         end
     end
 
-    -- According to https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0 :
-    --  coroutine.[create|resume|status|yield]() was removed in 0.1.3 but added
-    --  in 0.1.6 as coroutine(), cocreate(), coresume(), costatus() and yield()
-    --  respectively.
-    cocreate = coroutine.create
-    coresume = coroutine.resume
-    costatus = coroutine.status
-    yield = coroutine.yield
+    -- All flip() does for now is yield so that the C++ VM gets a chance
+    -- to draw something even if Lua is in an infinite loop
+    flip = function()
+        yield()
+    end
 
     -- Backward compatibility for old PICO-8 versions
     mapdraw = _z8.map
@@ -75,23 +81,31 @@ coroutine = nil
 --
 -- Utility functions
 --
-_z8.draw = function()
-    if _draw ~= nil then _draw() end
-end
+_z8.loop = cocreate(function()
+    local do_frame = true
 
-_z8.doframe = true
-_z8.tick = function()
-    if _update60 ~= nil then
-        _update_buttons()
-        _update60()
-        _z8.draw()
-    elseif _update ~= nil then
-        if _z8.doframe then
+    -- FIXME: load cart here
+    if _init ~= nil then _init() end
+
+    -- Execute the user functions
+    while true do
+        if _update60 ~= nil then
             _update_buttons()
-            _update()
-            _z8.draw()
+            _update60()
+            if _draw ~= nil then _draw() end
+        elseif _update ~= nil then
+            if do_frame then
+                _update_buttons()
+                _update()
+                if _draw ~= nil then _draw() end
+            end
+            do_frame = not do_frame
         end
-        _z8.doframe = not _z8.doframe
+        yield()
     end
+end)
+
+_z8.tick = function()
+    return coresume(_z8.loop)
 end
 

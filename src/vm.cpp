@@ -91,7 +91,6 @@ const lol::LuaObjectLib* vm::GetLib()
         // Statics
         {
             { "run",      &vm::run },
-            { "flip",     &vm::flip },
             { "menuitem", &vm::menuitem },
             { "cartdata", &vm::cartdata },
             { "reload",   &vm::reload },
@@ -201,6 +200,8 @@ int vm::run(lol::LuaState *l)
     if (luaL_loadstring(l, "clip() camera() pal() color(6)") == 0)
         lua_pcall(l, 0, LUA_MULTRET, 0);
 
+    // FIXME: this should probably go into _z8.tick()
+
     // Load cartridge code into a global identifier
     if (luaL_loadstring(l, that->m_cart.get_lua().C()) == 0)
     {
@@ -212,21 +213,6 @@ int vm::run(lol::LuaState *l)
     lua_getglobal(l, ".code");
     lua_pcall(l, 0, LUA_MULTRET, 0);
 
-    // Run cartridge initialisation routine
-    if (luaL_loadstring(l, "if _init ~= nil then _init() end") == 0)
-        lua_pcall(l, 0, LUA_MULTRET, 0);
-
-    return 0;
-}
-
-int vm::flip(lol::LuaState *l)
-{
-    UNUSED(l);
-    // Only print stub message the first time, or we’ll flood the console
-    static bool show_stub = true;
-    if (show_stub)
-        msg::info("z8:stub:flip\n");
-    show_stub = false;
     return 0;
 }
 
