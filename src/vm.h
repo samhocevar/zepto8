@@ -46,6 +46,9 @@ public:
     static vm* New(lol::LuaState* l, int arg_nb);
 
 private:
+    void set_this(lol::LuaState *l);
+    static vm* get_this(lol::LuaState *l);
+
     // System
     static int run(lol::LuaState *l);
     static int flip(lol::LuaState *l);

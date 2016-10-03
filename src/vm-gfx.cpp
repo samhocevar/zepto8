@@ -70,14 +70,14 @@ int vm::getspixel(int x, int y)
 
 int vm::cursor(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
     that->m_cursor = lol::ivec2(lua_tonumber(l, 1), lua_tonumber(l, 2));
     return 0;
 }
 
 int vm::print(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
 
     if (lua_isnone(l, 1))
         return 0;
@@ -146,14 +146,14 @@ int vm::print(lol::LuaState *l)
 
 int vm::camera(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
     that->m_camera = lol::ivec2(lua_tonumber(l, 1), lua_tonumber(l, 2));
     return 0;
 }
 
 int vm::circ(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
 
     int x = lua_tonumber(l, 1);
     int y = lua_tonumber(l, 2);
@@ -189,7 +189,7 @@ int vm::circ(lol::LuaState *l)
 
 int vm::circfill(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
 
     int x = lua_tonumber(l, 1);
     int y = lua_tonumber(l, 2);
@@ -226,7 +226,7 @@ int vm::circfill(lol::LuaState *l)
 
 int vm::clip(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
 
     /* XXX: there were rendering issues with Hyperspace by J.Fry when we were
      * only checking for lua_isnone(l,1) (instead of 4) because first argument
@@ -252,14 +252,14 @@ int vm::clip(lol::LuaState *l)
 int vm::cls(lol::LuaState *l)
 {
     int c = lua_tonumber(l, 1);
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
     ::memset(that->m_memory.data() + OFFSET_SCREEN, (c & 0xf) * 0x11, SIZE_SCREEN);
     return 0;
 }
 
 int vm::color(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
     that->m_color = (int)lua_tonumber(l, 1) & 0xf;
     return 0;
 }
@@ -274,7 +274,7 @@ int vm::fget(lol::LuaState *l)
 
     if (n >= 0 && n < SIZE_GFX_PROPS)
     {
-        vm *that = (vm *)vm::Find(l);
+        vm *that = get_this(l);
         bits = that->m_memory[OFFSET_GFX_PROPS + n];
     }
 
@@ -295,7 +295,7 @@ int vm::fset(lol::LuaState *l)
 
     if (n >= 0 && n < SIZE_GFX_PROPS)
     {
-        vm *that = (vm *)vm::Find(l);
+        vm *that = get_this(l);
         uint8_t bits = that->m_memory[OFFSET_GFX_PROPS + n];
         int f = lua_tonumber(l, 2);
 
@@ -314,7 +314,7 @@ int vm::fset(lol::LuaState *l)
 
 int vm::line(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
 
     int x0 = lua_tonumber(l, 1);
     int y0 = lua_tonumber(l, 2);
@@ -357,7 +357,7 @@ int vm::map(lol::LuaState *l)
     int cel_h = lua_tonumber(l, 6);
     int layer = lua_tonumber(l, 7);
 
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
 
     for (int dy = 0; dy < cel_h * 8; ++dy)
     for (int dx = 0; dx < cel_w * 8; ++dx)
@@ -397,7 +397,7 @@ int vm::mget(lol::LuaState *l)
 
     if (x >= 0 && x < 128 && y >= 0 && y < 64)
     {
-        vm *that = (vm *)vm::Find(l);
+        vm *that = get_this(l);
         int line = y < 32 ? OFFSET_MAP + 128 * y
                           : OFFSET_MAP2 + 128 * (y - 32);
         n = that->m_memory[line + x];
@@ -415,7 +415,7 @@ int vm::mset(lol::LuaState *l)
 
     if (x >= 0 && x < 128 && y >= 0 && y < 64)
     {
-        vm *that = (vm *)vm::Find(l);
+        vm *that = get_this(l);
         int line = y < 32 ? OFFSET_MAP + 128 * y
                           : OFFSET_MAP2 + 128 * (y - 32);
         that->m_memory[line + x] = n;
@@ -426,7 +426,7 @@ int vm::mset(lol::LuaState *l)
 
 int vm::pal(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
 
     if (lua_isnone(l, 1) || lua_isnone(l, 2))
     {
@@ -450,7 +450,7 @@ int vm::pal(lol::LuaState *l)
 
 int vm::palt(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
 
     if (lua_isnone(l, 1) || lua_isnone(l, 2))
     {
@@ -473,7 +473,7 @@ int vm::pget(lol::LuaState *l)
     lol::LuaFloat x, y, ret;
     s >> x >> y;
 
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
     ret = that->getpixel((int)x - that->m_camera.x, (int)y - that->m_camera.y);
 
     return s << ret;
@@ -481,7 +481,7 @@ int vm::pget(lol::LuaState *l)
 
 int vm::pset(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
 
     int x = lua_tonumber(l, 1);
     int y = lua_tonumber(l, 2);
@@ -495,7 +495,7 @@ int vm::pset(lol::LuaState *l)
 
 int vm::rect(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
 
     int x0 = lua_tonumber(l, 1);
     int y0 = lua_tonumber(l, 2);
@@ -521,7 +521,7 @@ int vm::rect(lol::LuaState *l)
 
 int vm::rectfill(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
 
     int x0 = lua_tonumber(l, 1);
     int y0 = lua_tonumber(l, 2);
@@ -539,7 +539,7 @@ int vm::rectfill(lol::LuaState *l)
 
 int vm::sget(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
 
     int x = lua_tonumber(l, 1);
     int y = lua_tonumber(l, 2);
@@ -551,7 +551,7 @@ int vm::sget(lol::LuaState *l)
 
 int vm::sset(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
 
     int x = lua_tonumber(l, 1);
     int y = lua_tonumber(l, 2);
@@ -565,7 +565,7 @@ int vm::sset(lol::LuaState *l)
 
 int vm::spr(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
 
     // FIXME: should we abort if n == 0?
     int n = lua_tonumber(l, 1);
@@ -594,7 +594,7 @@ int vm::spr(lol::LuaState *l)
 
 int vm::sspr(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
 
     int sx = lua_tonumber(l, 1);
     int sy = lua_tonumber(l, 2);

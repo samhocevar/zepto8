@@ -21,8 +21,14 @@ using lol::msg;
 
 vm::vm()
 {
+    lol::LuaState *l = GetLuaState();
+
+    // Store a pointer to us in global state
+    set_this(l);
+
     // Register our Lua module
-    lol::LuaObjectDef::Register<vm>(GetLuaState());
+    lol::LuaObjectDef::Register<vm>(l);
+
     ExecLuaFile("data/zepto8.lua");
 
     // Initialise the PRNG
@@ -40,6 +46,20 @@ vm::vm()
 
 vm::~vm()
 {
+}
+
+void vm::set_this(lol::LuaState *l)
+{
+    lua_pushlightuserdata(l, this);
+    lua_setglobal(l, "\x01");
+}
+
+vm* vm::get_this(lol::LuaState *l)
+{
+    lua_getglobal(l, "\x01");
+    vm *ret = (vm *)lua_touserdata(l, -1);
+    lua_remove(l, -1);
+    return ret;
 }
 
 void vm::load(char const *name)
@@ -168,7 +188,7 @@ vm* vm::New(lol::LuaState* l, int argc)
 
 int vm::run(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
 
     // Initialise VM state (TODO: check what else to init)
     ::memset(that->m_buttons, 0, sizeof(that->m_buttons));
@@ -237,7 +257,7 @@ int vm::peek(lol::LuaState *l)
     if (addr < 0 || addr >= SIZE_MEMORY)
         return 0;
 
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
     lua_pushnumber(l, that->m_memory[addr]);
     return 1;
 }
@@ -249,7 +269,7 @@ int vm::poke(lol::LuaState *l)
     if (addr < 0 || addr >= SIZE_MEMORY)
         return 0;
 
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
     that->m_memory[addr] = (uint16_t)val;
     return 0;
 }
@@ -265,7 +285,7 @@ int vm::memcpy(lol::LuaState *l)
          && dst < SIZE_MEMORY && src < SIZE_MEMORY
          && src + size <= SIZE_MEMORY && dst + size <= SIZE_MEMORY)
     {
-        vm *that = (vm *)vm::Find(l);
+        vm *that = get_this(l);
         memmove(that->m_memory.data() + dst, that->m_memory.data() + src, size);
     }
 
@@ -281,7 +301,7 @@ int vm::memset(lol::LuaState *l)
     if (dst >= 0 && size > 0
          && dst < SIZE_MEMORY && dst + size <= SIZE_MEMORY)
     {
-        vm *that = (vm *)vm::Find(l);
+        vm *that = get_this(l);
         ::memset(that->m_memory.data() + dst, val, size);
     }
 
@@ -331,7 +351,7 @@ int vm::printh(lol::LuaState *l)
 
 int vm::update_buttons(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
 
     // Update button state
     for (int i = 0; i < 64; ++i)
@@ -347,7 +367,7 @@ int vm::update_buttons(lol::LuaState *l)
 
 int vm::btn(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
 
     if (lua_isnone(l, 1))
     {
@@ -378,7 +398,7 @@ int vm::btnp(lol::LuaState *l)
         return false;
     };
 
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
 
     if (lua_isnone(l, 1))
     {
@@ -420,7 +440,7 @@ int vm::sfx(lol::LuaState *l)
 
 int vm::time(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
     float time = lol::fmod(that->m_timer.Poll(), 65536.0f);
     lua_pushnumber(l, time < 32768.f ? time : time - 65536.0f);
     return 1;

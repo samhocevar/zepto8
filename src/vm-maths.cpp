@@ -109,7 +109,7 @@ int vm::sgn(lol::LuaState *l)
 
 int vm::rnd(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
     uint32_t x = ((uint64_t)that->m_seed * 279470273ul) % 4294967291ul;
     that->m_seed = x;
 
@@ -124,7 +124,7 @@ int vm::rnd(lol::LuaState *l)
 
 int vm::srand(lol::LuaState *l)
 {
-    vm *that = (vm *)vm::Find(l);
+    vm *that = get_this(l);
     that->m_seed = double2fixed(lua_tonumber(l, 1));
     if (that->m_seed == 0)
         that->m_seed = 0xdeadbeef;
