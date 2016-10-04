@@ -99,9 +99,9 @@ int vm::print(lol::LuaState *l)
     bool use_cursor = lua_isnone(l, 2) || lua_isnone(l, 3);
     int x = use_cursor ? that->m_cursor.x : lua_tonumber(l, 2);
     int y = use_cursor ? that->m_cursor.y : lua_tonumber(l, 3);
-    int col = lua_isnone(l, 4) ? that->m_color : lua_tonumber(l, 4);
-
-    int c = that->m_pal[0][col & 0xf];
+    if (!lua_isnone(l, 4))
+        that->m_color = (int)lua_tonumber(l, 4) & 0xf;
+    int c = that->m_pal[0][that->m_color];
     int initial_x = x;
 
     auto pixels = that->m_font.Lock<lol::PixelFormat::RGBA_8>();
@@ -158,9 +158,9 @@ int vm::circ(lol::LuaState *l)
     int x = lua_tonumber(l, 1);
     int y = lua_tonumber(l, 2);
     int r = lua_tonumber(l, 3);
-    int col = lua_isnone(l, 4) ? that->m_color : lua_tonumber(l, 4);
-
-    int c = that->m_pal[0][col & 0xf];
+    if (!lua_isnone(l, 4))
+        that->m_color = (int)lua_tonumber(l, 4) & 0xf;
+    int c = that->m_pal[0][that->m_color];
 
     for (int dx = r, dy = 0, err = 0; dx >= dy; )
     {
@@ -194,9 +194,9 @@ int vm::circfill(lol::LuaState *l)
     int x = lua_tonumber(l, 1);
     int y = lua_tonumber(l, 2);
     int r = lua_tonumber(l, 3);
-    int col = lua_isnone(l, 4) ? that->m_color : lua_tonumber(l, 4);
-
-    int c = that->m_pal[0][col & 0xf];
+    if (!lua_isnone(l, 4))
+        that->m_color = (int)lua_tonumber(l, 4) & 0xf;
+    int c = that->m_pal[0][that->m_color];
 
     for (int dx = r, dy = 0, err = 0; dx >= dy; )
     {
@@ -320,8 +320,9 @@ int vm::line(lol::LuaState *l)
     int y0 = lua_tonumber(l, 2);
     int x1 = lua_tonumber(l, 3);
     int y1 = lua_tonumber(l, 4);
-    int col = lua_isnone(l, 5) ? that->m_color : lua_tonumber(l, 5);
-    int c = that->m_pal[0][col & 0xf];
+    if (!lua_isnone(l, 5))
+        that->m_color = (int)lua_tonumber(l, 5) & 0xf;
+    int c = that->m_pal[0][that->m_color];
 
     if (x0 == x1 && y0 == y1)
     {
@@ -485,8 +486,9 @@ int vm::pset(lol::LuaState *l)
 
     int x = lua_tonumber(l, 1);
     int y = lua_tonumber(l, 2);
-    int col = lua_isnone(l, 3) ? that->m_color : lua_tonumber(l, 3);
-    int c = that->m_pal[0][col & 0xf];
+    if (!lua_isnone(l, 3))
+        that->m_color = (int)lua_tonumber(l, 3) & 0xf;
+    int c = that->m_pal[0][that->m_color];
 
     that->setpixel(x, y, c);
 
@@ -501,8 +503,9 @@ int vm::rect(lol::LuaState *l)
     int y0 = lua_tonumber(l, 2);
     int x1 = lua_tonumber(l, 3);
     int y1 = lua_tonumber(l, 4);
-    int col = lua_isnone(l, 5) ? that->m_color : lua_tonumber(l, 5);
-    int c = that->m_pal[0][col & 0xf];
+    if (!lua_isnone(l, 5))
+        that->m_color = (int)lua_tonumber(l, 5) & 0xf;
+    int c = that->m_pal[0][that->m_color];
 
     for (int y = lol::min(y0, y1); y <= lol::max(y0, y1); ++y)
     {
@@ -527,8 +530,9 @@ int vm::rectfill(lol::LuaState *l)
     int y0 = lua_tonumber(l, 2);
     int x1 = lua_tonumber(l, 3);
     int y1 = lua_tonumber(l, 4);
-    int col = lua_isnone(l, 5) ? that->m_color : lua_tonumber(l, 5);
-    int c = that->m_pal[0][col & 0xf];
+    if (!lua_isnone(l, 5))
+        that->m_color = (int)lua_tonumber(l, 5) & 0xf;
+    int c = that->m_pal[0][that->m_color];
 
     for (int y = lol::min(y0, y1); y <= lol::max(y0, y1); ++y)
         for (int x = lol::min(x0, x1); x <= lol::max(x0, x1); ++x)
@@ -555,7 +559,7 @@ int vm::sset(lol::LuaState *l)
 
     int x = lua_tonumber(l, 1);
     int y = lua_tonumber(l, 2);
-    int col = lua_isnone(l, 5) ? that->m_color : lua_tonumber(l, 5);
+    int col = lua_isnone(l, 3) ? that->m_color : lua_tonumber(l, 3);
     int c = that->m_pal[0][col & 0xf];
 
     that->setspixel(x, y, c);
