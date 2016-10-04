@@ -82,31 +82,49 @@ coroutine = nil
 --
 -- Utility functions
 --
-_z8.loop = cocreate(function()
-    local do_frame = true
+_z8.run = function(cart_code)
+    _z8.loop = cocreate(function()
+        local do_frame = true
 
-    -- FIXME: load cart here
-    if _init ~= nil then _init() end
+        -- From the PICO-8 documentation:
+        -- “The draw state is reset each time a program is run. This is equivalent to calling:
+        -- clip() camera() pal() color()”
+        --
+        -- Note from Sam: this should probably be color(6) instead.
+        clip() camera() pal() color(6)
 
-    -- Execute the user functions
-    while true do
-        if _update60 ~= nil then
-            _update_buttons()
-            _update60()
-            if _draw ~= nil then _draw() end
-        elseif _update ~= nil then
-            if do_frame then
+        -- Load cart
+        cart_code()
+
+        -- Initialise if available
+        if _init ~= nil then _init() end
+
+        -- Execute the user functions
+        while true do
+            if _update60 ~= nil then
                 _update_buttons()
-                _update()
+                _update60()
                 if _draw ~= nil then _draw() end
+            elseif _update ~= nil then
+                if do_frame then
+                    _update_buttons()
+                    _update()
+                    if _draw ~= nil then _draw() end
+                end
+                do_frame = not do_frame
             end
-            do_frame = not do_frame
+            yield()
         end
-        yield()
-    end
-end)
+    end)
+end
 
 _z8.tick = function()
     return coresume(_z8.loop)
 end
+
+
+--
+-- Initialise the VM
+--
+srand(0)
 

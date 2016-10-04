@@ -35,9 +35,6 @@ vm::vm()
 
     ExecLuaFile("data/zepto8.lua");
 
-    // Initialise the PRNG
-    ExecLuaCode("srand(0)");
-
     // Load font
     m_font.Load("data/font.png");
 
@@ -94,7 +91,11 @@ void vm::step(float seconds)
 {
     UNUSED(seconds);
 
-    luaL_dostring(GetLuaState(), "_z8.tick()");
+    lol::LuaState *l = GetLuaState();
+    lua_getglobal(l, "_z8");
+    lua_getfield(l, -1, "tick");
+    lua_pcall(l, 0, 0, 0);
+
     m_instructions = 0;
 }
 
@@ -207,26 +208,11 @@ int vm::run(lol::LuaState *l)
     // Initialise VM state (TODO: check what else to init)
     ::memset(that->m_buttons, 0, sizeof(that->m_buttons));
 
-    // From the PICO-8 documentation:
-    // “The draw state is reset each time a program is run. This is equivalent to calling:
-    // clip() camera() pal() color()”
-    //
-    // Note from Sam: this should probably be color(6) instead.
-    if (luaL_loadstring(l, "clip() camera() pal() color(6)") == 0)
-        lua_pcall(l, 0, LUA_MULTRET, 0);
-
-    // FIXME: this should probably go into _z8.tick()
-
-    // Load cartridge code into a global identifier
-    if (luaL_loadstring(l, that->m_cart.get_lua().C()) == 0)
-    {
-        lua_pushvalue(l, -1);
-        lua_setglobal(l, ".code");
-    }
-
-    // Execute cartridge code
-    lua_getglobal(l, ".code");
-    lua_pcall(l, 0, LUA_MULTRET, 0);
+    // Load cartridge code and call _z8.run() on it
+    lua_getglobal(l, "_z8");
+    lua_getfield(l, -1, "run");
+    luaL_loadstring(l, that->m_cart.get_lua().C());
+    lua_pcall(l, 1, 0, 0);
 
     return 0;
 }
