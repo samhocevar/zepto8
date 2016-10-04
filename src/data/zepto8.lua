@@ -73,6 +73,7 @@ _G = nil
 -- Hide these modules, they should not be accessible
 --
 table = nil
+debug = nil
 string = nil
 io = nil
 coroutine = nil

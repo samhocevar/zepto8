@@ -48,6 +48,7 @@ public:
 private:
     void set_this(lol::LuaState *l);
     static vm* get_this(lol::LuaState *l);
+    static void hook(lol::LuaState *l, lua_Debug *ar);
 
     // System
     static int run(lol::LuaState *l);
@@ -145,6 +146,7 @@ private:
     uint8_t m_pal[2][16], m_palt[16];
 
     lol::Timer m_timer;
+    int m_instructions;
 };
 
 // Clamp a double to the nearest value that can be represented as a 16:16

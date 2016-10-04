@@ -20,11 +20,15 @@ namespace z8
 using lol::msg;
 
 vm::vm()
+  : m_instructions(0)
 {
     lol::LuaState *l = GetLuaState();
 
     // Store a pointer to us in global state
     set_this(l);
+
+    // Automatically yield every 1000 instructions
+    lua_sethook(l, &vm::hook, LUA_MASKCOUNT, 1000);
 
     // Register our Lua module
     lol::LuaObjectDef::Register<vm>(l);
@@ -62,6 +66,16 @@ vm* vm::get_this(lol::LuaState *l)
     return ret;
 }
 
+void vm::hook(lol::LuaState *l, lua_Debug *)
+{
+    vm *that = get_this(l);
+
+    // The value 35000 was found using trial and error
+    that->m_instructions += 1000;
+    if (that->m_instructions >= 35000)
+        lua_yield(l, 0);
+}
+
 void vm::load(char const *name)
 {
     m_cart.load(name);
@@ -81,6 +95,7 @@ void vm::step(float seconds)
     UNUSED(seconds);
 
     luaL_dostring(GetLuaState(), "_z8.tick()");
+    m_instructions = 0;
 }
 
 const lol::LuaObjectLib* vm::GetLib()
