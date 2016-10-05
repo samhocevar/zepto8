@@ -68,6 +68,70 @@ int vm::getspixel(int x, int y)
     return (x & 1) ? m_memory[offset] >> 4 : m_memory[offset] & 0xf;
 }
 
+void vm::hline(int x1, int x2, int y, int color)
+{
+    x1 -= m_camera.x;
+    x2 -= m_camera.x;
+    y -= m_camera.y;
+
+    if (y < m_clip.aa.y || y >= m_clip.bb.y)
+        return;
+
+    if (x1 > x2)
+        std::swap(x1, x2);
+
+    x1 = lol::max(x1, m_clip.aa.x);
+    x2 = lol::min(x2, m_clip.bb.x - 1);
+
+    if (x1 > x2)
+        return;
+
+    int offset = OFFSET_SCREEN + (128 * y) / 2;
+    if (x1 & 1)
+    {
+        m_memory[offset + x1 / 2]
+            = (m_memory[offset + x1 / 2] & 0x0f) | (color << 4);
+        ++x1;
+    }
+
+    if ((x2 & 1) == 0)
+    {
+        m_memory[offset + x2 / 2]
+            = (m_memory[offset + x2 / 2] & 0xf0) | color;
+        --x2;
+    }
+
+    ::memset(m_memory.data() + offset + x1 / 2, color * 0x11, (x2 - x1 + 1) / 2);
+}
+
+void vm::vline(int x, int y1, int y2, int color)
+{
+    x -= m_camera.x;
+    y1 -= m_camera.y;
+    y2 -= m_camera.y;
+
+    if (x < m_clip.aa.x || x >= m_clip.bb.x)
+        return;
+
+    if (y1 > y2)
+        std::swap(y1, y2);
+
+    y1 = lol::max(y1, m_clip.aa.y);
+    y2 = lol::min(y2, m_clip.bb.y - 1);
+
+    if (y1 > y2)
+        return;
+
+    int mask = (x & 1) ? 0x0f : 0xf0;
+    int p = (x & 1) ? color << 4 : color;
+
+    for (int y = y1; y <= y2; ++y)
+    {
+        int offset = OFFSET_SCREEN + (128 * y + x) / 2;
+        m_memory[offset] = (m_memory[offset] & mask) | p;
+    }
+}
+
 //
 // Text
 //
@@ -204,15 +268,11 @@ int vm::circfill(lol::LuaState *l)
 
     for (int dx = r, dy = 0, err = 0; dx >= dy; )
     {
-        // FIXME: there is some overdraw here, but nothing
-        // too grave; maybe fix this one day
-        for (int e = -dx; e <= dx; ++e)
-        {
-            that->setpixel(x + dy, y + e, c);
-            that->setpixel(x - dy, y + e, c);
-            that->setpixel(x + e, y + dy, c);
-            that->setpixel(x + e, y - dy, c);
-        }
+        /* Some minor overdraw here, but nothing serious */
+        that->hline(x - dx, x + dx, y - dy, c);
+        that->hline(x - dx, x + dx, y + dy, c);
+        that->vline(x - dy, y - dx, y + dx, c);
+        that->vline(x + dy, y - dx, y + dx, c);
 
         dy += 1;
         err += 1 + 2 * dy;
@@ -511,16 +571,19 @@ int vm::rect(lol::LuaState *l)
         that->m_color = (int)lua_tonumber(l, 5) & 0xf;
     int c = that->m_pal[0][that->m_color];
 
-    for (int y = lol::min(y0, y1); y <= lol::max(y0, y1); ++y)
-    {
-        that->setpixel(x0, y, c);;
-        that->setpixel(x1, y, c);;
-    }
+    if (x0 > x1)
+        std::swap(x0, x1);
 
-    for (int x = lol::min(x0, x1); x <= lol::max(x0, x1); ++x)
+    if (y0 > y1)
+        std::swap(y0, y1);
+
+    that->hline(x0, x1, y0, c);
+    that->hline(x0, x1, y1, c);
+
+    if (y0 + 1 < y1)
     {
-        that->setpixel(x, y0, c);;
-        that->setpixel(x, y1, c);;
+        that->vline(x0, y0 + 1, y1 - 1, c);
+        that->vline(x1, y0 + 1, y1 - 1, c);
     }
 
     return 0;
@@ -539,8 +602,7 @@ int vm::rectfill(lol::LuaState *l)
     int c = that->m_pal[0][that->m_color];
 
     for (int y = lol::min(y0, y1); y <= lol::max(y0, y1); ++y)
-        for (int x = lol::min(x0, x1); x <= lol::max(x0, x1); ++x)
-            that->setpixel(x, y, c);
+        that->hline(lol::min(x0, x1), lol::max(x0, x1), y, c);
 
     return 0;
 }

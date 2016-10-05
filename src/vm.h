@@ -130,6 +130,9 @@ private:
     int getpixel(int x, int y);
     void setpixel(int x, int y, int color);
 
+    void hline(int x1, int x2, int y, int color);
+    void vline(int x, int y1, int y2, int color);
+
     int getspixel(int x, int y);
     void setspixel(int x, int y, int color);
 
