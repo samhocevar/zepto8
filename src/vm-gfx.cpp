@@ -29,13 +29,17 @@ void vm::setpixel(int x, int y, int color)
         return;
 
     int offset = OFFSET_SCREEN + (128 * y + x) / 2;
-    int m1 = (x & 1) ? 0x0f : 0xf0;
-    int m2 = (x & 1) ? color << 4 : color;
-    m_memory[offset] = (m_memory[offset] & m1) | m2;
+    int mask = (x & 1) ? 0x0f : 0xf0;
+    int p = (x & 1) ? color << 4 : color;
+    m_memory[offset] = (m_memory[offset] & mask) | p;
 }
 
 int vm::getpixel(int x, int y)
 {
+    /* pget() is affected by camera() and by clip() */
+    x -= m_camera.x;
+    y -= m_camera.y;
+
     if (x < m_clip.aa.x || x >= m_clip.bb.x
          || y < m_clip.aa.y || y >= m_clip.bb.y)
         return 0;
@@ -50,9 +54,9 @@ void vm::setspixel(int x, int y, int color)
         return;
 
     int offset = OFFSET_GFX + (128 * y + x) / 2;
-    int m1 = (x & 1) ? 0x0f : 0xf0;
-    int m2 = (x & 1) ? color << 4 : color;
-    m_memory[offset] = (m_memory[offset] & m1) | m2;
+    int mask = (x & 1) ? 0x0f : 0xf0;
+    int p = (x & 1) ? color << 4 : color;
+    m_memory[offset] = (m_memory[offset] & mask) | p;
 }
 
 int vm::getspixel(int x, int y)
