@@ -164,17 +164,19 @@ int vm::bnot(lol::LuaState *l)
 
 int vm::shl(lol::LuaState *l)
 {
-    double x = lua_toclamp64(l, 1);
-    double y = lua_toclamp64(l, 2);
-    lua_pushnumber(l, (int16_t)x << (int16_t)y);
+    // PICO-8 seems to use y modulo 32
+    int32_t x = double2fixed(lua_tonumber(l, 1));
+    int32_t y = int(lua_toclamp64(l, 2)) & 0x1f;
+    lua_pushnumber(l, fixed2double(x << y));
     return 1;
 }
 
 int vm::shr(lol::LuaState *l)
 {
-    double x = lua_toclamp64(l, 1);
-    double y = lua_toclamp64(l, 2);
-    lua_pushnumber(l, (int16_t)x >> (int16_t)y);
+    // PICO-8 seems to use y modulo 32
+    int32_t x = double2fixed(lua_tonumber(l, 1));
+    int32_t y = int(lua_toclamp64(l, 2)) & 0x1f;
+    lua_pushnumber(l, fixed2double(x >> y));
     return 1;
 }
 

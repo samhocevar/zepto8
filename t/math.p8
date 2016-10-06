@@ -1,69 +1,101 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
--- mATHS tEST sUITE
--- sAM hOCEVAR <SAM@HOCEVAR.NET>
+-- zepto-8 conformance tests
+-- for lua syntax extensions
 
-function tostr(x)
-    return x == nil and "nil" or ""..x
+-- small test framework
+do local ctx, fail, total = "", 0, 0
+   function fixture(name)
+       ctx = name
+       a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z =
+       0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+   end
+   function test_equal(x, y)
+       total = total + 1
+       if x ~= y then
+           print(ctx.." failed: '"..x.."' != '"..y.."'")
+           fail = fail + 1
+       end
+   end
+   function summary() print("\n"..total.." tests - "..(total - fail).." passed, "..fail.." failed.") end
 end
 
-function section(name)
-    printh("")
-    printh("##########################")
-    printh("### "..name)
-    printh("")
-end
+--
+-- t1. check that shl works properly
+--
 
+fixture "t1.01"
+x = shl(1, 1)
+test_equal(x, 2)
 
-section("atan2")
+fixture "t1.02"
+x = shl(1, 0)
+test_equal(x, 1)
 
--- TODO: we want -32768 instead of -32767 below, but it causes PICO-8 to crash
-values = { nil, -32767, -1, 0, 1, 32767 }
-printh("atan2 = "..atan2())
-for i = 1,#values do
-    printh("atan2 "..tostr(x).." = "..atan2(x))
-    for j = 1,#values do
-        x, y = values[i], values[j]
-        printh("atan2 "..tostr(x).." "..tostr(y).." = "..atan2(x,y))
-    end
-end
+fixture "t1.03"
+x = shl(1, 14)
+test_equal(x, 16384)
 
+fixture "t1.04"
+x = shl(1, 15)
+test_equal(x, -32768)
 
-section("sin/cos")
+fixture "t1.05"
+x = shl(1, 16)
+test_equal(x, 0)
 
-values = { -32768, -32767, -128, -127, -5, -4, -3, -2, -1, 0 }
-steps = { 0, 1/4, 2/4, 3/4 }
-printh("sin = "..sin())
-printh("cos = "..cos())
-printh("sin nil = "..sin(nil))
-printh("cos nil = "..cos(nil))
-for i = 1,#values do
-    for j = 1,#steps do
-        x = values[i] + steps[j]
-        printh("sin "..tostr(x).." = "..sin(x))
-        printh("cos "..tostr(x).." = "..cos(x))
-        if (x ~= 0) and (x >= -32767) then
-            printh("sin "..tostr(-x).." = "..sin(-x))
-            printh("cos "..tostr(-x).." = "..cos(-x))
-        end
-    end
-end
+fixture "t1.06"
+x = shl(1.125, 1)
+test_equal(x, 2.25)
 
+fixture "t1.07"
+x = shl(16384, 1)
+test_equal(x, -32768)
 
-section("boolean ops")
+fixture "t1.08"
+x = shl(-32768, 1)
+test_equal(x, 0)
 
-for i = 0,256 do
-    -- use flr() to make sure the wrap around at 32768 happens
-    x = flr(i * 257)
-    for j = 1,256 do
-        y = flr(j * 257)
-        printh("band "..tostr(x).." "..tostr(y).." = "..band(x, y))
-        printh("bor "..tostr(x).." "..tostr(y).." = "..bor(x, y))
-        printh("bxor "..tostr(x).." "..tostr(y).." = "..bxor(x, y))
-    end
-    -- bnot(x) can’t be represented exactly so we compute this value instead
-    z = flr((bnot(x) - x) * 256 * 256)
-    printh("bnot "..tostr(x).." = "..tostr(flr(-x)).." + "..tostr(z).." / 65536")
-end
+fixture "t1.09"
+x = shl(-32767.5, 1)
+test_equal(x, 1)
+
+fixture "t1.10"
+x = shl(-1, 1)
+test_equal(x, -2)
+
+fixture "t1.11"
+x = shl(-1, 15)
+test_equal(x, -32768)
+
+fixture "t1.12"
+x = shl(-1, 16)
+test_equal(x, 0)
+
+fixture "t1.13"
+x = shl(-1, 32)
+test_equal(x, -1)
+
+fixture "t1.14"
+x = shl(-1, 33)
+test_equal(x, -2)
+
+--
+-- t2. check that shr works properly
+--
+
+fixture "t2.01"
+x = shr(2, 1)
+test_equal(x, 1)
+
+fixture "t2.02"
+x = shr(-2, 1)
+test_equal(x, -1)
+
+--
+-- print report
+--
+
+summary()
 
