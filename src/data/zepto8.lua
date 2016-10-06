@@ -104,12 +104,16 @@ _z8.run = function(cart_code)
             if _update60 ~= nil then
                 _update_buttons()
                 _update60()
-                if _draw ~= nil then _draw() end
+                if _draw ~= nil then
+                    _draw()
+                end
             elseif _update ~= nil then
                 if do_frame then
                     _update_buttons()
                     _update()
-                    if _draw ~= nil then _draw() end
+                    if _draw ~= nil then
+                        _draw()
+                    end
                 end
                 do_frame = not do_frame
             end
@@ -119,7 +123,10 @@ _z8.run = function(cart_code)
 end
 
 _z8.tick = function()
-    return coresume(_z8.loop)
+    ret, err = coresume(_z8.loop)
+    if not ret then
+        printh(err)
+    end
 end
 
 
