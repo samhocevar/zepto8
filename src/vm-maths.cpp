@@ -21,25 +21,25 @@ using lol::msg;
 
 int vm::max(lol::LuaState *l)
 {
-    double x = clamp64(lua_tonumber(l, 1));
-    double y = clamp64(lua_tonumber(l, 2));
+    double x = lua_toclamp64(l, 1);
+    double y = lua_toclamp64(l, 2);
     lua_pushnumber(l, lol::max(x, y));
     return 1;
 }
 
 int vm::min(lol::LuaState *l)
 {
-    double x = clamp64(lua_tonumber(l, 1));
-    double y = clamp64(lua_tonumber(l, 2));
+    double x = lua_toclamp64(l, 1);
+    double y = lua_toclamp64(l, 2);
     lua_pushnumber(l, lol::min(x, y));
     return 1;
 }
 
 int vm::mid(lol::LuaState *l)
 {
-    double x = clamp64(lua_tonumber(l, 1));
-    double y = clamp64(lua_tonumber(l, 2));
-    double z = clamp64(lua_tonumber(l, 3));
+    double x = lua_toclamp64(l, 1);
+    double y = lua_toclamp64(l, 2);
+    double z = lua_toclamp64(l, 3);
     lua_pushnumber(l, x > y ? y > z ? y : lol::min(x, z)
                             : x > z ? x : lol::min(y, z));
     return 1;
@@ -47,28 +47,28 @@ int vm::mid(lol::LuaState *l)
 
 int vm::flr(lol::LuaState *l)
 {
-    lua_pushnumber(l, lol::floor(clamp64(lua_tonumber(l, 1))));
+    lua_pushnumber(l, lol::floor(lua_toclamp64(l, 1)));
     return 1;
 }
 
 int vm::cos(lol::LuaState *l)
 {
-    double x = clamp64(lua_tonumber(l, 1));
-    lua_pushnumber(l, clamp64(lol::cos(-lol::D_TAU * clamp64(x))));
+    double x = lua_toclamp64(l, 1);
+    lua_pushnumber(l, clamp64(lol::cos(-lol::D_TAU * x)));
     return 1;
 }
 
 int vm::sin(lol::LuaState *l)
 {
-    double x = clamp64(lua_tonumber(l, 1));
-    lua_pushnumber(l, clamp64(lol::sin(-lol::D_TAU * clamp64(x))));
+    double x = lua_toclamp64(l, 1);
+    lua_pushnumber(l, clamp64(lol::sin(-lol::D_TAU * x)));
     return 1;
 }
 
 int vm::atan2(lol::LuaState *l)
 {
-    double x = clamp64(lua_tonumber(l, 1));
-    double y = clamp64(lua_tonumber(l, 2));
+    double x = lua_toclamp64(l, 1);
+    double y = lua_toclamp64(l, 2);
 
     // Emulate the official PICO-8 behaviour (as of 0.1.9)
     if (lol::abs(x) == 1.0 && y == -32768.0)
@@ -89,21 +89,21 @@ int vm::atan2(lol::LuaState *l)
 
 int vm::sqrt(lol::LuaState *l)
 {
-    double x = clamp64(lua_tonumber(l, 1));
+    double x = lua_toclamp64(l, 1);
     /* FIXME PICO-8 actually returns stuff for negative values */
-    lua_pushnumber(l, x >= 0 ? lol::sqrt(x) : 0);
+    lua_pushnumber(l, x >= 0 ? clamp64(lol::sqrt(x)) : 0);
     return 1;
 }
 
 int vm::abs(lol::LuaState *l)
 {
-    lua_pushnumber(l, lol::abs(clamp64(lua_tonumber(l, 1))));
+    lua_pushnumber(l, clamp64(lol::abs(lua_toclamp64(l, 1))));
     return 1;
 }
 
 int vm::sgn(lol::LuaState *l)
 {
-    lua_pushnumber(l, lua_tonumber(l, 1) >= 0.0 ? 1.0 : -1.0);
+    lua_pushnumber(l, lua_toclamp64(l, 1) >= 0.0 ? 1.0 : -1.0);
     return 1;
 }
 
@@ -116,7 +116,7 @@ int vm::rnd(lol::LuaState *l)
     /* FIXME: behaves incorrectly when b is negative */
     double a = 0.f;
     double b = lua_isnone(l, 1) ? 1.0
-             : clamp64(lol::min(lua_tonumber(l, 1), 32767.99));
+             : clamp64(lol::min(lua_toclamp64(l, 1), 32767.99));
     double c = lol::mix(a, b, x / (1.0 + (uint32_t)-1));
     lua_pushnumber(l, clamp64(c));
     return 1;
@@ -164,16 +164,16 @@ int vm::bnot(lol::LuaState *l)
 
 int vm::shl(lol::LuaState *l)
 {
-    double x = lua_tonumber(l, 1);
-    double y = lua_tonumber(l, 2);
+    double x = lua_toclamp64(l, 1);
+    double y = lua_toclamp64(l, 2);
     lua_pushnumber(l, (int16_t)x << (int16_t)y);
     return 1;
 }
 
 int vm::shr(lol::LuaState *l)
 {
-    double x = lua_tonumber(l, 1);
-    double y = lua_tonumber(l, 2);
+    double x = lua_toclamp64(l, 1);
+    double y = lua_toclamp64(l, 2);
     lua_pushnumber(l, (int16_t)x >> (int16_t)y);
     return 1;
 }

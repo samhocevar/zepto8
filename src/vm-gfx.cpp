@@ -139,7 +139,7 @@ void vm::vline(int x, int y1, int y2, int color)
 int vm::cursor(lol::LuaState *l)
 {
     vm *that = get_this(l);
-    that->m_cursor = lol::ivec2(lua_tonumber(l, 1), lua_tonumber(l, 2));
+    that->m_cursor = lol::ivec2(lua_toclamp64(l, 1), lua_toclamp64(l, 2));
     return 0;
 }
 
@@ -165,10 +165,10 @@ int vm::print(lol::LuaState *l)
         str = lua_toboolean(l, 1) ? "true" : "false";
 
     bool use_cursor = lua_isnone(l, 2) || lua_isnone(l, 3);
-    int x = use_cursor ? that->m_cursor.x : lua_tonumber(l, 2);
-    int y = use_cursor ? that->m_cursor.y : lua_tonumber(l, 3);
+    int x = use_cursor ? that->m_cursor.x : lua_toclamp64(l, 2);
+    int y = use_cursor ? that->m_cursor.y : lua_toclamp64(l, 3);
     if (!lua_isnone(l, 4))
-        that->m_color = (int)lua_tonumber(l, 4) & 0xf;
+        that->m_color = (int)lua_toclamp64(l, 4) & 0xf;
     int c = that->m_pal[0][that->m_color];
     int initial_x = x;
 
@@ -215,7 +215,7 @@ int vm::print(lol::LuaState *l)
 int vm::camera(lol::LuaState *l)
 {
     vm *that = get_this(l);
-    that->m_camera = lol::ivec2(lua_tonumber(l, 1), lua_tonumber(l, 2));
+    that->m_camera = lol::ivec2(lua_toclamp64(l, 1), lua_toclamp64(l, 2));
     return 0;
 }
 
@@ -223,11 +223,11 @@ int vm::circ(lol::LuaState *l)
 {
     vm *that = get_this(l);
 
-    int x = lua_tonumber(l, 1);
-    int y = lua_tonumber(l, 2);
-    int r = lua_tonumber(l, 3);
+    int x = lua_toclamp64(l, 1);
+    int y = lua_toclamp64(l, 2);
+    int r = lua_toclamp64(l, 3);
     if (!lua_isnone(l, 4))
-        that->m_color = (int)lua_tonumber(l, 4) & 0xf;
+        that->m_color = (int)lua_toclamp64(l, 4) & 0xf;
     int c = that->m_pal[0][that->m_color];
 
     for (int dx = r, dy = 0, err = 0; dx >= dy; )
@@ -259,11 +259,11 @@ int vm::circfill(lol::LuaState *l)
 {
     vm *that = get_this(l);
 
-    int x = lua_tonumber(l, 1);
-    int y = lua_tonumber(l, 2);
-    int r = lua_tonumber(l, 3);
+    int x = lua_toclamp64(l, 1);
+    int y = lua_toclamp64(l, 2);
+    int r = lua_toclamp64(l, 3);
     if (!lua_isnone(l, 4))
-        that->m_color = (int)lua_tonumber(l, 4) & 0xf;
+        that->m_color = (int)lua_toclamp64(l, 4) & 0xf;
     int c = that->m_pal[0][that->m_color];
 
     for (int dx = r, dy = 0, err = 0; dx >= dy; )
@@ -301,10 +301,10 @@ int vm::clip(lol::LuaState *l)
     }
     else
     {
-        int x0 = lua_tonumber(l, 1);
-        int y0 = lua_tonumber(l, 2);
-        int x1 = x0 + lua_tonumber(l, 3);
-        int y1 = y0 + lua_tonumber(l, 4);
+        int x0 = lua_toclamp64(l, 1);
+        int y0 = lua_toclamp64(l, 2);
+        int x1 = x0 + lua_toclamp64(l, 3);
+        int y1 = y0 + lua_toclamp64(l, 4);
 
         that->m_clip = lol::ibox2(lol::max(x0, 0), lol::max(y0, 0),
                                   lol::min(x1, 128), lol::min(y1, 128));
@@ -315,7 +315,7 @@ int vm::clip(lol::LuaState *l)
 
 int vm::cls(lol::LuaState *l)
 {
-    int c = lua_tonumber(l, 1);
+    int c = lua_toclamp64(l, 1);
     vm *that = get_this(l);
     ::memset(that->m_memory.data() + OFFSET_SCREEN, (c & 0xf) * 0x11, SIZE_SCREEN);
     return 0;
@@ -324,7 +324,7 @@ int vm::cls(lol::LuaState *l)
 int vm::color(lol::LuaState *l)
 {
     vm *that = get_this(l);
-    that->m_color = (int)lua_tonumber(l, 1) & 0xf;
+    that->m_color = (int)lua_toclamp64(l, 1) & 0xf;
     return 0;
 }
 
@@ -333,7 +333,7 @@ int vm::fget(lol::LuaState *l)
     if (lua_isnone(l, 1))
         return 0;
 
-    int n = lua_tonumber(l, 1);
+    int n = lua_toclamp64(l, 1);
     uint8_t bits = 0;
 
     if (n >= 0 && n < SIZE_GFX_PROPS)
@@ -345,7 +345,7 @@ int vm::fget(lol::LuaState *l)
     if (lua_isnone(l, 2))
         lua_pushnumber(l, bits);
     else
-        lua_pushboolean(l, bits & (1 << (int)lua_tonumber(l, 2)));
+        lua_pushboolean(l, bits & (1 << (int)lua_toclamp64(l, 2)));
 
     return 1;
 }
@@ -355,13 +355,13 @@ int vm::fset(lol::LuaState *l)
     if (lua_isnone(l, 1) || lua_isnone(l, 2))
         return 0;
 
-    int n = lua_tonumber(l, 1);
+    int n = lua_toclamp64(l, 1);
 
     if (n >= 0 && n < SIZE_GFX_PROPS)
     {
         vm *that = get_this(l);
         uint8_t bits = that->m_memory[OFFSET_GFX_PROPS + n];
-        int f = lua_tonumber(l, 2);
+        int f = lua_toclamp64(l, 2);
 
         if (lua_isnone(l, 3))
             bits = f;
@@ -380,12 +380,12 @@ int vm::line(lol::LuaState *l)
 {
     vm *that = get_this(l);
 
-    int x0 = lua_tonumber(l, 1);
-    int y0 = lua_tonumber(l, 2);
-    int x1 = lua_tonumber(l, 3);
-    int y1 = lua_tonumber(l, 4);
+    int x0 = lua_toclamp64(l, 1);
+    int y0 = lua_toclamp64(l, 2);
+    int x1 = lua_toclamp64(l, 3);
+    int y1 = lua_toclamp64(l, 4);
     if (!lua_isnone(l, 5))
-        that->m_color = (int)lua_tonumber(l, 5) & 0xf;
+        that->m_color = (int)lua_toclamp64(l, 5) & 0xf;
     int c = that->m_pal[0][that->m_color];
 
     if (x0 == x1 && y0 == y1)
@@ -414,13 +414,13 @@ int vm::line(lol::LuaState *l)
 
 int vm::map(lol::LuaState *l)
 {
-    int cel_x = lua_tonumber(l, 1);
-    int cel_y = lua_tonumber(l, 2);
-    int sx = lua_tonumber(l, 3);
-    int sy = lua_tonumber(l, 4);
-    int cel_w = lua_tonumber(l, 5);
-    int cel_h = lua_tonumber(l, 6);
-    int layer = lua_tonumber(l, 7);
+    int cel_x = lua_toclamp64(l, 1);
+    int cel_y = lua_toclamp64(l, 2);
+    int sx = lua_toclamp64(l, 3);
+    int sy = lua_toclamp64(l, 4);
+    int cel_w = lua_toclamp64(l, 5);
+    int cel_h = lua_toclamp64(l, 6);
+    int layer = lua_toclamp64(l, 7);
 
     vm *that = get_this(l);
 
@@ -456,8 +456,8 @@ int vm::map(lol::LuaState *l)
 
 int vm::mget(lol::LuaState *l)
 {
-    int x = lua_tonumber(l, 1);
-    int y = lua_tonumber(l, 2);
+    int x = lua_toclamp64(l, 1);
+    int y = lua_toclamp64(l, 2);
     int n = 0;
 
     if (x >= 0 && x < 128 && y >= 0 && y < 64)
@@ -474,9 +474,9 @@ int vm::mget(lol::LuaState *l)
 
 int vm::mset(lol::LuaState *l)
 {
-    int x = lua_tonumber(l, 1);
-    int y = lua_tonumber(l, 2);
-    int n = lua_tonumber(l, 3);
+    int x = lua_toclamp64(l, 1);
+    int y = lua_toclamp64(l, 2);
+    int n = lua_toclamp64(l, 3);
 
     if (x >= 0 && x < 128 && y >= 0 && y < 64)
     {
@@ -503,9 +503,9 @@ int vm::pal(lol::LuaState *l)
     }
     else
     {
-        int c0 = lua_tonumber(l, 1);
-        int c1 = lua_tonumber(l, 2);
-        int p = lua_tonumber(l, 3);
+        int c0 = lua_toclamp64(l, 1);
+        int c1 = lua_toclamp64(l, 2);
+        int p = lua_toclamp64(l, 3);
 
         that->m_pal[p & 1][c0 & 0xf] = c1 & 0xf;
     }
@@ -524,7 +524,7 @@ int vm::palt(lol::LuaState *l)
     }
     else
     {
-        int c = lua_tonumber(l, 1);
+        int c = lua_toclamp64(l, 1);
         int t = lua_toboolean(l, 2);
         that->m_palt[c & 0xf] = t;
     }
@@ -548,10 +548,10 @@ int vm::pset(lol::LuaState *l)
 {
     vm *that = get_this(l);
 
-    int x = lua_tonumber(l, 1);
-    int y = lua_tonumber(l, 2);
+    int x = lua_toclamp64(l, 1);
+    int y = lua_toclamp64(l, 2);
     if (!lua_isnone(l, 3))
-        that->m_color = (int)lua_tonumber(l, 3) & 0xf;
+        that->m_color = (int)lua_toclamp64(l, 3) & 0xf;
     int c = that->m_pal[0][that->m_color];
 
     that->setpixel(x, y, c);
@@ -563,12 +563,12 @@ int vm::rect(lol::LuaState *l)
 {
     vm *that = get_this(l);
 
-    int x0 = lua_tonumber(l, 1);
-    int y0 = lua_tonumber(l, 2);
-    int x1 = lua_tonumber(l, 3);
-    int y1 = lua_tonumber(l, 4);
+    int x0 = lua_toclamp64(l, 1);
+    int y0 = lua_toclamp64(l, 2);
+    int x1 = lua_toclamp64(l, 3);
+    int y1 = lua_toclamp64(l, 4);
     if (!lua_isnone(l, 5))
-        that->m_color = (int)lua_tonumber(l, 5) & 0xf;
+        that->m_color = (int)lua_toclamp64(l, 5) & 0xf;
     int c = that->m_pal[0][that->m_color];
 
     if (x0 > x1)
@@ -593,12 +593,12 @@ int vm::rectfill(lol::LuaState *l)
 {
     vm *that = get_this(l);
 
-    int x0 = lua_tonumber(l, 1);
-    int y0 = lua_tonumber(l, 2);
-    int x1 = lua_tonumber(l, 3);
-    int y1 = lua_tonumber(l, 4);
+    int x0 = lua_toclamp64(l, 1);
+    int y0 = lua_toclamp64(l, 2);
+    int x1 = lua_toclamp64(l, 3);
+    int y1 = lua_toclamp64(l, 4);
     if (!lua_isnone(l, 5))
-        that->m_color = (int)lua_tonumber(l, 5) & 0xf;
+        that->m_color = (int)lua_toclamp64(l, 5) & 0xf;
     int c = that->m_pal[0][that->m_color];
 
     for (int y = lol::min(y0, y1); y <= lol::max(y0, y1); ++y)
@@ -611,8 +611,8 @@ int vm::sget(lol::LuaState *l)
 {
     vm *that = get_this(l);
 
-    int x = lua_tonumber(l, 1);
-    int y = lua_tonumber(l, 2);
+    int x = lua_toclamp64(l, 1);
+    int y = lua_toclamp64(l, 2);
 
     lua_pushnumber(l, that->getspixel(x, y));
 
@@ -623,9 +623,9 @@ int vm::sset(lol::LuaState *l)
 {
     vm *that = get_this(l);
 
-    int x = lua_tonumber(l, 1);
-    int y = lua_tonumber(l, 2);
-    int col = lua_isnone(l, 3) ? that->m_color : lua_tonumber(l, 3);
+    int x = lua_toclamp64(l, 1);
+    int y = lua_toclamp64(l, 2);
+    int col = lua_isnone(l, 3) ? that->m_color : lua_toclamp64(l, 3);
     int c = that->m_pal[0][col & 0xf];
 
     that->setspixel(x, y, c);
@@ -638,11 +638,11 @@ int vm::spr(lol::LuaState *l)
     vm *that = get_this(l);
 
     // FIXME: should we abort if n == 0?
-    int n = lua_tonumber(l, 1);
-    int x = lua_tonumber(l, 2);
-    int y = lua_tonumber(l, 3);
-    float w = lua_isnoneornil(l, 4) ? 1 : lua_tonumber(l, 4);
-    float h = lua_isnoneornil(l, 5) ? 1 : lua_tonumber(l, 5);
+    int n = lua_toclamp64(l, 1);
+    int x = lua_toclamp64(l, 2);
+    int y = lua_toclamp64(l, 3);
+    float w = lua_isnoneornil(l, 4) ? 1 : lua_toclamp64(l, 4);
+    float h = lua_isnoneornil(l, 5) ? 1 : lua_toclamp64(l, 5);
     int flip_x = lua_toboolean(l, 6);
     int flip_y = lua_toboolean(l, 7);
 
@@ -666,14 +666,14 @@ int vm::sspr(lol::LuaState *l)
 {
     vm *that = get_this(l);
 
-    int sx = lua_tonumber(l, 1);
-    int sy = lua_tonumber(l, 2);
-    int sw = lua_tonumber(l, 3);
-    int sh = lua_tonumber(l, 4);
-    int dx = lua_tonumber(l, 5);
-    int dy = lua_tonumber(l, 6);
-    int dw = lua_isnone(l, 7) ? sw : lua_tonumber(l, 7);
-    int dh = lua_isnone(l, 8) ? sh : lua_tonumber(l, 8);
+    int sx = lua_toclamp64(l, 1);
+    int sy = lua_toclamp64(l, 2);
+    int sw = lua_toclamp64(l, 3);
+    int sh = lua_toclamp64(l, 4);
+    int dx = lua_toclamp64(l, 5);
+    int dy = lua_toclamp64(l, 6);
+    int dw = lua_isnone(l, 7) ? sw : lua_toclamp64(l, 7);
+    int dh = lua_isnone(l, 8) ? sh : lua_toclamp64(l, 8);
     int flip_x = lua_toboolean(l, 9);
     int flip_y = lua_toboolean(l, 10);
 

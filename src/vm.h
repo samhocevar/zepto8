@@ -175,5 +175,11 @@ static inline double clamp64(double x)
     return fixed2double(double2fixed(x));
 }
 
+// Not a Lua function, but behaves like one
+static inline double lua_toclamp64(lua_State *l, int index)
+{
+    return clamp64(lua_tonumber(l, index));
+}
+
 } // namespace z8
 

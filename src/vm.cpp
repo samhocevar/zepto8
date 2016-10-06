@@ -67,9 +67,9 @@ void vm::hook(lol::LuaState *l, lua_Debug *)
 {
     vm *that = get_this(l);
 
-    // The value 35000 was found using trial and error
+    // The value 135000 was found using trial and error
     that->m_instructions += 1000;
-    if (that->m_instructions >= 35000)
+    if (that->m_instructions >= 135000)
         lua_yield(l, 0);
 }
 
