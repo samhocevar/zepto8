@@ -233,8 +233,25 @@ int vm::cartdata(lol::LuaState *l)
 
 int vm::reload(lol::LuaState *l)
 {
-    UNUSED(l);
-    msg::info("z8:stub:reload\n");
+    int dst = lua_tonumber(l, 1);
+    int src = lua_tonumber(l, 2);
+    int size = lua_tonumber(l, 3);
+
+    // FIXME: test the behaviour more with various invalid arguments
+    if (lua_isnone(l, 1))
+    {
+        dst = src = 0;
+        size = OFFSET_CODE;
+    }
+
+    if (dst >= 0 && src >= 0 && size > 0
+         && dst < OFFSET_CODE && src < SIZE_MEMORY
+         && dst + size <= OFFSET_CODE && src + size <= SIZE_MEMORY)
+    {
+        vm *that = get_this(l);
+        ::memcpy(that->m_memory.data() + dst, that->m_cart.get_rom().data() + src, size);
+    }
+
     return 0;
 }
 
@@ -270,7 +287,7 @@ int vm::memcpy(lol::LuaState *l)
     /* FIXME: should the memory wrap around maybe? */
     if (dst >= 0 && src >= 0 && size > 0
          && dst < SIZE_MEMORY && src < SIZE_MEMORY
-         && src + size <= SIZE_MEMORY && dst + size <= SIZE_MEMORY)
+         && dst + size <= SIZE_MEMORY && src + size <= SIZE_MEMORY)
     {
         vm *that = get_this(l);
         memmove(that->m_memory.data() + dst, that->m_memory.data() + src, size);
