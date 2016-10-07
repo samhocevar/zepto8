@@ -230,23 +230,50 @@ int vm::cartdata(lol::LuaState *l)
 
 int vm::reload(lol::LuaState *l)
 {
-    int dst = lua_tonumber(l, 1);
-    int src = lua_tonumber(l, 2);
-    int size = lua_tonumber(l, 3);
+    int dst = 0, src = 0, size = OFFSET_CODE;
 
-    // FIXME: test the behaviour more with various invalid arguments
-    if (lua_isnone(l, 1))
+    // PICO-8 fully reloads the cartridge if not all arguments are passed
+    if (!lua_isnone(l, 3))
     {
-        dst = src = 0;
-        size = OFFSET_CODE;
+        dst = lua_toclamp64(l, 1);
+        src = lua_toclamp64(l, 2);
+        size = lua_toclamp64(l, 3);
     }
 
-    if (dst >= 0 && src >= 0 && size > 0
-         && dst < OFFSET_CODE && src < SIZE_MEMORY
-         && dst + size <= OFFSET_CODE && src + size <= SIZE_MEMORY)
+    // Attempting to write a positive number of bytes outside the memory area
+    // raises an error. Everything else seems legal.
+    if (size > 0 && (dst < 0 || dst + size > SIZE_MEMORY))
     {
-        vm *that = get_this(l);
-        ::memcpy(that->m_memory.data() + dst, that->m_cart.get_rom().data() + src, size);
+        // FIXME: this should raise a Lua error
+        msg::error("bad memory access");
+        return 0;
+    }
+
+    vm *that = get_this(l);
+
+    // If reading from before the cart, fill with zeroes
+    if (size > 0 && src < 0)
+    {
+        int amount = lol::min(size, -src);
+        ::memset(that->m_memory.data() + dst, 0, amount);
+        dst += amount;
+        src += amount;
+        size -= amount;
+    }
+
+    // Same when reading from after the cart
+    if (size > 0 && src + size > OFFSET_CODE)
+    {
+        int amount = lol::min(size, src + size - OFFSET_CODE);
+        ::memset(that->m_memory.data() + dst + size - amount, 0, amount);
+        size -= amount;
+    }
+
+    // The remaining bytes can be copied normally
+    if (size > 0)
+    {
+        ::memcpy(that->m_memory.data() + dst,
+                 that->m_cart.get_rom().data() + src, size);
     }
 
     return 0;
