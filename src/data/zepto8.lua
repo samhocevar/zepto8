@@ -86,6 +86,10 @@ _z8.run = function(cart_code)
     _z8.loop = cocreate(function()
         local do_frame = true
 
+        -- First reload cart into memory
+        memset(0, 0, 0x8000)
+        reload()
+
         -- From the PICO-8 documentation:
         -- “The draw state is reset each time a program is run. This is equivalent to calling:
         -- clip() camera() pal() color()”

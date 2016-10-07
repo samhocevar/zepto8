@@ -76,9 +76,6 @@ void vm::hook(lol::LuaState *l, lua_Debug *)
 void vm::load(char const *name)
 {
     m_cart.load(name);
-
-    // Copy everything up to the code section into memory
-    ::memcpy(m_memory.data(), m_cart.get_rom().data(), OFFSET_CODE);
 }
 
 void vm::run()
