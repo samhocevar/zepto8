@@ -46,13 +46,13 @@ vm::~vm()
 {
 }
 
-void vm::set_this(lol::LuaState *l)
+void vm::set_this(lua_State *l)
 {
     lua_pushlightuserdata(l, this);
     lua_setglobal(l, "\x01");
 }
 
-vm* vm::get_this(lol::LuaState *l)
+vm* vm::get_this(lua_State *l)
 {
     lua_getglobal(l, "\x01");
     vm *ret = (vm *)lua_touserdata(l, -1);
@@ -60,7 +60,7 @@ vm* vm::get_this(lol::LuaState *l)
     return ret;
 }
 
-void vm::hook(lol::LuaState *l, lua_Debug *)
+void vm::hook(lua_State *l, lua_Debug *)
 {
     vm *that = get_this(l);
 
@@ -85,7 +85,7 @@ void vm::step(float seconds)
 {
     UNUSED(seconds);
 
-    lol::LuaState *l = GetLuaState();
+    lua_State *l = GetLuaState();
     lua_getglobal(l, "_z8");
     lua_getfield(l, -1, "tick");
     lua_pcall(l, 0, 0, 0);
@@ -100,72 +100,72 @@ const lol::LuaObjectLib* vm::GetLib()
 
         // Statics
         {
-            { "run",      &vm::run },
-            { "menuitem", &vm::menuitem },
-            { "cartdata", &vm::cartdata },
-            { "reload",   &vm::reload },
-            { "peek",     &vm::peek },
-            { "poke",     &vm::poke },
-            { "memcpy",   &vm::memcpy },
-            { "memset",   &vm::memset },
-            { "dget",     &vm::dget },
-            { "dset",     &vm::dset },
-            { "stat",     &vm::stat },
-            { "printh",   &vm::printh },
+            { "run",      &vm::api::run },
+            { "menuitem", &vm::api::menuitem },
+            { "cartdata", &vm::api::cartdata },
+            { "reload",   &vm::api::reload },
+            { "peek",     &vm::api::peek },
+            { "poke",     &vm::api::poke },
+            { "memcpy",   &vm::api::memcpy },
+            { "memset",   &vm::api::memset },
+            { "dget",     &vm::api::dget },
+            { "dset",     &vm::api::dset },
+            { "stat",     &vm::api::stat },
+            { "printh",   &vm::api::printh },
 
-            { "_update_buttons", &vm::update_buttons },
-            { "btn",  &vm::btn },
-            { "btnp", &vm::btnp },
+            { "_update_buttons", &vm::api::update_buttons },
+            { "btn",  &vm::api::btn },
+            { "btnp", &vm::api::btnp },
 
-            { "cursor", &vm::cursor },
-            { "print",  &vm::print },
+            { "cursor", &vm::api::cursor },
+            { "print",  &vm::api::print },
 
-            { "max",   &vm::max },
-            { "min",   &vm::min },
-            { "mid",   &vm::mid },
-            { "flr",   &vm::flr },
-            { "cos",   &vm::cos },
-            { "sin",   &vm::sin },
-            { "atan2", &vm::atan2 },
-            { "sqrt",  &vm::sqrt },
-            { "abs",   &vm::abs },
-            { "sgn",   &vm::sgn },
-            { "rnd",   &vm::rnd },
-            { "srand", &vm::srand },
-            { "band",  &vm::band },
-            { "bor",   &vm::bor },
-            { "bxor",  &vm::bxor },
-            { "bnot",  &vm::bnot },
-            { "shl",   &vm::shl },
-            { "shr",   &vm::shr },
+            { "max",   &vm::api::max },
+            { "min",   &vm::api::min },
+            { "mid",   &vm::api::mid },
+            { "flr",   &vm::api::flr },
+            { "cos",   &vm::api::cos },
+            { "sin",   &vm::api::sin },
+            { "atan2", &vm::api::atan2 },
+            { "sqrt",  &vm::api::sqrt },
+            { "abs",   &vm::api::abs },
+            { "sgn",   &vm::api::sgn },
+            { "rnd",   &vm::api::rnd },
+            { "srand", &vm::api::srand },
+            { "band",  &vm::api::band },
+            { "bor",   &vm::api::bor },
+            { "bxor",  &vm::api::bxor },
+            { "bnot",  &vm::api::bnot },
+            { "shl",   &vm::api::shl },
+            { "shr",   &vm::api::shr },
 
-            { "camera",   &vm::camera },
-            { "circ",     &vm::circ },
-            { "circfill", &vm::circfill },
-            { "clip",     &vm::clip },
-            { "cls",      &vm::cls },
-            { "color",    &vm::color },
-            { "fget",     &vm::fget },
-            { "fset",     &vm::fset },
-            { "line",     &vm::line },
-            { "map",      &vm::map },
-            { "mget",     &vm::mget },
-            { "mset",     &vm::mset },
-            { "pal",      &vm::pal },
-            { "palt",     &vm::palt },
-            { "pget",     &vm::pget },
-            { "pset",     &vm::pset },
-            { "rect",     &vm::rect },
-            { "rectfill", &vm::rectfill },
-            { "sget",     &vm::sget },
-            { "sset",     &vm::sset },
-            { "spr",      &vm::spr },
-            { "sspr",     &vm::sspr },
+            { "camera",   &vm::api::camera },
+            { "circ",     &vm::api::circ },
+            { "circfill", &vm::api::circfill },
+            { "clip",     &vm::api::clip },
+            { "cls",      &vm::api::cls },
+            { "color",    &vm::api::color },
+            { "fget",     &vm::api::fget },
+            { "fset",     &vm::api::fset },
+            { "line",     &vm::api::line },
+            { "map",      &vm::api::map },
+            { "mget",     &vm::api::mget },
+            { "mset",     &vm::api::mset },
+            { "pal",      &vm::api::pal },
+            { "palt",     &vm::api::palt },
+            { "pget",     &vm::api::pget },
+            { "pset",     &vm::api::pset },
+            { "rect",     &vm::api::rect },
+            { "rectfill", &vm::api::rectfill },
+            { "sget",     &vm::api::sget },
+            { "sset",     &vm::api::sset },
+            { "spr",      &vm::api::spr },
+            { "sspr",     &vm::api::sspr },
 
-            { "music", &vm::music },
-            { "sfx",   &vm::sfx },
+            { "music", &vm::api::music },
+            { "sfx",   &vm::api::sfx },
 
-            { "time", &vm::time },
+            { "time", &vm::api::time },
 
             { nullptr, nullptr }
         },
@@ -195,7 +195,7 @@ vm* vm::New(lol::LuaState* l, int argc)
 // System
 //
 
-int vm::run(lol::LuaState *l)
+int vm::api::run(lua_State *l)
 {
     vm *that = get_this(l);
 
@@ -211,21 +211,21 @@ int vm::run(lol::LuaState *l)
     return 0;
 }
 
-int vm::menuitem(lol::LuaState *l)
+int vm::api::menuitem(lua_State *l)
 {
     UNUSED(l);
     msg::info("z8:stub:menuitem\n");
     return 0;
 }
 
-int vm::cartdata(lol::LuaState *l)
+int vm::api::cartdata(lua_State *l)
 {
     int x = (int)lua_tonumber(l, 1);
     msg::info("z8:stub:cartdata %d\n", x);
     return 0;
 }
 
-int vm::reload(lol::LuaState *l)
+int vm::api::reload(lua_State *l)
 {
     int dst = 0, src = 0, size = OFFSET_CODE;
 
@@ -271,7 +271,7 @@ int vm::reload(lol::LuaState *l)
     return 0;
 }
 
-int vm::peek(lol::LuaState *l)
+int vm::api::peek(lua_State *l)
 {
     // Note: peek() is the same as peek(0)
     int addr = (int)lua_toclamp64(l, 1) & 0xffff;
@@ -283,7 +283,7 @@ int vm::peek(lol::LuaState *l)
     return 1;
 }
 
-int vm::poke(lol::LuaState *l)
+int vm::api::poke(lua_State *l)
 {
     // Note: poke() is the same as poke(0, 0)
     int addr = (int)lua_toclamp64(l, 1) & 0xffff;
@@ -296,7 +296,7 @@ int vm::poke(lol::LuaState *l)
     return 0;
 }
 
-int vm::memcpy(lol::LuaState *l)
+int vm::api::memcpy(lua_State *l)
 {
     int dst = (int)lua_toclamp64(l, 1) & 0xffff;
     int src = (int)lua_toclamp64(l, 2) & 0xffff;
@@ -339,7 +339,7 @@ int vm::memcpy(lol::LuaState *l)
     return 0;
 }
 
-int vm::memset(lol::LuaState *l)
+int vm::api::memset(lua_State *l)
 {
     int dst = (int)lua_toclamp64(l, 1) & 0xffff;
     int val = (int)lua_toclamp64(l, 2) & 0xffff;
@@ -359,28 +359,28 @@ int vm::memset(lol::LuaState *l)
     return 0;
 }
 
-int vm::dget(lol::LuaState *l)
+int vm::api::dget(lua_State *l)
 {
     msg::info("z8:stub:dget\n");
     lua_pushnumber(l, 0);
     return 1;
 }
 
-int vm::dset(lol::LuaState *l)
+int vm::api::dset(lua_State *l)
 {
     UNUSED(l);
     msg::info("z8:stub:dset\n");
     return 0;
 }
 
-int vm::stat(lol::LuaState *l)
+int vm::api::stat(lua_State *l)
 {
     msg::info("z8:stub:stat\n");
     lua_pushnumber(l, 0);
     return 1;
 }
 
-int vm::printh(lol::LuaState *l)
+int vm::api::printh(lua_State *l)
 {
     char const *str;
     if (lua_isnoneornil(l, 1))
@@ -400,7 +400,7 @@ int vm::printh(lol::LuaState *l)
 // I/O
 //
 
-int vm::update_buttons(lol::LuaState *l)
+int vm::api::update_buttons(lua_State *l)
 {
     vm *that = get_this(l);
 
@@ -416,7 +416,7 @@ int vm::update_buttons(lol::LuaState *l)
     return 0;
 }
 
-int vm::btn(lol::LuaState *l)
+int vm::api::btn(lua_State *l)
 {
     vm *that = get_this(l);
 
@@ -436,7 +436,7 @@ int vm::btn(lol::LuaState *l)
     return 1;
 }
 
-int vm::btnp(lol::LuaState *l)
+int vm::api::btnp(lua_State *l)
 {
     auto was_pressed = [](int i)
     {
@@ -471,14 +471,14 @@ int vm::btnp(lol::LuaState *l)
 // Sound
 //
 
-int vm::music(lol::LuaState *l)
+int vm::api::music(lua_State *l)
 {
     UNUSED(l);
     msg::info("z8:stub:music\n");
     return 0;
 }
 
-int vm::sfx(lol::LuaState *l)
+int vm::api::sfx(lua_State *l)
 {
     UNUSED(l);
     msg::info("z8:stub:sfx\n");
@@ -489,7 +489,7 @@ int vm::sfx(lol::LuaState *l)
 // Deprecated
 //
 
-int vm::time(lol::LuaState *l)
+int vm::api::time(lua_State *l)
 {
     vm *that = get_this(l);
     float time = lol::fmod(that->m_timer.Poll(), 65536.0f);

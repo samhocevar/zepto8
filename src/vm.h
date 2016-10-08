@@ -47,85 +47,88 @@ public:
     static vm* New(lol::LuaState* l, int arg_nb);
 
 private:
-    void set_this(lol::LuaState *l);
-    static vm* get_this(lol::LuaState *l);
-    static void hook(lol::LuaState *l, lua_Debug *ar);
+    void set_this(lua_State *l);
+    static vm* get_this(lua_State *l);
+    static void hook(lua_State *l, lua_Debug *ar);
 
-    // System
-    static int run(lol::LuaState *l);
-    static int menuitem(lol::LuaState *l);
-    static int cartdata(lol::LuaState *l);
-    static int reload(lol::LuaState *l);
-    static int peek(lol::LuaState *l);
-    static int poke(lol::LuaState *l);
-    static int memcpy(lol::LuaState *l);
-    static int memset(lol::LuaState *l);
-    static int dget(lol::LuaState *l);
-    static int dset(lol::LuaState *l);
-    static int stat(lol::LuaState *l);
-    static int printh(lol::LuaState *l);
+    struct api
+    {
+        // System
+        static int run(lua_State *l);
+        static int menuitem(lua_State *l);
+        static int cartdata(lua_State *l);
+        static int reload(lua_State *l);
+        static int peek(lua_State *l);
+        static int poke(lua_State *l);
+        static int memcpy(lua_State *l);
+        static int memset(lua_State *l);
+        static int dget(lua_State *l);
+        static int dset(lua_State *l);
+        static int stat(lua_State *l);
+        static int printh(lua_State *l);
 
-    // I/O
-    static int update_buttons(lol::LuaState *l);
-    static int btn(lol::LuaState *l);
-    static int btnp(lol::LuaState *l);
+        // I/O
+        static int update_buttons(lua_State *l);
+        static int btn(lua_State *l);
+        static int btnp(lua_State *l);
 
-    // Text
-    static int cursor(lol::LuaState *l);
-    static int print(lol::LuaState *l);
+        // Text
+        static int cursor(lua_State *l);
+        static int print(lua_State *l);
 
-    // Maths
-    static int max(lol::LuaState *l);
-    static int min(lol::LuaState *l);
-    static int mid(lol::LuaState *l);
-    static int flr(lol::LuaState *l);
-    static int cos(lol::LuaState *l);
-    static int sin(lol::LuaState *l);
-    static int atan2(lol::LuaState *l);
-    static int sqrt(lol::LuaState *l);
-    static int abs(lol::LuaState *l);
-    static int sgn(lol::LuaState *l);
+        // Maths
+        static int max(lua_State *l);
+        static int min(lua_State *l);
+        static int mid(lua_State *l);
+        static int flr(lua_State *l);
+        static int cos(lua_State *l);
+        static int sin(lua_State *l);
+        static int atan2(lua_State *l);
+        static int sqrt(lua_State *l);
+        static int abs(lua_State *l);
+        static int sgn(lua_State *l);
 
-    static int rnd(lol::LuaState *l);
-    static int srand(lol::LuaState *l);
+        static int rnd(lua_State *l);
+        static int srand(lua_State *l);
 
-    static int band(lol::LuaState *l);
-    static int bor(lol::LuaState *l);
-    static int bxor(lol::LuaState *l);
-    static int bnot(lol::LuaState *l);
-    static int shl(lol::LuaState *l);
-    static int shr(lol::LuaState *l);
+        static int band(lua_State *l);
+        static int bor(lua_State *l);
+        static int bxor(lua_State *l);
+        static int bnot(lua_State *l);
+        static int shl(lua_State *l);
+        static int shr(lua_State *l);
 
-    // Graphics
-    static int camera(lol::LuaState *l);
-    static int circ(lol::LuaState *l);
-    static int circfill(lol::LuaState *l);
-    static int clip(lol::LuaState *l);
-    static int cls(lol::LuaState *l);
-    static int color(lol::LuaState *l);
-    static int fget(lol::LuaState *l);
-    static int fset(lol::LuaState *l);
-    static int line(lol::LuaState *l);
-    static int map(lol::LuaState *l);
-    static int mget(lol::LuaState *l);
-    static int mset(lol::LuaState *l);
-    static int pal(lol::LuaState *l);
-    static int palt(lol::LuaState *l);
-    static int pget(lol::LuaState *l);
-    static int pset(lol::LuaState *l);
-    static int rect(lol::LuaState *l);
-    static int rectfill(lol::LuaState *l);
-    static int sget(lol::LuaState *l);
-    static int sset(lol::LuaState *l);
-    static int spr(lol::LuaState *l);
-    static int sspr(lol::LuaState *l);
+        // Graphics
+        static int camera(lua_State *l);
+        static int circ(lua_State *l);
+        static int circfill(lua_State *l);
+        static int clip(lua_State *l);
+        static int cls(lua_State *l);
+        static int color(lua_State *l);
+        static int fget(lua_State *l);
+        static int fset(lua_State *l);
+        static int line(lua_State *l);
+        static int map(lua_State *l);
+        static int mget(lua_State *l);
+        static int mset(lua_State *l);
+        static int pal(lua_State *l);
+        static int palt(lua_State *l);
+        static int pget(lua_State *l);
+        static int pset(lua_State *l);
+        static int rect(lua_State *l);
+        static int rectfill(lua_State *l);
+        static int sget(lua_State *l);
+        static int sset(lua_State *l);
+        static int spr(lua_State *l);
+        static int sspr(lua_State *l);
 
-    // Sound
-    static int music(lol::LuaState *l);
-    static int sfx(lol::LuaState *l);
+        // Sound
+        static int music(lua_State *l);
+        static int sfx(lua_State *l);
 
-    // Deprecated
-    static int time(lol::LuaState *l);
+        // Deprecated
+        static int time(lua_State *l);
+    };
 
 private:
     int getpixel(int x, int y);

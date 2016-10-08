@@ -136,14 +136,14 @@ void vm::vline(int x, int y1, int y2, int color)
 // Text
 //
 
-int vm::cursor(lol::LuaState *l)
+int vm::api::cursor(lua_State *l)
 {
     vm *that = get_this(l);
     that->m_cursor = lol::ivec2(lua_toclamp64(l, 1), lua_toclamp64(l, 2));
     return 0;
 }
 
-int vm::print(lol::LuaState *l)
+int vm::api::print(lua_State *l)
 {
     vm *that = get_this(l);
 
@@ -212,14 +212,14 @@ int vm::print(lol::LuaState *l)
 // Graphics
 //
 
-int vm::camera(lol::LuaState *l)
+int vm::api::camera(lua_State *l)
 {
     vm *that = get_this(l);
     that->m_camera = lol::ivec2(lua_toclamp64(l, 1), lua_toclamp64(l, 2));
     return 0;
 }
 
-int vm::circ(lol::LuaState *l)
+int vm::api::circ(lua_State *l)
 {
     vm *that = get_this(l);
 
@@ -255,7 +255,7 @@ int vm::circ(lol::LuaState *l)
     return 0;
 }
 
-int vm::circfill(lol::LuaState *l)
+int vm::api::circfill(lua_State *l)
 {
     vm *that = get_this(l);
 
@@ -288,7 +288,7 @@ int vm::circfill(lol::LuaState *l)
     return 0;
 }
 
-int vm::clip(lol::LuaState *l)
+int vm::api::clip(lua_State *l)
 {
     vm *that = get_this(l);
 
@@ -313,7 +313,7 @@ int vm::clip(lol::LuaState *l)
     return 0;
 }
 
-int vm::cls(lol::LuaState *l)
+int vm::api::cls(lua_State *l)
 {
     int c = lua_toclamp64(l, 1);
     vm *that = get_this(l);
@@ -321,14 +321,14 @@ int vm::cls(lol::LuaState *l)
     return 0;
 }
 
-int vm::color(lol::LuaState *l)
+int vm::api::color(lua_State *l)
 {
     vm *that = get_this(l);
     that->m_color = (int)lua_toclamp64(l, 1) & 0xf;
     return 0;
 }
 
-int vm::fget(lol::LuaState *l)
+int vm::api::fget(lua_State *l)
 {
     if (lua_isnone(l, 1))
         return 0;
@@ -350,7 +350,7 @@ int vm::fget(lol::LuaState *l)
     return 1;
 }
 
-int vm::fset(lol::LuaState *l)
+int vm::api::fset(lua_State *l)
 {
     if (lua_isnone(l, 1) || lua_isnone(l, 2))
         return 0;
@@ -376,7 +376,7 @@ int vm::fset(lol::LuaState *l)
     return 0;
 }
 
-int vm::line(lol::LuaState *l)
+int vm::api::line(lua_State *l)
 {
     vm *that = get_this(l);
 
@@ -412,7 +412,7 @@ int vm::line(lol::LuaState *l)
     return 0;
 }
 
-int vm::map(lol::LuaState *l)
+int vm::api::map(lua_State *l)
 {
     int cel_x = lua_toclamp64(l, 1);
     int cel_y = lua_toclamp64(l, 2);
@@ -454,7 +454,7 @@ int vm::map(lol::LuaState *l)
     return 0;
 }
 
-int vm::mget(lol::LuaState *l)
+int vm::api::mget(lua_State *l)
 {
     int x = lua_toclamp64(l, 1);
     int y = lua_toclamp64(l, 2);
@@ -472,7 +472,7 @@ int vm::mget(lol::LuaState *l)
     return 1;
 }
 
-int vm::mset(lol::LuaState *l)
+int vm::api::mset(lua_State *l)
 {
     int x = lua_toclamp64(l, 1);
     int y = lua_toclamp64(l, 2);
@@ -489,7 +489,7 @@ int vm::mset(lol::LuaState *l)
     return 0;
 }
 
-int vm::pal(lol::LuaState *l)
+int vm::api::pal(lua_State *l)
 {
     vm *that = get_this(l);
 
@@ -513,7 +513,7 @@ int vm::pal(lol::LuaState *l)
     return 0;
 }
 
-int vm::palt(lol::LuaState *l)
+int vm::api::palt(lua_State *l)
 {
     vm *that = get_this(l);
 
@@ -532,7 +532,7 @@ int vm::palt(lol::LuaState *l)
     return 0;
 }
 
-int vm::pget(lol::LuaState *l)
+int vm::api::pget(lua_State *l)
 {
     lol::LuaStack s(l);
     lol::LuaFloat x, y, ret;
@@ -544,7 +544,7 @@ int vm::pget(lol::LuaState *l)
     return s << ret;
 }
 
-int vm::pset(lol::LuaState *l)
+int vm::api::pset(lua_State *l)
 {
     vm *that = get_this(l);
 
@@ -559,7 +559,7 @@ int vm::pset(lol::LuaState *l)
     return 0;
 }
 
-int vm::rect(lol::LuaState *l)
+int vm::api::rect(lua_State *l)
 {
     vm *that = get_this(l);
 
@@ -589,7 +589,7 @@ int vm::rect(lol::LuaState *l)
     return 0;
 }
 
-int vm::rectfill(lol::LuaState *l)
+int vm::api::rectfill(lua_State *l)
 {
     vm *that = get_this(l);
 
@@ -607,7 +607,7 @@ int vm::rectfill(lol::LuaState *l)
     return 0;
 }
 
-int vm::sget(lol::LuaState *l)
+int vm::api::sget(lua_State *l)
 {
     vm *that = get_this(l);
 
@@ -619,7 +619,7 @@ int vm::sget(lol::LuaState *l)
     return 1;
 }
 
-int vm::sset(lol::LuaState *l)
+int vm::api::sset(lua_State *l)
 {
     vm *that = get_this(l);
 
@@ -633,7 +633,7 @@ int vm::sset(lol::LuaState *l)
     return 0;
 }
 
-int vm::spr(lol::LuaState *l)
+int vm::api::spr(lua_State *l)
 {
     vm *that = get_this(l);
 
@@ -662,7 +662,7 @@ int vm::spr(lol::LuaState *l)
     return 0;
 }
 
-int vm::sspr(lol::LuaState *l)
+int vm::api::sspr(lua_State *l)
 {
     vm *that = get_this(l);
 

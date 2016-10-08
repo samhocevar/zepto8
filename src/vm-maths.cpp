@@ -19,7 +19,7 @@ namespace z8
 
 using lol::msg;
 
-int vm::max(lol::LuaState *l)
+int vm::api::max(lua_State *l)
 {
     double x = lua_toclamp64(l, 1);
     double y = lua_toclamp64(l, 2);
@@ -27,7 +27,7 @@ int vm::max(lol::LuaState *l)
     return 1;
 }
 
-int vm::min(lol::LuaState *l)
+int vm::api::min(lua_State *l)
 {
     double x = lua_toclamp64(l, 1);
     double y = lua_toclamp64(l, 2);
@@ -35,7 +35,7 @@ int vm::min(lol::LuaState *l)
     return 1;
 }
 
-int vm::mid(lol::LuaState *l)
+int vm::api::mid(lua_State *l)
 {
     double x = lua_toclamp64(l, 1);
     double y = lua_toclamp64(l, 2);
@@ -45,27 +45,27 @@ int vm::mid(lol::LuaState *l)
     return 1;
 }
 
-int vm::flr(lol::LuaState *l)
+int vm::api::flr(lua_State *l)
 {
     lua_pushnumber(l, lol::floor(lua_toclamp64(l, 1)));
     return 1;
 }
 
-int vm::cos(lol::LuaState *l)
+int vm::api::cos(lua_State *l)
 {
     double x = lua_toclamp64(l, 1);
     lua_pushnumber(l, clamp64(lol::cos(-lol::D_TAU * x)));
     return 1;
 }
 
-int vm::sin(lol::LuaState *l)
+int vm::api::sin(lua_State *l)
 {
     double x = lua_toclamp64(l, 1);
     lua_pushnumber(l, clamp64(lol::sin(-lol::D_TAU * x)));
     return 1;
 }
 
-int vm::atan2(lol::LuaState *l)
+int vm::api::atan2(lua_State *l)
 {
     double x = lua_toclamp64(l, 1);
     double y = lua_toclamp64(l, 2);
@@ -87,7 +87,7 @@ int vm::atan2(lol::LuaState *l)
     return 1;
 }
 
-int vm::sqrt(lol::LuaState *l)
+int vm::api::sqrt(lua_State *l)
 {
     double x = lua_toclamp64(l, 1);
     /* FIXME PICO-8 actually returns stuff for negative values */
@@ -95,19 +95,19 @@ int vm::sqrt(lol::LuaState *l)
     return 1;
 }
 
-int vm::abs(lol::LuaState *l)
+int vm::api::abs(lua_State *l)
 {
     lua_pushnumber(l, clamp64(lol::abs(lua_toclamp64(l, 1))));
     return 1;
 }
 
-int vm::sgn(lol::LuaState *l)
+int vm::api::sgn(lua_State *l)
 {
     lua_pushnumber(l, lua_toclamp64(l, 1) >= 0.0 ? 1.0 : -1.0);
     return 1;
 }
 
-int vm::rnd(lol::LuaState *l)
+int vm::api::rnd(lua_State *l)
 {
     vm *that = get_this(l);
     uint32_t x = ((uint64_t)that->m_seed * 279470273ul) % 4294967291ul;
@@ -122,7 +122,7 @@ int vm::rnd(lol::LuaState *l)
     return 1;
 }
 
-int vm::srand(lol::LuaState *l)
+int vm::api::srand(lua_State *l)
 {
     vm *that = get_this(l);
     that->m_seed = double2fixed(lua_tonumber(l, 1));
@@ -131,7 +131,7 @@ int vm::srand(lol::LuaState *l)
     return 0;
 }
 
-int vm::band(lol::LuaState *l)
+int vm::api::band(lua_State *l)
 {
     int32_t x = double2fixed(lua_tonumber(l, 1));
     int32_t y = double2fixed(lua_tonumber(l, 2));
@@ -139,7 +139,7 @@ int vm::band(lol::LuaState *l)
     return 1;
 }
 
-int vm::bor(lol::LuaState *l)
+int vm::api::bor(lua_State *l)
 {
     int32_t x = double2fixed(lua_tonumber(l, 1));
     int32_t y = double2fixed(lua_tonumber(l, 2));
@@ -147,7 +147,7 @@ int vm::bor(lol::LuaState *l)
     return 1;
 }
 
-int vm::bxor(lol::LuaState *l)
+int vm::api::bxor(lua_State *l)
 {
     int32_t x = double2fixed(lua_tonumber(l, 1));
     int32_t y = double2fixed(lua_tonumber(l, 2));
@@ -155,14 +155,14 @@ int vm::bxor(lol::LuaState *l)
     return 1;
 }
 
-int vm::bnot(lol::LuaState *l)
+int vm::api::bnot(lua_State *l)
 {
     int32_t x = double2fixed(lua_tonumber(l, 1));
     lua_pushnumber(l, fixed2double(~x));
     return 1;
 }
 
-int vm::shl(lol::LuaState *l)
+int vm::api::shl(lua_State *l)
 {
     // PICO-8 seems to use y modulo 32
     int32_t x = double2fixed(lua_tonumber(l, 1));
@@ -171,7 +171,7 @@ int vm::shl(lol::LuaState *l)
     return 1;
 }
 
-int vm::shr(lol::LuaState *l)
+int vm::api::shr(lua_State *l)
 {
     // PICO-8 seems to use y modulo 32
     int32_t x = double2fixed(lua_tonumber(l, 1));
