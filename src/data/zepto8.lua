@@ -127,6 +127,9 @@ _z8.run = function(cart_code)
 end
 
 _z8.tick = function()
+    if costatus(_z8.loop) == "dead" then
+        return
+    end
     ret, err = coresume(_z8.loop)
     if not ret then
         printh(err)
