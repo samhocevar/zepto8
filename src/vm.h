@@ -34,7 +34,8 @@ public:
     void run();
     void step(float seconds);
 
-    uint8_t const *memory() const { return m_memory.data(); }
+    uint8_t *get_mem(int offset = 0) { return &m_memory[offset]; }
+    uint8_t const *get_mem(int offset = 0) const { return &m_memory[offset]; }
 
     void render(lol::u8vec4 *screen) const;
     void print_ansi(lol::ivec2 term_size = lol::ivec2(128, 128),
@@ -137,7 +138,7 @@ private:
     void setspixel(int x, int y, int color);
 
 private:
-    array<uint8_t> m_memory;
+    uint8_t m_memory[SIZE_MEMORY];
     lol::Image m_font;
     cart m_cart;
 

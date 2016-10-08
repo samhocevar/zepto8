@@ -101,7 +101,7 @@ void vm::hline(int x1, int x2, int y, int color)
         --x2;
     }
 
-    ::memset(m_memory.data() + offset + x1 / 2, color * 0x11, (x2 - x1 + 1) / 2);
+    ::memset(get_mem(offset + x1 / 2), color * 0x11, (x2 - x1 + 1) / 2);
 }
 
 void vm::vline(int x, int y1, int y2, int color)
@@ -317,7 +317,7 @@ int vm::cls(lol::LuaState *l)
 {
     int c = lua_toclamp64(l, 1);
     vm *that = get_this(l);
-    ::memset(that->m_memory.data() + OFFSET_SCREEN, (c & 0xf) * 0x11, SIZE_SCREEN);
+    ::memset(&that->m_memory[OFFSET_SCREEN], (c & 0xf) * 0x11, SIZE_SCREEN);
     return 0;
 }
 

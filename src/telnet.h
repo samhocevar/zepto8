@@ -85,7 +85,7 @@ struct telnet
                           m_screen.count() ? m_screen.data() : nullptr);
 
             m_screen.resize(SIZE_SCREEN);
-            ::memcpy(m_screen.data(), vm.memory() + OFFSET_SCREEN, SIZE_SCREEN);
+            ::memcpy(m_screen.data(), vm.get_mem(OFFSET_SCREEN), SIZE_SCREEN);
 
             t.Wait(1.f / 60.f);
         }

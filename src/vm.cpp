@@ -38,11 +38,8 @@ vm::vm()
     // Load font
     m_font.Load("data/font.png");
 
-    // Allocate memory
-    m_memory.resize(SIZE_MEMORY);
-
-    // Clear screen
-    ::memset(m_memory.data() + OFFSET_SCREEN, 0, SIZE_SCREEN);
+    // Clear memory
+    ::memset(get_mem(), 0, SIZE_MEMORY);
 }
 
 vm::~vm()
@@ -235,53 +232,49 @@ int vm::reload(lol::LuaState *l)
     // PICO-8 fully reloads the cartridge if not all arguments are passed
     if (!lua_isnone(l, 3))
     {
-        dst = lua_toclamp64(l, 1);
-        src = lua_toclamp64(l, 2);
-        size = lua_toclamp64(l, 3);
+        dst = (int)lua_toclamp64(l, 1) & 0xffff;
+        src = (int)lua_toclamp64(l, 2) & 0xffff;
+        size = (int)lua_toclamp64(l, 3);
     }
 
-    // Attempting to write a positive number of bytes outside the memory area
-    // raises an error. Everything else seems legal.
-    if (size > 0 && (dst < 0 || dst + size > SIZE_MEMORY))
-    {
-        // FIXME: this should raise a Lua error
-        msg::error("bad memory access");
+    if (size <= 0)
         return 0;
-    }
+
+    size = size & 0xffff;
+
+    // Attempting to write outside the memory area raises an error. Everything
+    // else seems legal, especially reading from anywhere.
+    if (dst + size > SIZE_MEMORY)
+        return luaL_error(l, "bad memory access");
 
     vm *that = get_this(l);
 
-    // If reading from before the cart, fill with zeroes
-    if (size > 0 && src < 0)
+    // If reading from after the cart, fill with zeroes
+    if (src > OFFSET_CODE)
     {
-        int amount = lol::min(size, -src);
-        ::memset(that->m_memory.data() + dst, 0, amount);
+        int amount = lol::min(size, 0x10000 - src);
+        ::memset(that->get_mem(dst), 0, amount);
         dst += amount;
-        src += amount;
+        src = (src + amount) & 0xffff;
         size -= amount;
     }
 
-    // Same when reading from after the cart
-    if (size > 0 && src + size > OFFSET_CODE)
-    {
-        int amount = lol::min(size, src + size - OFFSET_CODE);
-        ::memset(that->m_memory.data() + dst + size - amount, 0, amount);
-        size -= amount;
-    }
+    // Now copy possibly legal data
+    int amount = lol::min(size, OFFSET_CODE - src);
+    ::memcpy(that->get_mem(dst), that->m_cart.get_rom().data() + src, amount);
+    dst += amount;
+    size -= amount;
 
-    // The remaining bytes can be copied normally
-    if (size > 0)
-    {
-        ::memcpy(that->m_memory.data() + dst,
-                 that->m_cart.get_rom().data() + src, size);
-    }
+    // If there is anything left to copy, it’s zeroes again
+    ::memset(that->get_mem(dst), 0, size);
 
     return 0;
 }
 
 int vm::peek(lol::LuaState *l)
 {
-    int addr = (int)lua_tonumber(l, 1);
+    // Note: peek() is the same as peek(0)
+    int addr = (int)lua_toclamp64(l, 1) & 0xffff;
     if (addr < 0 || addr >= SIZE_MEMORY)
         return 0;
 
@@ -292,46 +285,76 @@ int vm::peek(lol::LuaState *l)
 
 int vm::poke(lol::LuaState *l)
 {
-    int addr = (int)lua_tonumber(l, 1);
-    int val = (int)lua_tonumber(l, 2);
+    // Note: poke() is the same as poke(0, 0)
+    int addr = (int)lua_toclamp64(l, 1) & 0xffff;
+    int val = (int)lua_toclamp64(l, 2);
     if (addr < 0 || addr >= SIZE_MEMORY)
-        return 0;
+        return luaL_error(l, "bad memory access");
 
     vm *that = get_this(l);
-    that->m_memory[addr] = (uint16_t)val;
+    that->m_memory[addr] = (uint8_t)val;
     return 0;
 }
 
 int vm::memcpy(lol::LuaState *l)
 {
-    int dst = lua_tonumber(l, 1);
-    int src = lua_tonumber(l, 2);
-    int size = lua_tonumber(l, 3);
+    int dst = (int)lua_toclamp64(l, 1) & 0xffff;
+    int src = (int)lua_toclamp64(l, 2) & 0xffff;
+    int size = (int)lua_toclamp64(l, 3);
 
-    /* FIXME: should the memory wrap around maybe? */
-    if (dst >= 0 && src >= 0 && size > 0
-         && dst < SIZE_MEMORY && src < SIZE_MEMORY
-         && dst + size <= SIZE_MEMORY && src + size <= SIZE_MEMORY)
+    if (size <= 0)
+        return 0;
+
+    size = size & 0xffff;
+
+    // Attempting to write outside the memory area raises an error. Everything
+    // else seems legal, especially reading from anywhere.
+    if (dst + size > SIZE_MEMORY)
+        return luaL_error(l, "bad memory access");
+
+    vm *that = get_this(l);
+
+    // If source is outside main memory, this will be memset(0). But we
+    // delay the operation in case the source and the destinations overlap.
+    int saved_dst = dst, saved_size = 0;
+    if (src > SIZE_MEMORY)
     {
-        vm *that = get_this(l);
-        memmove(that->m_memory.data() + dst, that->m_memory.data() + src, size);
+        saved_size = lol::min(size, 0x10000 - src);
+        dst += saved_size;
+        src = (src + saved_size) & 0xffff;
+        size -= saved_size;
     }
+
+    // Now copy possibly legal data
+    int amount = lol::min(size, SIZE_MEMORY - src);
+    memmove(that->get_mem(dst), that->get_mem(src), amount);
+    dst += amount;
+    size -= amount;
+
+    // Fill possible zeroes we saved before, and if there is still something
+    // to copy, it’s zeroes again
+    ::memset(that->get_mem(saved_dst), 0, saved_size);
+    ::memset(that->get_mem(dst), 0, size);
 
     return 0;
 }
 
 int vm::memset(lol::LuaState *l)
 {
-    int dst = lua_tonumber(l, 1);
-    int val = lua_tonumber(l, 2);
-    int size = lua_tonumber(l, 3);
+    int dst = (int)lua_toclamp64(l, 1) & 0xffff;
+    int val = (int)lua_toclamp64(l, 2) & 0xffff;
+    int size = (int)lua_toclamp64(l, 3);
 
-    if (dst >= 0 && size > 0
-         && dst < SIZE_MEMORY && dst + size <= SIZE_MEMORY)
-    {
-        vm *that = get_this(l);
-        ::memset(that->m_memory.data() + dst, val, size);
-    }
+    if (size <= 0)
+        return 0;
+
+    size = size & 0xffff;
+
+    if (dst < 0 || dst + size >= SIZE_MEMORY)
+        return luaL_error(l, "bad memory access");
+
+    vm *that = get_this(l);
+    ::memset(that->get_mem(dst), val, size);
 
     return 0;
 }
