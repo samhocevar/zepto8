@@ -39,6 +39,7 @@ public:
 private:
     vm m_vm;
     array<u8vec4> m_screen;
+    int m_streams[4];
 
     lol::Camera *m_scenecam;
     lol::TileSet *m_tile;

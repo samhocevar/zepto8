@@ -24,7 +24,7 @@ zeptool_DEPENDENCIES = libzepto8.a @LOL_DEPS@
 
 libzepto8_a_SOURCES = \
     zepto8.h \
-    vm.cpp vm.h vm-maths.cpp vm-gfx.cpp vm-render.cpp \
+    vm.cpp vm.h vm-maths.cpp vm-gfx.cpp vm-render.cpp vm-sfx.cpp \
     cart.cpp cart.h \
     code-fixer.cpp code-fixer.h lua53-parse.h \
     $(NULL)

@@ -22,7 +22,7 @@ using lol::msg;
 vm::vm()
   : m_instructions(0)
 {
-    lol::LuaState *l = GetLuaState();
+    lua_State *l = GetLuaState();
 
     // Store a pointer to us in global state
     set_this(l);
@@ -183,7 +183,7 @@ const lol::LuaObjectLib* vm::GetLib()
     return &lib;
 }
 
-vm* vm::New(lol::LuaState* l, int argc)
+vm* vm::New(lua_State* l, int argc)
 {
     // FIXME: I have no idea what this function is for
     UNUSED(l);
@@ -465,24 +465,6 @@ int vm::api::btnp(lua_State *l)
     }
 
     return 1;
-}
-
-//
-// Sound
-//
-
-int vm::api::music(lua_State *l)
-{
-    UNUSED(l);
-    msg::info("z8:stub:music\n");
-    return 0;
-}
-
-int vm::api::sfx(lua_State *l)
-{
-    UNUSED(l);
-    msg::info("z8:stub:sfx\n");
-    return 0;
 }
 
 //

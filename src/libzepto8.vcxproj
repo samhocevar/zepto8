@@ -64,6 +64,7 @@
     <ClCompile Include="vm-maths.cpp" />
     <ClCompile Include="vm-gfx.cpp" />
     <ClCompile Include="vm-render.cpp" />
+    <ClCompile Include="vm-sfx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cart.h" />

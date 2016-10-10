@@ -60,6 +60,15 @@ player::player()
     scene.PushCamera(m_scenecam);
     lol::Ticker::Ref(m_scenecam);
 
+    // Register audio callbacks
+    for (int i = 0; i < 4; ++i)
+    {
+        auto f = std::bind(&vm::getaudio, &m_vm, i,
+                           std::placeholders::_1,
+                           std::placeholders::_2);
+        m_streams[i] = lol::audio::start_streaming(f);
+    }
+
     // FIXME: the image gets deleted by TextureImage class, it
     // does not seem right to me.
     auto img = new lol::Image(lol::ivec2(128, 128));
@@ -73,6 +82,9 @@ player::player()
 player::~player()
 {
     lol::Tiler::Deregister(m_tile);
+
+    for (int i = 0; i < 4; ++i)
+        lol::audio::stop_streaming(i);
 
     lol::Scene& scene = lol::Scene::GetScene();
     lol::Ticker::Unref(m_scenecam);

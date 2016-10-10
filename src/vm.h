@@ -23,9 +23,13 @@ namespace z8
 using lol::array;
 using lol::u8vec4;
 
+class player;
+
 class vm : public lol::LuaLoader,
            public lol::LuaObject
 {
+    friend class z8::player;
+
 public:
     vm();
     ~vm();
@@ -44,7 +48,7 @@ public:
     void button(int index, int state) { m_buttons[1][index] = state; }
 
     static const lol::LuaObjectLib* GetLib();
-    static vm* New(lol::LuaState* l, int arg_nb);
+    static vm* New(lua_State* l, int arg_nb);
 
 private:
     void set_this(lua_State *l);
@@ -139,6 +143,8 @@ private:
 
     int getspixel(int x, int y);
     void setspixel(int x, int y, int color);
+
+    void getaudio(int channel, void *buffer, int bytes);
 
 private:
     uint8_t m_memory[SIZE_MEMORY];
