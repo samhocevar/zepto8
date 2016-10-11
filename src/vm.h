@@ -164,20 +164,18 @@ private:
 
 // Clamp a double to the nearest value that can be represented as a 16:16
 // fixed point number (the ones used in PICO-8).
-static double const multiplier = 65536.0;
-
 static inline int32_t double2fixed(double x)
 {
     // This is more or less necessary because we use standard Lua with no
     // modifications, so we need a way to compute 1/0 or 0/0.
     if (std::isnan(x) || std::isinf(x))
         return x < 0 ? (int32_t)0x80000000 : (int32_t)0x7fffffff;
-    return (int32_t)(int64_t)lol::round(x * multiplier);
+    return (int32_t)(int64_t)lol::round(x * double(1 << 16));
 }
 
 static inline double fixed2double(int32_t x)
 {
-    return x / multiplier;
+    return x / double(1 << 16);
 }
 
 static inline double clamp64(double x)
