@@ -151,14 +151,26 @@ private:
     lol::Image m_font;
     cart m_cart;
 
-    uint32_t m_seed;
+    // Graphics
     uint8_t m_color;
     lol::ivec2 m_camera, m_cursor;
     lol::ibox2 m_clip;
-    int m_buttons[2][64];
     uint8_t m_pal[2][16], m_palt[16];
 
+    // Input
+    int m_buttons[2][64];
+
+    // Audio
+    struct channel
+    {
+        channel();
+
+        int m_sfx, m_offset;
+    }
+    m_channels[4];
+
     lol::Timer m_timer;
+    uint32_t m_seed;
     int m_instructions;
 };
 
