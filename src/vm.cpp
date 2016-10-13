@@ -389,8 +389,36 @@ int vm::api::dset(lua_State *l)
 
 int vm::api::stat(lua_State *l)
 {
-    msg::info("z8:stub:stat\n");
-    lua_pushnumber(l, 0);
+    vm *that = get_this(l);
+    int ret = 0, id = (int)lua_toclamp64(l, 1);
+
+    if (id == 0)
+    {
+        // From the PICO-8 documentation:
+        // x:0 returns current Lua memory useage (0..1024MB)
+        ret = ((int)lua_gc(l, LUA_GCCOUNT, 0) << 4)
+            + ((int)lua_gc(l, LUA_GCCOUNTB, 0) >> 6);
+    }
+    else if (id == 1)
+    {
+        // From the PICO-8 documentation:
+        // x:1 returns cpu useage for last frame (1.0 means 100% at 30fps)
+        // TODO
+    }
+    else if (id >= 16 && id <= 19)
+    {
+        // undocumented parameters for stat(n):
+        // 16..19: the sfx currently playing on each channel or -1 for none
+        ret = that->m_channels[id - 16].m_sfx;
+    }
+    else if (id >= 20 && id <= 23)
+    {
+        // undocumented parameters for stat(n):
+        // 20..23: the currently playing row number (0..31) or -1 for none
+        // TODO
+    }
+
+    lua_pushnumber(l, ret);
     return 1;
 }
 
