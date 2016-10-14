@@ -32,8 +32,8 @@ do
     add = function(a, x) if a ~= nil then insert(a, x) end end
     sub = string.sub
 
-    foreach = function(t, f)
-        for k, v in ipairs(t) do f(v) end
+    foreach = function(a, f)
+        if a ~= nil then for k, v in ipairs(a) do f(v) end end
     end
 
     all = function(a)
@@ -41,10 +41,10 @@ do
         return function() i = i + 1 if i <= n then return a[i] end end
     end
 
-    del = function(t, v)
-        if t ~= nil then
-            for k, v2 in ipairs(t) do
-                if v == v2 then remove(t, k) return end
+    del = function(a, v)
+        if a ~= nil then
+            for k, v2 in ipairs(a) do
+                if v == v2 then remove(a, k) return end
             end
         end
     end
