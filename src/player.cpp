@@ -39,6 +39,7 @@ player::player()
     m_input << lol::InputProfile::Keyboard(5, "Delete");
 
     m_input << lol::InputProfile::Keyboard(6, "Return");
+    m_input << lol::InputProfile::Keyboard(6, "P");
 
     m_input << lol::InputProfile::Keyboard(8, "S");
     m_input << lol::InputProfile::Keyboard(9, "F");
