@@ -390,14 +390,20 @@ int vm::api::dset(lua_State *l)
 int vm::api::stat(lua_State *l)
 {
     vm *that = get_this(l);
-    int ret = 0, id = (int)lua_toclamp64(l, 1);
+    int id = (int)lua_toclamp64(l, 1);
+    double ret = 0;
 
     if (id == 0)
     {
+        // Perform a GC to avoid accounting for short lifespan objects.
+        // Not sure about the performance cost of this.
+        lua_gc(l, LUA_GCCOLLECT, 0);
+
         // From the PICO-8 documentation:
         // x:0 returns current Lua memory useage (0..1024MB)
-        ret = ((int)lua_gc(l, LUA_GCCOUNT, 0) << 4)
-            + ((int)lua_gc(l, LUA_GCCOUNTB, 0) >> 6);
+        int32_t fixed = ((int)lua_gc(l, LUA_GCCOUNT, 0) << 16)
+                      + ((int)lua_gc(l, LUA_GCCOUNTB, 0) << 6);
+        ret = fixed2double(fixed);
     }
     else if (id == 1)
     {
