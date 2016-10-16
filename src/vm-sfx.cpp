@@ -31,6 +31,12 @@ void vm::getaudio(int chan, void *buffer, int bytes)
     memset(buffer, 0, bytes);
 }
 
+int vm::sfx_speed(int sfx) const
+{
+    ASSERT(sfx >= 0 && sfx < 64);
+    return *get_mem(OFFSET_SFX + 68 * sfx + 65);
+}
+
 //
 // Sound
 //
@@ -67,21 +73,39 @@ int vm::api::sfx(lua_State *l)
     }
     else
     {
-        // First, check whether the same SFX is already playing (PICO-8
-        // decides to forcibly reuse that channel, which is reasonable)
-        // or, if -1 was passed, whether there is a free channel for us.
-        for (int i = 0; i < 4; ++i)
+        // Find the first available channel: either a channel that plays
+        // nothing, or a channel that is already playing this sample (in
+        // this case PICO-8 decides to forcibly reuse that channel, which
+        // is reasonable)
+        if (chan == -1)
         {
-            // FIXME: skip music channels
-            if (that->m_channels[i].m_sfx == sfx)
-                chan = i;
-            else if (chan == -1 && that->m_channels[i].m_sfx == -1)
-                chan = i;
+            for (int i = 0; i < 4; ++i)
+                if (that->m_channels[i].m_sfx == -1 ||
+                    that->m_channels[i].m_sfx == sfx)
+                {
+                    chan = i;
+                    break;
+                }
+        }
+
+        // If still no channel found, the PICO-8 strategy seems to be to
+        // stop the sample with the lowest ID currently playing
+        if (chan == -1)
+        {
+            for (int i = 0; i < 4; ++i)
+               if (chan == -1 ||
+                    that->m_channels[i].m_sfx < that->m_channels[chan].m_sfx)
+                   chan = i;
         }
 
         // Play this sound!
         if (chan != -1)
         {
+            // Stop any channel playing the same sfx
+            for (int i = 0; i < 4; ++i)
+                if (that->m_channels[i].m_sfx == sfx)
+                    that->m_channels[i].m_sfx = -1;
+
             that->m_channels[chan].m_sfx = sfx;
             that->m_channels[chan].m_offset = offset;
         }

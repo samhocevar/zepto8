@@ -169,6 +169,8 @@ private:
     }
     m_channels[4];
 
+    int sfx_speed(int sfx) const;
+
     lol::Timer m_timer;
     uint32_t m_seed;
     int m_instructions;
