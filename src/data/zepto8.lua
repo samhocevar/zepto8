@@ -108,18 +108,15 @@ _z8.run = function(cart_code)
             if _update60 ~= nil then
                 _update_buttons()
                 _update60()
-                if _draw ~= nil then
-                    _draw()
-                end
             elseif _update ~= nil then
                 if do_frame then
                     _update_buttons()
                     _update()
-                    if _draw ~= nil then
-                        _draw()
-                    end
                 end
                 do_frame = not do_frame
+            end
+            if _draw ~= nil and do_frame then
+                _draw()
             end
             yield()
         end
