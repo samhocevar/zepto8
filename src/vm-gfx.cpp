@@ -201,9 +201,22 @@ int vm::api::print(lua_State *l)
 
     that->m_font.Unlock(pixels);
 
-    // Add implicit carriage return to the cursor position
+    // In PICO-8 scrolling only happens _after_ the whole string was printed,
+    // even if it contained carriage returns or if the cursor was already
+    // below the threshold value.
     if (use_cursor)
+    {
+        if (y > 116)
+        {
+            uint8_t *screen = that->get_mem(OFFSET_SCREEN);
+            int const lines = 6;
+            memmove(screen, screen + lines * 64, SIZE_SCREEN - lines * 64);
+            ::memset(screen + SIZE_SCREEN - lines * 64, 0, lines * 64);
+            y -= lines;
+        }
+
         that->m_cursor = lol::ivec2(initial_x, y + 6);
+    }
 
     return 0;
 }
