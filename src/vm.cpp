@@ -423,6 +423,13 @@ int vm::api::stat(lua_State *l)
         // 20..23: the currently playing row number (0..31) or -1 for none
         // TODO
     }
+    else if (id >= 32 && id <= 34 && *that->get_mem(0x5f2d) == 1)
+    {
+        // undocumented mouse support
+        ret = id == 32 ? that->m_mouse.x
+            : id == 33 ? that->m_mouse.y
+            : that->m_mouse.z;
+    }
 
     lua_pushnumber(l, ret);
     return 1;
