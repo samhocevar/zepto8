@@ -167,11 +167,12 @@ private:
     {
         channel();
 
-        int m_sfx, m_offset;
+        int m_sfx;
+        float m_offset;
     }
     m_channels[4];
 
-    int sfx_speed(int sfx) const;
+    struct sfx const &get_sfx(int n) const;
 
     lol::Timer m_timer;
     uint32_t m_seed;
