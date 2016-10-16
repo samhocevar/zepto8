@@ -331,6 +331,7 @@ int vm::api::cls(lua_State *l)
     int c = lua_toclamp64(l, 1);
     vm *that = get_this(l);
     ::memset(&that->m_memory[OFFSET_SCREEN], (c & 0xf) * 0x11, SIZE_SCREEN);
+    that->m_cursor = lol::ivec2(0, 0);
     return 0;
 }
 
