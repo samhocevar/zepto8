@@ -19,6 +19,12 @@ namespace z8
 
 enum
 {
+    WINDOW_WIDTH = 576,
+    WINDOW_HEIGHT = 576,
+};
+
+enum
+{
     OFFSET_GFX        = 0x0000,
     OFFSET_GFX2       = 0x1000,
     OFFSET_MAP2       = 0x1000,

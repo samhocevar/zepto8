@@ -56,7 +56,7 @@ player::player()
     // Create an ortho camera
     m_scenecam = new lol::Camera();
     m_scenecam->SetView(lol::mat4(1.f));
-    m_scenecam->SetProjection(lol::mat4::ortho(0.f, 600.f, 0.f, 600.f, -100.f, 100.f));
+    m_scenecam->SetProjection(lol::mat4::ortho(0.f, WINDOW_WIDTH, 0.f, WINDOW_HEIGHT, -100.f, 100.f));
     lol::Scene& scene = lol::Scene::GetScene();
     scene.PushCamera(m_scenecam);
     lol::Ticker::Ref(m_scenecam);
@@ -115,8 +115,9 @@ void player::TickDraw(float seconds, lol::Scene &scene)
     m_tile->GetTexture()->Bind();
     m_tile->GetTexture()->SetData(m_screen.data());
 
-    int delta = (600 - 512) / 2;
-    scene.AddTile(m_tile, 0, lol::vec3(delta, delta, 10.f), 0, lol::vec2(4.f), 0.f);
+    int delta_x = (WINDOW_WIDTH - 512) / 2;
+    int delta_y = (WINDOW_HEIGHT - 512) / 2;
+    scene.AddTile(m_tile, 0, lol::vec3(delta_x, delta_y, 10.f), 0, lol::vec2(4.f), 0.f);
 }
 
 } // namespace z8

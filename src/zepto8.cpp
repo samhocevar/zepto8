@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     if (argc < 2)
         return EXIT_FAILURE;
 
-    lol::Application app("zepto-8", lol::ivec2(600, 600), 60.0f);
+    lol::Application app("zepto-8", lol::ivec2(z8::WINDOW_WIDTH, z8::WINDOW_HEIGHT), 60.0f);
 
     z8::player *player = new z8::player();
     player->load(argv[1]);
