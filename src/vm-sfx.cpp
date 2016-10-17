@@ -87,16 +87,26 @@ static_assert(sizeof(sfx) == 68);
 
 vm::channel::channel()
   : m_sfx(-1),
-    m_offset(0)
+    m_offset(0),
+    m_phi(0)
 {
+#if DEBUG_EXPORT_WAV
+    char const *header =
+        "\x52\x49\x46\x46\xe4\xc1\x08\x00\x57\x41\x56\x45\x66\x6d\x74\x20"
+        "\x10\x00\x00\x00\x01\x00\x02\x00\x22\x56\x00\x00\x44\xac\x00\x00"
+        "\x02\x00\x10\x00\x64\x61\x74\x61\xc0\xc1\x08\x00";
+    m_fd = fopen(lol::String::format("/tmp/zepto8_%p.wav", this).C(), "w+");
+    fwrite(header, 44, 1, m_fd);
+#endif
 }
 
-void vm::getaudio(int chan, void *in_buffer, int bytes)
+void vm::getaudio(int chan, void *in_buffer, int in_bytes)
 {
     int const samples_per_second = 22050;
+    int const bytes_per_sample = 4; // stereo S16 for now
 
     int16_t *buffer = (int16_t *)in_buffer;
-    int samples = bytes / 2;
+    int samples = in_bytes / bytes_per_sample;
 
     for (int i = 0; i < samples; ++i)
     {
@@ -108,12 +118,13 @@ void vm::getaudio(int chan, void *in_buffer, int bytes)
         {
             // XXX: if speed is invalid I believe it’s safer to free the
             // channel immediately, but let’s see what PICO-8 does one day
-            buffer[i] = 0;
+            buffer[2 * i] = buffer[2 * i + 1] = 0;
             m_channels[chan].m_sfx = -1;
             continue;
         }
 
         float offset = m_channels[chan].m_offset;
+        float phi = m_channels[chan].m_phi;
         int note = (int)lol::floor(offset);
 
         // PICO-8 exports instruments as 22050 Hz WAV files with 183 samples
@@ -127,13 +138,18 @@ void vm::getaudio(int chan, void *in_buffer, int bytes)
         if (freq == 0.f || volume == 0.f)
         {
             // Play silence
-            buffer[i] = 0;
+            buffer[2 * i] = buffer[2 * i + 1] = 0;
         }
         else
         {
-            float t = lol::fmod(freq * offset / offset_per_second, 1.f);
+            float t = lol::fmod(freq * offset / offset_per_second + phi, 1.f);
             float waveform = lol::abs(t - 0.5f) - 0.25f;
-            buffer[i] = (int16_t)(32767.f * volume * waveform);
+            buffer[2 * i] = buffer[2 * i + 1] = (int16_t)(32767.f * volume * waveform);
+        }
+
+        if ((int)offset != (int)next_offset)
+        {
+            m_channels[chan].m_phi = lol::fmod(freq * offset / offset_per_second + phi, 1.f);
         }
 
         // TODO: handle loops etc.
@@ -144,6 +160,10 @@ void vm::getaudio(int chan, void *in_buffer, int bytes)
             m_channels[chan].m_sfx = -1;
         }
     }
+
+#if DEBUG_EXPORT_WAV
+    fwrite(in_buffer, in_bytes, 1, m_channels[chan].m_fd);
+#endif
 }
 
 struct sfx const &vm::get_sfx(int n) const
@@ -225,6 +245,7 @@ int vm::api::sfx(lua_State *l)
 
             that->m_channels[chan].m_sfx = sfx;
             that->m_channels[chan].m_offset = offset;
+            that->m_channels[chan].m_phi = 0.f;
         }
     }
 

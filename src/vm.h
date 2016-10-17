@@ -168,7 +168,10 @@ private:
         channel();
 
         int m_sfx;
-        float m_offset;
+        float m_offset, m_phi;
+#if DEBUG_EXPORT_WAV
+        FILE *m_fd;
+#endif
     }
     m_channels[4];
 

@@ -14,6 +14,8 @@
 
 #include <lol/engine.h>
 
+#define DEBUG_EXPORT_WAV 0
+
 namespace z8
 {
 
