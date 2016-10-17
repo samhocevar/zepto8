@@ -333,7 +333,7 @@ bool cart::load_p8(char const *filename)
                          | ((ins & 0x00400) >> 10) // instrument (part 1)
                          | ((ins & 0x00300) << 6)  // instrument (part 2)
                          | ((ins & 0x00070) >> 3)  // volume
-                         | ((ins & 0x00007) << 4); // effect
+                         | ((ins & 0x0000f) << 4); // effect
 
             m_rom[OFFSET_SFX + i * (4 + 64) + j * 2 + 0] = dst >> 8;
             m_rom[OFFSET_SFX + i * (4 + 64) + j * 2 + 1] = dst & 0x00ff;
@@ -346,6 +346,72 @@ bool cart::load_p8(char const *filename)
     }
 
     return true;
+}
+
+lol::String cart::get_p8() const
+{
+    lol::String ret = "pico-8 cartridge // http://www.pico-8.com\n"
+                      "version 8\n";
+
+    ret += "__lua__\n";
+    ret += get_code();
+    if (ret.last() != '\n')
+        ret += '\n';
+
+    ret += "__gfx__\n";
+    for (int i = 0; i < SIZE_GFX + SIZE_GFX2; ++i)
+    {
+        ret += lol::String::format("%02x", uint8_t(m_rom.data()[OFFSET_GFX + i] * 0x101 / 0x10));
+        if ((i + 1) % 64 == 0)
+            ret += '\n';
+    }
+
+    ret += "__gff__\n";
+    for (int i = 0; i < SIZE_GFX_PROPS; ++i)
+    {
+        ret += lol::String::format("%02x", m_rom.data()[OFFSET_GFX_PROPS + i]);
+        if ((i + 1) % 128 == 0)
+            ret += '\n';
+    }
+
+    ret += "__map__\n";
+    for (int i = 0; i < SIZE_MAP; ++i)
+    {
+        ret += lol::String::format("%02x", m_rom.data()[OFFSET_MAP + i]);
+        if ((i + 1) % 128 == 0)
+            ret += '\n';
+    }
+
+    ret += "__sfx__\n";
+    for (int n = 0; n < SIZE_SFX; n += 68)
+    {
+        uint8_t const *data = m_rom.data() + OFFSET_SFX + n;
+        ret += lol::String::format("%02x%02x%02x%02x", data[64], data[65], data[66], data[67]);
+        for (int j = 0; j < 64; j += 2)
+        {
+            int pitch = data[j] & 0x3f;
+            int instrument = ((data[j + 1] << 2) & 0x4) | (data[j] >> 6);
+            int volume = (data[j + 1] >> 1) & 0x7;
+            int effect = (data[j + 1] >> 4) & 0xf;
+            ret += lol::String::format("%02x%1x%1x%1x", pitch, instrument, volume, effect);
+        }
+        ret += '\n';
+    }
+
+    ret += "__music__\n";
+    for (int n = 0; n < SIZE_SONG; n += 4)
+    {
+        uint8_t const *data = m_rom.data() + OFFSET_SONG + n;
+        int flags = (data[0] >> 7) | ((data[1] >> 6) & 0x2)
+                     | ((data[2] >> 5) & 0x4) | ((data[3] >> 4) & 0x8);
+        ret += lol::String::format("%02x %02x%02x%02x%02x\n", flags,
+                                   data[0] & 0x7f, data[1] & 0x7f,
+                                   data[2] & 0x7f, data[3] & 0x7f);
+    }
+
+    ret += '\n';
+
+    return ret;
 }
 
 } // namespace z8

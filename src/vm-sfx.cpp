@@ -62,6 +62,8 @@ struct sfx
 
     int effect(int n) const
     {
+        // FIXME: there is an actual extra bit for the effect but I don’t
+        // know what it’s for: PICO-8 documentation says 0…7, not 0…15
         ASSERT(n >= 0 && n <= 31);
         return (notes[n][1] >> 4) & 0x7;
     }

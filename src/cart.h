@@ -50,6 +50,8 @@ public:
         return m_version;
     }
 
+    lol::String get_p8() const;
+
 private:
     bool load_png(char const *filename);
     bool load_p8(char const *filename);

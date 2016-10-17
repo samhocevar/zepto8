@@ -28,12 +28,16 @@ enum class mode
     none,
     pico2lua = 128,
     run      = 129,
-    telnet   = 130,
+    p8topng  = 130,
+    pngtop8  = 131,
+    telnet   = 132,
 };
 
 static void usage()
 {
     printf("Usage: zeptool --pico2lua <cart>\n");
+    printf("               --p8topng <cart>\n");
+    printf("               --pngtop8 <cart>\n");
     printf("               --run <cart>\n");
 #if HAVE_UNISTD_H
     printf("               --telnet <cart>\n");
@@ -47,8 +51,10 @@ int main(int argc, char **argv)
     lol::getopt opt(argc, argv);
     opt.add_opt(128, "pico2lua", true);
     opt.add_opt(129, "run", true);
+    opt.add_opt(130, "p8topng", true);
+    opt.add_opt(131, "pngtop8", true);
 #if HAVE_UNISTD_H
-    opt.add_opt(130, "telnet", true);
+    opt.add_opt(132, "telnet", true);
 #endif
 
     mode run_mode = mode::none;
@@ -63,6 +69,8 @@ int main(int argc, char **argv)
         switch (c)
         {
         case (int)mode::pico2lua:
+        case (int)mode::p8topng:
+        case (int)mode::pngtop8:
         case (int)mode::run:
         case (int)mode::telnet:
             run_mode = mode(c);
@@ -78,6 +86,12 @@ int main(int argc, char **argv)
         z8::cart cart;
         cart.load(arg);
         printf("%s", cart.get_lua().C());
+    }
+    else if (run_mode == mode::pngtop8)
+    {
+        z8::cart cart;
+        cart.load(arg);
+        printf("%s", cart.get_p8().C());
     }
     else if (run_mode == mode::run)
     {
