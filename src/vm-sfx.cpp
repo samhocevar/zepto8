@@ -125,12 +125,14 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
 
         float offset = m_channels[chan].m_offset;
         float phi = m_channels[chan].m_phi;
-        int note = (int)lol::floor(offset);
 
         // PICO-8 exports instruments as 22050 Hz WAV files with 183 samples
         // per speed unit per note, so this is how much we should advance
         float offset_per_second = 22050.f / (183.f * speed);
         float next_offset = offset + offset_per_second / samples_per_second;
+
+        int note = (int)lol::floor(offset);
+        int next_note = (int)lol::floor(next_offset);
 
         float freq = sfx.frequency(note);
         float volume = sfx.volume(note);
@@ -147,9 +149,14 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
             buffer[2 * i] = buffer[2 * i + 1] = (int16_t)(32767.f * volume * waveform);
         }
 
-        if ((int)offset != (int)next_offset)
+        if (note != next_note)
         {
-            m_channels[chan].m_phi = lol::fmod(freq * offset / offset_per_second + phi, 1.f);
+            float next_freq = sfx.frequency(next_note);
+            float next_volume = sfx.volume(next_note);
+
+            m_channels[chan].m_phi = lol::fmod((freq * offset - next_freq * next_offset) / offset_per_second + phi, 1.f);
+            if (m_channels[chan].m_phi < 0.f)
+                m_channels[chan].m_phi += 1.f;
         }
 
         // TODO: handle loops etc.
