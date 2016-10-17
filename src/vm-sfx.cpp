@@ -71,7 +71,7 @@ struct sfx
     int instrument(int n) const
     {
         ASSERT(n >= 0 && n <= 31);
-        return ((notes[n][1] >> 1) & 0x4) | (notes[n][0] >> 6);
+        return ((notes[n][1] << 2) & 0x4) | (notes[n][0] >> 6);
     }
 
     int speed() const { return flags[1]; }
@@ -145,18 +145,17 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         else
         {
             float t = lol::fmod(freq * offset / offset_per_second + phi, 1.f);
-            float waveform = lol::abs(t - 0.5f) - 0.25f;
-            buffer[2 * i] = buffer[2 * i + 1] = (int16_t)(32767.f * volume * waveform);
-        }
+            float waveform = 0.f, multiplier = 0.f;
+            switch (sfx.instrument(note))
+            {
+            case 0:
+                waveform = lol::abs(t - 0.5) - 0.25f;
+                multiplier = 32767;
+                break;
+            }
 
-        if (note != next_note)
-        {
-            float next_freq = sfx.frequency(next_note);
-            float next_volume = sfx.volume(next_note);
-
-            m_channels[chan].m_phi = lol::fmod((freq * offset - next_freq * next_offset) / offset_per_second + phi, 1.f);
-            if (m_channels[chan].m_phi < 0.f)
-                m_channels[chan].m_phi += 1.f;
+            buffer[2 * i] = buffer[2 * i + 1]
+                          = (int16_t)(multiplier * volume * waveform);
         }
 
         // TODO: handle loops etc.
@@ -165,6 +164,15 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         if (next_offset >= 32.f)
         {
             m_channels[chan].m_sfx = -1;
+        }
+        else if (note != next_note)
+        {
+            float next_freq = sfx.frequency(next_note);
+            float next_volume = sfx.volume(next_note);
+
+            phi += (freq * offset - next_freq * next_offset) / offset_per_second;
+            phi = lol::fmod(phi, 1.f) + (phi >= 0.f ? 0.f : 1.f);
+            m_channels[chan].m_phi = phi;
         }
     }
 
