@@ -19,6 +19,8 @@ namespace z8
 
 using lol::msg;
 
+lol::perlin_noise<1> noise;
+
 struct sfx
 {
     // Use uint8_t[2] instead of uint16_t so that 1-byte aligned storage
@@ -149,14 +151,13 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
             {
             case 0:
                 // Triangle signal
-                waveform = 0.354f * (lol::abs(lol::abs(4.f * t - 1.0f) - 2.0f) - 1.0f);
+                waveform = 0.354f * (lol::abs(4.f * t - 2.0f) - 1.0f);
                 break;
             case 1:
                 // Slanted triangle
-                static float const a = 0.45f;
-                waveform = t < a ? t / a
-                         : t > (1.f - a) ? (t - 1.f) / a
-                         : (t - 0.5f) / (a - 0.5f);
+                static float const a = 0.9f;
+                waveform = t < a ? 2.f * t / a - 1.f
+                         : 2.f * (1.f - t) / (1.f - a) - 1.f;
                 waveform *= 0.406f;
                 break;
             case 2:
@@ -173,7 +174,6 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
                 break;
             case 5:
                 // Some triangle stuff again
-                t = lol::fmod(t + 0.125f, 1.f);
                 waveform = t < 0.25f ? t * 8.f - 1.f
                          : t < 0.5f ? 3.f - t * 8.f
                          : t < 0.75f ? (16.f * t - 11.f) / 3.f
@@ -185,6 +185,9 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
                 // brown noise, but losing almost 10dB per octave.
                 // This may help us create a correct filter:
                 // http://www.firstpr.com.au/dsp/pink-noise/
+                for (float mul = 1; mul <= 16; mul *= 2)
+                    waveform += noise.eval(lol::vec_t<float, 1>(t * 32.f * mul)) / mul;
+                waveform *= 0.8f;
                 break;
             case 7:
                 // This one has a subfrequency of freq/128 that appears
