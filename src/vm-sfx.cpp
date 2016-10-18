@@ -145,17 +145,75 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         else
         {
             float t = lol::fmod(freq * offset / offset_per_second + phi, 1.f);
-            float waveform = 0.f, multiplier = 0.f;
+            float waveform = 0.f;
+
+            // Multipliers were measured from WAV exports. Waveforms are
+            // inferred from those exports by guessing what the original
+            // equations could be.
             switch (sfx.instrument(note))
             {
             case 0:
-                waveform = lol::abs(t - 0.5) - 0.25f;
-                multiplier = 32767;
+                // Triangle signal
+                waveform = 0.354f * (lol::abs(lol::abs(4.f * t - 1.0f) - 2.0f) - 1.0f);
+                break;
+            case 1:
+                // Slanted triangle
+                static float const a = 0.45f;
+                waveform = t < a ? t / a
+                         : t > (1.f - a) ? (t - 1.f) / a
+                         : (t - 0.5f) / (a - 0.5f);
+                waveform *= 0.406f;
+                break;
+            case 2:
+                // Sawtooth
+                waveform = 0.653f * (t < 0.5f ? t : t - 1.f);
+                break;
+            case 3:
+                // Square signal
+                waveform = t < 0.5f ? 0.25f : -0.25f;
+                break;
+            case 4:
+                // Asymmetric square signal
+                waveform = t < 0.33333333f ? 0.25f : -0.25f;
+                break;
+            case 5:
+                // Some triangle stuff again
+                t = lol::fmod(t + 0.125f, 1.f);
+                waveform = t < 0.25f ? t * 8.f - 1.f
+                         : t < 0.5f ? 3.f - t * 8.f
+                         : t < 0.75f ? (16.f * t - 11.f) / 3.f
+                         : (13.f - 16.f * t) / 3.f;
+                waveform *= 0.32f;
+                break;
+            case 6:
+                // Spectral analysis indicates this is some kind of
+                // brown noise, but losing almost 10dB per octave.
+                // This may help us create a correct filter:
+                // http://www.firstpr.com.au/dsp/pink-noise/
+                break;
+            case 7:
+                // This one has a subfrequency of freq/128 that appears
+                // to modulate two signals using a triangle wave
+                {
+                    float freq2 = freq / 128.f;
+                    float t2 = lol::fmod(freq2 * offset / offset_per_second, 1.f);
+                    t2 = lol::abs(2.f * t2 - 1.f);
+                    float dx = t2 / 2.f; // 0…0.5
+                    float dy = t2 / 3.f; // 0…0.333
+                    // The points for our curve are:
+                    // { 0, -1/3-dy }  { dx, dy+(2dx-1)/3 }  { 0.5, dy }
+                    //  + mirrored versions for second half of the interval
+                    float t3 = t < 0.5f ? t : t - 0.5f;
+                    waveform = t3 < dx ? lol::mix(-1.f / 3.f - dy, dy + (2.f * dx - 1.f) / 3.f, t3 / dx)
+                                       : lol::mix(dy + (2.f * dx - 1.f) / 3.f, dy, (t3 - dx) / (0.5f - dx));
+                    if (t >= 0.5f)
+                        waveform = -1.f / 3.f - waveform;
+                }
                 break;
             }
 
             buffer[2 * i] = buffer[2 * i + 1]
-                          = (int16_t)(multiplier * volume * waveform);
+                  = (int16_t)(32767.99f * volume * waveform);
         }
 
         // TODO: handle loops etc.
@@ -168,7 +226,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         else if (note != next_note)
         {
             float next_freq = sfx.frequency(next_note);
-            float next_volume = sfx.volume(next_note);
+            //float next_volume = sfx.volume(next_note);
 
             phi += (freq * offset - next_freq * next_offset) / offset_per_second;
             phi = lol::fmod(phi, 1.f) + (phi >= 0.f ? 0.f : 1.f);
