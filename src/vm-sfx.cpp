@@ -77,9 +77,6 @@ struct sfx
     int speed() const { return flags[1]; }
     int loop_start() const { return flags[2]; }
     int loop_end() const { return flags[3]; }
-
-    // This constructor is necessary for get_sfx
-    sfx() { ::memset(this, 0, sizeof(*this)); }
 };
 
 static_assert(sizeof(sfx) == 68);
@@ -110,18 +107,16 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
 
     for (int i = 0; i < samples; ++i)
     {
-        struct sfx const &sfx = get_sfx(m_channels[chan].m_sfx);
-        int speed = sfx.speed();
-
-        // Speed must be 1—255 otherwise the SFX is invalid
-        if (speed == 0)
+        if (m_channels[chan].m_sfx == -1)
         {
-            // XXX: if speed is invalid I believe it’s safer to free the
-            // channel immediately, but let’s see what PICO-8 does one day
             buffer[2 * i] = buffer[2 * i + 1] = 0;
             m_channels[chan].m_sfx = -1;
             continue;
         }
+
+        // Speed must be 1—255 otherwise the SFX is invalid
+        struct sfx const &sfx = get_sfx(m_channels[chan].m_sfx);
+        int speed = lol::max(1, sfx.speed());
 
         float offset = m_channels[chan].m_offset;
         float phi = m_channels[chan].m_phi;
@@ -241,10 +236,8 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
 
 struct sfx const &vm::get_sfx(int n) const
 {
-    ASSERT(n >= -1 && n < 64);
-    static struct sfx const empty_sfx;
-    return n == -1 ? empty_sfx :
-           *reinterpret_cast<struct sfx const *>(get_mem(OFFSET_SFX + 68 * n));
+    ASSERT(n >= 0 && n < 64);
+    return *reinterpret_cast<struct sfx const *>(get_mem(OFFSET_SFX + 68 * n));
 }
 
 //
