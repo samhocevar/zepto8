@@ -174,11 +174,9 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
                 break;
             case 5:
                 // Some triangle stuff again
-                waveform = t < 0.25f ? t * 8.f - 1.f
-                         : t < 0.5f ? 3.f - t * 8.f
-                         : t < 0.75f ? (16.f * t - 11.f) / 3.f
-                         : (13.f - 16.f * t) / 3.f;
-                waveform *= 0.32f;
+                waveform = t < 0.5f ? 3.f - lol::abs(24.f * t - 6.f)
+                                    : 1.f - lol::abs(16.f * t - 12.f);
+                waveform *= 0.111111111f;
                 break;
             case 6:
                 // Spectral analysis indicates this is some kind of
@@ -192,20 +190,12 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
             case 7:
                 // This one has a subfrequency of freq/128 that appears
                 // to modulate two signals using a triangle wave
+                // FIXME: amplitude seems to be affected, too
                 {
-                    float freq2 = freq / 128.f;
-                    float t2 = lol::fmod(freq2 * offset / offset_per_second, 1.f);
-                    t2 = lol::abs(2.f * t2 - 1.f);
-                    float dx = t2 / 2.f; // 0…0.5
-                    float dy = t2 / 3.f; // 0…0.333
-                    // The points for our curve are:
-                    // { 0, -1/3-dy }  { dx, dy+(2dx-1)/3 }  { 0.5, dy }
-                    //  + mirrored versions for second half of the interval
-                    float t3 = t < 0.5f ? t : t - 0.5f;
-                    waveform = t3 < dx ? lol::mix(-1.f / 3.f - dy, dy + (2.f * dx - 1.f) / 3.f, t3 / dx)
-                                       : lol::mix(dy + (2.f * dx - 1.f) / 3.f, dy, (t3 - dx) / (0.5f - dx));
-                    if (t >= 0.5f)
-                        waveform = -1.f / 3.f - waveform;
+                    float k = lol::abs(2.f * lol::fmod(freq / 128.f * offset / offset_per_second, 1.f) - 1.f);
+                    float u = lol::fmod(t + 0.5f * k, 1.0f);
+                    waveform = lol::abs(4.f * u - 2.f) - lol::abs(8.f * t - 4.f);
+                    waveform *= 0.166666666f;
                 }
                 break;
             }
