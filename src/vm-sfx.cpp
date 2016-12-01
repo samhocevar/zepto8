@@ -81,7 +81,7 @@ struct sfx
     int loop_end() const { return flags[3]; }
 };
 
-static_assert(sizeof(sfx) == 68);
+static_assert(sizeof(sfx) == 68, "z8::sfx has incorrect size");
 
 
 vm::channel::channel()
