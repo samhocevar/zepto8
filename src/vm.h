@@ -48,7 +48,7 @@ public:
     void button(int index, int state) { m_buttons[1][index] = state; }
     void mouse(lol::ivec2 coords, int buttons) { m_mouse = lol::ivec3(coords, buttons); }
 
-    static const lol::LuaObjectLib* GetLib();
+    static const lol::LuaObjectLibrary* GetLib();
     static vm* New(lua_State* l, int arg_nb);
 
 private:

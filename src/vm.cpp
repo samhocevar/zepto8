@@ -31,7 +31,7 @@ vm::vm()
     lua_sethook(l, &vm::hook, LUA_MASKCOUNT, 1000);
 
     // Register our Lua module
-    lol::LuaObjectDef::Register<vm>(l);
+    lol::LuaObjectHelper::Register<vm>(l);
 
     ExecLuaFile("data/zepto8.lua");
 
@@ -93,9 +93,9 @@ void vm::step(float seconds)
     m_instructions = 0;
 }
 
-const lol::LuaObjectLib* vm::GetLib()
+const lol::LuaObjectLibrary* vm::GetLib()
 {
-    static const lol::LuaObjectLib lib = lol::LuaObjectLib(
+    static const lol::LuaObjectLibrary lib = lol::LuaObjectLibrary(
         "_z8",
 
         // Statics

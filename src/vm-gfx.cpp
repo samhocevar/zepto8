@@ -548,14 +548,14 @@ int vm::api::palt(lua_State *l)
 
 int vm::api::pget(lua_State *l)
 {
-    lol::LuaStack s(l);
-    lol::LuaFloat x, y, ret;
-    s >> x >> y;
-
     vm *that = get_this(l);
-    ret = that->getpixel((int)x - that->m_camera.x, (int)y - that->m_camera.y);
 
-    return s << ret;
+    int x = lua_toclamp64(l, 1);
+    int y = lua_toclamp64(l, 2);
+
+    lua_pushnumber(l, that->getpixel(x - that->m_camera.x, y - that->m_camera.y));
+
+    return 1;
 }
 
 int vm::api::pset(lua_State *l)
