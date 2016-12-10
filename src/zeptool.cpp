@@ -26,21 +26,22 @@
 enum class mode
 {
     none,
-    pico2lua = 128,
-    run      = 129,
-    p8topng  = 130,
-    pngtop8  = 131,
-    telnet   = 132,
+    run    = 129,
+    telnet = 130,
+
+    tolua  = 131,
+    topng  = 132,
+    top8   = 133,
+
+    data   = 134,
 };
 
 static void usage()
 {
-    printf("Usage: zeptool --pico2lua <cart>\n");
-    printf("               --p8topng <cart>\n");
-    printf("               --pngtop8 <cart>\n");
-    printf("               --run <cart>\n");
+    printf("Usage: zeptool [--tolua|--topng|--top8] [--data <file>] <cart>\n");
 #if HAVE_UNISTD_H
-    printf("               --telnet <cart>\n");
+    printf("       zeptool --run <cart>\n");
+    printf("       zeptool --telnet <cart>\n");
 #endif
 }
 
@@ -49,16 +50,17 @@ int main(int argc, char **argv)
     lol::sys::init(argc, argv);
 
     lol::getopt opt(argc, argv);
-    opt.add_opt(128, "pico2lua", true);
-    opt.add_opt(129, "run", true);
-    opt.add_opt(130, "p8topng", true);
-    opt.add_opt(131, "pngtop8", true);
+    opt.add_opt(int(mode::run),   "run",   false);
+    opt.add_opt(int(mode::tolua), "tolua", false);
+    opt.add_opt(int(mode::topng), "topng", false);
+    opt.add_opt(int(mode::top8),  "top8",  false);
+    opt.add_opt(int(mode::data),  "data",  true);
 #if HAVE_UNISTD_H
-    opt.add_opt(132, "telnet", true);
+    opt.add_opt(int(mode::telnet), "telnet", false);
 #endif
 
     mode run_mode = mode::none;
-    char const *arg = nullptr;
+    char const *data = nullptr;
 
     for (;;)
     {
@@ -68,35 +70,60 @@ int main(int argc, char **argv)
 
         switch (c)
         {
-        case (int)mode::pico2lua:
-        case (int)mode::p8topng:
-        case (int)mode::pngtop8:
+        case (int)mode::tolua:
+        case (int)mode::topng:
+        case (int)mode::top8:
         case (int)mode::run:
         case (int)mode::telnet:
             run_mode = mode(c);
-            arg = opt.arg;
+            break;
+        case (int)mode::data:
+            data = opt.arg;
             break;
         default:
             return EXIT_FAILURE;
         }
     }
 
-    if (run_mode == mode::pico2lua)
+    char const *cart_name = argv[opt.index];
+
+    if (run_mode == mode::tolua || run_mode == mode::top8 || run_mode == mode::topng)
     {
         z8::cart cart;
-        cart.load(arg);
-        printf("%s", cart.get_lua().C());
-    }
-    else if (run_mode == mode::pngtop8)
-    {
-        z8::cart cart;
-        cart.load(arg);
-        printf("%s", cart.get_p8().C());
+        cart.load(cart_name);
+
+        if (data)
+        {
+            lol::String s;
+            lol::File f;
+            for (auto candidate : lol::sys::get_path_list(data))
+            {
+                f.Open(candidate, lol::FileAccess::Read);
+                if (f.IsValid())
+                {
+                    s = f.ReadString();
+                    f.Close();
+
+                    lol::msg::debug("loaded file %s\n", candidate.C());
+                    break;
+                }
+            }
+            memcpy(cart.get_rom().data(), s.C(), lol::min(s.count(), 0x4300));
+        }
+
+        if (run_mode == mode::tolua)
+        {
+            printf("%s", cart.get_lua().C());
+        }
+        else if (run_mode == mode::top8)
+        {
+            printf("%s", cart.get_p8().C());
+        }
     }
     else if (run_mode == mode::run)
     {
         z8::vm vm;
-        vm.load(arg);
+        vm.load(cart_name);
         vm.run();
         while (true)
         {
@@ -110,7 +137,7 @@ int main(int argc, char **argv)
     else if (run_mode == mode::telnet)
     {
         z8::telnet telnet;
-        telnet.run(arg);
+        telnet.run(cart_name);
     }
 #endif
     else

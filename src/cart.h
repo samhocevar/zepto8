@@ -33,6 +33,11 @@ public:
         return m_rom;
     }
 
+    lol::array<uint8_t> &get_rom()
+    {
+        return m_rom;
+    }
+
     lol::String const &get_code() const
     {
         return m_code;
