@@ -104,7 +104,8 @@ int main(int argc, char **argv)
                     s = f.ReadString();
                     f.Close();
 
-                    lol::msg::debug("loaded file %s\n", candidate.C());
+                    lol::msg::debug("loaded file %s (%d bytes, max %d)\n",
+                                    candidate.C(), int(s.count()), 0x4300);
                     break;
                 }
             }
