@@ -32,13 +32,14 @@ enum class mode
     tolua  = 131,
     topng  = 132,
     top8   = 133,
+    todata = 134,
 
-    data   = 134,
+    data   = 135,
 };
 
 static void usage()
 {
-    printf("Usage: zeptool [--tolua|--topng|--top8] [--data <file>] <cart>\n");
+    printf("Usage: zeptool [--tolua|--topng|--top8|--todata] [--data <file>] <cart>\n");
 #if HAVE_UNISTD_H
     printf("       zeptool --run <cart>\n");
     printf("       zeptool --telnet <cart>\n");
@@ -50,11 +51,12 @@ int main(int argc, char **argv)
     lol::sys::init(argc, argv);
 
     lol::getopt opt(argc, argv);
-    opt.add_opt(int(mode::run),   "run",   false);
-    opt.add_opt(int(mode::tolua), "tolua", false);
-    opt.add_opt(int(mode::topng), "topng", false);
-    opt.add_opt(int(mode::top8),  "top8",  false);
-    opt.add_opt(int(mode::data),  "data",  true);
+    opt.add_opt(int(mode::run),    "run",    false);
+    opt.add_opt(int(mode::tolua),  "tolua",  false);
+    opt.add_opt(int(mode::topng),  "topng",  false);
+    opt.add_opt(int(mode::top8),   "top8",   false);
+    opt.add_opt(int(mode::todata), "todata", false);
+    opt.add_opt(int(mode::data),   "data",   true);
 #if HAVE_UNISTD_H
     opt.add_opt(int(mode::telnet), "telnet", false);
 #endif
@@ -73,6 +75,7 @@ int main(int argc, char **argv)
         case (int)mode::tolua:
         case (int)mode::topng:
         case (int)mode::top8:
+        case (int)mode::todata:
         case (int)mode::run:
         case (int)mode::telnet:
             run_mode = mode(c);
@@ -87,7 +90,7 @@ int main(int argc, char **argv)
 
     char const *cart_name = argv[opt.index];
 
-    if (run_mode == mode::tolua || run_mode == mode::top8 || run_mode == mode::topng)
+    if (run_mode == mode::tolua || run_mode == mode::top8 || run_mode == mode::topng || run_mode == mode::todata)
     {
         z8::cart cart;
         cart.load(cart_name);
@@ -119,6 +122,10 @@ int main(int argc, char **argv)
         else if (run_mode == mode::top8)
         {
             printf("%s", cart.get_p8().C());
+        }
+        else if (run_mode == mode::todata)
+        {
+            fwrite(cart.get_rom().data(), 1, cart.get_rom().count(), stdout);
         }
     }
     else if (run_mode == mode::run)
