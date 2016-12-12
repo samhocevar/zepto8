@@ -125,7 +125,7 @@ int main(int argc, char **argv)
         }
         else if (run_mode == mode::todata)
         {
-            fwrite(cart.get_rom().data(), 1, cart.get_rom().count(), stdout);
+            fwrite(cart.get_rom().data(), 1, 0x4300, stdout);
         }
     }
     else if (run_mode == mode::run)
