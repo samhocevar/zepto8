@@ -65,7 +65,7 @@ bool cart::load_png(char const *filename)
         for (int y = 0; y < LABEL_HEIGHT; ++y)
         for (int x = 0; x < LABEL_WIDTH; ++x)
         {
-            u8vec4 p = pixels[(y + LABEL_Y) * size.x + (x + LABEL_X)];
+            lol::u8vec4 p = pixels[(y + LABEL_Y) * size.x + (x + LABEL_X)];
             uint8_t c = z8::palette::best(p);
             if (x & 1)
                 m_label[(y * LABEL_WIDTH + x) / 2] += c << 4;
@@ -123,8 +123,6 @@ bool cart::load_png(char const *filename)
 
     // Remove possible trailing zeroes
     m_code.resize(strlen(m_code.C()));
-
-    m_version = version;
 
     return true;
 }
@@ -378,10 +376,53 @@ bool cart::load_p8(char const *filename)
     return true;
 }
 
+lol::Image cart::get_png() const
+{
+    lol::Image ret;
+    ret.Load("data/blank.png");
+
+    ivec2 size = ret.GetSize();
+
+    u8vec4 *pixels = ret.Lock<PixelFormat::RGBA_8>();
+
+    /* Apply label */
+    if (m_label.count() >= LABEL_WIDTH * LABEL_HEIGHT / 2)
+    {
+        for (int y = 0; y < LABEL_HEIGHT; ++y)
+        for (int x = 0; x < LABEL_WIDTH; ++x)
+        {
+            uint8_t col = (m_label[(y * LABEL_WIDTH + x) / 2] >> (4 * (x & 1))) & 0xf;
+            pixels[(y + LABEL_Y) * size.x + (x + LABEL_X)] = palette::get(col);
+        }
+    }
+
+    /* Create ROM data */
+    lol::array<uint8_t> rom = m_rom;
+    rom.resize(SIZE_MEMORY + 1);
+
+    /* FIXME: write code here */
+    memset(rom.data() + OFFSET_CODE, 0, SIZE_MEMORY - OFFSET_CODE);
+    rom[OFFSET_CODE] = 0;
+    rom[OFFSET_CODE + 1] = 0;
+
+    rom[SIZE_MEMORY] = EXPORT_VERSION;
+
+    /* Write ROM to lower bits */
+    for (int n = 0; n < rom.count(); ++n)
+    {
+        u8vec4 p(rom[n] & 0x30, rom[n] & 0x0c, rom[n] & 0x03, rom[n] & 0xc0);
+        pixels[n] = pixels[n] / 4 * 4 + p / u8vec4(16, 4, 1, 64);
+    }
+
+    ret.Unlock(pixels);
+
+    return ret;
+}
+
 lol::String cart::get_p8() const
 {
-    lol::String ret = "pico-8 cartridge // http://www.pico-8.com\n"
-                      "version 8\n";
+    lol::String ret = "pico-8 cartridge // http://www.pico-8.com\n";
+    ret += lol::String::format("version %d\n", EXPORT_VERSION);
 
     ret += "__lua__\n";
     ret += get_code();
@@ -394,6 +435,18 @@ lol::String cart::get_p8() const
         ret += lol::String::format("%02x", uint8_t(m_rom.data()[OFFSET_GFX + i] * 0x101 / 0x10));
         if ((i + 1) % 64 == 0)
             ret += '\n';
+    }
+
+    if (m_label.count() >= LABEL_WIDTH * LABEL_HEIGHT / 2)
+    {
+        ret += "__label__\n";
+        for (int i = 0; i < LABEL_WIDTH * LABEL_HEIGHT / 2; ++i)
+        {
+            ret += lol::String::format("%02x", uint8_t(m_label.data()[i] * 0x101 / 0x10));
+            if ((i + 1) % (LABEL_WIDTH / 2) == 0)
+                ret += '\n';
+        }
+        ret += '\n';
     }
 
     ret += "__gff__\n";
@@ -437,17 +490,6 @@ lol::String cart::get_p8() const
         ret += lol::String::format("%02x %02x%02x%02x%02x\n", flags,
                                    data[0] & 0x7f, data[1] & 0x7f,
                                    data[2] & 0x7f, data[3] & 0x7f);
-    }
-
-    if (m_label.count() >= LABEL_WIDTH * LABEL_HEIGHT / 2)
-    {
-        ret += "__label__\n";
-        for (int i = 0; i < LABEL_WIDTH * LABEL_HEIGHT / 2; ++i)
-        {
-            ret += lol::String::format("%02x", uint8_t(m_label.data()[i] * 0x101 / 0x10));
-            if ((i + 1) % (LABEL_WIDTH / 2) == 0)
-                ret += '\n';
-        }
     }
 
     ret += '\n';

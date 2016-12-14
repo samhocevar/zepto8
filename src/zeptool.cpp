@@ -34,12 +34,13 @@ enum class mode
     top8   = 133,
     todata = 134,
 
-    data   = 135,
+    out    = 'o',
+    data   = 136,
 };
 
 static void usage()
 {
-    printf("Usage: zeptool [--tolua|--topng|--top8|--todata] [--data <file>] <cart>\n");
+    printf("Usage: zeptool [--tolua|--topng|--top8|--todata] [--data <file>] <cart> [-o <file>]\n");
 #if HAVE_UNISTD_H
     printf("       zeptool --run <cart>\n");
     printf("       zeptool --telnet <cart>\n");
@@ -56,6 +57,7 @@ int main(int argc, char **argv)
     opt.add_opt(int(mode::topng),  "topng",  false);
     opt.add_opt(int(mode::top8),   "top8",   false);
     opt.add_opt(int(mode::todata), "todata", false);
+    opt.add_opt(int(mode::out),    "out",    true);
     opt.add_opt(int(mode::data),   "data",   true);
 #if HAVE_UNISTD_H
     opt.add_opt(int(mode::telnet), "telnet", false);
@@ -63,6 +65,7 @@ int main(int argc, char **argv)
 
     mode run_mode = mode::none;
     char const *data = nullptr;
+    char const *out = nullptr;
 
     for (;;)
     {
@@ -82,6 +85,9 @@ int main(int argc, char **argv)
             break;
         case (int)mode::data:
             data = opt.arg;
+            break;
+        case (int)mode::out:
+            out = opt.arg;
             break;
         default:
             return EXIT_FAILURE;
@@ -122,6 +128,12 @@ int main(int argc, char **argv)
         else if (run_mode == mode::top8)
         {
             printf("%s", cart.get_p8().C());
+        }
+        else if (run_mode == mode::topng)
+        {
+            if (!out)
+                return EXIT_FAILURE;
+            cart.get_png().Save(out);
         }
         else if (run_mode == mode::todata)
         {

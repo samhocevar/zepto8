@@ -23,7 +23,6 @@ class cart
 {
 public:
     cart()
-      : m_version(0)
     {}
 
     bool load(char const *filename);
@@ -55,12 +54,8 @@ public:
         return m_lua;
     }
 
-    int get_version() const
-    {
-        return m_version;
-    }
-
     lol::String get_p8() const;
+    lol::Image get_png() const;
 
 private:
     bool load_png(char const *filename);

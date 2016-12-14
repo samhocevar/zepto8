@@ -21,6 +21,11 @@ namespace z8
 
 enum
 {
+    EXPORT_VERSION = 8,
+};
+
+enum
+{
     WINDOW_WIDTH = 576,
     WINDOW_HEIGHT = 576,
 };
