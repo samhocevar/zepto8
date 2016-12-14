@@ -124,6 +124,9 @@ bool cart::load_png(char const *filename)
     // Remove possible trailing zeroes
     m_code.resize(strlen(m_code.C()));
 
+    // Invalidate code cache
+    m_lua.resize(0);
+
     return true;
 }
 
@@ -373,6 +376,9 @@ bool cart::load_p8(char const *filename)
     m_label.resize(lol::min(lab.count(), LABEL_WIDTH * LABEL_HEIGHT / 2));
     memcpy(m_label.data(), lab.data(), m_label.count());
 
+    // Invalidate code cache
+    m_lua.resize(0);
+
     return true;
 }
 
@@ -407,7 +413,7 @@ lol::Image cart::get_png() const
 
     rom[SIZE_MEMORY] = EXPORT_VERSION;
 
-    /* Write ROM to lower bits */
+    /* Write ROM to lower image bits */
     for (int n = 0; n < rom.count(); ++n)
     {
         u8vec4 p(rom[n] & 0x30, rom[n] & 0x0c, rom[n] & 0x03, rom[n] & 0xc0);
