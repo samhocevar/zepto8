@@ -21,31 +21,11 @@ using lol::msg;
 
 void vm::render(lol::u8vec4 *screen) const
 {
-    static lol::u8vec4 const palette[] =
-    {
-        lol::u8vec4(0x00, 0x00, 0x00, 0xff), // black
-        lol::u8vec4(0x1d, 0x2b, 0x53, 0xff), // dark_blue
-        lol::u8vec4(0x7e, 0x25, 0x53, 0xff), // dark_purple
-        lol::u8vec4(0x00, 0x87, 0x51, 0xff), // dark_green
-        lol::u8vec4(0xab, 0x52, 0x36, 0xff), // brown
-        lol::u8vec4(0x5f, 0x57, 0x4f, 0xff), // dark_gray
-        lol::u8vec4(0xc2, 0xc3, 0xc7, 0xff), // light_gray
-        lol::u8vec4(0xff, 0xf1, 0xe8, 0xff), // white
-        lol::u8vec4(0xff, 0x00, 0x4d, 0xff), // red
-        lol::u8vec4(0xff, 0xa3, 0x00, 0xff), // orange
-        lol::u8vec4(0xff, 0xec, 0x27, 0xff), // yellow
-        lol::u8vec4(0x00, 0xe4, 0x36, 0xff), // green
-        lol::u8vec4(0x29, 0xad, 0xff, 0xff), // blue
-        lol::u8vec4(0x83, 0x76, 0x9c, 0xff), // indigo
-        lol::u8vec4(0xff, 0x77, 0xa8, 0xff), // pink
-        lol::u8vec4(0xff, 0xcc, 0xaa, 0xff), // peach
-    };
-
     for (int n = 0; n < 128 * 128 / 2; ++n)
     {
         uint8_t data = m_memory[OFFSET_SCREEN + n];
-        screen[2 * n] = palette[m_pal[1][data & 0xf]];
-        screen[2 * n + 1] = palette[m_pal[1][data >> 4]];
+        screen[2 * n] = palette::get(m_pal[1][data & 0xf]);
+        screen[2 * n + 1] = palette::get(m_pal[1][data >> 4]);
     }
 }
 

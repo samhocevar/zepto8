@@ -38,6 +38,11 @@ public:
         return m_rom;
     }
 
+    lol::array<uint8_t> &get_label()
+    {
+        return m_label;
+    }
+
     lol::String const &get_code() const
     {
         return m_code;
@@ -62,6 +67,7 @@ private:
     bool load_p8(char const *filename);
 
     lol::array<uint8_t> m_rom;
+    lol::array<uint8_t> m_label;
     lol::String m_code, m_lua;
     int m_version;
 };

@@ -46,16 +46,34 @@ bool cart::load_png(char const *filename)
     lol::Image img;
     img.Load(filename);
     ivec2 size = img.GetSize();
-    int count = size.x * size.y;
-    m_rom.resize(count);
+
+    u8vec4 const *pixels = img.Lock<PixelFormat::RGBA_8>();
 
     // Retrieve cartridge data from lower image bits
-    u8vec4 const *pixels = img.Lock<PixelFormat::RGBA_8>();
-    for (int n = 0; n < count; ++n)
+    int pixel_count = size.x * size.y;
+    m_rom.resize(pixel_count);
+    for (int n = 0; n < pixel_count; ++n)
     {
         u8vec4 p = pixels[n] * 64;
         m_rom[n] = p.a + p.r / 4 + p.g / 16 + p.b / 64;
     }
+
+    // Retrieve label from image pixels
+    if (size.x >= LABEL_WIDTH + LABEL_X && size.y >= LABEL_HEIGHT + LABEL_Y)
+    {
+        m_label.resize(LABEL_WIDTH * LABEL_HEIGHT / 2);
+        for (int y = 0; y < LABEL_HEIGHT; ++y)
+        for (int x = 0; x < LABEL_WIDTH; ++x)
+        {
+            u8vec4 p = pixels[(y + LABEL_Y) * size.x + (x + LABEL_X)];
+            uint8_t c = z8::palette::best(p);
+            if (x & 1)
+                m_label[(y * LABEL_WIDTH + x) / 2] += c << 4;
+            else
+                m_label[(y * LABEL_WIDTH + x) / 2] = c;
+        }
+    }
+
     img.Unlock(pixels);
 
     // Retrieve code, with optional decompression
@@ -129,13 +147,15 @@ struct p8_reader
     struct r_map : pegtl_string_t("__map__") {};
     struct r_sfx : pegtl_string_t("__sfx__") {};
     struct r_mus : pegtl_string_t("__music__") {};
+    struct r_lab : pegtl_string_t("__label__") {};
 
     struct r_section_name : pegtl::sor<r_lua,
                                        r_gfx,
                                        r_gff,
                                        r_map,
                                        r_sfx,
-                                       r_mus> {};
+                                       r_mus,
+                                       r_lab> {};
     struct r_section_line : pegtl::seq<r_section_name, pegtl::eol> {};
 
     struct r_data_line : pegtl::seq<pegtl::not_at<r_section_line>,
@@ -172,6 +192,7 @@ struct p8_reader
         map,
         sfx,
         mus,
+        lab,
     };
 
     section m_current_section;
@@ -214,6 +235,8 @@ struct p8_reader::action<p8_reader::r_section_name>
             r.m_current_section = section::sfx;
         else if (in.string().find("music") != std::string::npos)
             r.m_current_section = section::mus;
+        else if (in.string().find("label") != std::string::npos)
+            r.m_current_section = section::lab;
         else
         {
             msg::info("unknown section name %s\n", in.string().c_str());
@@ -234,7 +257,8 @@ struct p8_reader::action<p8_reader::r_data>
         }
         else
         {
-            bool must_swap = r.m_current_section == section::gfx;
+            bool must_swap = r.m_current_section == section::gfx
+                          || r.m_current_section == section::lab;
 
             // Decode hexadecimal data from this section
             auto &section = r.m_sections[(int8_t)r.m_current_section];
@@ -291,12 +315,14 @@ bool cart::load_p8(char const *filename)
     auto const &map = reader.m_sections[(int8_t)p8_reader::section::map];
     auto const &sfx = reader.m_sections[(int8_t)p8_reader::section::sfx];
     auto const &mus = reader.m_sections[(int8_t)p8_reader::section::mus];
+    auto const &lab = reader.m_sections[(int8_t)p8_reader::section::lab];
 
     msg::info("gfx size: %d / %d\n", gfx.count(), SIZE_GFX + SIZE_GFX2);
     msg::info("gff size: %d / %d\n", gff.count(), SIZE_GFX_PROPS);
     msg::info("map size: %d / %d\n", map.count(), SIZE_MAP + SIZE_MAP2);
     msg::info("sfx size: %d / %d\n", sfx.count() / (4 + 80) * (4 + 64), SIZE_SFX);
     msg::info("mus size: %d / %d\n", mus.count() / 5 * 4, SIZE_SONG);
+    msg::info("lab size: %d / %d\n", lab.count(), LABEL_WIDTH * LABEL_HEIGHT / 2);
 
     // The optional second chunk of gfx is contiguous, we can copy it directly
     memcpy(m_rom.data() + OFFSET_GFX, gfx.data(), lol::min(SIZE_GFX + SIZE_GFX2, gfx.count()));
@@ -344,6 +370,10 @@ bool cart::load_p8(char const *filename)
         m_rom[OFFSET_SFX + i * (4 + 64) + 64 + 2] = sfx[i * (4 + 32 * 5 / 2) + 2];
         m_rom[OFFSET_SFX + i * (4 + 64) + 64 + 3] = sfx[i * (4 + 32 * 5 / 2) + 3];
     }
+
+    // Optional cartridge label
+    m_label.resize(lol::min(lab.count(), LABEL_WIDTH * LABEL_HEIGHT / 2));
+    memcpy(m_label.data(), lab.data(), m_label.count());
 
     return true;
 }
@@ -407,6 +437,17 @@ lol::String cart::get_p8() const
         ret += lol::String::format("%02x %02x%02x%02x%02x\n", flags,
                                    data[0] & 0x7f, data[1] & 0x7f,
                                    data[2] & 0x7f, data[3] & 0x7f);
+    }
+
+    if (m_label.count() >= LABEL_WIDTH * LABEL_HEIGHT / 2)
+    {
+        ret += "__label__\n";
+        for (int i = 0; i < LABEL_WIDTH * LABEL_HEIGHT / 2; ++i)
+        {
+            ret += lol::String::format("%02x", uint8_t(m_label.data()[i] * 0x101 / 0x10));
+            if ((i + 1) % (LABEL_WIDTH / 2) == 0)
+                ret += '\n';
+        }
     }
 
     ret += '\n';
