@@ -412,7 +412,7 @@ lol::Image cart::get_png() const
     rom << 0 << 0; /* FIXME: what is this? */
     rom += get_compressed_code();
 
-    rom.resize(SIZE_MEMORY + 1);
+    rom.resize(SIZE_MEMORY);
     rom << EXPORT_VERSION;
 
     /* Write ROM to lower image bits */
@@ -450,9 +450,10 @@ lol::array<uint8_t> cart::get_compressed_code() const
         int best_j = 0, best_len = 0;
         for (int j = lol::max(i - 3135, 0); j < i; ++j)
         {
-            int end = lol::min(m_code.count() - i, 17);
-            /* FIXME: official PICO-8 stops at i - j, despite being perfectly
-             * able to decompress a longer chunk. */
+            int end = lol::min(m_code.count() - j, 17);
+
+            /* XXX: official PICO-8 stops at i - j, despite being able
+             * to support m_code.count() - j, it seems. */
             end = lol::min(end, i - j);
 
             for (int k = 0; ; ++k)
@@ -471,7 +472,7 @@ lol::array<uint8_t> cart::get_compressed_code() const
 
         uint8_t byte = (uint8_t)m_code[i];
 
-        /* FIXME: a length of 2 is always better than any alternative,
+        /* XXX: a length of 2 is always better than any alternative,
          * but official PICO-8 ignores it (and is thus less efficient). */
         if (best_len > 2)
         {
