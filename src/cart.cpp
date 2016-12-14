@@ -40,6 +40,9 @@ bool cart::load(char const *filename)
     return false;
 }
 
+static uint8_t const *compress_lut = nullptr;
+static char const *decompress_lut = "\n 0123456789abcdefghijklmnopqrstuvwxyz!#%(){}[]<>+=/*:;.,~_";
+
 bool cart::load_png(char const *filename)
 {
     // Open cartridge as PNG image
@@ -102,7 +105,7 @@ bool cart::load_png(char const *filename)
         m_code.resize(0);
         for (int i = OFFSET_CODE + 8; i < m_rom.count() && m_code.count() < length; ++i)
         {
-            if(m_rom[i] >= 0x3c)
+            if (m_rom[i] >= 0x3c)
             {
                 int a = (m_rom[i] - 0x3c) * 16 + (m_rom[i + 1] & 0xf);
                 int b = m_rom[i + 1] / 16 + 2;
@@ -112,10 +115,7 @@ bool cart::load_png(char const *filename)
             }
             else
             {
-                static char const *lut = "#\n 0123456789abcdef"
-                    "ghijklmnopqrstuvwxyz!#%(){}[]<>+=/*:;.,~_";
-
-                m_code += m_rom[i] ? lut[m_rom[i]] : m_rom[++i];
+                m_code += m_rom[i] ? decompress_lut[m_rom[i] - 1] : m_rom[++i];
             }
         }
         msg::info("Expected %d bytes, got %d\n", length, (int)m_code.count());
@@ -347,7 +347,7 @@ bool cart::load_p8(char const *filename)
     // SFX data is packed
     for (int i = 0; i < lol::min(SIZE_SFX / (4 + 32 * 2), sfx.count() / (4 + 32 * 5 / 2)); ++i)
     {
-        // FIXME move this to the parser
+        // FIXME move this to the parser maybe?
         for (int j = 0; j < 32; ++j)
         {
             uint32_t ins = (sfx[4 + i * (4 + 80) + j * 5 / 2 + 0] << 16)
@@ -404,14 +404,16 @@ lol::Image cart::get_png() const
 
     /* Create ROM data */
     lol::array<uint8_t> rom = m_rom;
+
+    rom.resize(OFFSET_CODE);
+    rom << ':' << 'c' << ':' << '\0';
+    rom << (m_code.count() >> 8);
+    rom << (m_code.count() & 0xff);
+    rom << 0 << 0; /* FIXME: what is this? */
+    rom += get_compressed_code();
+
     rom.resize(SIZE_MEMORY + 1);
-
-    /* FIXME: write code here */
-    memset(rom.data() + OFFSET_CODE, 0, SIZE_MEMORY - OFFSET_CODE);
-    rom[OFFSET_CODE] = 0;
-    rom[OFFSET_CODE + 1] = 0;
-
-    rom[SIZE_MEMORY] = EXPORT_VERSION;
+    rom << EXPORT_VERSION;
 
     /* Write ROM to lower image bits */
     for (int n = 0; n < rom.count(); ++n)
@@ -421,6 +423,72 @@ lol::Image cart::get_png() const
     }
 
     ret.Unlock(pixels);
+
+    return ret;
+}
+
+lol::array<uint8_t> cart::get_compressed_code() const
+{
+    lol::array<uint8_t> ret;
+
+    /* Ensure the compression LUT is initialised */
+    if (!compress_lut)
+    {
+        uint8_t *tmp = new uint8_t[128];
+        memset(tmp, 0, 128);
+        for (int i = 0; i < 0x3b; ++i)
+            tmp[(uint8_t)decompress_lut[i]] = i + 1;
+        compress_lut = tmp;
+    }
+
+    /* FIXME: PICO-8 appears to be adding an implicit \n at the
+     * end of the code, and ignoring it when compressing code. So
+     * for the moment we write one char too many. */
+    for (int i = 0; i < m_code.count(); ++i)
+    {
+        /* Look behind for possible patterns */
+        int best_j = 0, best_len = 0;
+        for (int j = lol::max(i - 3135, 0); j < i; ++j)
+        {
+            int end = lol::min(m_code.count() - i, 17);
+            /* FIXME: official PICO-8 stops at i - j, despite being perfectly
+             * able to decompress a longer chunk. */
+            end = lol::min(end, i - j);
+
+            for (int k = 0; ; ++k)
+            {
+                if (k >= end || m_code[j + k] != m_code[i + k])
+                {
+                    if (k > best_len)
+                    {
+                        best_j = j;
+                        best_len = k;
+                    }
+                    break;
+                }
+            }
+        }
+
+        uint8_t byte = (uint8_t)m_code[i];
+
+        /* FIXME: a length of 2 is always better than any alternative,
+         * but official PICO-8 ignores it (and is thus less efficient). */
+        if (best_len > 2)
+        {
+            int a = 0x3c + (i - best_j) / 16;
+            int b = ((i - best_j) & 0xf) + (best_len - 2) * 16;
+            ret << a << b;
+            i += best_len - 1;
+        }
+        else if (byte < 128 && compress_lut[byte])
+        {
+            ret << compress_lut[byte];
+        }
+        else
+        {
+            ret << '\0' << byte;
+        }
+    }
 
     return ret;
 }

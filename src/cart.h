@@ -54,6 +54,7 @@ public:
         return m_lua;
     }
 
+    lol::array<uint8_t> get_compressed_code() const;
     lol::String get_p8() const;
     lol::Image get_png() const;
 
