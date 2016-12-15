@@ -109,8 +109,9 @@ bool cart::load_png(char const *filename)
             {
                 int a = (m_rom[i] - 0x3c) * 16 + (m_rom[i + 1] & 0xf);
                 int b = m_rom[i + 1] / 16 + 2;
-                while (b--)
-                    m_code += m_code[m_code.count() - a];
+                if (m_code.count() >= a)
+                    while (b--)
+                        m_code += m_code[m_code.count() - a];
                 ++i;
             }
             else
