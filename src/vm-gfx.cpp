@@ -553,7 +553,7 @@ int vm::api::pget(lua_State *l)
     int x = lua_toclamp64(l, 1);
     int y = lua_toclamp64(l, 2);
 
-    lua_pushnumber(l, that->getpixel(x - that->m_camera.x, y - that->m_camera.y));
+    lua_pushnumber(l, that->getpixel(x, y));
 
     return 1;
 }
