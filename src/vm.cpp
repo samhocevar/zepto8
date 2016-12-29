@@ -89,6 +89,7 @@ void vm::step(float seconds)
     lua_getglobal(l, "_z8");
     lua_getfield(l, -1, "tick");
     lua_pcall(l, 0, 0, 0);
+    lua_remove(l, -1);
 
     m_instructions = 0;
 }
