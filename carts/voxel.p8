@@ -7,8 +7,8 @@ __lua__
 function _init()
 	cls()
 	cartdata"zepton_score"
-	debug=true
-	mode=0 --o=game/1=menu/2=score
+	dbg=dget"8">0 and true or false
+	mode=1 --o=game/1=menu/2=score
 	t=0    --timer
 	fc=0   --frame count
 	fps={}
@@ -16,25 +16,19 @@ function _init()
 	a=0    --angle
 	f=128  --focale
 	d=512  --depth
-	u=8    --unit
-	u2,u3,u4,uh=2*u,3*u,4*u,u/2
-	s=0    --speed
-	sm=1   --Ömax
-	ii=0.125
-	id=0.0625--1/16
-	im=2
-	ix=0
-	iy=0
-	iz=0.03125--1/32
 	nx=40  --size x
 	nz=48  --size z
+	u=8    --unit
+	u2,u3,u4,uh=2*u,3*u,4*u,u/2
 	uz=d/nz--depth unit
+	s=0    --speed
+	sm=1   --Ömax
+	ix=0
+	iy=0
 	xm=18*u--x max
 	yt=24*u--y top
-	yb=-u2 --y bottom
 	tv={}  --terrain
 	tz={}
-	tc={7,10,9,4,5,3,11,12}
 	sta={} --stars
 	sc1={7,6,13,13}
 	sc2={}
@@ -45,7 +39,7 @@ function _init()
 	se=100 --èenergy level
 	su=1   --èunit
 	suh=su/2
-	n=0
+	local n=0
 	for k=0,1 do
 		for j=0,6 do
 			for i=0,6 do
@@ -70,6 +64,7 @@ function _init()
 	mx=0    --mire x
 	my=0    --mire y
 	mz=0    --mire z
+	mb=-1			--mire bip
 	mt=false--mire target
 	msl={}  --missile
 	mn=0    --ènumber
@@ -83,7 +78,7 @@ function _init()
 	foe={}  --enemy
 	hb=8*su --hitbox size
 	kc=0    --kill count
-	fl1={0,1,2,5,8,8,8,8,5,2,1,0}
+	goc={0,1,2,5,8,8,8,8,5,2,1,0}
 	score={}
 	for i=0,7 do
 		score[i]=dget(i)
@@ -92,10 +87,9 @@ function _init()
 end
 
 function init()
-	t=0
-	a,az=0,0
+	t,a=0,0
 	px,py,pz=0,0,0
-	s=sm
+	s=1
 	se=100
 	sx=0
 	sy=5*u
@@ -113,27 +107,38 @@ function init()
 		end
 		-------------------init voxel
 		for i=0,nz-1 do
-			tv[i]={}
+			tv[i]=voxel()
 			tz[i]=i*uz
-			voxel(tv[i])
 			if i%8==0 then
 				spawn(i,flr(2+rnd(nx-4)))
 			end
 			a+=1
-			az=a%nz
 		end
-	else-----------------init menu
-		sn=384
+	else ----------------init menu
+		sn=512
+		local b,x,y,z,zf
 		for i=0,sn-1 do
-			sta[i]={
+			v={
 				z=256/sn*i,
-				r=32+rnd(384),a=rnd(1),
-				tx={},ty={}}
+				r=32+rnd(480),a=rnd(1),
+				tx={},ty={},tz={}}
+			b=v.a+cos(a)/4+(sx+sy)/720
+			x=v.r*cos(b)+128*cos(a*2)-sx
+			y=v.r*sin(b)+128*sin(a/2)-sy
+			z=(v.z+256*sin(a))%256
+			zf=1/z*32
+			x,y=x*zf,y*zf
+			for j=0,5 do
+				v.tx[j]=x
+				v.ty[j]=y
+				v.tz[j]=z
+			end
+			sta[i]=v
 		end
 		for i=0,7 do
 			a=1/6*i
 			for j=0,11,2 do
-				b=j<6 and 1/16 or 1/24
+				b=j<6 and 1/28 or 1/24
 				sta[sn+i*12+j]={
 					x=0,y=0,a=1/6*j+a-b}
 				sta[sn+i*12+j+1]={
@@ -143,15 +148,16 @@ function init()
 	end
 end
 
-function voxel(l)
+function voxel()
+	local az,l=a%nz,{}
+	local y,w,c,bt,by,bw,bh,bc
+	local p,vy,bx,ry
+	local tc={7,10,9,4,5,3,11,12}
 	for j=0,nx-1 do
 		----------------------terrain
 		y=tgen(a,j)
 		w=1
-		c=(u4+y)/8
-		o=-1
-		c=max(min(c,8),1)
-		c=tc[flr(c)]
+		c=tc[flr(max((u4+y)/8,1))]
 		bt=0
 		by=u4
 		bw=1
@@ -187,8 +193,8 @@ function voxel(l)
 		-----------------------bridge
 		bx=13
 		ry=cos(2/nz*max(az,nz/2))*u
-		if j>bx-2 and j<bx+2 then
-			if(y<ry+u) y=ry+u
+		if abs(j-bx)<2 then
+			y=max(y,ry+u)
 			if j==bx-1 then
 				by=ry
 				bw=3
@@ -205,7 +211,7 @@ function voxel(l)
 				y=ry+u
 				c=6
 			else
-				if(y<ry) y=ry
+				y=max(y,ry)
 			end
 		end
 		if j==bx-2 or j==bx+2 then
@@ -236,7 +242,7 @@ function voxel(l)
 	if az==rx or az==rx+1 then
 		for j=0,nx-1 do
 			v=l[j]
-			if (j<bx-2 or j>bx+2)
+			if abs(j-bx)>2
 			and v.y<u then --tunnel
 				v.by=v.y
 				v.bh=-v.y+u
@@ -270,8 +276,7 @@ function voxel(l)
 	if az==rx-1 or az==rx+2 then
 		for j=0,nx-1 do
 			v=l[j]
-			if v.y<u 
-			and p<bx-1 and p>bx+1 then
+			if v.y<u and abs(p-bx)>1 then
 				v.by=v.y
 				v.bh=-v.y+u
 				v.bc=v.c
@@ -285,31 +290,33 @@ function voxel(l)
 	obj(l,16,18,0)  --airport
 	obj(l,2,10,16)  --pyramid
 	vopt(l)         --optimize
+	return l
 end
 
 function tgen(i,j)
-	y=u2
-	i2=min(i%nz,nz/4)
-	y+=u2*cos(4/nz*i2)
+	local y=u2
+	y+=u2*cos(4/nz*min(i%nz,nz/4))
 	y+=u2*cos(3/nx*j) --x
 	y+=u2*sin((i-j*4)/nz) --y
 	y+=u3*sin((2/nz)*(i+j))
 	return flr(min(y,u4)/uh)*uh
 end
 
-function obj(l,p,n,ox)
+function obj(l,p,n,o)
+	local az,v,x,y,c
+	az=a%nz
 	if az>n and az<n+9 then
 		for j=0,7 do
 			v=l[p+j]
-			x=j+ox+8
+			x=j+o+8
 			y=n+8-az
-			c=sget(j+ox,y)
+			c=sget(j+o,y)
 			if c!=0 then
 				v.y=(4-sget(x,y))*u
 				v.c=c
 			end
 			y+=8
-			c=sget(j+ox,y)
+			c=sget(j+o,y)
 			if c!=0 then
 				v.by=(4-sget(x,y))*u
 				v.bc=c
@@ -319,9 +326,9 @@ function obj(l,p,n,ox)
 end
 
 function vopt(l)
-	p,y,c=1,false,false
+	local p,y,c=1,false,false
 	for j=0,nx-1 do
-		v=l[j]
+		local v=l[j]
 		if v.y==y and v.c==c then
 			p+=1
 		else
@@ -335,15 +342,15 @@ function voptl(l,p,j)
 	if p>1 then
 		l[j-p].w=p
 		for k=j-p+1,j-1 do
-			l[k].w=1
-			l[k].c=12
+			l[k].w,l[k].c=1,12
 		end
-		p=1
+		return 1
 	end
 	return p
 end
 
 function aam()
+	local x,m
 	x=mn%2==0 and su or -su
 	m={
 		x=-sx+x,y=-sy,z=sz,
@@ -406,29 +413,11 @@ function lock(x,y,w,h)
 	pset(x+w,y+h-2)
 end
 
-function ship()
-	for i=0,count(shp) do
-		v=shp[i]
-		zf=1/(sz-v.z)*f
-		x=(v.x+px-sx+v.z*ix/4)*zf
-		y=(v.y+py-sy-v.x*ix/4+v.z*iy/4)*zf
-		w=v.w*zf-1
-		h=v.h*zf-1
-		color(v.c)
-		if v.c!=9 then
-			rectfill(x+w,y+h,x,y)
-		else
-			i=btn(4) and 35 or 34
-			w=suh*zf-4
-			spr(i,x+w,y+w)
-		end
-	end
-end
-
 function spawn(i,j)
+	local y,w,h,e
+	y=-u4-rnd(1)*(yt-8*u)
 	w=flr(1+rnd(8))
 	h=flr(1+rnd(8))
-	y=-u4-rnd(1)*(yt-8*u)
 	e={
 		e=100, --energy
 		f=0,   --force
@@ -451,61 +440,62 @@ function spawn(i,j)
 end
 
 function enemy(e)
-		zf=1/e.z*f
-		zu=zf*su
-		x=(px+e.x)*zf
-		y=(py+e.y)*zf
-		w=e.w*zf-zu-1
-		h=e.h*zf-zu-1
-		g=(py+e.v.y)*zf
-		color(0)
-		rectfill(x+w,y+zu,x-w,y-zu)
-		rectfill(x+zu,y+h,x-zu,y-h)
-		circfill(x,y,2*zu)
-		circfill(x-w,y,zu)
-		circfill(x+w,y,zu)
-		circfill(x,y-h,zu)
-		circfill(x,y+h,zu)
-		if e.e>0 then
-			color(8)
-			circfill(x,y,zu)
-			if e.w>3*su and zu>1 then
-				circfill(x-w+su,y,zu/2)
-				circfill(x+w-su,y,zu/2)
-			end
+	local zf,zu,x,y,w,h,g
+	zf=1/e.z*f
+	zu=zf*su
+	x=(px+e.x)*zf
+	y=(py+e.y)*zf
+	w=e.w*zf-zu-1
+	h=e.h*zf-zu-1
+	g=(py+e.v.y)*zf
+	color(0)
+	rectfill(x+w,y+zu,x-w,y-zu)
+	rectfill(x+zu,y+h,x-zu,y-h)
+	circfill(x,y,2*zu)
+	circfill(x-w,y,zu)
+	circfill(x+w,y,zu)
+	circfill(x,y-h,zu)
+	circfill(x,y+h,zu)
+	if e.e>0 then
+		color(8)
+		circfill(x,y,zu)
+		if e.w>3*su and zu>1 then
+			circfill(x-w+su,y,zu/2)
+			circfill(x+w-su,y,zu/2)
 		end
-		--line(x,y+h,x,g)
-		if e.e>0 ----------------bolt
-		and e.y>-16*u and e.z>sz
-		and t%256>=e.bt
-		and t%256<e.bt+e.bl then
-			n=16
-			x1=x
-			y1=y+h+zu*2
-			color(7)
-			circfill(x1,y1,zu/2)
-			for i=0,n-2 do
-				x2=x1+rnd(8*zu)-4*zu
-				y2=y1+((e.v.y-e.y)/n*zf)
-				line(x1,y1,x2,y2)
-				x1=x2
-				y1=y2
-			end
-			if t%256>e.bt+e.bl-1 then
-				e.bl=4+rnd(28)
-				e.bt=rnd(256-e.bl)
-			end
+	end
+	--line(x,y+h,x,g)
+	if e.e>0 -----------------bolt
+	and e.y>-16*u and e.z>sz
+	and t%256>=e.bt
+	and t%256<e.bt+e.bl then
+		local n,x1,y1,x2,y2
+		n=16
+		x1=x
+		y1=y+h+zu*2
+		color(7)
+		circfill(x1,y1,zu/2)
+		for i=0,n-2 do
+			x2=x1+rnd(8*zu)-4*zu
+			y2=y1+((e.v.y-e.y)/n*zf)
+			line(x1,y1,x2,y2)
+			x1=x2
+			y1=y2
 		end
+		if t%256>e.bt+e.bl-1 then
+			e.bl=4+rnd(28)
+			e.bt=rnd(256-e.bl)
+		end
+	end
 end
 
 function boom(x,y,z)
-	v={
+	add(exp,{
 		x=x,y=y,z=z,
 		w=(8+rnd(4))/16*u,
 		vx=(rnd(16)-8)/32,
 		vy=(rnd(16)-8)/32,
-		vz=(rnd(16)-8)/32}
-	add(exp,v)
+		vz=(rnd(16)-8)/32})
 end
 
 function ex(x,y,z)
@@ -513,18 +503,16 @@ function ex(x,y,z)
 end
 
 function smoke(x,y,z,w)
-	v={
+	add(smo,{
 		i=0,
 		x=x,y=y,z=z,w=w,
 		vx=(rnd(12)-6)/256,
 		vy=(rnd(12)-6)/256,
-		vz=0}
-	add(smo,v)
+		vz=0})
 end
 
 function ct(i,j,y,z)
-	v=tv[i][j]
-	zi=tz[i]
+	local v,zi=tv[i][j],tz[i]
 	if z>zi then--and z<zi+uz
 		if(y>v.y) return 1
 		if(y>v.by and y<v.by+v.bh) return 2
@@ -533,8 +521,9 @@ function ct(i,j,y,z)
 end
 
 function game()
-	px=sx-sx/16
-	py=sy-sy/16+u2
+	local cx,cy,x,y,z,w,h,zf,zu,x2,y2,n
+	px=sx*0.9375
+	py=sy*0.9375+u2
 	cx=-64+sx/4
 	cy=-48+sy/4
 	ch=cy+120
@@ -560,27 +549,22 @@ function game()
 	color(6)
 	line(cx,y,w,y)
 	-------------------------stars
-	i=0
 	for i=0,sn-1 do
 		v=sta[i]
 		x=(v.x-cx-sx/4)%128
-		if(i%16) then
-			color(sc1[flr(i/8)+1])
-		end
+		if(i%16) color(sc1[flr(i/8)+1])
 		pset(cx+x,v.y-56+y)
-		i+=1
 	end
-	x=-sx/4
-	spr(14,x-8,y-30,2,2) --moon
-	spr(47,x+6,y-36)     --sun
-	spr(46,x-32,y-40)    --venus
-	spr(62,x-60,y-15)    --neptune
-	spr(63,x-40,y-32)    --pluto
+	x=-sx/6-8
+	spr(14,x,y-30,2,2) --moon
+	spr(47,x+16,y-38)  --sun
+	spr(46,x+48,y-32)  --venus
+	spr(62,x-48,y-15)  --titan
+	spr(63,x-32,y-32)  --neptune
 	---------------------------sea
 	color(12)
 	rectfill(w,ch,cx,y+1)
 	-------------------------voxel
-	n=0
 	for i=pz-1,0,-1 do dt(i) end
 	for i=nz-1,pz,-1 do dt(i) end
 	---------------------explosion
@@ -609,14 +593,6 @@ function game()
 			color(10)
 			circfill(x,y,su*zf)
 		end
-		--if debug and m.t then
-		--	test=(abs(m.t.x-m.x)<m.t.w)
-		--	color(test and 11 or 8)
-		--	print(flr(m.x),x+4,y-8)
-		--	test=(abs(m.t.y-m.y)<m.t.h)
-		--	color(test and 11 or 8)
-		--	print(flr(-m.y+u4),x+4,y-2)
-		--end
 	end
 	------------------------smoke1
 	for v in all(smo) do
@@ -630,7 +606,23 @@ function game()
 		end
 	end
 	---------------------spaceship
-	if(se>0) ship()
+	if se>0 then
+		for i=0,count(shp) do
+			v=shp[i]
+			zf=1/(sz-v.z)*f
+			x=(v.x+px-sx+v.z*ix/4)*zf
+			y=(v.y+py-sy-v.x*ix/4+v.z*iy/4)*zf
+			if v.c!=9 then
+				w=v.w*zf-1
+				h=v.h*zf-1
+				color(v.c)
+				rectfill(x+w,y+h,x,y)
+			else
+				w=suh*zf-4
+				spr(btn(4) and 35 or 34,x+w,y+w)
+			end
+		end
+	end
 	------------------------smoke2
 	for v in all(smo) do
 		if v.z<=sz then
@@ -648,8 +640,10 @@ function game()
 	zu=zf*u
 	mx=-sx
 	my=-sy
+	mb=-1
 	if my<-u4 then ----air to air
 		if mt then
+			mb=0
 			x=(px+mt.x)*zf
 			y=(py+mt.y)*zf
 			z=flr(mt.z-sz)
@@ -658,14 +652,16 @@ function game()
 			if abs(mt.x-mx)<mt.w and
 			abs(mt.y-my)<mt.h then
 				color(11)
+				mb=1
 			end
 			if mt.e>0 then --energy
 				lock(x,y,w+1,h+1)
 				print(z,x+w+3,y-2)
-				l=(w*2+2)/100*mt.e
-				line(x-w-1,y+h+3,x-w-1+l,y+h+3)
+				v=(w*2+2)/100*mt.e
+				line(x-w-1,y+h+3,x-w-1+v,y+h+3)
 			end
 		end
+		sfx(0,4)
 	else -----------air to surface
 		x=(px+mx-mx%u)*zf
 		y=(py+my-my%uh)*zf
@@ -680,65 +676,67 @@ function game()
 	ptr(x,y,z)
 	if mz<d and se>0 then
 		zf=1/(sz+u)*f
-		n=(py+my)*zf-y
-		for i=0,n-1,3 do
-			pset(x+x/n*i,y+i)
+		x2=(px-sx)*zf
+		y2=(py-sy)*zf
+		n=(x2-x)/(y2-y)
+		for i=0,y2-y-1,3 do
+			pset(x+n*i,y+i)
 		end
 	end
 	for m in all(msl) do
-		color(m.t.l and 11 or 8)
-		if m.t.l then
-			zf=(1/m.t.z)*f
-			if m.t.y<-u4 then
-				x=(px+m.t.x)*zf
-				y=(py+m.t.y)*zf
-				z=flr(m.t.z-m.z)
-				w=m.t.w*zf
-				h=m.t.h*zf
+		v=m.t
+		color(v.l and 11 or 8)
+		if v.l then
+			zf=(1/v.z)*f
+			if v.y<-u4 then
+				x=(px+v.x)*zf
+				y=(py+v.y)*zf
+				z=flr(v.z-m.z)
+				w=v.w*zf
+				h=v.h*zf
 				lock(x,y,w+1,h+1)
 				--print(z,x+w+3,y-2)
 			else
 				zu=zf*u
-				x=(px+m.t.x-m.t.x%u)*zf
-				y=(py+m.t.y-m.t.y%uh)*zf
+				x=(px+v.x-v.x%u)*zf
+				y=(py+v.y-v.y%uh)*zf
 				rect(x+zu,y+zu,x-1,y-1)
 			end
 		end
 	end
 	---------------------------hud
 	camera(0,0)
-	m=1
 	h=24
 	n=h/4
 	color(0)
-	rectfill(m+7,m+h-1,m+3,m)
+	rectfill(8,h,4,1)
 	color(7)
 	for i=0,3 do
-		y=m+(n*i+py+n/2)%h
-		line(m+4,y,m+4,y)
-		y=m+(n*i+py)%h
-		line(m+4,y,m+5,y)
+		y=1+(n*i+py+n/2)%h
+		pset(5,y)
+		y=1+(n*i+py)%h
+		line(5,y,6,y)
 	end
-	y=m+h/2
+	y=1+h/2
 	color(8)
-	line(m+4,y,m+6,y)
+	line(5,y,6,y)
 	color(0)
-	print(flr(sy+u4),m+9,y-2)
-	--print(flr(-sx),m+6,y-8)
+	print(flr(sy+u4),10,y-2)
+	--print(flr(-sx),10,y-8)
 	-------------------------speed
 	y=(h-1)/sm*s
-	rectfill(m,m,m+1,m+h-1)
+	rectfill(1,1,2,h)
 	if y>0 then
 		color(2)
-		rectfill(m,m+h-1-y,m+1,m+h-1)
+		rectfill(1,h-y,2,h)
 	end
 	--color(8)
-	--pset(m,m+h-1-y)
-	--pset(m+1,m+h-1-y)
+	--pset(1,h-y)
+	--pset(2,h-y)
 	--------------------------dead
 	if se<1 then
 		camera(-46,-52)
-		pal(8,fl1[flr(t/4)%12])
+		pal(8,goc[flr(t/4)%12])
 		spr(77)
 		spr(78,9)
 		spr(79,18)
@@ -747,7 +745,6 @@ function game()
 		spr(92,0,9,2,1)
 		spr(94,20,9,2,1)
 		pal()
-		camera(0,0)
 	end
 	---------------------------bar
 	camera(0,-121)
@@ -755,11 +752,11 @@ function game()
 	rectfill(127,6,0,0)
 	spr(48,56,0,2,1) --eagle
 	spr(50,-1)
-	nbr(se,7,1,3)
-	spr(51,96)
-	nbr(kc,104,1,3)
+	nbr(se,7,1,3,100)
+	spr(51,88)
+	nbr(kc,96,1,4,1000)
 	-------------------------debug
-	if debug then
+	if dbg then
 		color(5)
 		spr(52,28)
 		print(count(msl),35,1)
@@ -769,48 +766,48 @@ function game()
 end
 
 function dt(i)
+	local zi,zf,zu,x,y,w,h,e,v
 	zi=tz[i]
-	--if(zi<8*u) return
 	zf=1/zi*f
 	zu=zf*u
 	e=false
 	for j=0,nx-1 do
-		_t=tv[i][j]
-		if _t.c!=12 then
-			y=(_t.y+py)*zf
+		v=tv[i][j]
+		if v.c!=12 then
+			y=(v.y+py)*zf
 			if y<ch then
-				x=(_t.x+px)*zf
-				w=_t.w*zu
-				h=(u4-_t.y)*zf
-				color(_t.c)
+				x=(v.x+px)*zf
+				w=v.w*zu
+				h=(u4-v.y)*zf
+				color(v.c)
 				rectfill(x+w-1,min(y+h-1,ch),x,y)
 				--color(8)
 				--pset(x+zu/2-1,y-1)
 			end
 		end
-		if _t.by<u4 then
-			y=(_t.by+py)*zf
+		if v.by<u4 then
+			y=(v.by+py)*zf
 			if y<ch then
-				color(_t.bc)
-				if _t.bt==0 then
-					x=(_t.x+px)*zf
-					w=_t.bw*zu-1
-					h=_t.bh*zf-1
+				color(v.bc)
+				if v.bt==0 then
+					x=(v.x+px)*zf
+					w=v.bw*zu-1
+					h=v.bh*zf-1
 					rectfill(x+w,min(y+h,ch),x,y)
 				else
-					x=(_t.x+px+uh)*zf
-					w=(_t.bw/2)*zu
+					x=(v.x+px+uh)*zf
+					w=(v.bw/2)*zu
 					circfill(x,y+uh*zf,w)
 				end
 			end
 		end
-		if(_t.e) e=j
+		if(v.e) e=j
 	end
 	if(e) enemy(tv[i][e].e)
-	n+=1
 end
 
 function upd()
+	local x,y,z,w,v
 	-----------------------terrain
 	for i=0,nz-1 do
 		tz[i]-=s
@@ -818,7 +815,7 @@ function upd()
 			tz[i]+=d
 			pz+=1
 			if(pz>nz-1) pz=0
-			voxel(tv[i])
+			tv[i]=voxel()
 			if pz%8==0 then
 				spawn(i,flr(2+rnd(nx-4)))
 			end
@@ -870,14 +867,15 @@ function upd()
 			end
 			e.y+=e.vy
 			e.vy*=e.ry
-			if e.y>e.v.y then--shot down
+			v=e.v
+			if e.y>v.y then--shot down
 				e.k=true
-				e.v.by=e.v.y
-				e.v.bc=0
-				e.v.bt=0
-				e.v.e=false --reference bug
+				v.by=v.y
+				v.bc=0
+				v.bt=0
+				v.e=false --reference bug
 				del(foe,e)
-				ex(e.x,e.v.y,e.z)
+				ex(e.x,v.y,e.z)
 			end
 		end
 	end
@@ -942,39 +940,39 @@ function upd()
 	end
 	-----------------------missile
 	for m in all(msl) do
+		v=m.t
 		x=0--(-sx-m.x)/16
 		y=0--(-sy-m.y)/16
-		if m.t.l then
-			x=(m.t.x-m.x)/16
-			y=(m.t.y-m.y)/16
+		if v.l then
+			x=(v.x-m.x)/16
+			y=(v.y-m.y)/16
 		end
 		m.x+=m.vx+x*m.vz
 		m.y+=m.vy+y*m.vz
 		m.z+=m.vz
-		if(m.vx!=0) m.vx*=m.rx
-		if(m.vy!=0) m.vy*=m.ry
+		m.vx*=m.rx
+		m.vy*=m.ry
 		if(m.rx>0) m.rx-=1/128
 		if(m.ry>0) m.ry-=1/128
 		m.vz+=1/32
 		if(m.z>d) del(msl,m)
-		if not m.t.l and m.z>d/2 then
+		if not v.l and m.z>d/2 then
 			del(msl,m)
 			ex(m.x,m.y,m.z)
 		end
 		if m.y<-u4 then --air to air
-			if abs(m.t.z-m.z)<m.vz and
-			abs(m.t.x-m.x)<m.t.w and
-			abs(m.t.y-m.y)<m.t.h then
+			if abs(v.z-m.z)<m.vz and
+			abs(v.x-m.x)<v.w and
+			abs(v.y-m.y)<v.h then
 				del(msl,m)
-				ex(m.t.x,m.t.y,m.t.z)
-				if m.t.e>0 then
-					m.t.e-=100-m.t.f
-					if(m.t.e<1) kc+=1 --killed
+				ex(v.x,v.y,v.z)
+				if v.e>0 then
+					v.e-=100-v.f
+					if(v.e<1) kc+=1 --killed
 				end
 			end
 		else ----------air to surface
-			ctv=0
-			cti=0
+			local j,ctv,cti,v2=0,0,0
 			j=flr((m.x+nx/2*u)/u)
 			for i=pz,nz-1 do
 				ctv=ct(i,j,m.y,m.z)
@@ -1027,34 +1025,36 @@ function upd()
 end
 
 function menu()
+	local cx,cy,n,c,c1,c2,y,k
 	cx,cy=-64,-64
 	camera(cx,cy)
 	color(0)
 	rectfill(cx+127,cy+127,cx,cy)
 	a=t/1080
-	for i=0,sn-1 do ds(i) end
-	if mode==1 then ---------title
+	for i=0,sn-1 do sf(i) end
+	if mode==1 then ----------logo
 		camera(-16,-56)
-		n=flr(t/4)%80
+		n=flr(t/4)%128
 		for j=0,14 do
 			c1=sget(n+j,64)
 			c2=sget(n-j,65)
-			for i=0,93 do
+			for i=0,92 do
 				c=sget(i,80+j)
 				if(c==3 and c1!=0) pset(i,j,c1)
 				if(c==11 and c2!=0) pset(i,j,c2)
 			end
-		k="rez"
+		k="éstart"
 		end
 	else --------------------score
 		for i=0,7 do tri(i) end
 		camera(-44,-34)
-		spr(123,0,0,5,1)
+		spr(107,0,0,5,1)
 		for i=0,7 do
 			y=12+i*6
-			nbr(i+1,0,y,1)
-			spr(122,8,y)
-			nbr(score[i],16,y,3)
+			spr(122,-8,y)
+			nbr(i+1,0,y,1,1)
+			spr(123,8,y)
+			nbr(score[i],16,y,4,1000)
 		end
 		k="éexit"
 	end
@@ -1063,31 +1063,29 @@ function menu()
 	print(k,1,122)
 end
 
-function ds(i) -------draw star
+function sf(i) -------starfield
+	local v,x,y,z,b,zf,c
 	v=sta[i]
 	b=v.a+cos(a)/4+(sx+sy)/720
-	x=v.r*cos(b)+64*cos(a*2)-sx
-	y=v.r*sin(b)+64*sin(a/2)-sy
+	x=v.r*cos(b)+128*cos(a*2)-sx
+	y=v.r*sin(b)+128*sin(a/2)-sy
 	z=(v.z+256*sin(a))%256
 	if(z<0) z+=256
 	zf=1/z*32
 	x,y=x*zf,y*zf
+	v.tx[0],v.ty[0],v.tz[0]=x,y,z
 	for j=5,1,-1 do
 		v.tx[j]=v.tx[j-1]
 		v.ty[j]=v.ty[j-1]
+		v.tz[j]=v.tz[j-1]
 	end
-	v.tx[0],v.ty[0]=x,y
-	if z>2 and abs(x)<80
-	and abs(y)<80 then
+	if abs(v.tz[0]-v.tz[5])<128
+	and abs(x)<80 and abs(y)<80 then
 		c=6-flr(z/48)
 		if c>2 then
 			for j=c-1,1,-1 do
-				x1=v.tx[j]
-				y1=v.ty[j]
-				x2=v.tx[j-1]
-				y2=v.ty[j-1]
 				color(sc2[i%2][c-j])
-				line(x1,y1,x2,y2)
+				line(v.tx[j],v.ty[j],v.tx[j-1],v.ty[j-1])
 			end
 		else
 			color(sc2[i%2][c])
@@ -1097,14 +1095,15 @@ function ds(i) -------draw star
 end
 
 function tri(i)
+	local v,b,r,x,y,z,x2,y2,zf
 	x2,y2={},{}
 	for j=0,11 do
-		r=(j<6) and 16 or 18
+		r=(j<6) and 20 or 28
 		v=sta[sn+i*12+j]
 		b=v.a+cos(a)/4+(sx+sy)/720
 		v.x,v.y=r*cos(b),r*sin(b)
-		x=v.x+64*cos(a*2)-sx
-		y=v.y+64*sin(a/2)-sy
+		x=v.x+128*cos(a*2)-sx
+		y=v.y+128*sin(a/2)-sy
 		z=(256-i*32+256*sin(a))%256
 		if(z<0) z+=256
 		zf=1/z*32
@@ -1119,9 +1118,7 @@ function tri(i)
 	end
 end
 
-function nbr(n,x,y,l)
-	k=1
-	for i=1,l-1 do k*=10 end
+function nbr(n,x,y,l,k)
 	for i=0,l-1 do
 		spr(112+((n/k)%10),x+i*8,y)
 		k/=10
@@ -1135,45 +1132,48 @@ function _draw()
 		menu()
 	end
 	fc+=1
-	if debug then
+	if dbg then
+		local x,y,n
 		camera(0,0)
 		--------------------------fps
-		m=1
-		w=24
-		h=16
-		x=128-w-m
 		n=100-flr(100/stat(1))
 		fps[fc]=max(0,n)
 		color(0)
-		rectfill(x+w-1,m+h-1,x,m)
+		rectfill(126,1,103,16)
 		color(1)
-		print(fps[fc],x+1,m+1)
+		print(fps[fc],104,2)
 		color(2)
-		line(x,h/2,x+w-1,h/2)
-		for i=0,w-1 do
-			v=fps[(i+fc+1)%(w+1)]
+		line(103,8,126,8)
+		for i=0,23 do
+			v=fps[(i+fc+1)%25]
 			if v>0 then
 				color(1)
-				y=h/100*v
-				line(x+i,m+h-y,x+i,m+h-1)
+				x=103+i
+				y=17-v*0.16
+				line(x,y,x,16)
 				color(v>50 and 8 or 12)
-				pset(x+i,m+h-y)
+				pset(x,y)
 			end
 		end
-		if(fc==w) fc=-1
 		--------------------------mem
-		n=w/1024*stat(0)
+		n=stat(0)*0.0234375 --24/1024
 		color(0)
-		rectfill(x+w-1,m+h+2,x,m+h+1)
+		rectfill(126,18,103,19)
 		color(2)
-		rectfill(x+n-1,m+h+2,x,m+h+1)
+		rectfill(102+n,18,103,19)
 	end
+	if(fc==24) fc=-1
 end
 
 function _update60()
 	t+=1
 	if(mode==0) upd()
 	-------------------------input
+	local im,ii,iz,id
+	im=2
+	ii=0.125
+	id=0.0625  --1/16
+	iz=0.03125 --1/32
 	if(btn(0) and ix<im) ix+=ii
 	if(btn(1) and ix>-im) ix-=ii
 	if(btn(2) and iy<im) iy+=ii
@@ -1185,7 +1185,7 @@ function _update60()
 	end
 	if btn(5) then ---fire missile
 		if se>0 then
-			if mp%mr==0 and 
+			if mp%mr==0 and
 			count(msl)<mm then
 				aam()
 			end
@@ -1207,6 +1207,10 @@ function _update60()
 			return
 		end
 	end
+	if btnp(4,1) then
+		dbg=not dbg
+		dset(8,dbg and 1 or 0)
+	end
 	----------------------position
 	if(ix>0) ix-=id
 	if ix>im/2 and sx>xm-u3 then
@@ -1221,7 +1225,7 @@ function _update60()
 		iy-=2*id
 	end
 	if(iy<0) iy+=id
-	if iy<-im/2 and sy<yb+u3 then
+	if iy<-im/2 and sy<u then
 		iy+=2*id
 	end
 	if(abs(ix)<id) ix=0
@@ -1231,7 +1235,7 @@ function _update60()
 	else
 	 ix=0
 	end
-	if sy+iy>yb and sy+iy<yt then
+	if sy+iy>-u2 and sy+iy<yt then
 		sy+=iy
 	else
 		iy=0
@@ -1286,28 +1290,24 @@ __gfx__
 00000000000000000000600000060000000606000060600000606060606060600002000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000060000006000000060600060606000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000002222000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000002200000288200028888200001000000000000000000000000000000000000000000000000000000000000
-00000000000000000002200000022000002882000088880002899820289aa9820000000000000000000000000000000000000000000000000000000000000000
-000200000002200000288200002992000089980002899820089aa98028a77a82010d010000000000000000000000000000000000000000000000000000000000
-000000000002200000288200002992000089980002899820089aa98028a77a820000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000002222000000000000000000000000005ddddd505ddddd505ddddd505ddddd505ddddd50
+0000000000000000000000000000000000000000000220000028820002888820000100000000000000000000ee200000ee000000ee000ee0ee000ee0ee000000
+00000000000000000002200000022000002882000088880002899820289aa9820000000000000000000000002efffe20ff200000ff200ff0ff20ef20ff20e000
+000200000002200000288200002992000089980002899820089aa98028a77a82010d0100000000000000000000002ee0eee00000eee00ee0eee02ee0eee00000
+000000000002200000288200002992000089980002899820089aa98028a77a820000000000000000000000009aaaa94049aaaa9049aaa9409aa00a9049aaaa90
 00000000000000000002200000022000002882000088880002899820289aa9820001000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000002200000288200028888200000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000002222000000000000000000000000000000000000000000000000000000000000000000
-d77777d07777d000777777d0777777d07700077077777770d777777077777770d77777d0d77777d0007000005dddddd05dddddd05ddddd50dddddd505dddddd0
-770d7770000770000000d7700000d77077d0077077d0000077d000000000d77077d0d77077d0d77077770000ee200000ee000000ee000ee0ee000ee0ee000000
-77d7d77000d77000d77777d0000777d0d7777770d77777d0777777d000d777d0d77777d0d7777770777770002efffe20ff200000ff200ff0ff20ef20ff20e000
-777d07700077700077d000000000d770000007700000d7707700d7700077d00077d0d770000007707777000000002ee0eee00000eee00ee0eee02ee0eee00000
-d77777d07777777077777770777777d000000770777777d0d77777d000770000d77777d0777777d0007000009aaaa94049aaaa9049aaa9409aa00a9049aaaa90
+56666650666650006666665066666650660006606666666056666660666666605666665056666650000056606650000000000000000000000000000000000000
+66000660005660000000066000000660665006606600000066000000000006606600066066000660000066000660000000000000000000000000000000000000
+77000770000770005777775000077750577777707777775077777750005777505777775057777770000077000770000000000000000000000000000000000000
+66000660000660006600000000000660000006600600066000665000660006600000000000000660000066000660000000000000000000000000000000000000
+1ddddd10ddddddd0ddddddd0dddddd1000000dd0dddddd1000dd00001ddddd10dddd00000000dd1000001dd0dd10000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000000000125def7a9845215d676d51000000000000000000000000113b7b311000000000000000000000000000000000000000000000000000000000
-000000000000000015d67d12489ae210000000000000000000113b7b311000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000125def7a9845215d676d51000000000000000000113b7b3110000000000000000000000012489999999999a77a9999999999842100000000
+0000000015d67d12489ae21000000000000000000000113b7b311000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1318,21 +1318,25 @@ d77777d07777777077777770777777d000000770777777d0d77777d000770000d77777d0777777d0
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-33333333333333330033333333333333003333333333300333333333333333333003333333333000033000000000030000000000000000000000000000000000
-03bbbbbbbbbbbb3003bbbbbbbbbbbb3003bbbbbbbbbbb3003bbbbbbbbbbbbbb3003bbbbbbbbbb30003b300000000330000000000000000000000000000000000
-003bbbbbbbbbb30003bbbbbbbbbbb30003bbbbbbbbbbbb3003bbbbbbbbbbbb3003bbbbbbbbbbbb3003bb30000003b30000000000000000000000000000000000
-000333333bbb300003bb33333333300003bb33333333bb300033333bb333330003bbb333333bbb3003bbb300003bb30000000000000000000000000000000000
-00000003bbb3000003bb33333000000003bb3333333bbb300000003bb300000003bb30000003bb3003bbbb30003bb30000000000000000000000000000000000
-0000003bbb30000003bbbbbb3000000003bbbbbbbbbbb3000000003bb300000003bb30000003bb3003bb3bb3003bb30000000000000000000000000000000000
-000003bbb300000003bbbbbb3000000003bbbbbbbbbb30000000003bb300000003bb30000003bb3003bb33bb303bb30000000000000000000000000000000000
-00003bbb3000000003bb33330000000003bb3333333300000000003bb300000003bb30000003bb3003bb303bb33bb30000000000000000000000000000000000
-0003bbb33333300003bb33333333300003bb3000000000000000003bb300000003bbb333333bbb3003bb3003bb3bb30000000000000000000000000000000000
-003bbbbbbbbbb30003bbbbbbbbbbb30003bb3000000000000000003bb300000003bbbbbbbbbbbb3003bb30003bbbb30000000000000000000000000000000000
-03bbbbbbbbbbbb3003bbbbbbbbbbbb3003bb3000000000000000003bb3000000003bbbbbbbbbb30003bb300003bbb30000000000000000000000000000000000
-33333333333333330033333333333333003b3000000000000000003b30000000000333333333300003b30000003bb30000000000000000000000000000000000
-00000000000000000000000000000000000330000000000000000033000000000000000000000000033000000003b30000000000000000000000000000000000
-00000000000000000000000000000000000030000000000000000030000000000000000000000000030000000000330000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+33333333333333330033333333333333003333333333300333333333333333333003333333333000330000000000300000000000000000000000000000000000
+03bbbbbbbbbbbb3003bbbbbbbbbbbb3003bbbbbbbbbbb3003bbbbbbbbbbbbbb3003bbbbbbbbbb3003b3000000003300000000000000000000000000000000000
+003bbbbbbbbbb30003bbbbbbbbbbb30003bbbbbbbbbbbb3003bbbbbbbbbbbb3003bbbbbbbbbbbb303bb30000003b300000000000000000000000000000000000
+000333333bbb300003bb33333333300003bb33333333bb300033333bb333330003bbb333333bbb303bbb300003bb300000000000000000000000000000000000
+00000003bbb3000003bb33333300000003bb3333333bbb300000003bb300000003bb30000003bb303bbbb30003bb300000000000000000000000000000000000
+0000003bbb30000003bbbbbb3000000003bbbbbbbbbbb3000000003bb300000003bb30000003bb303bb3bb3003bb300000000000000000000000000000000000
+000003bbb300000003bbbbb30000000003bbbbbbbbbb30000000003bb300000003bb30000003bb303bb33bb303bb300000000000000000000000000000000000
+00003bbb3000000003bb33300000000003bb3333333300000000003bb300000003bb30000003bb303bb303bb33bb300000000000000000000000000000000000
+0003bbb33333330003bb33333333300003bb3000000000000000003bb300000003bbb333333bbb303bb3003bb3bb300000000000000000000000000000000000
+003bbbbbbbbbbb3003bbbbbbbbbbb30003bb3000000000000000003bb300000003bbbbbbbbbbbb303bb30003bbbb300000000000000000000000000000000000
+03bbbbbbbbbbbbb3003bbbbbbbbbbb3003bb3000000000000000003bb3000000003bbbbbbbbbb3003bb300003bbb300000000000000000000000000000000000
+33333333333333333003333333333333003b3000000000000000003b3000000000033333333330003b30000003bb300000000000000000000000000000000000
+0000000000000000000000000000000000033000000000000000003300000000000000000000000033000000003b300000000000000000000000000000000000
+00000000000000000000000000000000000030000000000000000030000000000000000000000000300000000003300000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1533,10 +1537,10 @@ __map__
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
-01100000004000030100401003010040100301014010c201004011800018000180001800018000180001800018000180001800018000180001800018000180001800018000180001800018000180001800018000
-011000080e555155251c5550e5251d5551c525155551d5251f5000e4011640116401174011840118401044010a401104010e4010c401104010e401184010c4011040117401024010c4010e401024010a40110401
+011000001a3451a0021a0021a0021a00200301013010c201004011800018000180001800018000180001800018000180001800018000180001800018000180001800018000180001800018000180001800018000
+0110000026320155051c5050e5051d5051c505155051d5051f5000e4011640116401174011840118401044010a401104010e4010c401104010e401184010c4011040117401024010c4010e401024010a40110401
 011000080243302401024100e31302430024000241002332022003460534604346052860334605346053460502200346053460434605286033460534605346050220034605346043460528603346053460534605
-011000081d4020e5000e6151d4023e6131a4041a5000e6141f4021c404000001f4022d505000001d5052d505285051d5052b5051d505295052b50526505295052850526505295052850526505000002850511700
+01100010182461d2461f246212061e206212061d2061f206182461b2461f246272062d505000001d5052d505285051d5052b5051d505295052b50526505295052850526505295052850526505000002850511700
 010c0000210001a0001d000210001b0002d000260001d000210001a0001d0002100026000210001d000210001d0001a0001d0002200024000210001d000210001d0001a0001d0002200026000220002600022000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
