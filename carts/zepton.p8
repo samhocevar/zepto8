@@ -4,12 +4,12 @@ __lua__
 -- zepton 0.9 beta
 -- a game by rez
 
--- „todo„
+-- ÂÂÂÂÂâ€todoâ€ÂÂÂÂÂ
 -- energy boost (over pyramid)
 -- drop bonus (life/shield)
 -- add score combo
 -- optimize spaceship
--- 
+-- ÂÂÂÂÂÂÂÂÂÂÂÂÂÂ
 
 function _init()
 	cls()
@@ -780,7 +780,7 @@ function game()
 		pal()
 		if tw==0 and t%64<32 then
 			color(0)
-			print("press—",-45,63)
+			print("pressÅ½â€”",-45,63)
 		end
 	end
 	---------------------------bar
@@ -1199,7 +1199,7 @@ function menu()
 	end
 	camera(0)
 	color(1)
-	print("press—",1,122)
+	print("pressÅ½â€”",1,122)
 end
 
 function sf() --------starfield
