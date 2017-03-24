@@ -1,20 +1,21 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
--- zepton 0.9 beta
+-- zepton 0.9.1 beta
 -- a game by rez
 
--- ÂÂÂÂÂâ€žtodoâ€žÂÂÂÂÂ
+-- „todo„
 -- energy boost (over pyramid)
 -- drop bonus (life/shield)
 -- add score combo
 -- optimize spaceship
--- ÂÂÂÂÂÂÂÂÂÂÂÂÂÂ
+-- 
 
 function _init()
 	cls()
 	cartdata"zepton"
 	dbg=dget"8">0 and true or false
+	inv=dget"9">0 and true or false
 	fps={}
 	for i=0,23 do fps[i]=0 end
 	f,d=128,512 --focale/depth
@@ -61,6 +62,7 @@ function _init()
 			end
 			init(2)
 		end)
+	menuitem(4,"invert y-axis",ya)
 	menuitem(5,"debug mode",db)
 	init(1)
 	music(0)
@@ -386,8 +388,7 @@ function enemy(e)
 	circfill(x,y-h,zu)
 	circfill(x,y+h,zu)
 	if e.lf>0 then
-		color(c[flr(e.lf)])
-		circfill(x,y,zu)
+		circfill(x,y,zu,c[flr(e.lf)])
 		e.lf-=0.25
 	end
 	if e.e>0 then
@@ -409,15 +410,13 @@ function enemy(e)
 		local n,x1,y1,x2,y2
 		n,x1,y1=16,x,y+h+zu*2
 		if fc%2==0 then
-			color(12)
-			line(x,y+h+zu,x,g)
+			line(x,y+h+zu,x,g,12)
 		end
-		color(7)
-		circfill(x1,y1,zu/2)
+		circfill(x1,y1,zu/2,7)
 		for i=0,n-2 do
 			x2=x1+rnd(4*zu)-2*zu
 			y2=y1+((e.v.y-e.y)/n*zf)
-			line(x1,y1,x2,y2)
+			line(x1,y1,x2,y2,7)
 			x1,y1=x2,y2
 		end
 		if t%256>e.bt+e.bl-1 then
@@ -520,21 +519,17 @@ function game()
 	end
 	rectfill(w,cy,cx,y2)
 	-----------------------horizon
-	color(7)
-	line(w,y-1,cx,y-1)
-	color(12)
-	line(w,y,cx,y)
+	line(w,y-1,cx,y-1,7)
+	line(w,y,cx,y,12)
 	---------------------------sea
-	color(13)
-	line(w,y+1,cx,y+1)
-	color(1)
-	rectfill(w,ch,cx,y+2)
+	line(w,y+1,cx,y+1,13)
+	rectfill(w,ch,cx,y+2,1)
 	-------------------------stars
 	c={7,6,13,13}
 	for i=0,sn-1 do
 		v=sta[i]
 		x=(v.x-cx-sx/4)%128
-		if(i%16) color(c[flr(i/8)+1])
+		if(i%8==0) color(c[i/8+1])
 		pset(cx+x,v.y-56+y)
 	end
 	-----------------------planets
@@ -556,17 +551,15 @@ function game()
 		zf=1/v.z*f
 		x,y=(px+v.x)*zf,(py+v.y)*zf
 		w=v.w*zf
-		color(c[min(flr(12/v.w),7)])
-		circfill(x,y,w)
+		circfill(x,y,w,c[min(flr(12/v.w),7)])
 	end
 	------------------------bullet
-	color(9)
 	for b in all(bul) do
 		for i=0,3 do
 			zf=1/(b.z+(2-i)*su)*f
 			x,y=(px+b.x)*zf,(py+b.y)*zf
 			w=su/8*zf
-			rect(x+w,y+w,x-w,y-w)
+			rect(x+w,y+w,x-w,y-w,9)
 		end
 	end
 	-----------------------missile
@@ -576,14 +569,12 @@ function game()
 			zf=1/(m.z+(2-i)*su)*f
 			x,y=(px+m.x)*zf,(py+m.y)*zf
 			w=su/4*zf
-			color(c[i+1])
-			rectfill(x+w,y+w,x-w,y-w)
+			rectfill(x+w,y+w,x-w,y-w,c[i+1])
 		end
 		if m.vz>suh then
 			zf=1/(m.z-su2)*f
 			x,y=(px+m.x)*zf,(py+m.y)*zf
-			color(10)
-			circfill(x,y,su*zf)
+			circfill(x,y,su*zf,10)
 		end
 	end
 	------------------------smoke1
@@ -593,7 +584,6 @@ function game()
 		end
 	end
 	-------------------------laser
-	color(8)
 	for l in all(lsr) do
 		for i=0,3 do
 			r=l.r+i*2
@@ -601,7 +591,7 @@ function game()
 			zf=1/z*f
 			x=(px+l.x+r*sin(l.a))*zf
 			y=(py+l.y+r*sin(l.b))*zf
-			circfill(x,y,su*zf)
+			circfill(x,y,su*zf,8)
 		end
 	end
 	---------------------spaceship
@@ -614,12 +604,10 @@ function game()
 			y=(v.y+py-sy-v.x*ix/4+v.z*iy/4)*zf
 			if (v.c!=6 and v.c!=8 and v.c!=9) or i==1 then
 				w,h=v.w*zf-1,v.h*zf-1
-				color(v.c)
-				rectfill(x+w,y+h,x,y)
+				rectfill(x+w,y+h,x,y,v.c)
 			else
 				if v.c==6 then
-					color(6)
-					circfill(x+zu,y+zu,zu)
+					circfill(x+zu,y+zu,zu,6)
 				end
 				if v.c==9 then
 					w=zu-4
@@ -638,12 +626,9 @@ function game()
 			zf=1/sz*f
 			x,y=(px-sx)*zf,(py-sy)*zf
 			w=sh*su*zf
-			color(12)
-			circfill(x,y,w)
-			color(6)
-			circfill(x,y,w/3*2)
-			color(7)
-			circfill(x,y,w/3)
+			circfill(x,y,w,12)
+			circfill(x,y,w/3*2,6)
+			circfill(x,y,w/3,7)
 		end
 	end
 	------------------------smoke2
@@ -669,14 +654,11 @@ function game()
 			spr(28,x-w-1,y+h-6)
 			spr(29,x+w-6,y+h-6)
 			pal()
-			color(c)
-			print(flr(mt.z-sz),x+w+3,y-2)
-			print(-flr(-mt.e/50),x-w-5,y-2)
+			print(flr(mt.z-sz),x+w+3,y-2,c)
+			print(-flr(-mt.e/50),x-w-5,y-2,c)
 			v=(w*2+4)/mt.f*mt.e
-			color(0)
-			rect(x+w+2,y+h+4,x-w-2,y+h+3)
-			color(mt.e>mt.f/2 and 12 or 8)
-			rect(x-w-2+v,y+h+4,x-w-2,y+h+3)
+			rect(x+w+2,y+h+4,x-w-2,y+h+3,0)
+			rect(x-w-2+v,y+h+4,x-w-2,y+h+3,mt.e>mt.f/2 and 12 or 8)
 			if mt.l and ms!=1 then
 				sfx(0)
 				ms=1
@@ -701,15 +683,13 @@ function game()
 			zu=zf*u
 			x=(px+v.x-v.x%u)*zf
 			y=(py+v.y-v.y%uh)*zf
-			color(11)
-			rect(x+zu,y+zu,x-1,y-1)
+			rect(x+zu,y+zu,x-1,y-1,11)
 		end
 	end
 	zf=1/mz*f
 	x,y=(px+mx)*zf,(py+my)*zf
 	r=1
-	c=ec(mt,mx,my) and 11 or 8
-	color(c)
+	color(ec(mt,mx,my) and 11 or 8)
 	if mt and mz!=d and se>0 then
 		r=(mt.w+mt.h)*zf
 		zf=1/(sz+u)*f
@@ -729,36 +709,29 @@ function game()
 	if(btn(5)) circ(x,y,r+2)
 	---------------------------hud
 	camera(0,0)
-	color(0)
-	rectfill(8,24,4,1)
-	color(7)
+	rectfill(8,24,4,1,0)
 	for i=0,3 do
 		y=1+(8*i+py+4)%24
-		pset(5,y)
+		pset(5,y,7)
 		y=1+(8*i+py)%24
 		line(5,y,6,y)
 	end
 	y=13
-	color(8)
-	line(5,13,6,13)
-	color(0)
-	print(flr(sy+u4),10,11)
-	--print(flr(-sx),10,5)
+	line(5,13,6,13,8)
+	print(flr(sy+u4),10,11,0)
+	--print(flr(-sx),10,5,0)
 	-------------------------speed
 	y=12*s-1
-	rectfill(1,1,2,24)
+	rectfill(1,1,2,24,0)
 	if y>0 then
-		color(2)
-		rectfill(1,24-y,2,24)
+		rectfill(1,24-y,2,24,2)
 	end
-	--color(8)
-	--pset(1,24-y)
-	--pset(2,24-y)
+	--pset(1,24-y,8)
+	--pset(2,24-y,8)
 	--if dbg then
-	--	color(0)
-	--	print("lvl="..(lvl+1),103,21)
-	--	print("er="..er,103,27)
-	--	print("lr="..lr,103,33)
+	--	print("lvl="..(lvl+1),103,21,0)
+	--	print("er="..er,103,27,0)
+	--	print("lr="..lr,103,33,0)
 	--end
 	---------------------------low
 	if (mt and mt.z-sz<4*uz)
@@ -779,15 +752,13 @@ function game()
 		spr(94,20,9,2,1)
 		pal()
 		if tw==0 and t%64<32 then
-			color(0)
-			print("pressÅ½â€”",-45,63)
+			print("pressŽ—",-45,63,0)
 		end
 	end
 	---------------------------bar
 	camera(0,-121)
 	clip()
-	color(0)
-	rectfill(127,6,0,0)
+	rectfill(127,6,0,0,0)
 	spr(48,56,0,2,1) --eagle
 	spr(se>0 and 50 or 51,-1)
 	o=0
@@ -797,13 +768,12 @@ function game()
 	nbr(sc,96,1,4,1000,0)
 	-------------------------debug
 	if(not dbg) return
-	color(5)
 	spr(52,28)
-	print(count(msl),35,1)
+	print(count(msl),35,1,5)
 	spr(53,36)
-	print(count(lsr),43,1)
+	print(count(lsr),43,1,5)
 	spr(65,72)
-	print(count(smo),78,1)
+	print(count(smo),78,1,5)
 end
 
 function dt(i)
@@ -827,25 +797,22 @@ function dt(i)
 				x=(v.x+px)*zf
 				w=v.w*zu
 				h=(u4-v.y)*zf
-				color(v.c)
-				rectfill(x+w-1,min(y+h-1,ch),x,y)
-				--color(8)
-				--pset(x+zu/2-1,y-1)
+				rectfill(x+w-1,min(y+h-1,ch),x,y,v.c)
+				--pset(x+zu/2-1,y-1,8)
 			end
 		end
 		if v.by<u4 then
 			y=(v.by+py)*zf
 			if y<ch then
-				color(v.bc)
 				if v.bt==0 then
 					x=(v.x+px)*zf
 					w=v.bw*zu-1
 					h=v.bh*zf-1
-					rectfill(x+w,min(y+h,ch),x,y)
+					rectfill(x+w,min(y+h,ch),x,y,v.bc)
 				else
 					x=(v.x+px+uh)*zf
 					w=(v.bw/2)*zu
-					circfill(x,y+uh*zf,w)
+					circfill(x,y+uh*zf,w,v.bc)
 				end
 			end
 		end
@@ -1152,8 +1119,7 @@ function menu()
 	local cx,cy,n,c,c1,c2,y,o
 	cx,cy=-64,-64
 	camera(cx,cy)
-	color(0)
-	rectfill(cx+127,cy+127,cx,cy)
+	rectfill(cx+127,cy+127,cx,cy,0)
 	a=t/1080
 	sf()
 	if mode==1 then ----------logo
@@ -1198,8 +1164,7 @@ function menu()
 		end
 	end
 	camera(0)
-	color(1)
-	print("pressÅ½â€”",1,122)
+	print("pressŽ—",1,122,1)
 end
 
 function sf() --------starfield
@@ -1226,12 +1191,10 @@ function sf() --------starfield
 			n=i%2*6+k
 			if k>2 then
 				for j=k-1,1,-1 do
-					color(c[n-j])
-					line(v.t[j].x,v.t[j].y,v.t[j-1].x,v.t[j-1].y)
+					line(v.t[j].x,v.t[j].y,v.t[j-1].x,v.t[j-1].y,c[n-j])
 				end
 			else
-				color(c[n])
-				pset(x,y)
+				pset(x,y,c[n])
 			end
 		end
 	end
@@ -1268,6 +1231,11 @@ function nbr(n,x,y,l,k,o)
 	end
 end
 
+function ya()
+	inv=not inv
+	dset(9,inv and 1 or 0)
+end
+
 function db()
 	dbg=not dbg
 	dset(8,dbg and 1 or 0)
@@ -1284,31 +1252,26 @@ function _draw()
 		local x,y,n
 		camera(0,0)
 		--------------------------fps
-		n=100-flr(100/stat(1))
+		n=flr(stat(1)*25)
 		fps[fc%24]=max(0,n)
-		color(0)
-		rectfill(126,1,103,16)
-		color(1)
-		print(fps[fc%24],104,2)
-		color(2)
-		line(103,8,126,8)
+		rectfill(126,1,103,16,0)
+		print(fps[fc%24],104,2,1)
+		--line(103,4,126,4,2)
+		line(103,8,126,8,2)
+		--line(103,12,126,12,2)
 		for i=0,23 do
 			v=fps[(i+fc%24+1)%24]
 			if v>0 then
-				color(1)
 				x=103+i
 				y=17-v*0.16
-				line(x,y,x,16)
-				color(v>50 and 8 or 12)
-				pset(x,y)
+				line(x,y,x,16,1)
+				pset(x,y,v>50 and 8 or 12)
 			end
 		end
 		--------------------------mem
 		n=stat(0)*0.0234375 --24/1024
-		color(0)
-		rectfill(126,18,103,19)
-		color(2)
-		rectfill(102+n,18,103,19)
+		rectfill(126,18,103,19,0)
+		rectfill(102+n,18,103,19,2)
 	end
 end
 
@@ -1328,8 +1291,10 @@ function _update60()
 	end
 	if(btn(0) and ix<im) ix+=ii
 	if(btn(1) and ix>-im) ix-=ii
-	if(btn(2) and iy<im) iy+=ii
-	if(btn(3) and iy>-im) iy-=ii
+	if btn(inv and 2 or 3)
+	and iy<im then iy+=ii end
+	if btn(inv and 3 or 2)
+	and iy>-im then iy-=ii end
 	if mode==0 and se>0 then
 		if btn(4) then --fire missile
 			if mp%32==0 and   --rate
