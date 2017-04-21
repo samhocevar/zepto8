@@ -155,10 +155,12 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
                 break;
             case 1:
                 // Slanted triangle
-                static float const a = 0.9f;
-                waveform = t < a ? 2.f * t / a - 1.f
-                         : 2.f * (1.f - t) / (1.f - a) - 1.f;
-                waveform *= 0.406f;
+                {
+                    static float const a = 0.9f;
+                    waveform = t < a ? 2.f * t / a - 1.f
+                             : 2.f * (1.f - t) / (1.f - a) - 1.f;
+                    waveform *= 0.406f;
+                }
                 break;
             case 2:
                 // Sawtooth
