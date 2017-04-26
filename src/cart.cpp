@@ -505,6 +505,9 @@ lol::array<uint8_t> cart::get_compressed_code() const
         }
     }
 
+    msg::info("compressed code (%d bytes, max %d)\n",
+              ret.count(), SIZE_MEMORY - OFFSET_CODE - 8);
+
     return ret;
 }
 
