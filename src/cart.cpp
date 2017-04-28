@@ -412,6 +412,8 @@ lol::Image cart::get_png() const
     rom << (m_code.count() & 0xff);
     rom << 0 << 0; /* FIXME: what is this? */
     rom += get_compressed_code();
+    msg::info("compressed code length: %d/%d\n",
+              rom.count() - OFFSET_CODE, SIZE_MEMORY - OFFSET_CODE);
 
     rom.resize(SIZE_MEMORY);
     rom << EXPORT_VERSION;
