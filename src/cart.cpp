@@ -435,8 +435,8 @@ lol::array<uint8_t> cart::get_compressed_code() const
     /* Ensure the compression LUT is initialised */
     if (!compress_lut)
     {
-        uint8_t *tmp = new uint8_t[128];
-        memset(tmp, 0, 128);
+        uint8_t *tmp = new uint8_t[256];
+        memset(tmp, 0, 256);
         for (int i = 0; i < 0x3b; ++i)
             tmp[(uint8_t)decompress_lut[i]] = i + 1;
         compress_lut = tmp;
@@ -473,18 +473,29 @@ lol::array<uint8_t> cart::get_compressed_code() const
 
         uint8_t byte = (uint8_t)m_code[i];
 
-        /* XXX: a length of 2 is always better than any alternative,
-         * but official PICO-8 ignores it (and is thus less efficient). */
-        if (best_len > 2)
+        /* If best length is 2, it may or may not be interesting to emit a back
+         * reference. Most of the time, if the first character fits in a single
+         * byte, we should emit it directly. And if the first character needs
+         * to be escaped, we should always emit a back reference of length 2.
+         *
+         * However there is at least one suboptimal case with preexisting
+         * sequences “ab”, “b-”, and “-c-”. Then the sequence “ab-c-” can be
+         * encoded as “a” “b-” “c-” (5 bytes) or as “ab” “-c-” (4 bytes).
+         * Clearly it is more interesting to encode “ab” as a two-byte back
+         * reference. But since this case is statistically rare, we ignore
+         * it and accept that compression could be more efficient.
+         *
+         * If it can be a relief, PICO-8 is a lot less good than us at this. */
+        if (compress_lut[byte] && best_len <= 2)
+        {
+            ret << compress_lut[byte];
+        }
+        else if (best_len >= 2)
         {
             int a = 0x3c + (i - best_j) / 16;
             int b = ((i - best_j) & 0xf) + (best_len - 2) * 16;
             ret << a << b;
             i += best_len - 1;
-        }
-        else if (byte < 128 && compress_lut[byte])
-        {
-            ret << compress_lut[byte];
         }
         else
         {
