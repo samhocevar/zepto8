@@ -32,7 +32,8 @@ enum class mode
     tolua  = 131,
     topng  = 132,
     top8   = 133,
-    todata = 134,
+    tobin  = 134,
+    todata = 135,
 
     out    = 'o',
     data   = 136,
@@ -40,7 +41,7 @@ enum class mode
 
 static void usage()
 {
-    printf("Usage: zeptool [--tolua|--topng|--top8|--todata] [--data <file>] <cart> [-o <file>]\n");
+    printf("Usage: zeptool [--tolua|--topng|--top8|--tobin|--todata] [--data <file>] <cart> [-o <file>]\n");
 #if HAVE_UNISTD_H
     printf("       zeptool --run <cart>\n");
     printf("       zeptool --telnet <cart>\n");
@@ -56,6 +57,7 @@ int main(int argc, char **argv)
     opt.add_opt(int(mode::tolua),  "tolua",  false);
     opt.add_opt(int(mode::topng),  "topng",  false);
     opt.add_opt(int(mode::top8),   "top8",   false);
+    opt.add_opt(int(mode::tobin),  "tobin",  false);
     opt.add_opt(int(mode::todata), "todata", false);
     opt.add_opt(int(mode::out),    "out",    true);
     opt.add_opt(int(mode::data),   "data",   true);
@@ -78,6 +80,7 @@ int main(int argc, char **argv)
         case (int)mode::tolua:
         case (int)mode::topng:
         case (int)mode::top8:
+        case (int)mode::tobin:
         case (int)mode::todata:
         case (int)mode::run:
         case (int)mode::telnet:
@@ -96,7 +99,9 @@ int main(int argc, char **argv)
 
     char const *cart_name = argv[opt.index];
 
-    if (run_mode == mode::tolua || run_mode == mode::top8 || run_mode == mode::topng || run_mode == mode::todata)
+    if (run_mode == mode::tolua || run_mode == mode::top8 ||
+        run_mode == mode::tobin || run_mode == mode::topng ||
+        run_mode == mode::todata)
     {
         z8::cart cart;
         cart.load(cart_name);
@@ -128,6 +133,10 @@ int main(int argc, char **argv)
         else if (run_mode == mode::top8)
         {
             printf("%s", cart.get_p8().C());
+        }
+        else if (run_mode == mode::tobin)
+        {
+            fwrite(cart.get_bin().data(), 1, cart.get_bin().count(), stdout);
         }
         else if (run_mode == mode::topng)
         {

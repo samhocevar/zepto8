@@ -50,6 +50,9 @@ bool cart::load_png(char const *filename)
     img.Load(filename);
     ivec2 size = img.GetSize();
 
+    if (size.x * size.y < SIZE_MEMORY + 1)
+        return false;
+
     u8vec4 const *pixels = img.Lock<PixelFormat::RGBA_8>();
 
     // Retrieve cartridge data from lower image bits
@@ -404,19 +407,7 @@ lol::Image cart::get_png() const
     }
 
     /* Create ROM data */
-    lol::array<uint8_t> rom = m_rom;
-
-    rom.resize(OFFSET_CODE);
-    rom << ':' << 'c' << ':' << '\0';
-    rom << (m_code.count() >> 8);
-    rom << (m_code.count() & 0xff);
-    rom << 0 << 0; /* FIXME: what is this? */
-    rom += get_compressed_code();
-    msg::info("compressed code length: %d/%d\n",
-              rom.count() - OFFSET_CODE, SIZE_MEMORY - OFFSET_CODE);
-
-    rom.resize(SIZE_MEMORY);
-    rom << EXPORT_VERSION;
+    lol::array<uint8_t> rom = get_bin();
 
     /* Write ROM to lower image bits */
     for (int n = 0; n < rom.count(); ++n)
@@ -507,6 +498,26 @@ lol::array<uint8_t> cart::get_compressed_code() const
 
     msg::info("compressed code (%d bytes, max %d)\n",
               ret.count(), SIZE_MEMORY - OFFSET_CODE - 8);
+
+    return ret;
+}
+
+lol::array<uint8_t> cart::get_bin() const
+{
+    /* Create ROM data */
+    lol::array<uint8_t> ret = m_rom;
+
+    ret.resize(OFFSET_CODE);
+    ret << ':' << 'c' << ':' << '\0';
+    ret << (m_code.count() >> 8);
+    ret << (m_code.count() & 0xff);
+    ret << 0 << 0; /* FIXME: what is this? */
+    ret += get_compressed_code();
+    msg::info("compressed code length: %d/%d\n",
+              ret.count() - OFFSET_CODE, SIZE_MEMORY - OFFSET_CODE);
+
+    ret.resize(SIZE_MEMORY);
+    ret << EXPORT_VERSION;
 
     return ret;
 }
