@@ -6,7 +6,6 @@ __lua__
 
 -- „todo„
 -- drop bonus at kill/score?
--- starfield slower after game?
 -- 
 
 cartdata"zepton"
@@ -20,7 +19,7 @@ local dbg,inv,mse,
 		dget"9">0,
 		dget"10">0,
 		{},{},{},{},{},
-		128,512,38,40,48,
+		128,512,32,40,48,
 		8,16,24,32,4,10.66666--512/48
 
 for i=0,23 do fps[i]=0 end
@@ -102,7 +101,7 @@ function init(m)
 		0,16,time()*32,
 		{},{},0,
 		0,0,0,
-		0,96,0,100,0,
+		0,96,6,100,0,
 		{},{},16,128,
 		{},{},{},{},
 		{},0,0,0,
@@ -550,16 +549,16 @@ function game()
 		{15,14,13,5,1}
 	for i=0,5 do
 		rectfill(w,y2,cx,y2-h-1,c[i])
-		line(w,y2+2,cx,y2+2)
+		rectfill(w,y2+2,cx,y2+2)
 		y2-=h
 		h*=1.5
 	end
 	rectfill(w,cy-1,cx,y2)
 	-----------------------horizon
-	line(w,y-1,cx,y-1,7)
-	line(w,y,cx,y,12)
+	rectfill(w,y-1,cx,y-1,7)
+	rectfill(w,y,cx,y,12)
 	---------------------------sea
-	line(w,y+1,cx,y+1,13)
+	rectfill(w,y+1,cx,y+1,13)
 	rectfill(w,ch,cx,y+2,1)
 	-------------------------stars
 	c={7,6,13,13}
@@ -581,8 +580,9 @@ function game()
 	spr(62,x-84,y-19) --titan
 	spr(63,x-48,y-40) --neptune
 	-------------------------voxel
-	for i=pz-1,0,-1 do dt(i) end
-	for i=nz-1,pz,-1 do dt(i) end
+	for i=nz-1,0,-1 do
+		dt((pz+i)%nz)
+	end
 	---------------------explosion
 	c={7,10,9,8,4,5,13,6}
 	for v in all(exp) do
@@ -599,7 +599,7 @@ function game()
 			zf=1/(cz+b.z+(2-i))*f
 			x,y=(px+b.x)*zf,(py+b.y)*zf
 			w=0.125*zf
-			rect(x+w,y+w,x-w,y-w,9)
+			rectfill(x+w,y+w,x-w,y-w,9)
 		end
 	end
 	-----------------------missile
@@ -708,8 +708,10 @@ function game()
 			print(-flr(-mt.e/50),
 				x-w-5,y-2,c)
 			v=(w*2+2)/mt.f*mt.e
-			rect(x+w+1,y+h+4,x-w-1,y+h+3,0)
-			rect(x-w-1+v,y+h+4,x-w-1,y+h+3,
+			rectfill(
+				x+w+1,y+h+4,x-w-1,y+h+3,0)
+			rectfill(
+				x-w-1+v,y+h+4,x-w-1,y+h+3,
 				mt.e>mt.f/2 and 12 or 8)
 			if mt.l and ms!=1 then
 				sfx(0)
@@ -738,7 +740,7 @@ function game()
 			x,y=
 				(px+v.x-v.x%u)*zf-1,
 				(py+v.y-v.y%u)*zf-1
-			rect(x+zu,y+zu,x,y,8)
+			rectfill(x+zu,y+zu,x,y,8)
 		end
 	end
 	zf=1/(cz+mz)*f
@@ -774,9 +776,9 @@ function game()
 	for i=0,3 do
 		pset(5,1+(8*i+py+4)%24,7)
 		y=1+(8*i+py)%24
-		line(5,y,6,y)
+		rectfill(5,y,6,y)
 	end
-	line(5,13,6,13,8)
+	rectfill(5,13,6,13,8)
 	print(flr(sy+u4),10,11,0)
 	--print(flr(mx),10,5,0)
 	if(se>50) pal(8,11)
@@ -1016,11 +1018,13 @@ function upd()
 		if(l.z<0) del(lsr,l)
 	end
 	---------------------spaceship
-	for e in all(foe) do
-		if se>0 and ec(e,mx,my)
-		and abs(e.z-sz)<2 then
-			e.e=0
-			dead()
+	if se>0 then
+		for e in all(foe) do
+			if ec(e,mx,my)
+			and abs(e.z-sz)<2 then
+				e.e=0
+				dead()
+			end
 		end
 	end
 	------------------------target
@@ -1324,7 +1328,7 @@ function _draw()
 		fps[fc%24]=max(0,n)
 		rectfill(126,1,103,16,0)
 		print(fps[fc%24],104,2,1)
-		line(103,8,126,8,2)
+		rectfill(103,8,126,8,2)
 		for i=0,23 do
 			local v=fps[(i+fc%24+1)%24]
 			if v>0 then
