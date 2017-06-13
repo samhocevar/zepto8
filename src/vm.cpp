@@ -36,7 +36,7 @@ vm::vm()
     ExecLuaFile("data/zepto8.lua");
 
     // Load font
-    m_font.Load("data/font.png");
+    m_font.load("data/font.png");
 
     // Clear memory
     ::memset(get_mem(), 0, SIZE_MEMORY);

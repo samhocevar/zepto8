@@ -79,9 +79,9 @@ player::player()
 
     // FIXME: the image gets deleted by TextureImage class, it
     // does not seem right to me.
-    auto img = new lol::Image(lol::ivec2(128, 128));
-    img->Unlock(img->Lock<lol::PixelFormat::RGBA_8>()); // ensure RGBA_8 is present
-    m_tile = lol::Tiler::Register("fuck", new lol::Image(*img), lol::ivec2(128, 128), lol::ivec2(1, 1));
+    auto img = new lol::image(lol::ivec2(128, 128));
+    img->unlock(img->lock<lol::PixelFormat::RGBA_8>()); // ensure RGBA_8 is present
+    m_tile = lol::Tiler::Register("fuck", new lol::image(*img), lol::ivec2(128, 128), lol::ivec2(1, 1));
 
     /* Allocate memory */
     m_screen.resize(128 * 128);

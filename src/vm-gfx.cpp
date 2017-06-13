@@ -172,7 +172,7 @@ int vm::api::print(lua_State *l)
     int c = that->m_pal[0][that->m_color];
     int initial_x = x;
 
-    auto pixels = that->m_font.Lock<lol::PixelFormat::RGBA_8>();
+    auto pixels = that->m_font.lock<lol::PixelFormat::RGBA_8>();
     for (int n = 0; str[n]; ++n)
     {
         int ch = (int)(uint8_t)str[n];
@@ -199,7 +199,7 @@ int vm::api::print(lua_State *l)
         }
     }
 
-    that->m_font.Unlock(pixels);
+    that->m_font.unlock(pixels);
 
     // In PICO-8 scrolling only happens _after_ the whole string was printed,
     // even if it contained carriage returns or if the cursor was already

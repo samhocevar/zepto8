@@ -142,7 +142,7 @@ int main(int argc, char **argv)
         {
             if (!out)
                 return EXIT_FAILURE;
-            cart.get_png().Save(out);
+            cart.get_png().save(out);
         }
         else if (run_mode == mode::todata)
         {

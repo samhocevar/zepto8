@@ -98,10 +98,10 @@ int main(int argc, char **argv)
     msg::info("palette has %d colours\n", palette.count());
 
     /* Load images */
-    Image im;
-    im.Load(argv[1]);
+    image im;
+    im.load(argv[1]);
 
-    ivec2 size(im.GetSize());
+    ivec2 size(im.size());
 
     if (size.x != 128)
     {
@@ -116,18 +116,18 @@ int main(int argc, char **argv)
 
     msg::info("image size %d×%d\n", size.x, size.y);
 
-    Image dst(size), otherdst(size);
+    image dst(size), otherdst(size);
     array2d<uint8_t> dstpixels(size), otherdstpixels(size);
-    Image cur = im;
+    image cur = im;
 
     for (int iter = 0; iter < ITERATIONS; ++iter)
     {
-        Image next = im;
+        image next = im;
 
         /* Dither image for first destination */
-        array2d<vec4> &curdata = cur.Lock2D<PixelFormat::RGBA_F32>();
-        array2d<vec4> &nextdata = next.Lock2D<PixelFormat::RGBA_F32>();
-        array2d<vec4> &dstdata = dst.Lock2D<PixelFormat::RGBA_F32>();
+        array2d<vec4> &curdata = cur.lock2d<PixelFormat::RGBA_F32>();
+        array2d<vec4> &nextdata = next.lock2d<PixelFormat::RGBA_F32>();
+        array2d<vec4> &dstdata = dst.lock2d<PixelFormat::RGBA_F32>();
         for (int j = 0; j < size.y; ++j)
         {
             for (int i = 0; i < size.x; ++i)
@@ -182,9 +182,9 @@ int main(int argc, char **argv)
             }
         }
 
-        cur.Unlock2D(curdata);
-        next.Unlock2D(nextdata);
-        dst.Unlock2D(dstdata);
+        cur.unlock2d(curdata);
+        next.unlock2d(nextdata);
+        dst.unlock2d(dstdata);
 
         /* Swap images */
         cur = next;
@@ -307,8 +307,8 @@ int main(int argc, char **argv)
     }
 
     /* Fixup images */
-    array2d<vec4> &dstdata = dst.Lock2D<PixelFormat::RGBA_F32>();
-    array2d<vec4> &otherdstdata = otherdst.Lock2D<PixelFormat::RGBA_F32>();
+    array2d<vec4> &dstdata = dst.lock2d<PixelFormat::RGBA_F32>();
+    array2d<vec4> &otherdstdata = otherdst.lock2d<PixelFormat::RGBA_F32>();
     for (int j = 0; j < size.y; ++j)
         for (int i = 0; i < size.x; ++i)
         {
@@ -319,14 +319,14 @@ int main(int argc, char **argv)
             dstdata[i][j] = mix(a, b, 0.25f);
             otherdstdata[i][j] = mix(a, b, 0.75f);
         }
-    dst.Unlock2D(dstdata);
-    otherdst.Unlock2D(otherdstdata);
+    dst.unlock2d(dstdata);
+    otherdst.unlock2d(otherdstdata);
 
     /* Save images */
     dst = dst.Resize(size * 4, ResampleAlgorithm::Bresenham);
-    dst.Save(argv[2]);
+    dst.save(argv[2]);
     otherdst = otherdst.Resize(size * 4, ResampleAlgorithm::Bresenham);
-    otherdst.Save(argv[3]);
+    otherdst.save(argv[3]);
 
     return 0;
 }

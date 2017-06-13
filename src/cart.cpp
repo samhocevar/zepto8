@@ -46,14 +46,14 @@ static char const *decompress_lut = "\n 0123456789abcdefghijklmnopqrstuvwxyz!#%(
 bool cart::load_png(char const *filename)
 {
     // Open cartridge as PNG image
-    lol::Image img;
-    img.Load(filename);
-    ivec2 size = img.GetSize();
+    lol::image img;
+    img.load(filename);
+    ivec2 size = img.size();
 
     if (size.x * size.y < SIZE_MEMORY + 1)
         return false;
 
-    u8vec4 const *pixels = img.Lock<PixelFormat::RGBA_8>();
+    u8vec4 const *pixels = img.lock<PixelFormat::RGBA_8>();
 
     // Retrieve cartridge data from lower image bits
     int pixel_count = size.x * size.y;
@@ -80,7 +80,7 @@ bool cart::load_png(char const *filename)
         }
     }
 
-    img.Unlock(pixels);
+    img.unlock(pixels);
 
     // Retrieve code, with optional decompression
     int version = m_rom[SIZE_MEMORY];
@@ -386,14 +386,14 @@ bool cart::load_p8(char const *filename)
     return true;
 }
 
-lol::Image cart::get_png() const
+lol::image cart::get_png() const
 {
-    lol::Image ret;
-    ret.Load("data/blank.png");
+    lol::image ret;
+    ret.load("data/blank.png");
 
-    ivec2 size = ret.GetSize();
+    ivec2 size = ret.size();
 
-    u8vec4 *pixels = ret.Lock<PixelFormat::RGBA_8>();
+    u8vec4 *pixels = ret.lock<PixelFormat::RGBA_8>();
 
     /* Apply label */
     if (m_label.count() >= LABEL_WIDTH * LABEL_HEIGHT / 2)
@@ -416,7 +416,7 @@ lol::Image cart::get_png() const
         pixels[n] = pixels[n] / 4 * 4 + p / u8vec4(16, 4, 1, 64);
     }
 
-    ret.Unlock(pixels);
+    ret.unlock(pixels);
 
     return ret;
 }

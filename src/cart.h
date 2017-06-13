@@ -57,7 +57,7 @@ public:
     lol::array<uint8_t> get_compressed_code() const;
     lol::array<uint8_t> get_bin() const;
     lol::String get_p8() const;
-    lol::Image get_png() const;
+    lol::image get_png() const;
 
 private:
     bool load_png(char const *filename);

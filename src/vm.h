@@ -149,7 +149,7 @@ private:
 
 private:
     uint8_t m_memory[SIZE_MEMORY];
-    lol::Image m_font;
+    lol::image m_font;
     cart m_cart;
 
     // Graphics
