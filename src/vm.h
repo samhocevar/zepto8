@@ -71,6 +71,7 @@ private:
         static int dset(lua_State *l);
         static int stat(lua_State *l);
         static int printh(lua_State *l);
+        static int extcmd(lua_State *l);
 
         // I/O
         static int update_buttons(lua_State *l);

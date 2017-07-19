@@ -113,6 +113,7 @@ const lol::LuaObjectLibrary* vm::GetLib()
             { "dset",     &vm::api::dset },
             { "stat",     &vm::api::stat },
             { "printh",   &vm::api::printh },
+            { "extcmd",   &vm::api::extcmd },
 
             { "_update_buttons", &vm::api::update_buttons },
             { "btn",  &vm::api::btn },
@@ -448,6 +449,25 @@ int vm::api::printh(lua_State *l)
 
     fprintf(stdout, "%s\n", str);
     fflush(stdout);
+
+    return 0;
+}
+
+int vm::api::extcmd(lua_State *l)
+{
+    char const *str;
+    if (lua_isnoneornil(l, 1))
+        str = "false";
+    else if (lua_isstring(l, 1))
+        str = lua_tostring(l, 1);
+    else
+        str = lua_toboolean(l, 1) ? "true" : "false";
+
+    if (strcmp("label", str) == 0
+         || strcmp("screen", str) == 0
+         || strcmp("rec", str) == 0
+         || strcmp("video", str) == 0)
+        msg::info("z8:stub:extcmd(%s)\n", str);
 
     return 0;
 }
