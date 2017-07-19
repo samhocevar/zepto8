@@ -12,7 +12,7 @@
 
 #include <lol/engine.h>
 
-#include "pegtl.hh"
+#include "tao/pegtl.hpp"
 
 #include "zepto8.h"
 #include "cart.h"
@@ -25,6 +25,8 @@ using lol::ivec2;
 using lol::msg;
 using lol::u8vec4;
 using lol::PixelFormat;
+
+using namespace tao;
 
 bool cart::load(char const *filename)
 {
@@ -144,15 +146,15 @@ struct p8_reader
     // Grammar rules
     //
 
-    struct r_bom : pegtl::opt<pegtl_string_t("\xef\xbb\xbf")> {};
+    struct r_bom : pegtl::opt<TAOCPP_PEGTL_STRING("\xef\xbb\xbf")> {};
 
-    struct r_lua : pegtl_string_t("__lua__") {};
-    struct r_gfx : pegtl_string_t("__gfx__") {};
-    struct r_gff : pegtl_string_t("__gff__") {};
-    struct r_map : pegtl_string_t("__map__") {};
-    struct r_sfx : pegtl_string_t("__sfx__") {};
-    struct r_mus : pegtl_string_t("__music__") {};
-    struct r_lab : pegtl_string_t("__label__") {};
+    struct r_lua : TAOCPP_PEGTL_STRING("__lua__") {};
+    struct r_gfx : TAOCPP_PEGTL_STRING("__gfx__") {};
+    struct r_gff : TAOCPP_PEGTL_STRING("__gff__") {};
+    struct r_map : TAOCPP_PEGTL_STRING("__map__") {};
+    struct r_sfx : TAOCPP_PEGTL_STRING("__sfx__") {};
+    struct r_mus : TAOCPP_PEGTL_STRING("__music__") {};
+    struct r_lab : TAOCPP_PEGTL_STRING("__label__") {};
 
     struct r_section_name : pegtl::sor<r_lua,
                                        r_gfx,
@@ -170,8 +172,8 @@ struct p8_reader
     struct r_section : pegtl::seq<r_section_line, r_data> {};
     struct r_version : pegtl::star<pegtl::digit> {};
 
-    struct r_header: pegtl::seq<pegtl_string_t("pico-8 cartridge"), pegtl::until<pegtl::eol>,
-                                pegtl_string_t("version "), r_version, pegtl::until<pegtl::eol>> {};
+    struct r_header: pegtl::seq<TAOCPP_PEGTL_STRING("pico-8 cartridge"), pegtl::until<pegtl::eol>,
+                                TAOCPP_PEGTL_STRING("version "), r_version, pegtl::until<pegtl::eol>> {};
     struct r_file : pegtl::seq<r_bom, r_header, pegtl::star<r_section>, pegtl::eof> {};
 
     //
@@ -210,14 +212,16 @@ struct p8_reader
 
     void parse(char const *str)
     {
-        pegtl::parse_string<r_file, action>(str, "p8", *this);
+        pegtl::memory_input<> in(str, "p8");
+        pegtl::parse<r_file, action>(in, *this);
     }
 };
 
 template<>
 struct p8_reader::action<p8_reader::r_version>
 {
-    static void apply(pegtl::action_input const &in, p8_reader &r)
+    template<typename Input>
+    static void apply(Input const &in, p8_reader &r)
     {
         r.m_version = std::atoi(in.string().c_str());
     }
@@ -226,7 +230,8 @@ struct p8_reader::action<p8_reader::r_version>
 template<>
 struct p8_reader::action<p8_reader::r_section_name>
 {
-    static void apply(pegtl::action_input const &in, p8_reader &r)
+    template<typename Input>
+    static void apply(Input const &in, p8_reader &r)
     {
         if (in.string().find("lua") != std::string::npos)
             r.m_current_section = section::lua;
@@ -253,7 +258,8 @@ struct p8_reader::action<p8_reader::r_section_name>
 template<>
 struct p8_reader::action<p8_reader::r_data>
 {
-    static void apply(pegtl::action_input const &in, p8_reader &r)
+    template<typename Input>
+    static void apply(Input const &in, p8_reader &r)
     {
         if (r.m_current_section == section::lua)
         {
