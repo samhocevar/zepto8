@@ -163,11 +163,12 @@ struct p8_reader
                                        r_sfx,
                                        r_mus,
                                        r_lab> {};
-    struct r_section_line : pegtl::seq<r_section_name, pegtl::eol> {};
+    struct r_section_line : pegtl::seq<r_section_name, pegtl::eolf> {};
 
-    struct r_data_line : pegtl::seq<pegtl::not_at<r_section_line>,
-                                    pegtl::until<pegtl::eolf>> {};
-    struct r_data : pegtl::star<r_data_line> {};
+    struct r_data_line : pegtl::until<pegtl::eolf> {};
+    struct r_data : pegtl::star<pegtl::not_at<r_section_line>,
+                                pegtl::not_at<pegtl::eof>,
+                                r_data_line> {};
 
     struct r_section : pegtl::seq<r_section_line, r_data> {};
     struct r_version : pegtl::star<pegtl::digit> {};
