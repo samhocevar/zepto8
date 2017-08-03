@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2017 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -28,6 +28,8 @@ using namespace tao;
 namespace lua53
 {
 
+// Special rule to disallow line breaks when matching special
+// PICO-8 syntax (the one-line if(...)... construct)
 template<bool B>
 struct disable_crlf
 {
@@ -93,12 +95,26 @@ struct analyze_action<lua53::short_print>
     template<typename Input>
     static void apply(Input const &in, code_fixer &f)
     {
+        auto pos = in.position();
+        lol::ivec2 tmp(pos.byte, pos.byte + in.size());
+        f.m_short_prints.push(tmp);
 #if 0
-        msg::info("short_print at line %ld:%ld(%ld): %s\n", in.line(), in.position().byte_in_line, in.position().byte, in.string().c_str());
+        msg::info("short_print at %ld:%ld(%ld): %s\n", pos.line, pos.byte_in_line, pos.byte, in.string().c_str());
 #endif
-        lol::ivec2 pos(in.position().byte, in.position().byte + in.size());
-        // FIXME: push_unique is a hack; we need to ensure single step
-        f.m_short_prints.push_unique(pos);
+    }
+};
+
+template<>
+struct analyze_action<lua53::name>
+{
+    template<typename Input>
+    static void apply(Input const &in, code_fixer &)
+    {
+        UNUSED(in);
+#if 0
+        auto pos = in.position();
+        msg::info("name at %ld:%ld(%ld): '%s'\n", pos.line, pos.byte_in_line, pos.byte, in.string().c_str());
+#endif
     }
 };
 
@@ -108,12 +124,12 @@ struct analyze_action<lua53::short_if_body>
     template<typename Input>
     static void apply(Input const &in, code_fixer &f)
     {
+        auto pos = in.position();
+        lol::ivec2 tmp(pos.byte, pos.byte + in.size());
+        f.m_short_ifs.push(tmp);
 #if 0
-        msg::info("short_if_body at line %ld:%ld(%ld): %s\n", in.line(), in.position().byte_in_line, in.position().byte, in.string().c_str());
+        msg::info("short_if_body at %ld:%ld(%ld): %s\n", pos.line, pos.byte_in_line, pos.byte, in.string().c_str());
 #endif
-        lol::ivec2 pos(in.position().byte, in.position().byte + in.size());
-        // FIXME: push_unique is a hack; we need to ensure single step
-        f.m_short_ifs.push_unique(pos);
     }
 };
 
@@ -123,10 +139,11 @@ struct analyze_action<lua53::reassign_op>
     template<typename Input>
     static void apply(Input const &in, code_fixer &f)
     {
+        auto pos = in.position();
+        f.m_reassign_ops.push(pos.byte);
 #if 0
-        msg::info("reassign_op %ld:%ld(%ld): %s\n", in.line(), in.position().byte_in_line, in.position().byte, in.string().c_str());
+        msg::info("reassign_op at %ld:%ld(%ld): %s\n", pos.line, pos.byte_in_line, pos.byte, in.string().c_str());
 #endif
-        f.m_reassign_ops.push(in.position().byte);
     }
 };
 
@@ -136,9 +153,12 @@ struct analyze_action<lua53::reassign_body>
     template<typename Input>
     static void apply(Input const &in, code_fixer &f)
     {
-        lol::ivec3 pos(in.position().byte, f.m_reassign_ops.pop(), in.position().byte + in.size());
-        // FIXME: push_unique is a hack; we need to ensure single step
-        f.m_reassigns.push_unique(pos);
+        auto pos = in.position();
+        lol::ivec3 tmp(pos.byte, f.m_reassign_ops.pop(), pos.byte + in.size());
+        f.m_reassigns.push(tmp);
+#if 0
+        msg::info("reassign_body at %ld:%ld(%ld): %s\n", pos.line, pos.byte_in_line, pos.byte, in.string().c_str());
+#endif
     }
 };
 
@@ -148,13 +168,6 @@ struct analyze_action<lua53::operator_notequal>
     template<typename Input>
     static void apply(Input const &in, code_fixer &f)
     {
-        /* XXX: Try to remove elements that are now invalid because of
-         * backtracking (see https://github.com/ColinH/PEGTL/issues/32).
-         * To be honest, it’s probably me who don’t understand how to
-         * do this properly. */
-        while (f.m_notequals.count() &&
-               f.m_notequals.last() >= (int)in.position().byte)
-            f.m_notequals.pop();
         f.m_notequals.push(in.position().byte);
     }
 };
@@ -165,10 +178,6 @@ struct analyze_action<lua53::cpp_comment>
     template<typename Input>
     static void apply(Input const &in, code_fixer &f)
     {
-        /* FIXME: see above for why this loop */
-        while (f.m_cpp_comments.count() &&
-               f.m_cpp_comments.last() >= (int)in.position().byte)
-            f.m_cpp_comments.pop();
         f.m_cpp_comments.push(in.position().byte);
     }
 };
@@ -250,8 +259,8 @@ String code_fixer::fix()
              + " end "
              + code.sub(pos[1]);
 
-        bump(pos[0], 6);
-        bump(pos[1], 5);
+        bump(pos[0], 6); // len(" then ")
+        bump(pos[1], 5); // len(" end ")
     }
 
     /* Fix ?… → print(…) */

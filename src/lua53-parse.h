@@ -365,12 +365,14 @@ namespace lua53
    // Parsing strategy is to match “if”, verify that this is not a standard
    // “if-then”, temporarily disable CRLF, match “if (expression)”, then match
    // either:
-   //  - any number of statements followed by a return statement
-   //  - at least one statement followed by any number of statements
+   //  - a return statement
+   //  - at least one statement followed by an optional return statement
    // Once the match is performed, we re-enable CRLF (even when rule failed).
-   struct short_if_tail_one : pegtl::seq< seps, pegtl::until< pegtl::if_must< key_return, statement_return >, statement, seps > > {};
-   struct short_if_tail_two : pegtl::seq< seps, statement, seps, pegtl::until< pegtl::sor< pegtl::eof, pegtl::not_at< statement > >, statement, seps > > {};
-   struct short_if_tail : pegtl::sor< short_if_tail_one, short_if_tail_two > {};
+   struct short_if_tail_two : pegtl::if_must< key_return, statement_return > {};
+   struct short_if_tail_one : pegtl::seq< statement, seps,
+                                          pegtl::until< pegtl::sor< pegtl::eof, pegtl::not_at< statement > >, statement, seps >,
+                                          pegtl::opt< short_if_tail_two > > {};
+   struct short_if_tail : pegtl::seq< seps, pegtl::sor< short_if_tail_two, short_if_tail_one > > {};
 
    struct short_if_body : pegtl::seq< short_if_tail, seps, pegtl::if_then_else< key_else, short_if_tail, pegtl::success > > {};
 
@@ -415,8 +417,7 @@ namespace lua53
                                     pegtl::string< '*', '=' >,
                                     pegtl::string< '/', '=' >,
                                     pegtl::string< '%', '=' > > {};
-   struct reassign_expr : expr_list_must {};
-   struct reassign_body : pegtl::seq< reassign_var, seps, reassign_op, seps, reassign_expr > {};
+   struct reassign_body : pegtl::seq< reassign_var, seps, reassign_op, seps, expression > {};
    struct reassignment : pegtl::seq< pegtl::opt< key_local, seps >, reassign_body > {};
 #endif
    struct assignment_variable_list : pegtl::list_must< variable, pegtl::one< ',' >, sep > {};
@@ -431,10 +432,17 @@ namespace lua53
 
    struct semicolon : pegtl::one< ';' > {};
    struct statement : pegtl::sor< semicolon,
-                                  assignments,
 #if WITH_PICO8
-                                  reassignment,
+                                  // We use this hack to prevent excessive backtracking; it’s really
+                                  // too difficult to differentiate assignments from function calls
+                                  // without parsing twice. We don’t really care about performance,
+                                  // and backtracking messes with our code analysis.
+                                  pegtl::seq< pegtl::at< assignments >, assignments >,
+                                  pegtl::seq< pegtl::at< reassignment >, reassignment >,
                                   short_print,
+                                  short_if_statement,
+#else
+                                  assignments,
 #endif
                                   function_call,
                                   label_statement,
@@ -443,9 +451,6 @@ namespace lua53
                                   do_statement,
                                   while_statement,
                                   repeat_statement,
-#if WITH_PICO8
-                                  short_if_statement,
-#endif
                                   if_statement,
                                   for_statement,
                                   function_definition,
