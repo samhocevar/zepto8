@@ -317,7 +317,6 @@ bool cart::load_p8(char const *filename)
         return false;
 
     m_code = reader.m_code;
-    msg::info("code length: %d\n", m_code.count());
 
     m_rom.resize(0x8000);
     memset(m_rom.data(), 0, m_rom.bytes());
@@ -329,12 +328,14 @@ bool cart::load_p8(char const *filename)
     auto const &mus = reader.m_sections[(int8_t)p8_reader::section::mus];
     auto const &lab = reader.m_sections[(int8_t)p8_reader::section::lab];
 
-    msg::info("gfx size: %d / %d\n", gfx.count(), SIZE_GFX + SIZE_GFX2);
-    msg::info("gff size: %d / %d\n", gff.count(), SIZE_GFX_PROPS);
-    msg::info("map size: %d / %d\n", map.count(), SIZE_MAP + SIZE_MAP2);
-    msg::info("sfx size: %d / %d\n", sfx.count() / (4 + 80) * (4 + 64), SIZE_SFX);
-    msg::info("mus size: %d / %d\n", mus.count() / 5 * 4, SIZE_SONG);
-    msg::info("lab size: %d / %d\n", lab.count(), LABEL_WIDTH * LABEL_HEIGHT / 2);
+    msg::info("code: %d gfx: %d/%d gff: %d/%d map: %d/%d "
+              "sfx: %d/%d mus: %d/%d lab: %d/%d\n", m_code.count(),
+              gfx.count(), SIZE_GFX + SIZE_GFX2,
+              gff.count(), SIZE_GFX_PROPS,
+              map.count(), SIZE_MAP + SIZE_MAP2,
+              sfx.count() / (4 + 80) * (4 + 64), SIZE_SFX,
+              mus.count() / 5 * 4, SIZE_SONG,
+              lab.count(), LABEL_WIDTH * LABEL_HEIGHT / 2);
 
     // The optional second chunk of gfx is contiguous, we can copy it directly
     memcpy(m_rom.data() + OFFSET_GFX, gfx.data(), lol::min(SIZE_GFX + SIZE_GFX2, gfx.count()));
