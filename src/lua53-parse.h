@@ -198,7 +198,12 @@ namespace lua53
    struct numeral_one : pegtl::sor< numeral_two< D, E >, numeral_three< D, E > > {};
 
    struct decimal : numeral_one< pegtl::digit, pegtl::one< 'e', 'E' > > {};
+#if WITH_PICO8
+   // PICO-8 does not support hexadecimal floats
+   struct hexadecimal : pegtl::if_must< pegtl::istring< '0', 'x' >, numeral_one< pegtl::xdigit, pegtl::failure > > {};
+#else
    struct hexadecimal : pegtl::if_must< pegtl::istring< '0', 'x' >, numeral_one< pegtl::xdigit, pegtl::one< 'p', 'P' > > > {};
+#endif
    struct numeral : pegtl::sor< hexadecimal, decimal > {};
 
    struct label_statement : pegtl::if_must< pegtl::two< ':' >, seps, name, seps, pegtl::two< ':' > > {};
@@ -446,8 +451,15 @@ namespace lua53
                                   function_definition,
                                   local_statement > {};
 
+#if WITH_PICO8
+   struct header_comment : pegtl::disable< pegtl::two< '-' >, short_comment > {};
+   struct grammar : pegtl::must< pegtl::opt< header_comment >,
+                                 pegtl::opt< header_comment >,
+                                 statement_list< pegtl::eof > > {};
+#else
    struct interpreter : pegtl::seq< pegtl::one< '#' >, pegtl::until< pegtl::eolf > > {};
    struct grammar : pegtl::must< pegtl::opt< interpreter >, statement_list< pegtl::eof > > {};
+#endif
    // clang-format on
 
 }  // namespace lua53
