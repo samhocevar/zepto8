@@ -178,7 +178,13 @@ struct analyze_action<lua53::cpp_comment>
     template<typename Input>
     static void apply(Input const &in, code_fixer &f)
     {
-        f.m_cpp_comments.push(in.position().byte);
+        auto pos = in.position();
+#if 0
+        msg::info("cpp comment at %ld:%ld(%ld): %s\n", pos.line, pos.byte_in_line, pos.byte, in.string().c_str());
+#endif
+        // We need push_unique because of backtracking; it’s not serious
+        // enough for us to fix the grammar, so we don’t really care.
+        f.m_cpp_comments.push_unique(pos.byte);
     }
 };
 
@@ -289,7 +295,7 @@ String code_fixer::fix()
     for (int const &pos : m_cpp_comments)
     {
         ASSERT(code[pos] == '/' && code[pos + 1] == '/',
-               "invalid operator %c%c", code[pos], code[pos + 1]);
+               "invalid syntax %c%c", code[pos], code[pos + 1]);
         code[pos] = code[pos + 1] = '-';
     }
 
