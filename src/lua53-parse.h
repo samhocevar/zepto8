@@ -100,6 +100,18 @@ namespace lua53
    // so this is probably the best course of action.
    template< typename R >
    struct disable_backtracking : pegtl::seq< pegtl::at< R >, R > {};
+
+   // This rule will toggle a special state where line breaks can be
+   // forbidden within a rule.
+   template<bool B>
+   struct disable_crlf;
+
+   // Convenience rule to match a sequence on a single line
+   template< typename... R >
+   struct one_line_seq : pegtl::seq< disable_crlf< true >,
+                                     pegtl::sor< pegtl::seq< R... >,
+                                                 pegtl::seq< disable_crlf< false >, pegtl::failure > >,
+                                     disable_crlf< false > > {};
 #endif
 
    // clang-format off
@@ -383,20 +395,33 @@ namespace lua53
    //  - a return statement
    //  - at least one statement followed by an optional return statement
    // Once the match is performed, we re-enable CRLF (even when rule failed).
+   //
+   // We also parse the so-called “buggy if” by allowing “if(x) do \n … end”
+   // because this is a side-effect of the PICO-8 handling of the short if.
+   struct not_at_if_then : pegtl::not_at< pegtl::seq< seps, expression, seps, key_then > > {};
+
    struct short_if_tail_two : pegtl::if_must< key_return, statement_return > {};
    struct short_if_tail_one : pegtl::seq< statement, seps,
                                           pegtl::until< pegtl::sor< pegtl::eof, pegtl::not_at< statement > >, statement, seps >,
                                           pegtl::opt< short_if_tail_two > > {};
    struct short_if_tail : pegtl::seq< seps, pegtl::sor< short_if_tail_two, short_if_tail_one > > {};
-
    struct short_if_body : pegtl::seq< short_if_tail, seps, pegtl::if_then_else< key_else, short_if_tail, pegtl::success > > {};
 
-   template<bool B> struct disable_crlf;
-   struct short_if_statement : pegtl::seq< key_if,
-                                           pegtl::not_at< pegtl::seq< seps, expression, seps, key_then > >,
-                                           disable_crlf< true >,
-                                           pegtl::sor< pegtl::seq< seps, pegtl::try_catch< bracket_expr >, seps, short_if_body, disable_crlf< false > >,
-                                                       pegtl::seq< disable_crlf< false >, pegtl::failure > > > {};
+   struct short_if_statement : pegtl::seq< key_if, not_at_if_then,
+                                           one_line_seq< seps, pegtl::try_catch< bracket_expr >, seps, short_if_body > > {};
+
+   // Undocumented feature: if (...) do
+   //
+   // This is actually a side effect of the short if statements; the code
+   // gets translated to “if (...) then do end”, which simply needs to be
+   // terminated by an endif somewhere.
+   //
+   // FIXME: rework this so as to not require backtracking
+   struct if_do : key_do {};
+   struct if_do_statement : pegtl::seq< key_if, not_at_if_then,
+                                        one_line_seq< seps, pegtl::try_catch< bracket_expr >, seps, if_do >,
+                                        // Same as the end of the actual “if” statement
+                                        statement_list< at_elseif_else_end >, seps, pegtl::until< pegtl::sor< else_statement, key_end >, elseif_statement, seps > > {};
 
    // Undocumented feature: short print
    //
@@ -406,9 +431,7 @@ namespace lua53
    struct query_at_sol;
 
    struct short_print : pegtl::seq< query_at_sol,
-                                    disable_crlf< true >,
-                                    pegtl::sor< pegtl::seq< seps, pegtl::try_catch< expr_list_must >, seps, disable_crlf< false > >,
-                                                pegtl::seq< disable_crlf< false >, pegtl::failure > >,
+                                    one_line_seq< seps, pegtl::try_catch< expr_list_must >, seps >,
                                     pegtl::at< pegtl::sor< pegtl::eolf, comment, cpp_comment > > > {};
 #endif
 
@@ -451,6 +474,7 @@ namespace lua53
                                   disable_backtracking< assignments >,
                                   disable_backtracking< reassignment >,
                                   short_print,
+                                  disable_backtracking< if_do_statement >,
                                   short_if_statement,
 #else
                                   assignments,

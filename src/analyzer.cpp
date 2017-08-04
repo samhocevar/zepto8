@@ -119,6 +119,20 @@ struct analyze_action<lua53::name>
 };
 
 template<>
+struct analyze_action<lua53::if_do>
+{
+    template<typename Input>
+    static void apply(Input const &in, analyzer &f)
+    {
+        auto pos = in.position();
+        f.m_if_dos.push(pos.byte);
+#if 0
+        msg::info("if_do at %ld:%ld(%ld): %s\n", pos.line, pos.byte_in_line, pos.byte, in.string().c_str());
+#endif
+    }
+};
+
+template<>
 struct analyze_action<lua53::short_if_body>
 {
     template<typename Input>
@@ -205,6 +219,9 @@ void analyzer::bump(int offset, int delta)
     for (int &pos : m_cpp_comments)
         if (pos >= offset) pos += delta;
 
+    for (int &pos : m_if_dos)
+        if (pos >= offset) pos += delta;
+
     for (ivec3 &pos : m_reassigns)
     {
         if (pos[0] >= offset) pos[0] += delta;
@@ -253,8 +270,19 @@ String analyzer::fix()
     m_reassigns.empty();
     m_short_prints.empty();
     m_short_ifs.empty();
+    m_if_dos.empty();
     pegtl::memory_input<> in(code.C(), "code");
     pegtl::parse<lua53::grammar, analyze_action>(in, *this);
+
+    /* Fix if(x)do → if(x)then do end */
+    for (int const &pos : m_if_dos)
+    {
+        code = code.sub(0, pos)
+             + "then do end"
+             + code.sub(pos + 2);
+
+        bump(pos, 9); // len("then do end") - len("do")
+    }
 
     /* Fix if(x)y → if(x)then y end */
     for (ivec2 const &pos : m_short_ifs)
