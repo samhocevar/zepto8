@@ -86,7 +86,6 @@ bool cart::load_png(char const *filename)
 
     // Retrieve code, with optional decompression
     int version = m_rom[SIZE_MEMORY];
-    msg::info("Found cartridge version %d\n", version);
     if (version == 0 || m_rom[OFFSET_CODE] != ':'
                      || m_rom[OFFSET_CODE + 1] != 'c'
                      || m_rom[OFFSET_CODE + 2] != ':'
@@ -124,7 +123,9 @@ bool cart::load_png(char const *filename)
                 m_code += m_rom[i] ? decompress_lut[m_rom[i] - 1] : m_rom[++i];
             }
         }
-        msg::info("Expected %d bytes, got %d\n", length, (int)m_code.count());
+
+        if (length != (int)m_code.count())
+            msg::warn("expected %d code bytes, got %d\n", length, (int)m_code.count());
     }
 
     // Remove possible trailing zeroes
