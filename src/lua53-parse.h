@@ -468,7 +468,9 @@ namespace lua53
                                   local_statement > {};
 
 #if WITH_PICO8
-   struct header_comment : pegtl::disable< pegtl::two< '-' >, short_comment > {};
+   // FIXME: we try to capture the first two comment lines, but what
+   // to do if they are actually a multiline / long comment?
+   struct header_comment : pegtl::disable< pegtl::two< '-' >, pegtl::not_at< long_string >, short_comment > {};
    struct grammar : pegtl::must< pegtl::opt< header_comment >,
                                  pegtl::opt< header_comment >,
                                  statement_list< pegtl::eof > > {};
