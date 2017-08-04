@@ -14,7 +14,7 @@
 
 #include <lol/engine.h>
 
-#include "code-fixer.h"
+#include "analyzer.h"
 
 namespace z8
 {
@@ -50,7 +50,7 @@ public:
     lol::String const &get_lua()
     {
         if (m_lua.count() == 0)
-            m_lua = code_fixer(m_code).fix();
+            m_lua = analyzer(m_code).fix();
         return m_lua;
     }
 

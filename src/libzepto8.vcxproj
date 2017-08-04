@@ -58,8 +58,8 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="analyzer.cpp" />
     <ClCompile Include="cart.cpp" />
-    <ClCompile Include="code-fixer.cpp" />
     <ClCompile Include="vm.cpp" />
     <ClCompile Include="vm-maths.cpp" />
     <ClCompile Include="vm-gfx.cpp" />
@@ -67,8 +67,8 @@
     <ClCompile Include="vm-sfx.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="analyzer.h" />
     <ClInclude Include="cart.h" />
-    <ClInclude Include="code-fixer.h" />
     <ClInclude Include="lua53-parse.h" />
     <ClInclude Include="vm.h" />
     <ClInclude Include="zepto8.h" />

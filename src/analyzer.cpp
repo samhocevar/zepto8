@@ -14,7 +14,7 @@
 
 #include <tao/pegtl.hpp>
 
-#include "code-fixer.h"
+#include "analyzer.h"
 #define WITH_PICO8 1
 #include "lua53-parse.h"
 
@@ -39,7 +39,7 @@ struct disable_crlf
               template< typename ... > class Action,
               template< typename ... > class Control,
               typename Input >
-    static bool match(Input &, z8::code_fixer &f)
+    static bool match(Input &, z8::analyzer &f)
     {
         f.m_disable_crlf += B ? 1 : -1;
         return true;
@@ -54,7 +54,7 @@ struct sep
               template< typename ... > class Action,
               template< typename ... > class Control,
               typename Input >
-    static bool match(Input & in, z8::code_fixer &f)
+    static bool match(Input & in, z8::analyzer &f)
     {
         if (f.m_disable_crlf > 0)
             return sep_horiz::match(in);
@@ -71,7 +71,7 @@ struct query_at_sol
               template< typename ... > class Action,
               template< typename ... > class Control,
               typename Input >
-    static bool match(Input & in, z8::code_fixer &)
+    static bool match(Input & in, z8::analyzer &)
     {
         return in.position().byte_in_line == 0 && query::match(in);
     }
@@ -93,7 +93,7 @@ template<>
 struct analyze_action<lua53::short_print>
 {
     template<typename Input>
-    static void apply(Input const &in, code_fixer &f)
+    static void apply(Input const &in, analyzer &f)
     {
         auto pos = in.position();
         lol::ivec2 tmp(pos.byte, pos.byte + in.size());
@@ -108,7 +108,7 @@ template<>
 struct analyze_action<lua53::name>
 {
     template<typename Input>
-    static void apply(Input const &in, code_fixer &)
+    static void apply(Input const &in, analyzer &)
     {
         UNUSED(in);
 #if 0
@@ -122,7 +122,7 @@ template<>
 struct analyze_action<lua53::short_if_body>
 {
     template<typename Input>
-    static void apply(Input const &in, code_fixer &f)
+    static void apply(Input const &in, analyzer &f)
     {
         auto pos = in.position();
         lol::ivec2 tmp(pos.byte, pos.byte + in.size());
@@ -137,7 +137,7 @@ template<>
 struct analyze_action<lua53::reassign_op>
 {
     template<typename Input>
-    static void apply(Input const &in, code_fixer &f)
+    static void apply(Input const &in, analyzer &f)
     {
         auto pos = in.position();
         f.m_reassign_ops.push(pos.byte);
@@ -151,7 +151,7 @@ template<>
 struct analyze_action<lua53::reassign_body>
 {
     template<typename Input>
-    static void apply(Input const &in, code_fixer &f)
+    static void apply(Input const &in, analyzer &f)
     {
         auto pos = in.position();
         lol::ivec3 tmp(pos.byte, f.m_reassign_ops.pop(), pos.byte + in.size());
@@ -166,7 +166,7 @@ template<>
 struct analyze_action<lua53::operator_notequal>
 {
     template<typename Input>
-    static void apply(Input const &in, code_fixer &f)
+    static void apply(Input const &in, analyzer &f)
     {
         f.m_notequals.push(in.position().byte);
     }
@@ -176,7 +176,7 @@ template<>
 struct analyze_action<lua53::cpp_comment>
 {
     template<typename Input>
-    static void apply(Input const &in, code_fixer &f)
+    static void apply(Input const &in, analyzer &f)
     {
         auto pos = in.position();
 #if 0
@@ -192,12 +192,12 @@ struct analyze_action<lua53::cpp_comment>
 // Actions executed during translation
 //
 
-code_fixer::code_fixer(String const &code)
+analyzer::analyzer(String const &code)
   : m_code(code)
 {
 }
 
-void code_fixer::bump(int offset, int delta)
+void analyzer::bump(int offset, int delta)
 {
     for (int &pos : m_notequals)
         if (pos >= offset) pos += delta;
@@ -225,7 +225,7 @@ void code_fixer::bump(int offset, int delta)
     }
 }
 
-String code_fixer::fix()
+String analyzer::fix()
 {
     String code = m_code;
 

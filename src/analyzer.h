@@ -16,10 +16,10 @@
 
 namespace z8
 {
-    class code_fixer
+    class analyzer
     {
     public:
-        code_fixer(lol::String const &code);
+        analyzer(lol::String const &code);
         lol::String fix();
 
         lol::array<int> m_notequals;
