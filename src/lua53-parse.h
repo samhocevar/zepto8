@@ -91,6 +91,17 @@ namespace lua53
 
    namespace pegtl = tao::TAOCPP_PEGTL_NAMESPACE;
 
+#if WITH_PICO8
+   // Use this helper class to ensure we parse rule R with no risk
+   // of backtracking. For some rules (such as assignments vs.
+   // function calls) it’s really difficult to disambiguate without
+   // rewriting a lot of the grammar. We don’t really care about
+   // performance, and backtracking messes with our code analysis,
+   // so this is probably the best course of action.
+   template< typename R >
+   struct disable_backtracking : pegtl::seq< pegtl::at< R >, R > {};
+#endif
+
    // clang-format off
    struct short_comment : pegtl::until< pegtl::eolf > {};
    struct long_string : pegtl::raw_string< '[', '=', ']' > {};
@@ -223,7 +234,11 @@ namespace lua53
 
    struct table_field_one : pegtl::if_must< pegtl::one< '[' >, seps, expression, seps, pegtl::one< ']' >, seps, pegtl::one< '=' >, seps, expression > {};
    struct table_field_two : pegtl::if_must< pegtl::seq< name, seps, pegtl::one< '=' > >, seps, expression > {};
+#if WITH_PICO8
+   struct table_field : pegtl::sor< table_field_one, disable_backtracking< table_field_two >, expression > {};
+#else
    struct table_field : pegtl::sor< table_field_one, table_field_two, expression > {};
+#endif
    struct table_field_list : pegtl::list_tail< table_field, pegtl::one< ',', ';' >, sep > {};
    struct table_constructor : pegtl::if_must< pegtl::one< '{' >, pegtl::pad_opt< table_field_list, sep >, pegtl::one< '}' > > {};
 
@@ -397,9 +412,9 @@ namespace lua53
                                     pegtl::at< pegtl::sor< pegtl::eolf, comment, cpp_comment > > > {};
 #endif
 
-   struct for_statement_one : pegtl::seq< name, seps, pegtl::one< '=' >, seps, expression, seps, pegtl::one< ',' >, seps, expression, pegtl::pad_opt< pegtl::if_must< pegtl::one< ',' >, seps, expression >, sep >, key_do, statement_list< key_end > > {};
-   struct for_statement_two : pegtl::seq< name_list_must, seps, key_in, seps, expr_list_must, seps, key_do, statement_list< key_end > > {};
-   struct for_statement : pegtl::if_must< key_for, seps, pegtl::sor< for_statement_one, for_statement_two > > {};
+   struct for_statement_one : pegtl::seq< pegtl::one< '=' >, seps, expression, seps, pegtl::one< ',' >, seps, expression, pegtl::pad_opt< pegtl::if_must< pegtl::one< ',' >, seps, expression >, sep > > {};
+   struct for_statement_two : pegtl::seq< pegtl::opt< pegtl::one< ',' >, name_list_must, seps >, key_in, seps, expr_list_must, seps > {};
+   struct for_statement : pegtl::if_must< key_for, seps, name, seps, pegtl::sor< for_statement_one, for_statement_two >, key_do, statement_list< key_end > > {};
 
 #if WITH_PICO8
    // From the PICO-8 documentation:
@@ -433,12 +448,8 @@ namespace lua53
    struct semicolon : pegtl::one< ';' > {};
    struct statement : pegtl::sor< semicolon,
 #if WITH_PICO8
-                                  // We use this hack to prevent excessive backtracking; it’s really
-                                  // too difficult to differentiate assignments from function calls
-                                  // without parsing twice. We don’t really care about performance,
-                                  // and backtracking messes with our code analysis.
-                                  pegtl::seq< pegtl::at< assignments >, assignments >,
-                                  pegtl::seq< pegtl::at< reassignment >, reassignment >,
+                                  disable_backtracking< assignments >,
+                                  disable_backtracking< reassignment >,
                                   short_print,
                                   short_if_statement,
 #else
