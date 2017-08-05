@@ -117,7 +117,27 @@ namespace lua53
    // clang-format off
    struct short_comment : pegtl::until< pegtl::eolf > {};
    struct long_string : pegtl::raw_string< '[', '=', ']' > {};
+#if WITH_PICO8
+   // Emulate PICO-8 parsing “bugs”:
+   //  - no support for raw string literals of level > 0, i.e. [[abc]] is
+   //    valid but [=[abc]=] isn’t, so we don’t use pegtl::raw_string for
+   //    comments and roll out or own simpler implementation instead.
+   //  - PICO-8 allows nesting raw string literals, despite these being
+   //    explicitly disallowed by the Lua specification (“ends at the first
+   //    closing long bracket”), so we capture nested raw strings, too.
+   //  - any syntax error within a long comment will abort parsing and treat
+   //    the first line as a normal comment line, so we don’t raise a general
+   //    failure unlike pegtl::raw_string.
+   struct long_comment_open : pegtl::string< '[', '[' > {};
+   struct long_comment_close : pegtl::string< ']', ']' > {};
+   struct long_comment_string : pegtl::seq< long_comment_open,
+                                            pegtl::star< pegtl::not_at< long_comment_close >,
+                                                         pegtl::sor< long_comment_string, pegtl::any > >,
+                                            long_comment_close > {};
+   struct comment : pegtl::disable< pegtl::two< '-' >, pegtl::sor< long_comment_string, short_comment > > {};
+#else
    struct comment : pegtl::disable< pegtl::two< '-' >, pegtl::sor< long_string, short_comment > > {};
+#endif
 
 #if WITH_PICO8
    // PICO-8 accepts “//” as a comment prefix, too, but doesn’t accept
@@ -494,7 +514,7 @@ namespace lua53
 #if WITH_PICO8
    // FIXME: we try to capture the first two comment lines, but what
    // to do if they are actually a multiline / long comment?
-   struct header_comment : pegtl::disable< pegtl::two< '-' >, pegtl::not_at< long_string >, short_comment > {};
+   struct header_comment : pegtl::disable< pegtl::two< '-' >, pegtl::not_at< long_comment_string >, short_comment > {};
    struct grammar : pegtl::must< pegtl::opt< header_comment >,
                                  pegtl::opt< header_comment >,
                                  statement_list< pegtl::eof > > {};
