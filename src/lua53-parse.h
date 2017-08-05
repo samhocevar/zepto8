@@ -109,7 +109,7 @@ namespace lua53
    // Convenience rule to match a sequence on a single line
    template< typename... R >
    struct one_line_seq : pegtl::seq< disable_crlf< true >,
-                                     pegtl::sor< pegtl::seq< R... >,
+                                     pegtl::sor< pegtl::try_catch< pegtl::seq< R... > >,
                                                  pegtl::seq< disable_crlf< false >, pegtl::failure > >,
                                      disable_crlf< false > > {};
 #endif
@@ -475,7 +475,11 @@ namespace lua53
                                     pegtl::string< '*', '=' >,
                                     pegtl::string< '/', '=' >,
                                     pegtl::string< '%', '=' > > {};
-   struct reassign_body : pegtl::seq< reassign_var, seps, reassign_op, seps, expression > {};
+   // We use one_line_seq because PICO-8 only supports these operators when
+   // the whole statement is on a single line. There are also several other
+   // bugs as reported in https://www.lexaloffle.com/bbs/?tid=29750 that we
+   // try to tackle using a few hacks, for instance eating that last comma.
+   struct reassign_body : one_line_seq< reassign_var, seps, reassign_op, seps, expression, pegtl::opt< pegtl::one< ',' > > > {};
    struct reassignment : pegtl::seq< pegtl::opt< key_local, seps >, reassign_body > {};
 #endif
    struct assignment_variable_list : pegtl::list_must< variable, pegtl::one< ',' >, sep > {};

@@ -346,11 +346,17 @@ String analyzer::fix()
         msg::info("Reassignment %d/%d/%d: “%s” “%s” “%s”\n", pos[0], pos[1], pos[2], var.C(), op.C(), arg.C());
 #endif
 
+        /* Handle the weird trailing comma bug as reported on
+         * https://www.lexaloffle.com/bbs/?tid=29750 */
+        int hack = code[pos[2] - 1] == ',';
+
         /* 1. build the string ‘=a+(b)’ */
         String dst = "=" // FIXME: Lol Engine is missing +(char,String)
                    + code.sub(pos[0], pos[1] - pos[0])
                    + code[pos[1]]
-                   + '(' + code.sub(pos[1] + 2, pos[2] - pos[1] - 2) + ')';
+                   + '('
+                   + code.sub(pos[1] + 2, pos[2] - pos[1] - 2 - hack)
+                   + ')';
 
         /* 2. insert that string where ‘+=b’ is currently */
         code = code.sub(0, pos[1]) + dst + code.sub(pos[2]);
