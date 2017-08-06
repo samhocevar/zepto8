@@ -75,11 +75,13 @@ fixture "t2.08"
 x+=1-- intrusive comment
 test_equal(x, 1)
 
-fixture "t2.09"
-x-- more
-+=-- intrusive
-1-- comments
-test_equal(x, 1)
+-- XXX: PICO-8 does not support multiline reassignments, so we
+-- disabled it in zepto8, too, but it could be re-added.
+--fixture "t2.09"
+--x-- more
+--+=-- intrusive
+--1-- comments
+--test_equal(x, 1)
 
 -- nested reassignments; will confuse most regex-based methods that
 -- attempt to convert pico-8 code to standard lua
