@@ -436,10 +436,13 @@ namespace lua53
    // gets translated to “if (...) then do end”, which simply needs to be
    // terminated by an endif somewhere.
    //
+   // We also support “if (...) else” which does not do what the developer
+   // thought, because “else” is ignored. Found in cartridge 14948 at least.
+   //
    // FIXME: rework this so as to not require backtracking
-   struct if_do : key_do {};
+   struct if_trail : pegtl::sor< key_do, key_else > {};
    struct if_do_statement : pegtl::seq< key_if, not_at_if_then,
-                                        one_line_seq< seps, pegtl::try_catch< bracket_expr >, seps, if_do >,
+                                        one_line_seq< seps, pegtl::try_catch< bracket_expr >, seps, if_trail >,
                                         // Same as the end of the actual “if” statement
                                         statement_list< at_elseif_else_end >, seps, pegtl::until< pegtl::sor< else_statement, key_end >, elseif_statement, seps > > {};
 
