@@ -22,21 +22,23 @@
 #include "zepto8.h"
 #include "vm.h"
 #include "telnet.h"
+#include "splore.h"
 
 enum class mode
 {
     none,
     run    = 129,
     telnet = 130,
+    splore = 131,
 
-    tolua  = 131,
-    topng  = 132,
-    top8   = 133,
-    tobin  = 134,
-    todata = 135,
+    tolua  = 140,
+    topng  = 141,
+    top8   = 143,
+    tobin  = 144,
+    todata = 145,
 
     out    = 'o',
-    data   = 136,
+    data   = 150,
 };
 
 static void usage()
@@ -45,6 +47,7 @@ static void usage()
 #if HAVE_UNISTD_H
     printf("       zeptool --run <cart>\n");
     printf("       zeptool --telnet <cart>\n");
+    printf("       zeptool --splore <image>\n");
 #endif
 }
 
@@ -64,6 +67,7 @@ int main(int argc, char **argv)
 #if HAVE_UNISTD_H
     opt.add_opt(int(mode::telnet), "telnet", false);
 #endif
+    opt.add_opt(int(mode::splore), "splore", false);
 
     mode run_mode = mode::none;
     char const *data = nullptr;
@@ -84,6 +88,7 @@ int main(int argc, char **argv)
         case (int)mode::todata:
         case (int)mode::run:
         case (int)mode::telnet:
+        case (int)mode::splore:
             run_mode = mode(c);
             break;
         case (int)mode::data:
@@ -161,6 +166,11 @@ int main(int argc, char **argv)
             vm.print_ansi();
             t.Wait(1.f / 60.f);
         }
+    }
+    else if (run_mode == mode::splore)
+    {
+        z8::splore splore;
+        splore.dump(cart_name);
     }
 #if HAVE_UNISTD_H
     else if (run_mode == mode::telnet)

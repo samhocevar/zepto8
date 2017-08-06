@@ -17,7 +17,10 @@ zepto8_DATA = data/zepto8.lua data/font.png
 
 EXTRA_DIST += zepto8.vcxproj
 
-zeptool_SOURCES = zeptool.cpp
+zeptool_SOURCES = \
+    zeptool.cpp \
+    splore.cpp splore.h \
+    $(NULL)
 zeptool_CPPFLAGS = $(AM_CPPFLAGS)
 zeptool_LDFLAGS = libzepto8.a $(AM_LDFLAGS)
 zeptool_DEPENDENCIES = libzepto8.a @LOL_DEPS@

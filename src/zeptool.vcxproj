@@ -32,8 +32,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="zeptool.cpp" />
+    <ClCompile Include="splore.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="splore.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(LolDir)\src\lol-core.vcxproj">
