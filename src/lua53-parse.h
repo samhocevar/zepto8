@@ -416,8 +416,9 @@ namespace lua53
    //  - at least one statement followed by an optional return statement
    // Once the match is performed, we re-enable CRLF (even when rule failed).
    //
-   // We also parse the so-called “buggy if” by allowing “if(x) do \n … end”
-   // because this is a side-effect of the PICO-8 handling of the short if.
+   // We also support “if (...) ... else” which does not do what the developer
+   // thought, because “else” is ignored. Found in cartridge 14948 at least.
+   // It is implemented by making short_if_tail optional after “else”.
    struct not_at_if_then : pegtl::not_at< pegtl::seq< seps, expression, seps, key_then > > {};
 
    struct short_if_tail_two : pegtl::if_must< key_return, statement_return > {};
@@ -425,7 +426,7 @@ namespace lua53
                                           pegtl::until< pegtl::sor< pegtl::eof, pegtl::not_at< statement > >, statement, seps >,
                                           pegtl::opt< short_if_tail_two > > {};
    struct short_if_tail : pegtl::seq< seps, pegtl::sor< short_if_tail_two, short_if_tail_one > > {};
-   struct short_if_body : pegtl::seq< short_if_tail, seps, pegtl::if_then_else< key_else, short_if_tail, pegtl::success > > {};
+   struct short_if_body : pegtl::seq< short_if_tail, seps, pegtl::opt< key_else, seps, pegtl::opt< short_if_tail > > > {};
 
    struct short_if_statement : pegtl::seq< key_if, not_at_if_then,
                                            one_line_seq< seps, pegtl::try_catch< bracket_expr >, seps, short_if_body > > {};
@@ -436,11 +437,8 @@ namespace lua53
    // gets translated to “if (...) then do end”, which simply needs to be
    // terminated by an endif somewhere.
    //
-   // We also support “if (...) else” which does not do what the developer
-   // thought, because “else” is ignored. Found in cartridge 14948 at least.
-   //
    // FIXME: rework this so as to not require backtracking
-   struct if_trail : pegtl::sor< key_do, key_else > {};
+   struct if_trail : pegtl::sor< key_do > {};
    struct if_do_statement : pegtl::seq< key_if, not_at_if_then,
                                         one_line_seq< seps, pegtl::try_catch< bracket_expr >, seps, if_trail >,
                                         // Same as the end of the actual “if” statement
