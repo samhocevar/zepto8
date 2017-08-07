@@ -283,7 +283,7 @@ String analyzer::fix()
     {
         code = code.sub(0, pos[0])
              + "then "
-             + code.sub(pos[0], pos[1] - pos[0]);
+             + code.sub(pos[0], pos[1] - pos[0])
              + " end"
              + code.sub(pos[1]);
 
