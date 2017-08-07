@@ -119,16 +119,16 @@ struct analyze_action<lua53::name>
 };
 
 template<>
-struct analyze_action<lua53::if_trail>
+struct analyze_action<lua53::if_do_trail>
 {
     template<typename Input>
     static void apply(Input const &in, analyzer &f)
     {
         auto pos = in.position();
         lol::ivec2 tmp(pos.byte, pos.byte + in.size());
-        f.m_if_trails.push(tmp);
+        f.m_if_do_trails.push(tmp);
 #if 0
-        msg::info("if_trail at %ld:%ld(%ld): %s\n", pos.line, pos.byte_in_line, pos.byte, in.string().c_str());
+        msg::info("if_do_trail at %ld:%ld(%ld): %s\n", pos.line, pos.byte_in_line, pos.byte, in.string().c_str());
 #endif
     }
 };
@@ -220,7 +220,7 @@ void analyzer::bump(int offset, int delta)
     for (int &pos : m_cpp_comments)
         if (pos >= offset) pos += delta;
 
-    for (ivec2 &pos : m_if_trails)
+    for (ivec2 &pos : m_if_do_trails)
     {
         if (pos[0] >= offset) pos[0] += delta;
         if (pos[1] >= offset) pos[1] += delta;
@@ -274,20 +274,21 @@ String analyzer::fix()
     m_reassigns.empty();
     m_short_prints.empty();
     m_short_ifs.empty();
-    m_if_trails.empty();
+    m_if_do_trails.empty();
     pegtl::memory_input<> in(code.C(), "code");
     pegtl::parse<lua53::grammar, analyze_action>(in, *this);
 
     /* Fix if(x)do → if(x)then do end */
-    for (ivec2 const &pos : m_if_trails)
+    for (ivec2 const &pos : m_if_do_trails)
     {
         code = code.sub(0, pos[0])
              + "then "
              + code.sub(pos[0], pos[1] - pos[0]);
              + " end"
-             + code.sub(pos[2]);
+             + code.sub(pos[1]);
 
-        bump(pos[1], 9); // len("then ") + len(" end")
+        bump(pos[0], 5); // len("then ")
+        bump(pos[1], 4); // len(" end")
     }
 
     /* Fix if(x)y → if(x)then y end */

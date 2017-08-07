@@ -438,9 +438,10 @@ namespace lua53
    // terminated by an endif somewhere.
    //
    // FIXME: rework this so as to not require backtracking
-   struct if_trail : pegtl::sor< key_do > {};
+   struct if_do_trail : key_do {};
    struct if_do_statement : pegtl::seq< key_if, not_at_if_then,
-                                        one_line_seq< seps, pegtl::try_catch< bracket_expr >, seps, if_trail >,
+                                        // The “do” must be at end of line or at a comment
+                                        one_line_seq< seps, pegtl::try_catch< bracket_expr >, seps, if_do_trail, seps, pegtl::sor< pegtl::at< comment >, pegtl::eolf > >,
                                         // Same as the end of the actual “if” statement
                                         statement_list< at_elseif_else_end >, seps, pegtl::until< pegtl::sor< else_statement, key_end >, elseif_statement, seps > > {};
 

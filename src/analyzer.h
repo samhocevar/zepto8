@@ -29,7 +29,7 @@ namespace z8
         lol::array<lol::ivec3> m_reassigns;
 
         int m_disable_crlf = 0;
-        lol::array<lol::ivec2> m_if_trails;
+        lol::array<lol::ivec2> m_if_do_trails;
         lol::array<lol::ivec2> m_short_ifs;
         lol::array<lol::ivec2> m_short_prints;
 
