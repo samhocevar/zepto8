@@ -478,11 +478,20 @@ namespace lua53
                                     pegtl::string< '*', '=' >,
                                     pegtl::string< '/', '=' >,
                                     pegtl::string< '%', '=' > > {};
-   // We use one_line_seq because PICO-8 only supports these operators when
-   // the whole statement is on a single line. There are also several other
-   // bugs as reported in https://www.lexaloffle.com/bbs/?tid=29750 that we
-   // try to tackle using a few hacks, for instance eating that last comma.
-   struct reassign_body : one_line_seq< reassign_var, seps, reassign_op, seps, expression, pegtl::opt< pegtl::one< ',' > > > {};
+   // We use one_line_seq to try to emulate the PICO-8 parser: it seems to
+   // first validate the syntax on a single line, but still allow multiline
+   // code at runtime. For instance this is not valid:
+   //   a += b +
+   //        c
+   // But this is valid because “a += b” is valid:
+   //   a += b
+   //        + c
+   // There are also several other bugs that we try to tackle using a few
+   // hacks, for instance eating that last comma. Most of them were reported
+   // to https://www.lexaloffle.com/bbs/?tid=29750
+   struct reassign_body_one : pegtl::seq< reassign_var, seps, reassign_op, seps, expression, pegtl::opt< pegtl::one< ',' > > > {};
+   struct reassign_body : pegtl::seq< pegtl::at< one_line_seq< reassign_body_one > >,
+                                      reassign_body_one > {};
    struct reassignment : pegtl::seq< pegtl::opt< key_local, seps >, reassign_body > {};
 #endif
    struct assignment_variable_list : pegtl::list_must< variable, pegtl::one< ',' >, sep > {};
