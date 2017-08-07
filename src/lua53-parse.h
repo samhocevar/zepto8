@@ -477,19 +477,29 @@ namespace lua53
                                     pegtl::string< '*', '=' >,
                                     pegtl::string< '/', '=' >,
                                     pegtl::string< '%', '=' > > {};
-   // We use one_line_seq to try to emulate the PICO-8 parser: it seems to
-   // first validate the syntax on a single line, but still allow multiline
+   // We could use one_line_seq to try to emulate the PICO-8 parser: it seems
+   // to first validate the syntax on a single line, but still allow multiline
    // code at runtime. For instance this is not valid:
    //   a += b +
    //        c
    // But this is valid because “a += b” is valid:
    //   a += b
    //        + c
+   // However this is valid, too:
+   //   a += (b
+   //        + c)
    // There are also several other bugs that we try to tackle using a few
    // hacks, for instance eating that last comma. Most of them were reported
    // to https://www.lexaloffle.com/bbs/?tid=29750
-   struct reassign_body_one : pegtl::seq< reassign_var, seps, reassign_op, seps, expression, pegtl::opt< pegtl::one< ',' > > > {};
-   struct reassign_body : pegtl::seq< pegtl::at< one_line_seq< reassign_body_one > >,
+   // For instance, this shit is valid (the comma is replaced with a space
+   // in PICO-8, so we try to do the same):
+   //   a+=b,c=1
+   // And that shit, too (the 3 is replaced with a space) but it’s tricky to
+   // support properly, so I chose to ignore it:
+   //   a+=sin(b)3-c
+   struct reassign_body_trail : pegtl::one< ',' > {};
+   struct reassign_body_one : pegtl::seq< reassign_var, seps, reassign_op, seps, expression > {};
+   struct reassign_body : pegtl::sor< one_line_seq< reassign_body_one, reassign_body_trail >,
                                       reassign_body_one > {};
    struct reassignment : pegtl::seq< pegtl::opt< key_local, seps >, reassign_body > {};
 #endif
