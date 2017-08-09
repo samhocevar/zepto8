@@ -43,11 +43,11 @@ enum class mode
 
 static void usage()
 {
-    printf("Usage: zeptool [--tolua|--topng|--top8|--tobin|--todata] [--data <file>] <cart> [-o <file>]\n");
+    printf("Usage: z8tool [--tolua|--topng|--top8|--tobin|--todata] [--data <file>] <cart> [-o <file>]\n");
 #if HAVE_UNISTD_H
-    printf("       zeptool --run <cart>\n");
-    printf("       zeptool --telnet <cart>\n");
-    printf("       zeptool --splore <image>\n");
+    printf("       z8tool --run <cart>\n");
+    printf("       z8tool --telnet <cart>\n");
+    printf("       z8tool --splore <image>\n");
 #endif
 }
 

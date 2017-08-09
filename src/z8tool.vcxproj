@@ -31,7 +31,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="zeptool.cpp" />
+    <ClCompile Include="z8tool.cpp" />
     <ClCompile Include="splore.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -18,7 +18,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zepto8", "src\zepto8.vcxpro
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "zepto8", "zepto8", "{03B9D2E1-AFBA-4F66-8DE0-6499C9F9155F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zeptool", "src\zeptool.vcxproj", "{CC700045-8E2C-4516-9159-43FC4FFD4783}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "z8tool", "src\z8tool.vcxproj", "{CC700045-8E2C-4516-9159-43FC4FFD4783}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libzepto8", "src\libzepto8.vcxproj", "{9AE29931-C72E-43DF-805B-27E4DDFBB582}"
 EndProject

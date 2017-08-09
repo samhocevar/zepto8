@@ -1,7 +1,7 @@
 
 include $(top_srcdir)/lol/build/autotools/common.am
 
-bin_PROGRAMS = zepto8 zeptool dither
+bin_PROGRAMS = zepto8 z8tool dither
 noinst_LIBRARIES = libzepto8.a
 
 zepto8dir = $(datarootdir)/zepto8
@@ -17,13 +17,15 @@ zepto8_DATA = data/zepto8.lua data/font.png
 
 EXTRA_DIST += zepto8.vcxproj
 
-zeptool_SOURCES = \
-    zeptool.cpp \
+z8tool_SOURCES = \
+    z8tool.cpp \
     splore.cpp splore.h \
     $(NULL)
-zeptool_CPPFLAGS = $(AM_CPPFLAGS)
-zeptool_LDFLAGS = libzepto8.a $(AM_LDFLAGS)
-zeptool_DEPENDENCIES = libzepto8.a @LOL_DEPS@
+z8tool_CPPFLAGS = $(AM_CPPFLAGS)
+z8tool_LDFLAGS = libzepto8.a $(AM_LDFLAGS)
+z8tool_DEPENDENCIES = libzepto8.a @LOL_DEPS@
+
+EXTRA_DIST += z8tool.vcxproj
 
 libzepto8_a_SOURCES = \
     zepto8.h \
