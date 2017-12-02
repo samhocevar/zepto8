@@ -113,6 +113,7 @@ private:
         static int clip(lua_State *l);
         static int cls(lua_State *l);
         static int color(lua_State *l);
+        static int fillp(lua_State *l);
         static int fget(lua_State *l);
         static int fset(lua_State *l);
         static int line(lua_State *l);

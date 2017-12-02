@@ -150,6 +150,7 @@ const lol::LuaObjectLibrary* vm::GetLib()
             { "clip",     &vm::api::clip },
             { "cls",      &vm::api::cls },
             { "color",    &vm::api::color },
+            { "fillp",    &vm::api::fillp },
             { "fget",     &vm::api::fget },
             { "fset",     &vm::api::fset },
             { "line",     &vm::api::line },

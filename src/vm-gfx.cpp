@@ -384,6 +384,13 @@ int vm::api::color(lua_State *l)
     return 0;
 }
 
+int vm::api::fillp(lua_State *l)
+{
+    UNUSED(l);
+    msg::info("z8:stub:fillp\n");
+    return 0;
+}
+
 int vm::api::fget(lua_State *l)
 {
     if (lua_isnone(l, 1))
