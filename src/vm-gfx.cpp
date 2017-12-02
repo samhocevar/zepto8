@@ -143,6 +143,46 @@ int vm::api::cursor(lua_State *l)
     return 0;
 }
 
+static void lua_pushtostr(lua_State *l, bool do_hex)
+{
+    char buffer[20];
+    char const *str = buffer;
+
+    if (lua_isnone(l, 1))
+        str = "[no value]";
+    else if (lua_isnil(l, 1))
+        str = "[nil]";
+    else if (lua_type(l, 1) == LUA_TSTRING)
+        str = lua_tostring(l, 1);
+    else if (lua_isnumber(l, 1))
+    {
+        if (do_hex)
+        {
+            uint32_t x = (uint32_t)double2fixed(lua_tonumber(l, 1));
+            sprintf(buffer, "0x%04x.%04x", (x >> 16) & 0xffff, x & 0xffff);
+        }
+        else
+        {
+            int n = sprintf(buffer, "%.4f", lua_toclamp64(l, 1));
+            // Remove trailing zeroes and comma
+            while (n > 2 && buffer[n - 1] == '0' && ::isdigit(buffer[n - 2]))
+                buffer[--n] = '\0';
+            if (n > 2 && buffer[n - 1] == '0' && buffer[n - 2] == '.')
+                buffer[n -= 2] = '\0';
+        }
+    }
+    else if (lua_istable(l, 1))
+        str = "[table]";
+    else if (lua_isthread(l, 1))
+        str = "[thread]";
+    else if (lua_isfunction(l, 1))
+        str = "[function]";
+    else
+        str = lua_toboolean(l, 1) ? "true" : "false";
+
+    lua_pushstring(l, str);
+}
+
 int vm::api::print(lua_State *l)
 {
     vm *that = get_this(l);
@@ -150,8 +190,8 @@ int vm::api::print(lua_State *l)
     if (lua_isnone(l, 1))
         return 0;
 
-    // Leverage tostr() to make sure we have a string
-    tostr(l);
+    // Leverage lua_pushtostr() to make sure we have a string
+    lua_pushtostr(l, false);
     char const *str = lua_tostring(l, -1);
     lua_pop(l, 1);
 
@@ -216,42 +256,8 @@ int vm::api::print(lua_State *l)
 
 int vm::api::tostr(lua_State *l)
 {
-    char buffer[20];
-    char const *str = buffer;
-
-    if (lua_isnone(l, 1))
-        str = "[no value]";
-    else if (lua_isnil(l, 1))
-        str = "[nil]";
-    else if (lua_type(l, 1) == LUA_TSTRING)
-        str = lua_tostring(l, 1);
-    else if (lua_isnumber(l, 1))
-    {
-        if (lua_toboolean(l, 2))
-        {
-            uint32_t x = (uint32_t)double2fixed(lua_tonumber(l, 1));
-            sprintf(buffer, "0x%04x.%04x", (x >> 16) & 0xffff, x & 0xffff);
-        }
-        else
-        {
-            int n = sprintf(buffer, "%.4f", lua_toclamp64(l, 1));
-            // Remove trailing zeroes and comma
-            while (n > 2 && buffer[n - 1] == '0' && ::isdigit(buffer[n - 2]))
-                buffer[--n] = '\0';
-            if (n > 2 && buffer[n - 1] == '0' && buffer[n - 2] == '.')
-                buffer[n -= 2] = '\0';
-        }
-    }
-    else if (lua_istable(l, 1))
-        str = "[table]";
-    else if (lua_isthread(l, 1))
-        str = "[thread]";
-    else if (lua_isfunction(l, 1))
-        str = "[function]";
-    else
-        str = lua_toboolean(l, 1) ? "true" : "false";
-
-    lua_pushstring(l, str);
+    bool do_hex = lua_toboolean(l, 2);
+    lua_pushtostr(l, do_hex);
     return 1;
 }
 
