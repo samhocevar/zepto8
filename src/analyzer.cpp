@@ -105,6 +105,21 @@ struct analyze_action<lua53::short_print>
 };
 
 template<>
+struct analyze_action<lua53::binary>
+{
+    template<typename Input>
+    static void apply(Input const &in, analyzer &f)
+    {
+        auto pos = in.position();
+        lol::ivec2 tmp(pos.byte, pos.byte + in.size());
+        f.m_binary_literals.push(tmp);
+#if 0
+        msg::info("binary at %ld:%ld(%ld): %s\n", pos.line, pos.byte_in_line, pos.byte, in.string().c_str());
+#endif
+    }
+};
+
+template<>
 struct analyze_action<lua53::name>
 {
     template<typename Input>
@@ -239,6 +254,12 @@ void analyzer::bump(int offset, int delta)
         if (pos[1] > offset) pos[1] += delta;
     }
 
+    for (ivec2 &pos : m_binary_literals)
+    {
+        if (pos[0] >= offset) pos[0] += delta;
+        if (pos[1] > offset) pos[1] += delta;
+    }
+
     for (ivec2 &pos : m_short_ifs)
     {
         if (pos[0] >= offset) pos[0] += delta;
@@ -273,6 +294,7 @@ String analyzer::fix()
     m_cpp_comments.empty();
     m_reassigns.empty();
     m_short_prints.empty();
+    m_binary_literals.empty();
     m_short_ifs.empty();
     m_if_do_trails.empty();
     pegtl::memory_input<> in(code.C(), "code");
@@ -307,7 +329,7 @@ String analyzer::fix()
     /* Fix ?… → print(…) */
     for (ivec2 const &pos : m_short_prints)
     {
-        ASSERT(code[pos[0]] == '?')
+        ASSERT(code[pos[0]] == '?');
         code = code.sub(0, pos[0])
              + "print("
              + code.sub(pos[0] + 1, pos[1] - pos[0] - 1)
@@ -316,6 +338,35 @@ String analyzer::fix()
 
         bump(pos[0], 5); // len("print(") - len("?")
         bump(pos[1], 1); // len(")")
+    }
+
+    /* Fix 0b… → 0x… */
+    for (ivec2 const &pos : m_binary_literals)
+    {
+        ASSERT(code[pos[0]] == '0' && code[pos[0] + 1] == 'b');
+
+        int a = 0, b = 0, comma_bits = 0;
+        bool has_comma = false;
+        for (int n = pos[0] + 2; n < pos[1]; ++n)
+        {
+            if (code[n] == '.')
+                has_comma = true;
+            else if (has_comma)
+            {
+                ++comma_bits;
+                b += b + (code[n] == '1');
+            }
+            else
+                a += a + (code[n] == '1');
+        }
+        char buffer[20];
+        sprintf(buffer, "0x%x.%x", a, b << ((4 - comma_bits) & 3));
+
+        code = code.sub(0, pos[0])
+             + buffer
+             + code.sub(pos[1]);
+
+        bump(pos[0], strlen(buffer) - pos[1] + pos[0]);
     }
 
     /* Fix != → ~= */

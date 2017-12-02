@@ -242,12 +242,14 @@ namespace lua53
 
    struct decimal : numeral_one< pegtl::digit, pegtl::one< 'e', 'E' > > {};
 #if WITH_PICO8
-   // PICO-8 does not support hexadecimal floats
+   // PICO-8 does not support hexadecimal floats (with P exponent) but it supports binary digits
    struct hexadecimal : pegtl::if_must< pegtl::istring< '0', 'x' >, numeral_one< pegtl::xdigit, pegtl::failure > > {};
+   struct binary : pegtl::if_must< pegtl::istring< '0', 'b' >, numeral_one< pegtl::one< '0', '1' >, pegtl::failure > > {};
+   struct numeral : pegtl::sor< hexadecimal, binary, decimal > {};
 #else
    struct hexadecimal : pegtl::if_must< pegtl::istring< '0', 'x' >, numeral_one< pegtl::xdigit, pegtl::one< 'p', 'P' > > > {};
-#endif
    struct numeral : pegtl::sor< hexadecimal, decimal > {};
+#endif
 
    struct label_statement : pegtl::if_must< pegtl::two< ':' >, seps, name, seps, pegtl::two< ':' > > {};
    struct goto_statement : pegtl::if_must< key_goto, seps, name > {};
