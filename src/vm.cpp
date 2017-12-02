@@ -122,6 +122,8 @@ const lol::LuaObjectLibrary* vm::GetLib()
 
             { "cursor", &vm::api::cursor },
             { "print",  &vm::api::print },
+            { "tonum",  &vm::api::tonum },
+            { "tostr",  &vm::api::tostr },
 
             { "max",   &vm::api::max },
             { "min",   &vm::api::min },

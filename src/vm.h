@@ -81,6 +81,8 @@ private:
         // Text
         static int cursor(lua_State *l);
         static int print(lua_State *l);
+        static int tonum(lua_State *l);
+        static int tostr(lua_State *l);
 
         // Maths
         static int max(lua_State *l);
