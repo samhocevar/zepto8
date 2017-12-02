@@ -184,12 +184,14 @@ int vm::api::print(lua_State *l)
         }
         else
         {
-            int index = ch > 0x20 && ch < 0x9a ? ch - 0x20 : 0;
+            // PICO-8 characters end at 0x99, but we use characters
+            // 0x9a…0x9f for the ZEPTO-8 logo. Lol.
+            int index = ch > 0x20 && ch < 0xa0 ? ch - 0x20 : 0;
             int w = index < 0x60 ? 4 : 8;
             int h = 6;
 
-            for (int dy = 0; dy < h - 1; ++dy)
-                for (int dx = 0; dx < w - 1; ++dx)
+            for (int dy = 0; dy < h; ++dy)
+                for (int dx = 0; dx < w; ++dx)
                 {
                     if (pixels[(index / 16 * h + dy) * 128 + (index % 16 * w + dx)].r > 0)
                         that->setpixel(x + dx, y + dy, c);
