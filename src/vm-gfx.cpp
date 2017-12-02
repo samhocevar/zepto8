@@ -235,9 +235,11 @@ int vm::api::tostr(lua_State *l)
         else
         {
             int n = sprintf(buffer, "%.4f", lua_toclamp64(l, 1));
-            // Remove trailing zeroes
+            // Remove trailing zeroes and comma
             while (n > 2 && buffer[n - 1] == '0' && ::isdigit(buffer[n - 2]))
                 buffer[--n] = '\0';
+            if (n > 2 && buffer[n - 1] == '0' && buffer[n - 2] == '.')
+                buffer[n -= 2] = '\0';
         }
     }
     else if (lua_istable(l, 1))
