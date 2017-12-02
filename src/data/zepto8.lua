@@ -82,6 +82,15 @@ coroutine = nil
 --
 -- Utility functions
 --
+_z8.reset_drawstate = function()
+    -- From the PICO-8 documentation:
+    -- “The draw state is reset each time a program is run. This is equivalent to calling:
+    -- clip() camera() pal() color()”
+    --
+    -- Note from Sam: this should probably be color(6) instead.
+    clip() camera() pal() color(6) fillp()
+end
+
 _z8.run = function(cart_code)
     _z8.loop = cocreate(function()
         local do_frame = true
@@ -90,12 +99,7 @@ _z8.run = function(cart_code)
         memset(0, 0, 0x8000)
         reload()
 
-        -- From the PICO-8 documentation:
-        -- “The draw state is reset each time a program is run. This is equivalent to calling:
-        -- clip() camera() pal() color()”
-        --
-        -- Note from Sam: this should probably be color(6) instead.
-        clip() camera() pal() color(6)
+        _z8.reset_drawstate()
 
         -- Load cart
         cart_code()
@@ -138,4 +142,29 @@ end
 -- Initialise the VM
 --
 srand(0)
+
+
+--
+-- Splash sequence
+--
+_z8.loop = cocreate(function()
+    _z8.reset_drawstate()
+
+    local steps =
+    {
+        [1] =  function() for i=2,127,8 do for j=0,127 do pset(i,j,rnd()*4+j/40) end end end,
+        [7] =  function() for i=0,127,4 do for j=0,127,2 do pset(i,j,(i+j)/8%8+6) end end end,
+        [12] =  function() for i=2,127,4 do for j=0,127,3 do pset(i,j,rnd()*4+10) end end end,
+        [17] = function() for i=1,127,2 do for j=0,127 do pset(i,j,pget(i+1,j)) end end end,
+        [22] = function() for j=0,31 do memset(0x6040+j*256,0,192) end end,
+        [27] = cls,
+        [36] = function() color(7) print("\n\x9a\x9b\x9c\x9d\x9e\x9f")
+                           local a = {0,0,8,0,0,0,9,7,15,0,10,7,7,7,14,0,11,7,13,0,0,0,12,0,0}
+                           for j=0,#a-1 do pset(41+j%5,2+j/5,a[j+1]) end end,
+        [45] = function() color(6) print("\nzepto-8 0.0.0") end,
+        [50] = function() print("(c) 2016-17 sam hocevar\n\n") end,
+    }
+
+    for step=0,60 do if steps[step] then steps[step]() end flip() end
+end)
 

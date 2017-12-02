@@ -33,8 +33,8 @@ public:
     virtual void TickGame(float seconds);
     virtual void TickDraw(float seconds, lol::Scene &scene);
 
-    void load(char const *name) { m_vm.load(name); }
-    void run() { m_vm.run(); }
+    void load(char const *name);
+    void run();
 
 private:
     vm m_vm;

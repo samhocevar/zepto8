@@ -41,14 +41,15 @@ int main(int argc, char **argv)
         }
     }
 
-    if (argc < 2)
-        return EXIT_FAILURE;
-
     lol::Application app("zepto-8", lol::ivec2(z8::WINDOW_WIDTH, z8::WINDOW_HEIGHT), 60.0f);
 
     z8::player *player = new z8::player();
-    player->load(argv[1]);
-    player->run();
+
+    if (argc >= 2)
+    {
+        player->load(argv[1]);
+        player->run();
+    }
 
     app.Run();
 

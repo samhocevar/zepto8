@@ -33,13 +33,14 @@ vm::vm()
     // Register our Lua module
     lol::LuaObjectHelper::Register<vm>(l);
 
-    ExecLuaFile("data/zepto8.lua");
-
     // Load font
     m_font.load("data/font.png");
 
     // Clear memory
     ::memset(get_mem(), 0, SIZE_MEMORY);
+
+    // Initialize Zepto8
+    ExecLuaFile("data/zepto8.lua");
 }
 
 vm::~vm()

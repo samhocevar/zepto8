@@ -99,6 +99,16 @@ player::~player()
     scene.PopCamera(m_scenecam);
 }
 
+void player::load(char const *name)
+{
+    m_vm.load(name);
+}
+
+void player::run()
+{
+    m_vm.run();
+}
+
 void player::TickGame(float seconds)
 {
     lol::WorldEntity::TickGame(seconds);
