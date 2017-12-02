@@ -29,7 +29,7 @@ do
     local remove = table.remove
 
     count = function(a) return a ~= nil and #a or 0 end
-    add = function(a, x) if a ~= nil then insert(a, x) end end
+    add = function(a, x) if a ~= nil then insert(a, x) end return x end
     sub = string.sub
 
     foreach = function(a, f)
