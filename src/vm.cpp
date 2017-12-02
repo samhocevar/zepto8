@@ -64,9 +64,10 @@ void vm::hook(lua_State *l, lua_Debug *)
 {
     vm *that = get_this(l);
 
-    // The value 135000 was found using trial and error
+    // The value 135000 was found using trial and error, but it causes
+    // side effects in lots of cases. Use 300000 instead.
     that->m_instructions += 1000;
-    if (that->m_instructions >= 135000)
+    if (that->m_instructions >= 300000)
         lua_yield(l, 0);
 }
 
