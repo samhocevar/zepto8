@@ -312,7 +312,10 @@ int vm::api::memcpy(lua_State *l)
     // Attempting to write outside the memory area raises an error. Everything
     // else seems legal, especially reading from anywhere.
     if (dst + size > SIZE_MEMORY)
+    {
+        msg::info("z8:segv:memcpy(0x%x,0x%x,0x%x)\n", src, dst, size);
         return luaL_error(l, "bad memory access");
+    }
 
     vm *that = get_this(l);
 
@@ -352,8 +355,11 @@ int vm::api::memset(lua_State *l)
 
     size = size & 0xffff;
 
-    if (dst < 0 || dst + size >= SIZE_MEMORY)
+    if (dst < 0 || dst + size > SIZE_MEMORY)
+    {
+        msg::info("z8:segv:memset(0x%x,0x%x,0x%x)\n", dst, val, size);
         return luaL_error(l, "bad memory access");
+    }
 
     vm *that = get_this(l);
     ::memset(that->get_mem(dst), val, size);
