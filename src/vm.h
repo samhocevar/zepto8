@@ -142,9 +142,10 @@ private:
 private:
     int getpixel(int x, int y);
     void setpixel(int x, int y, int color);
+    void setpixel(int x, int y, int color1, int color2);
 
-    void hline(int x1, int x2, int y, int color);
-    void vline(int x, int y1, int y2, int color);
+    void hline(int x1, int x2, int y, int color1, int color2);
+    void vline(int x, int y1, int y2, int color1, int color2);
 
     int getspixel(int x, int y);
     void setspixel(int x, int y, int color);
@@ -157,10 +158,11 @@ private:
     cart m_cart;
 
     // Graphics
-    uint8_t m_color;
+    uint8_t m_colors;
     lol::ivec2 m_camera, m_cursor;
     lol::ibox2 m_clip;
     uint8_t m_pal[2][16], m_palt[16];
+    uint32_t m_fillp;
 
     // Input
     int m_buttons[2][64];

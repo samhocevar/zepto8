@@ -154,7 +154,7 @@ _z8.loop = cocreate(function()
     {
         [1] =  function() for i=2,127,8 do for j=0,127 do pset(i,j,rnd()*4+j/40) end end end,
         [7] =  function() for i=0,127,4 do for j=0,127,2 do pset(i,j,(i+j)/8%8+6) end end end,
-        [12] =  function() for i=2,127,4 do for j=0,127,3 do pset(i,j,rnd()*4+10) end end end,
+        [12] = function() for i=2,127,4 do for j=0,127,3 do pset(i,j,rnd()*4+10) end end end,
         [17] = function() for i=1,127,2 do for j=0,127 do pset(i,j,pget(i+1,j)) end end end,
         [22] = function() for j=0,31 do memset(0x6040+j*256,0,192) end end,
         [27] = cls,

@@ -34,6 +34,28 @@ void vm::setpixel(int x, int y, int color)
     m_memory[offset] = (m_memory[offset] & mask) | p;
 }
 
+void vm::setpixel(int x, int y, int color1, int color2)
+{
+    x -= m_camera.x;
+    y -= m_camera.y;
+
+    if (x < m_clip.aa.x || x >= m_clip.bb.x
+         || y < m_clip.aa.y || y >= m_clip.bb.y)
+        return;
+
+    if ((m_fillp >> ((x & 3) + 4 * (y & 3))) & 0x10000)
+    {
+        if (m_fillp & 0x8000) // Special transparency bit
+            return;
+        color1 = color2;
+    }
+
+    int offset = OFFSET_SCREEN + (128 * y + x) / 2;
+    int mask = (x & 1) ? 0x0f : 0xf0;
+    int p = (x & 1) ? color1 << 4 : color1;
+    m_memory[offset] = (m_memory[offset] & mask) | p;
+}
+
 int vm::getpixel(int x, int y)
 {
     /* pget() is affected by camera() and by clip() */
@@ -68,8 +90,19 @@ int vm::getspixel(int x, int y)
     return (x & 1) ? m_memory[offset] >> 4 : m_memory[offset] & 0xf;
 }
 
-void vm::hline(int x1, int x2, int y, int color)
+void vm::hline(int x1, int x2, int y, int color1, int color2)
 {
+    // FIXME: very inefficient when fillp is active
+    if (m_fillp)
+    {
+        for (int x = x1; ; x += x1 < x2 ? 1 : -1)
+        {
+            setpixel(x, y, color1, color2);
+            if (x == x2)
+                return;
+        }
+    }
+
     x1 -= m_camera.x;
     x2 -= m_camera.x;
     y -= m_camera.y;
@@ -90,22 +123,33 @@ void vm::hline(int x1, int x2, int y, int color)
     if (x1 & 1)
     {
         m_memory[offset + x1 / 2]
-            = (m_memory[offset + x1 / 2] & 0x0f) | (color << 4);
+            = (m_memory[offset + x1 / 2] & 0x0f) | (color1 << 4);
         ++x1;
     }
 
     if ((x2 & 1) == 0)
     {
         m_memory[offset + x2 / 2]
-            = (m_memory[offset + x2 / 2] & 0xf0) | color;
+            = (m_memory[offset + x2 / 2] & 0xf0) | color1;
         --x2;
     }
 
-    ::memset(get_mem(offset + x1 / 2), color * 0x11, (x2 - x1 + 1) / 2);
+    ::memset(get_mem(offset + x1 / 2), color1 * 0x11, (x2 - x1 + 1) / 2);
 }
 
-void vm::vline(int x, int y1, int y2, int color)
+void vm::vline(int x, int y1, int y2, int color1, int color2)
 {
+    // FIXME: very inefficient when fillp is active
+    if (m_fillp)
+    {
+        for (int y = y1; ; y += y1 < y2 ? 1 : -1)
+        {
+            setpixel(x, y, color1, color2);
+            if (y == y2)
+                return;
+        }
+    }
+
     x -= m_camera.x;
     y1 -= m_camera.y;
     y2 -= m_camera.y;
@@ -123,7 +167,7 @@ void vm::vline(int x, int y1, int y2, int color)
         return;
 
     int mask = (x & 1) ? 0x0f : 0xf0;
-    int p = (x & 1) ? color << 4 : color;
+    int p = (x & 1) ? color1 << 4 : color1;
 
     for (int y = y1; y <= y2; ++y)
     {
@@ -199,8 +243,8 @@ int vm::api::print(lua_State *l)
     int x = use_cursor ? that->m_cursor.x : lua_toclamp64(l, 2);
     int y = use_cursor ? that->m_cursor.y : lua_toclamp64(l, 3);
     if (!lua_isnone(l, 4))
-        that->m_color = (int)lua_toclamp64(l, 4) & 0xf;
-    int c = that->m_pal[0][that->m_color];
+        that->m_colors = (int)lua_toclamp64(l, 4) & 0xff;
+    int c = that->m_pal[0][that->m_colors & 0xf];
     int initial_x = x;
 
     auto pixels = that->m_font.lock<lol::PixelFormat::RGBA_8>();
@@ -288,19 +332,20 @@ int vm::api::circ(lua_State *l)
     int y = lua_toclamp64(l, 2);
     int r = lua_toclamp64(l, 3);
     if (!lua_isnone(l, 4))
-        that->m_color = (int)lua_toclamp64(l, 4) & 0xf;
-    int c = that->m_pal[0][that->m_color];
+        that->m_colors = (int)lua_toclamp64(l, 4) & 0xff;
+    int c1 = that->m_pal[0][that->m_colors & 0xf];
+    int c2 = that->m_pal[0][(that->m_colors >> 4) & 0xf];
 
     for (int dx = r, dy = 0, err = 0; dx >= dy; )
     {
-        that->setpixel(x + dx, y + dy, c);
-        that->setpixel(x + dy, y + dx, c);
-        that->setpixel(x - dy, y + dx, c);
-        that->setpixel(x - dx, y + dy, c);
-        that->setpixel(x - dx, y - dy, c);
-        that->setpixel(x - dy, y - dx, c);
-        that->setpixel(x + dy, y - dx, c);
-        that->setpixel(x + dx, y - dy, c);
+        that->setpixel(x + dx, y + dy, c1, c2);
+        that->setpixel(x + dy, y + dx, c1, c2);
+        that->setpixel(x - dy, y + dx, c1, c2);
+        that->setpixel(x - dx, y + dy, c1, c2);
+        that->setpixel(x - dx, y - dy, c1, c2);
+        that->setpixel(x - dy, y - dx, c1, c2);
+        that->setpixel(x + dy, y - dx, c1, c2);
+        that->setpixel(x + dx, y - dy, c1, c2);
 
         dy += 1;
         err += 1 + 2 * dy;
@@ -324,16 +369,17 @@ int vm::api::circfill(lua_State *l)
     int y = lua_toclamp64(l, 2);
     int r = lua_toclamp64(l, 3);
     if (!lua_isnone(l, 4))
-        that->m_color = (int)lua_toclamp64(l, 4) & 0xf;
-    int c = that->m_pal[0][that->m_color];
+        that->m_colors = (int)lua_toclamp64(l, 4) & 0xff;
+    int c1 = that->m_pal[0][that->m_colors & 0xf];
+    int c2 = that->m_pal[0][(that->m_colors >> 4) & 0xf];
 
     for (int dx = r, dy = 0, err = 0; dx >= dy; )
     {
         /* Some minor overdraw here, but nothing serious */
-        that->hline(x - dx, x + dx, y - dy, c);
-        that->hline(x - dx, x + dx, y + dy, c);
-        that->vline(x - dy, y - dx, y + dx, c);
-        that->vline(x + dy, y - dx, y + dx, c);
+        that->hline(x - dx, x + dx, y - dy, c1, c2);
+        that->hline(x - dx, x + dx, y + dy, c1, c2);
+        that->vline(x - dy, y - dx, y + dx, c1, c2);
+        that->vline(x + dy, y - dx, y + dx, c1, c2);
 
         dy += 1;
         err += 1 + 2 * dy;
@@ -386,14 +432,24 @@ int vm::api::cls(lua_State *l)
 int vm::api::color(lua_State *l)
 {
     vm *that = get_this(l);
-    that->m_color = (int)lua_toclamp64(l, 1) & 0xf;
+    that->m_colors = (int)lua_toclamp64(l, 1) & 0xff;
     return 0;
 }
 
 int vm::api::fillp(lua_State *l)
 {
-    UNUSED(l);
-    msg::info("z8:stub:fillp\n");
+    vm *that = get_this(l);
+
+    if (lua_isnone(l, 1))
+    {
+        that->m_fillp = 0;
+    }
+    else
+    {
+        uint32_t x = (uint32_t)double2fixed(lua_tonumber(l, 1));
+        that->m_fillp = x;
+    }
+
     return 0;
 }
 
@@ -454,19 +510,20 @@ int vm::api::line(lua_State *l)
     int x1 = lua_toclamp64(l, 3);
     int y1 = lua_toclamp64(l, 4);
     if (!lua_isnone(l, 5))
-        that->m_color = (int)lua_toclamp64(l, 5) & 0xf;
-    int c = that->m_pal[0][that->m_color];
+        that->m_colors = (int)lua_toclamp64(l, 5) & 0xff;
+    int c1 = that->m_pal[0][that->m_colors & 0xf];
+    int c2 = that->m_pal[0][(that->m_colors >> 4) & 0xf];
 
     if (x0 == x1 && y0 == y1)
     {
-        that->setpixel(x0, y0, c);
+        that->setpixel(x0, y0, c1, c2);
     }
     else if (lol::abs(x1 - x0) > lol::abs(y1 - y0))
     {
         for (int x = lol::min(x0, x1); x <= lol::max(x0, x1); ++x)
         {
             int y = lol::round(lol::mix((float)y0, (float)y1, (float)(x - x0) / (x1 - x0)));
-            that->setpixel(x, y, c);
+            that->setpixel(x, y, c1, c2);
         }
     }
     else
@@ -474,7 +531,7 @@ int vm::api::line(lua_State *l)
         for (int y = lol::min(y0, y1); y <= lol::max(y0, y1); ++y)
         {
             int x = lol::round(lol::mix((float)x0, (float)x1, (float)(y - y0) / (y1 - y0)));
-            that->setpixel(x, y, c);
+            that->setpixel(x, y, c1, c2);
         }
     }
 
@@ -564,11 +621,14 @@ int vm::api::pal(lua_State *l)
 
     if (lua_isnone(l, 1) || lua_isnone(l, 2))
     {
+        // PICO-8 documentation: “pal() to reset to system defaults (including
+        // transparency values and fill pattern)”
         for (int i = 0; i < 16; ++i)
         {
             that->m_pal[0][i] = that->m_pal[1][i] = i;
             that->m_palt[i] = i ? 0 : 1;
         }
+        that->m_fillp = 0;
     }
     else
     {
@@ -620,10 +680,11 @@ int vm::api::pset(lua_State *l)
     int x = lua_toclamp64(l, 1);
     int y = lua_toclamp64(l, 2);
     if (!lua_isnone(l, 3))
-        that->m_color = (int)lua_toclamp64(l, 3) & 0xf;
-    int c = that->m_pal[0][that->m_color];
+        that->m_colors = (int)lua_toclamp64(l, 3) & 0xff;
+    int c1 = that->m_pal[0][that->m_colors & 0xf];
+    int c2 = that->m_pal[0][(that->m_colors >> 4) & 0xf];
 
-    that->setpixel(x, y, c);
+    that->setpixel(x, y, c1, c2);
 
     return 0;
 }
@@ -637,8 +698,9 @@ int vm::api::rect(lua_State *l)
     int x1 = lua_toclamp64(l, 3);
     int y1 = lua_toclamp64(l, 4);
     if (!lua_isnone(l, 5))
-        that->m_color = (int)lua_toclamp64(l, 5) & 0xf;
-    int c = that->m_pal[0][that->m_color];
+        that->m_colors = (int)lua_toclamp64(l, 5) & 0xff;
+    int c1 = that->m_pal[0][that->m_colors & 0xf];
+    int c2 = that->m_pal[0][(that->m_colors >> 4) & 0xf];
 
     if (x0 > x1)
         std::swap(x0, x1);
@@ -646,13 +708,13 @@ int vm::api::rect(lua_State *l)
     if (y0 > y1)
         std::swap(y0, y1);
 
-    that->hline(x0, x1, y0, c);
-    that->hline(x0, x1, y1, c);
+    that->hline(x0, x1, y0, c1, c2);
+    that->hline(x0, x1, y1, c1, c2);
 
     if (y0 + 1 < y1)
     {
-        that->vline(x0, y0 + 1, y1 - 1, c);
-        that->vline(x1, y0 + 1, y1 - 1, c);
+        that->vline(x0, y0 + 1, y1 - 1, c1, c2);
+        that->vline(x1, y0 + 1, y1 - 1, c1, c2);
     }
 
     return 0;
@@ -667,11 +729,12 @@ int vm::api::rectfill(lua_State *l)
     int x1 = lua_toclamp64(l, 3);
     int y1 = lua_toclamp64(l, 4);
     if (!lua_isnone(l, 5))
-        that->m_color = (int)lua_toclamp64(l, 5) & 0xf;
-    int c = that->m_pal[0][that->m_color];
+        that->m_colors = (int)lua_toclamp64(l, 5) & 0xff;
+    int c1 = that->m_pal[0][that->m_colors & 0xf];
+    int c2 = that->m_pal[0][(that->m_colors >> 4) & 0xf];
 
     for (int y = lol::min(y0, y1); y <= lol::max(y0, y1); ++y)
-        that->hline(lol::min(x0, x1), lol::max(x0, x1), y, c);
+        that->hline(lol::min(x0, x1), lol::max(x0, x1), y, c1, c2);
 
     return 0;
 }
@@ -694,7 +757,7 @@ int vm::api::sset(lua_State *l)
 
     int x = lua_toclamp64(l, 1);
     int y = lua_toclamp64(l, 2);
-    int col = lua_isnone(l, 3) ? that->m_color : lua_toclamp64(l, 3);
+    int col = lua_isnone(l, 3) ? that->m_colors & 0xf : lua_toclamp64(l, 3);
     int c = that->m_pal[0][col & 0xf];
 
     that->setspixel(x, y, c);
