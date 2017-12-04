@@ -49,6 +49,9 @@ do
         end
     end
 
+    -- PICO-8 documentation: t() aliased to time()
+    t = _z8.time
+
     -- Use the new peek4() and poke4() functions
     dget = function(n)
         return n >= 0 and n < 64 and peek4(0x5e00 + 4 * n) or 0
