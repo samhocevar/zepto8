@@ -106,6 +106,9 @@ private:
         static int bnot(lua_State *l);
         static int shl(lua_State *l);
         static int shr(lua_State *l);
+        static int lshr(lua_State *l);
+        static int rotl(lua_State *l);
+        static int rotr(lua_State *l);
 
         // Graphics
         static int camera(lua_State *l);

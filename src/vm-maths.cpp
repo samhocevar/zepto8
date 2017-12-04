@@ -170,19 +170,44 @@ int vm::api::bnot(lua_State *l)
 
 int vm::api::shl(lua_State *l)
 {
-    // PICO-8 seems to use y modulo 32
+    // If y is >= 32, result is always zero.
     int32_t x = double2fixed(lua_tonumber(l, 1));
-    int32_t y = int(lua_toclamp64(l, 2)) & 0x1f;
+    int y = (int)lua_toclamp64(l, 2) & 0xffff;
     lua_pushnumber(l, fixed2double(x << y));
     return 1;
 }
 
 int vm::api::shr(lua_State *l)
 {
-    // PICO-8 seems to use y modulo 32
+    // If y is >= 32, only the sign is preserved, so it's
+    // the same as for y == 31.
     int32_t x = double2fixed(lua_tonumber(l, 1));
-    int32_t y = int(lua_toclamp64(l, 2)) & 0x1f;
+    int y = (int)lua_toclamp64(l, 2) & 0xffff;
+    lua_pushnumber(l, fixed2double(x >> std::max(y, 31)));
+    return 1;
+}
+
+int vm::api::lshr(lua_State *l)
+{
+    uint32_t x = (uint32_t)double2fixed(lua_tonumber(l, 1));
+    int y = (int)lua_toclamp64(l, 2) & 0xffff;
     lua_pushnumber(l, fixed2double(x >> y));
+    return 1;
+}
+
+int vm::api::rotl(lua_State *l)
+{
+    uint32_t x = (uint32_t)double2fixed(lua_tonumber(l, 1));
+    int y = (int)lua_toclamp64(l, 2) & 0x1f;
+    lua_pushnumber(l, fixed2double(y ? ((x << y) | (x >> (32 - y))) : x));
+    return 1;
+}
+
+int vm::api::rotr(lua_State *l)
+{
+    uint32_t x = (uint32_t)double2fixed(lua_tonumber(l, 1));
+    int y = (int)lua_toclamp64(l, 2) & 0x1f;
+    lua_pushnumber(l, fixed2double(y ? ((x >> y) | (x << (32 - y))) : x));
     return 1;
 }
 

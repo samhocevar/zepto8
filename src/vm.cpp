@@ -145,6 +145,9 @@ const lol::LuaObjectLibrary* vm::GetLib()
             { "bnot",  &vm::api::bnot },
             { "shl",   &vm::api::shl },
             { "shr",   &vm::api::shr },
+            { "lshr",  &vm::api::lshr },
+            { "rotl",  &vm::api::rotl },
+            { "rotr",  &vm::api::rotr },
 
             { "camera",   &vm::api::camera },
             { "circ",     &vm::api::circ },
