@@ -129,6 +129,7 @@ const lol::LuaObjectLibrary* vm::GetLib()
             { "max",   &vm::api::max },
             { "min",   &vm::api::min },
             { "mid",   &vm::api::mid },
+            { "ceil",  &vm::api::ceil },
             { "flr",   &vm::api::flr },
             { "cos",   &vm::api::cos },
             { "sin",   &vm::api::sin },

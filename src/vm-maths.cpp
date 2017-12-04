@@ -45,6 +45,12 @@ int vm::api::mid(lua_State *l)
     return 1;
 }
 
+int vm::api::ceil(lua_State *l)
+{
+    lua_pushnumber(l, lol::ceil(lua_toclamp64(l, 1)));
+    return 1;
+}
+
 int vm::api::flr(lua_State *l)
 {
     lua_pushnumber(l, lol::floor(lua_toclamp64(l, 1)));

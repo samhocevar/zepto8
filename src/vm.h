@@ -88,6 +88,7 @@ private:
         static int max(lua_State *l);
         static int min(lua_State *l);
         static int mid(lua_State *l);
+        static int ceil(lua_State *l);
         static int flr(lua_State *l);
         static int cos(lua_State *l);
         static int sin(lua_State *l);
