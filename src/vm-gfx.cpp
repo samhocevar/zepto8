@@ -544,8 +544,11 @@ int vm::api::map(lua_State *l)
     int cel_y = lua_toclamp64(l, 2);
     int sx = lua_toclamp64(l, 3);
     int sy = lua_toclamp64(l, 4);
-    int cel_w = lua_toclamp64(l, 5);
-    int cel_h = lua_toclamp64(l, 6);
+    // PICO-8 documentation: “If cel_w and cel_h are not specified,
+    // defaults to 128,32”.
+    bool no_size = lua_isnone(l, 5) && lua_isnone(l, 6);
+    int cel_w = no_size ? 128 : lua_toclamp64(l, 5);
+    int cel_h = no_size ? 32 : lua_toclamp64(l, 6);
     int layer = lua_toclamp64(l, 7);
 
     vm *that = get_this(l);
