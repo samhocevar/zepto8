@@ -108,11 +108,11 @@ const lol::LuaObjectLibrary* vm::GetLib()
             { "cartdata", &vm::api::cartdata },
             { "reload",   &vm::api::reload },
             { "peek",     &vm::api::peek },
+            { "peek4",    &vm::api::peek4 },
             { "poke",     &vm::api::poke },
+            { "poke4",    &vm::api::poke4 },
             { "memcpy",   &vm::api::memcpy },
             { "memset",   &vm::api::memset },
-            { "dget",     &vm::api::dget },
-            { "dset",     &vm::api::dset },
             { "stat",     &vm::api::stat },
             { "printh",   &vm::api::printh },
             { "extcmd",   &vm::api::extcmd },
@@ -290,16 +290,51 @@ int vm::api::peek(lua_State *l)
     return 1;
 }
 
+int vm::api::peek4(lua_State *l)
+{
+    int addr = (int)lua_toclamp64(l, 1) & 0xffff;
+    uint8_t const *p = get_this(l)->get_mem(addr);
+    int ret = 0;
+    for (int i = 0; i < 4; ++i)
+    {
+        /* This code handles partial reads by adding zeroes */
+        if (addr + i < SIZE_MEMORY)
+            ret |= p[i] << (8 * i);
+        else if (addr + i >= 0x10000)
+            ret |= p[i - 0x10000] << (8 * i);
+    }
+
+    lua_pushnumber(l, fixed2double(int32_t(ret)));
+    return 1;
+}
+
 int vm::api::poke(lua_State *l)
 {
     // Note: poke() is the same as poke(0, 0)
     int addr = (int)lua_toclamp64(l, 1) & 0xffff;
     int val = (int)lua_toclamp64(l, 2);
-    if (addr < 0 || addr >= SIZE_MEMORY)
+    if (addr < 0 || addr > SIZE_MEMORY - 1)
         return luaL_error(l, "bad memory access");
 
     vm *that = get_this(l);
     that->m_memory[addr] = (uint8_t)val;
+    return 0;
+}
+
+int vm::api::poke4(lua_State *l)
+{
+    // Note: poke4() is the same as poke(0, 0)
+    int addr = (int)lua_toclamp64(l, 1) & 0xffff;
+    if (addr < 0 || addr > SIZE_MEMORY - 4)
+        return luaL_error(l, "bad memory access");
+
+    uint32_t x = (uint32_t)double2fixed(lua_tonumber(l, 2));
+    uint8_t *p = get_this(l)->get_mem(addr);
+    p[0] = x;
+    p[1] = x >> 8;
+    p[2] = x >> 16;
+    p[3] = x >> 24;
+
     return 0;
 }
 
@@ -369,34 +404,6 @@ int vm::api::memset(lua_State *l)
     vm *that = get_this(l);
     ::memset(that->get_mem(dst), val, size);
 
-    return 0;
-}
-
-int vm::api::dget(lua_State *l)
-{
-    int n = (int)lua_toclamp64(l, 1);
-    uint32_t ret = 0;
-    if (n >= 0 && n < SIZE_PERSISTENT / 4)
-    {
-        uint8_t const *p = get_this(l)->get_mem(OFFSET_PERSISTENT + n * 4);
-        ret = p[0] | (p[1] << 8) | (p[2] << 16) | (p[3] << 24);
-    }
-    lua_pushnumber(l, fixed2double(int32_t(ret)));
-    return 1;
-}
-
-int vm::api::dset(lua_State *l)
-{
-    int n = (int)lua_toclamp64(l, 1);
-    if (n >= 0 && n < SIZE_PERSISTENT / 4)
-    {
-        uint32_t x = (uint32_t)double2fixed(lua_tonumber(l, 2));
-        uint8_t *p = get_this(l)->get_mem(OFFSET_PERSISTENT + n * 4);
-        p[0] = x;
-        p[1] = x >> 8;
-        p[2] = x >> 16;
-        p[3] = x >> 24;
-    }
     return 0;
 }
 

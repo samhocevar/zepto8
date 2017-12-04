@@ -49,6 +49,15 @@ do
         end
     end
 
+    -- Use the new peek4() and poke4() functions
+    dget = function(n)
+        return n >= 0 and n < 64 and peek4(0x5e00 + 4 * n) or 0
+    end
+
+    dset = function(n, x)
+        if n >= 0 and n < 64 then poke4(0x5e00 + 4 * n, x) end
+    end
+
     -- All flip() does for now is yield so that the C++ VM gets a chance
     -- to draw something even if Lua is in an infinite loop
     flip = function()

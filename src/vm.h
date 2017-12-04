@@ -38,8 +38,8 @@ public:
     void run();
     void step(float seconds);
 
-    uint8_t *get_mem(int offset = 0) { return &m_memory[offset]; }
-    uint8_t const *get_mem(int offset = 0) const { return &m_memory[offset]; }
+    inline uint8_t *get_mem(int offset = 0) { return &m_memory[offset]; }
+    inline uint8_t const *get_mem(int offset = 0) const { return &m_memory[offset]; }
 
     void render(lol::u8vec4 *screen) const;
     void print_ansi(lol::ivec2 term_size = lol::ivec2(128, 128),
@@ -64,11 +64,11 @@ private:
         static int cartdata(lua_State *l);
         static int reload(lua_State *l);
         static int peek(lua_State *l);
+        static int peek4(lua_State *l);
         static int poke(lua_State *l);
+        static int poke4(lua_State *l);
         static int memcpy(lua_State *l);
         static int memset(lua_State *l);
-        static int dget(lua_State *l);
-        static int dset(lua_State *l);
         static int stat(lua_State *l);
         static int printh(lua_State *l);
         static int extcmd(lua_State *l);
