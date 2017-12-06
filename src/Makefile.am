@@ -1,7 +1,8 @@
 
 include $(top_srcdir)/lol/build/autotools/common.am
 
-bin_PROGRAMS = zepto8 z8tool dither
+bin_PROGRAMS = zepto8 z8tool
+noinst_PROGRAMS = dither
 noinst_LIBRARIES = libzepto8.a
 
 zepto8dir = $(datarootdir)/zepto8
