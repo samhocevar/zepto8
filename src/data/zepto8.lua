@@ -54,10 +54,12 @@ do
 
     -- Use the new peek4() and poke4() functions
     dget = function(n)
+        n = tonumber(n)
         return n >= 0 and n < 64 and peek4(0x5e00 + 4 * n) or 0
     end
 
     dset = function(n, x)
+        n = tonumber(n)
         if n >= 0 and n < 64 then poke4(0x5e00 + 4 * n, x) end
     end
 
@@ -171,10 +173,10 @@ _z8.loop = cocreate(function()
         [22] = function() for j=0,31 do memset(0x6040+j*256,0,192) end end,
         [27] = cls,
         [36] = function() color(7) print("\n\x9a\x9b\x9c\x9d\x9e\x9f")
-                           local a = {0,0,8,0,0,0,9,7,15,0,10,7,7,7,14,0,11,7,13,0,0,0,12,0,0}
+                           local a = {0,0,12,0,0,0,13,7,11,0,14,7,7,7,10,0,15,7,9,0,0,0,8,0,0}
                            for j=0,#a-1 do pset(41+j%5,2+j/5,a[j+1]) end end,
         [45] = function() color(6) print("\nzepto-8 0.0.0") end,
-        [50] = function() print("(c) 2016-17 sam hocevar\n\n") end,
+        [50] = function() print("(c) 2016-17 sam hocevar et al.\n\n") end,
     }
 
     for step=0,60 do if steps[step] then steps[step]() end flip() end
