@@ -183,7 +183,7 @@ int vm::api::shr(lua_State *l)
     // the same as for y == 31.
     int32_t x = double2fixed(lua_tonumber(l, 1));
     int y = (int)lua_toclamp64(l, 2) & 0xffff;
-    lua_pushnumber(l, fixed2double(x >> std::max(y, 31)));
+    lua_pushnumber(l, fixed2double(x >> std::min(y, 31)));
     return 1;
 }
 
