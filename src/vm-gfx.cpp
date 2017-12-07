@@ -505,10 +505,10 @@ int vm::api::line(lua_State *l)
 {
     vm *that = get_this(l);
 
-    int x0 = lua_toclamp64(l, 1);
-    int y0 = lua_toclamp64(l, 2);
-    int x1 = lua_toclamp64(l, 3);
-    int y1 = lua_toclamp64(l, 4);
+    int x0 = std::floor(lua_toclamp64(l, 1));
+    int y0 = std::floor(lua_toclamp64(l, 2));
+    int x1 = std::floor(lua_toclamp64(l, 3));
+    int y1 = std::floor(lua_toclamp64(l, 4));
     if (!lua_isnone(l, 5))
         that->m_colors = (int)lua_toclamp64(l, 5) & 0xff;
     int c1 = that->m_pal[0][that->m_colors & 0xf];
@@ -522,7 +522,7 @@ int vm::api::line(lua_State *l)
     {
         for (int x = lol::min(x0, x1); x <= lol::max(x0, x1); ++x)
         {
-            int y = lol::round(lol::mix((float)y0, (float)y1, (float)(x - x0) / (x1 - x0)));
+            int y = lol::floor(lol::mix((float)y0, (float)y1, (float)(x - x0) / (x1 - x0)));
             that->setpixel(x, y, c1, c2);
         }
     }
@@ -530,7 +530,7 @@ int vm::api::line(lua_State *l)
     {
         for (int y = lol::min(y0, y1); y <= lol::max(y0, y1); ++y)
         {
-            int x = lol::round(lol::mix((float)x0, (float)x1, (float)(y - y0) / (y1 - y0)));
+            int x = lol::floor(lol::mix((float)x0, (float)x1, (float)(y - y0) / (y1 - y0)));
             that->setpixel(x, y, c1, c2);
         }
     }
