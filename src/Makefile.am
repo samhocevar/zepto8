@@ -31,6 +31,7 @@ EXTRA_DIST += z8tool.vcxproj
 libzepto8_a_SOURCES = \
     zepto8.h \
     vm.cpp vm.h vm-maths.cpp vm-gfx.cpp vm-render.cpp vm-sfx.cpp \
+    fix32.h \
     cart.cpp cart.h \
     analyzer.cpp analyzer.h lua53-parse.h \
     $(NULL)

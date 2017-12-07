@@ -16,6 +16,7 @@
 
 #include "zepto8.h"
 #include "cart.h"
+#include "fix32.h"
 
 namespace z8
 {
@@ -199,7 +200,7 @@ static inline int32_t double2fixed(double x)
     // This is more or less necessary because we use standard Lua with no
     // modifications, so we need a way to compute 1/0 or 0/0.
     if (std::isnan(x) || std::isinf(x))
-        return x < 0 ? (int32_t)0x80000000 : (int32_t)0x7fffffff;
+        return x < 0 ? (int32_t)0x80000001 : (int32_t)0x7fffffff;
     return (int32_t)(int64_t)lol::round(x * double(1 << 16));
 }
 
@@ -213,10 +214,20 @@ static inline double clamp64(double x)
     return fixed2double(double2fixed(x));
 }
 
-// Not a Lua function, but behaves like one
+// Not Lua functions, but behave like them
 static inline double lua_toclamp64(lua_State *l, int index)
 {
     return clamp64(lua_tonumber(l, index));
+}
+
+static inline fix32 lua_tofix32(lua_State *l, int index)
+{
+    return fix32::frombits(double2fixed(lua_tonumber(l, index)));
+}
+
+static inline void lua_pushfix32(lua_State *l, fix32 const &x)
+{
+    return lua_pushnumber(l, (double)x);
 }
 
 } // namespace z8
