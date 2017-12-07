@@ -109,9 +109,9 @@ int vm::api::rnd(lua_State *l)
     /* FIXME: behaves incorrectly when b is negative */
     double a = 0.f;
     double b = lua_isnone(l, 1) ? 1.0
-             : clamp64(lol::min(lua_toclamp64(l, 1), 32767.99));
+             : (double)fix32::min(lua_tofix32(l, 1), fix32::frombits(0x7ffffff));
     double c = lol::mix(a, b, x / (1.0 + (uint32_t)-1));
-    lua_pushnumber(l, clamp64(c));
+    lua_pushfix32(l, fix32(c));
     return 1;
 }
 

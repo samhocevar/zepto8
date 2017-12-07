@@ -85,19 +85,12 @@ struct fix32
     inline fix32& operator /=(fix32 x) { return *this = *this / x; }
 
     /* Free functions */
-    static fix32 abs(fix32 const &a) { return a.m_bits > 0 ? a : -a; }
-    static fix32 min(fix32 const &a, fix32 const &b) { return a < b ? a : b; }
-    static fix32 max(fix32 const &a, fix32 const &b) { return a > b ? a : b; }
+    static fix32 abs(fix32 a) { return a.m_bits > 0 ? a : -a; }
+    static fix32 min(fix32 a, fix32 b) { return a < b ? a : b; }
+    static fix32 max(fix32 a, fix32 b) { return a > b ? a : b; }
 
-    static fix32 ceil(fix32 const &x)
-    {
-        return frombits((x.m_bits + 0xffff) & 0xffff0000);
-    }
-
-    static fix32 floor(fix32 const &x)
-    {
-        return frombits(x.m_bits & 0xffff0000);
-    }
+    static fix32 ceil(fix32 x) { return -floor(-x); }
+    static fix32 floor(fix32 x) { return frombits(x.m_bits & 0xffff0000); }
 
 private:
     int32_t m_bits;

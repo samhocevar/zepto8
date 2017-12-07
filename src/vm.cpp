@@ -202,6 +202,18 @@ vm* vm::New(lua_State* l, int argc)
     return nullptr;
 }
 
+void vm::button(int index, int state)
+{
+    m_buttons[1][index] = state;
+}
+
+void vm::mouse(lol::ivec2 coords, int buttons)
+{
+    m_mouse.x = (double)coords.x;
+    m_mouse.y = (double)coords.y;
+    m_mouse.b = (double)buttons;
+}
+
 //
 // System
 //
@@ -298,17 +310,17 @@ int vm::api::peek4(lua_State *l)
 {
     int addr = (int)lua_toclamp64(l, 1) & 0xffff;
     uint8_t const *p = get_this(l)->get_mem(addr);
-    int ret = 0;
+    int32_t bits = 0;
     for (int i = 0; i < 4; ++i)
     {
         /* This code handles partial reads by adding zeroes */
         if (addr + i < SIZE_MEMORY)
-            ret |= p[i] << (8 * i);
+            bits |= p[i] << (8 * i);
         else if (addr + i >= 0x10000)
-            ret |= p[i - 0x10000] << (8 * i);
+            bits |= p[i - 0x10000] << (8 * i);
     }
 
-    lua_pushnumber(l, fixed2double(int32_t(ret)));
+    lua_pushfix32(l, fix32::frombits(bits));
     return 1;
 }
 
@@ -415,7 +427,7 @@ int vm::api::stat(lua_State *l)
 {
     vm *that = get_this(l);
     int id = (int)lua_toclamp64(l, 1);
-    double ret = 0;
+    fix32 ret(0.0);
 
     if (id == 0)
     {
@@ -425,9 +437,9 @@ int vm::api::stat(lua_State *l)
 
         // From the PICO-8 documentation:
         // x:0 returns current Lua memory useage (0..1024MB)
-        int32_t fixed = ((int)lua_gc(l, LUA_GCCOUNT, 0) << 16)
-                      + ((int)lua_gc(l, LUA_GCCOUNTB, 0) << 6);
-        ret = fixed2double(fixed);
+        int32_t bits = ((int)lua_gc(l, LUA_GCCOUNT, 0) << 16)
+                     + ((int)lua_gc(l, LUA_GCCOUNTB, 0) << 6);
+        ret = fix32::frombits(bits);
     }
     else if (id == 1)
     {
@@ -439,7 +451,7 @@ int vm::api::stat(lua_State *l)
     {
         // undocumented parameters for stat(n):
         // 16..19: the sfx currently playing on each channel or -1 for none
-        ret = that->m_channels[id - 16].m_sfx;
+        ret = fix32((double)that->m_channels[id - 16].m_sfx);
     }
     else if (id >= 20 && id <= 23)
     {
@@ -452,10 +464,10 @@ int vm::api::stat(lua_State *l)
         // undocumented mouse support
         ret = id == 32 ? that->m_mouse.x
             : id == 33 ? that->m_mouse.y
-            : that->m_mouse.z;
+            : that->m_mouse.b;
     }
 
-    lua_pushnumber(l, ret);
+    lua_pushfix32(l, ret);
     return 1;
 }
 

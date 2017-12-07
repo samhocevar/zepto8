@@ -19,13 +19,51 @@ namespace z8
 
 using lol::msg;
 
-void vm::setpixel(int x, int y, int color)
+uint8_t vm::getpixel(fix32 x, fix32 y)
+{
+    /* pget() is affected by camera() and by clip() */
+    x -= m_camera.x;
+    y -= m_camera.y;
+
+    if (x < m_clip.aa.x || x >= m_clip.bb.x
+         || y < m_clip.aa.y || y >= m_clip.bb.y)
+        return 0;
+
+    int offset = OFFSET_SCREEN + (128 * (int)y + (int)x) / 2;
+    return ((int)x & 1) ? m_memory[offset] >> 4 : m_memory[offset] & 0xf;
+}
+
+void vm::setpixel(fix32 x, fix32 y, fix32 c)
 {
     x -= m_camera.x;
     y -= m_camera.y;
 
     if (x < m_clip.aa.x || x >= m_clip.bb.x
          || y < m_clip.aa.y || y >= m_clip.bb.y)
+        return;
+
+    int color = m_pal[0][(int)c & 0xf];
+
+    if ((m_fillp.bits() >> (((int)x & 3) + 4 * ((int)y & 3))) & 0x10000)
+    {
+        if (m_fillp.bits() & 0x8000) // Special transparency bit
+            return;
+        color = m_pal[0][((int)c >> 4) & 0xf];
+    }
+
+    int offset = OFFSET_SCREEN + (128 * (int)y + (int)x) / 2;
+    int mask = ((int)x & 1) ? 0x0f : 0xf0;
+    int p = ((int)x & 1) ? color << 4 : color;
+    m_memory[offset] = (m_memory[offset] & mask) | p;
+}
+
+void vm::setpixel(int x, int y, int color)
+{
+    x -= (int)m_camera.x;
+    y -= (int)m_camera.y;
+
+    if (x < (int)m_clip.aa.x || x >= (int)m_clip.bb.x
+         || y < (int)m_clip.aa.y || y >= (int)m_clip.bb.y)
         return;
 
     int offset = OFFSET_SCREEN + (128 * y + x) / 2;
@@ -36,16 +74,16 @@ void vm::setpixel(int x, int y, int color)
 
 void vm::setpixel(int x, int y, int color1, int color2)
 {
-    x -= m_camera.x;
-    y -= m_camera.y;
+    x -= (int)m_camera.x;
+    y -= (int)m_camera.y;
 
-    if (x < m_clip.aa.x || x >= m_clip.bb.x
-         || y < m_clip.aa.y || y >= m_clip.bb.y)
+    if (x < (int)m_clip.aa.x || x >= (int)m_clip.bb.x
+         || y < (int)m_clip.aa.y || y >= (int)m_clip.bb.y)
         return;
 
-    if ((m_fillp >> ((x & 3) + 4 * (y & 3))) & 0x10000)
+    if ((m_fillp.bits() >> ((x & 3) + 4 * (y & 3))) & 0x10000)
     {
-        if (m_fillp & 0x8000) // Special transparency bit
+        if (m_fillp.bits() & 0x8000) // Special transparency bit
             return;
         color1 = color2;
     }
@@ -59,11 +97,11 @@ void vm::setpixel(int x, int y, int color1, int color2)
 int vm::getpixel(int x, int y)
 {
     /* pget() is affected by camera() and by clip() */
-    x -= m_camera.x;
-    y -= m_camera.y;
+    x -= (int)m_camera.x;
+    y -= (int)m_camera.y;
 
-    if (x < m_clip.aa.x || x >= m_clip.bb.x
-         || y < m_clip.aa.y || y >= m_clip.bb.y)
+    if (x < (int)m_clip.aa.x || x >= (int)m_clip.bb.x
+         || y < (int)m_clip.aa.y || y >= (int)m_clip.bb.y)
         return 0;
 
     int offset = OFFSET_SCREEN + (128 * y + x) / 2;
@@ -93,7 +131,7 @@ int vm::getspixel(int x, int y)
 void vm::hline(int x1, int x2, int y, int color1, int color2)
 {
     // FIXME: very inefficient when fillp is active
-    if (m_fillp)
+    if (m_fillp.bits())
     {
         for (int x = x1; ; x += x1 < x2 ? 1 : -1)
         {
@@ -103,18 +141,18 @@ void vm::hline(int x1, int x2, int y, int color1, int color2)
         }
     }
 
-    x1 -= m_camera.x;
-    x2 -= m_camera.x;
-    y -= m_camera.y;
+    x1 -= (int)m_camera.x;
+    x2 -= (int)m_camera.x;
+    y -= (int)m_camera.y;
 
-    if (y < m_clip.aa.y || y >= m_clip.bb.y)
+    if (y < (int)m_clip.aa.y || y >= (int)m_clip.bb.y)
         return;
 
     if (x1 > x2)
         std::swap(x1, x2);
 
-    x1 = lol::max(x1, m_clip.aa.x);
-    x2 = lol::min(x2, m_clip.bb.x - 1);
+    x1 = lol::max(x1, (int)m_clip.aa.x);
+    x2 = lol::min(x2, (int)m_clip.bb.x - 1);
 
     if (x1 > x2)
         return;
@@ -140,7 +178,7 @@ void vm::hline(int x1, int x2, int y, int color1, int color2)
 void vm::vline(int x, int y1, int y2, int color1, int color2)
 {
     // FIXME: very inefficient when fillp is active
-    if (m_fillp)
+    if (m_fillp.bits())
     {
         for (int y = y1; ; y += y1 < y2 ? 1 : -1)
         {
@@ -150,18 +188,18 @@ void vm::vline(int x, int y1, int y2, int color1, int color2)
         }
     }
 
-    x -= m_camera.x;
-    y1 -= m_camera.y;
-    y2 -= m_camera.y;
+    x -= (int)m_camera.x;
+    y1 -= (int)m_camera.y;
+    y2 -= (int)m_camera.y;
 
-    if (x < m_clip.aa.x || x >= m_clip.bb.x)
+    if (x < (int)m_clip.aa.x || x >= (int)m_clip.bb.x)
         return;
 
     if (y1 > y2)
         std::swap(y1, y2);
 
-    y1 = lol::max(y1, m_clip.aa.y);
-    y2 = lol::min(y2, m_clip.bb.y - 1);
+    y1 = lol::max(y1, (int)m_clip.aa.y);
+    y2 = lol::min(y2, (int)m_clip.bb.y - 1);
 
     if (y1 > y2)
         return;
@@ -183,7 +221,8 @@ void vm::vline(int x, int y1, int y2, int color1, int color2)
 int vm::api::cursor(lua_State *l)
 {
     vm *that = get_this(l);
-    that->m_cursor = lol::ivec2(lua_toclamp64(l, 1), lua_toclamp64(l, 2));
+    that->m_cursor.x = lua_tofix32(l, 1);
+    that->m_cursor.y = lua_tofix32(l, 2);
     return 0;
 }
 
@@ -240,12 +279,11 @@ int vm::api::print(lua_State *l)
     lua_pop(l, 1);
 
     bool use_cursor = lua_isnone(l, 2) || lua_isnone(l, 3);
-    int x = use_cursor ? that->m_cursor.x : lua_toclamp64(l, 2);
-    int y = use_cursor ? that->m_cursor.y : lua_toclamp64(l, 3);
+    fix32 x = use_cursor ? that->m_cursor.x : lua_tofix32(l, 2);
+    fix32 y = use_cursor ? that->m_cursor.y : lua_tofix32(l, 3);
     if (!lua_isnone(l, 4))
-        that->m_colors = (int)lua_toclamp64(l, 4) & 0xff;
-    int c = that->m_pal[0][that->m_colors & 0xf];
-    int initial_x = x;
+        that->m_colors = lua_tofix32(l, 4);
+    fix32 initial_x = x;
 
     auto pixels = that->m_font.lock<lol::PixelFormat::RGBA_8>();
     for (int n = 0; str[n]; ++n)
@@ -255,7 +293,7 @@ int vm::api::print(lua_State *l)
         if (ch == '\n')
         {
             x = initial_x;
-            y += 6;
+            y += fix32(6.0);
         }
         else
         {
@@ -269,10 +307,10 @@ int vm::api::print(lua_State *l)
                 for (int dx = 0; dx < w; ++dx)
                 {
                     if (pixels[(index / 16 * h + dy) * 128 + (index % 16 * w + dx)].r > 0)
-                        that->setpixel(x + dx, y + dy, c);
+                        that->setpixel(x + fix32((double)dx), y + fix32((double)dy), that->m_colors);
                 }
 
-            x += w;
+            x += fix32((double)w);
         }
     }
 
@@ -283,16 +321,17 @@ int vm::api::print(lua_State *l)
     // below the threshold value.
     if (use_cursor)
     {
-        if (y > 116)
+        if (y > fix32(116.0))
         {
             uint8_t *screen = that->get_mem(OFFSET_SCREEN);
             int const lines = 6;
             memmove(screen, screen + lines * 64, SIZE_SCREEN - lines * 64);
             ::memset(screen + SIZE_SCREEN - lines * 64, 0, lines * 64);
-            y -= lines;
+            y -= fix32((double)lines);
         }
 
-        that->m_cursor = lol::ivec2(initial_x, y + 6);
+        that->m_cursor.x = initial_x;
+        that->m_cursor.y = y + fix32(6.0);
     }
 
     return 0;
@@ -320,7 +359,8 @@ int vm::api::tonum(lua_State *l)
 int vm::api::camera(lua_State *l)
 {
     vm *that = get_this(l);
-    that->m_camera = lol::ivec2(lua_toclamp64(l, 1), lua_toclamp64(l, 2));
+    that->m_camera.x = lua_tofix32(l, 1);
+    that->m_camera.y = lua_tofix32(l, 2);
     return 0;
 }
 
@@ -328,24 +368,24 @@ int vm::api::circ(lua_State *l)
 {
     vm *that = get_this(l);
 
-    int x = lua_toclamp64(l, 1);
-    int y = lua_toclamp64(l, 2);
-    int r = lua_toclamp64(l, 3);
+    fix32 x = lua_tofix32(l, 1);
+    fix32 y = lua_tofix32(l, 2);
+    int r = (int)lua_tofix32(l, 3);
     if (!lua_isnone(l, 4))
-        that->m_colors = (int)lua_toclamp64(l, 4) & 0xff;
-    int c1 = that->m_pal[0][that->m_colors & 0xf];
-    int c2 = that->m_pal[0][(that->m_colors >> 4) & 0xf];
+        that->m_colors = lua_tofix32(l, 4);
 
     for (int dx = r, dy = 0, err = 0; dx >= dy; )
     {
-        that->setpixel(x + dx, y + dy, c1, c2);
-        that->setpixel(x + dy, y + dx, c1, c2);
-        that->setpixel(x - dy, y + dx, c1, c2);
-        that->setpixel(x - dx, y + dy, c1, c2);
-        that->setpixel(x - dx, y - dy, c1, c2);
-        that->setpixel(x - dy, y - dx, c1, c2);
-        that->setpixel(x + dy, y - dx, c1, c2);
-        that->setpixel(x + dx, y - dy, c1, c2);
+        fix32 fdx((double)dx), fdy((double)dy);
+
+        that->setpixel(x + fdx, y + fdy, that->m_colors);
+        that->setpixel(x + fdy, y + fdx, that->m_colors);
+        that->setpixel(x - fdy, y + fdx, that->m_colors);
+        that->setpixel(x - fdx, y + fdy, that->m_colors);
+        that->setpixel(x - fdx, y - fdy, that->m_colors);
+        that->setpixel(x - fdy, y - fdx, that->m_colors);
+        that->setpixel(x + fdy, y - fdx, that->m_colors);
+        that->setpixel(x + fdx, y - fdy, that->m_colors);
 
         dy += 1;
         err += 1 + 2 * dy;
@@ -369,9 +409,9 @@ int vm::api::circfill(lua_State *l)
     int y = lua_toclamp64(l, 2);
     int r = lua_toclamp64(l, 3);
     if (!lua_isnone(l, 4))
-        that->m_colors = (int)lua_toclamp64(l, 4) & 0xff;
-    int c1 = that->m_pal[0][that->m_colors & 0xf];
-    int c2 = that->m_pal[0][(that->m_colors >> 4) & 0xf];
+        that->m_colors = lua_tofix32(l, 4);
+    int c1 = that->m_pal[0][(int)that->m_colors & 0xf];
+    int c2 = that->m_pal[0][((int)that->m_colors >> 4) & 0xf];
 
     for (int dx = r, dy = 0, err = 0; dx >= dy; )
     {
@@ -404,17 +444,21 @@ int vm::api::clip(lua_State *l)
      * was actually "" instead of nil. */
     if (lua_isnone(l, 4))
     {
-        that->m_clip = lol::ibox2(0, 0, 128, 128);
+        that->m_clip.aa.x = that->m_clip.aa.y = 0.0;
+        that->m_clip.bb.x = that->m_clip.bb.y = 128.0;
     }
     else
     {
-        int x0 = lua_toclamp64(l, 1);
-        int y0 = lua_toclamp64(l, 2);
-        int x1 = x0 + lua_toclamp64(l, 3);
-        int y1 = y0 + lua_toclamp64(l, 4);
+        fix32 x0 = lua_tofix32(l, 1);
+        fix32 y0 = lua_tofix32(l, 2);
+        fix32 x1 = x0 + lua_tofix32(l, 3);
+        fix32 y1 = y0 + lua_tofix32(l, 4);
 
-        that->m_clip = lol::ibox2(lol::max(x0, 0), lol::max(y0, 0),
-                                  lol::min(x1, 128), lol::min(y1, 128));
+        /* FIXME: check the clamp order */
+        that->m_clip.aa.x = fix32::max(x0, 0.0);
+        that->m_clip.aa.y = fix32::max(y0, 0.0);
+        that->m_clip.bb.x = fix32::min(x1, 128.0);
+        that->m_clip.bb.y = fix32::min(y1, 128.0);
     }
 
     return 0;
@@ -425,31 +469,21 @@ int vm::api::cls(lua_State *l)
     int c = lua_toclamp64(l, 1);
     vm *that = get_this(l);
     ::memset(&that->m_memory[OFFSET_SCREEN], (c & 0xf) * 0x11, SIZE_SCREEN);
-    that->m_cursor = lol::ivec2(0, 0);
+    that->m_cursor.x = that->m_cursor.y = 0.0;
     return 0;
 }
 
 int vm::api::color(lua_State *l)
 {
     vm *that = get_this(l);
-    that->m_colors = (int)lua_toclamp64(l, 1) & 0xff;
+    that->m_colors = lua_tofix32(l, 1);
     return 0;
 }
 
 int vm::api::fillp(lua_State *l)
 {
     vm *that = get_this(l);
-
-    if (lua_isnone(l, 1))
-    {
-        that->m_fillp = 0;
-    }
-    else
-    {
-        uint32_t x = (uint32_t)double2fixed(lua_tonumber(l, 1));
-        that->m_fillp = x;
-    }
-
+    that->m_fillp = lua_tofix32(l, 1);
     return 0;
 }
 
@@ -510,9 +544,9 @@ int vm::api::line(lua_State *l)
     int x1 = std::floor(lua_toclamp64(l, 3));
     int y1 = std::floor(lua_toclamp64(l, 4));
     if (!lua_isnone(l, 5))
-        that->m_colors = (int)lua_toclamp64(l, 5) & 0xff;
-    int c1 = that->m_pal[0][that->m_colors & 0xf];
-    int c2 = that->m_pal[0][(that->m_colors >> 4) & 0xf];
+        that->m_colors = lua_tofix32(l, 5);
+    int c1 = that->m_pal[0][(int)that->m_colors & 0xf];
+    int c2 = that->m_pal[0][((int)that->m_colors >> 4) & 0xf];
 
     if (x0 == x1 && y0 == y1)
     {
@@ -631,7 +665,7 @@ int vm::api::pal(lua_State *l)
             that->m_pal[0][i] = that->m_pal[1][i] = i;
             that->m_palt[i] = i ? 0 : 1;
         }
-        that->m_fillp = 0;
+        that->m_fillp = 0.0;
     }
     else
     {
@@ -683,9 +717,9 @@ int vm::api::pset(lua_State *l)
     int x = lua_toclamp64(l, 1);
     int y = lua_toclamp64(l, 2);
     if (!lua_isnone(l, 3))
-        that->m_colors = (int)lua_toclamp64(l, 3) & 0xff;
-    int c1 = that->m_pal[0][that->m_colors & 0xf];
-    int c2 = that->m_pal[0][(that->m_colors >> 4) & 0xf];
+        that->m_colors = lua_tofix32(l, 3);
+    int c1 = that->m_pal[0][(int)that->m_colors & 0xf];
+    int c2 = that->m_pal[0][((int)that->m_colors >> 4) & 0xf];
 
     that->setpixel(x, y, c1, c2);
 
@@ -701,9 +735,9 @@ int vm::api::rect(lua_State *l)
     int x1 = lua_toclamp64(l, 3);
     int y1 = lua_toclamp64(l, 4);
     if (!lua_isnone(l, 5))
-        that->m_colors = (int)lua_toclamp64(l, 5) & 0xff;
-    int c1 = that->m_pal[0][that->m_colors & 0xf];
-    int c2 = that->m_pal[0][(that->m_colors >> 4) & 0xf];
+        that->m_colors = lua_tofix32(l, 5);
+    int c1 = that->m_pal[0][(int)that->m_colors & 0xf];
+    int c2 = that->m_pal[0][((int)that->m_colors >> 4) & 0xf];
 
     if (x0 > x1)
         std::swap(x0, x1);
@@ -732,9 +766,9 @@ int vm::api::rectfill(lua_State *l)
     int x1 = lua_toclamp64(l, 3);
     int y1 = lua_toclamp64(l, 4);
     if (!lua_isnone(l, 5))
-        that->m_colors = (int)lua_toclamp64(l, 5) & 0xff;
-    int c1 = that->m_pal[0][that->m_colors & 0xf];
-    int c2 = that->m_pal[0][(that->m_colors >> 4) & 0xf];
+        that->m_colors = lua_tofix32(l, 5);
+    int c1 = that->m_pal[0][(int)that->m_colors & 0xf];
+    int c2 = that->m_pal[0][((int)that->m_colors >> 4) & 0xf];
 
     for (int y = lol::min(y0, y1); y <= lol::max(y0, y1); ++y)
         that->hline(lol::min(x0, x1), lol::max(x0, x1), y, c1, c2);
@@ -746,10 +780,10 @@ int vm::api::sget(lua_State *l)
 {
     vm *that = get_this(l);
 
-    int x = lua_toclamp64(l, 1);
-    int y = lua_toclamp64(l, 2);
+    fix32 x = lua_tofix32(l, 1);
+    fix32 y = lua_tofix32(l, 2);
 
-    lua_pushnumber(l, that->getspixel(x, y));
+    lua_pushnumber(l, that->getspixel((int)x, (int)y));
 
     return 1;
 }
@@ -758,12 +792,12 @@ int vm::api::sset(lua_State *l)
 {
     vm *that = get_this(l);
 
-    int x = lua_toclamp64(l, 1);
-    int y = lua_toclamp64(l, 2);
-    int col = lua_isnone(l, 3) ? that->m_colors & 0xf : lua_toclamp64(l, 3);
-    int c = that->m_pal[0][col & 0xf];
+    fix32 x = lua_tofix32(l, 1);
+    fix32 y = lua_tofix32(l, 2);
+    fix32 col = lua_isnone(l, 3) ? that->m_colors : lua_tofix32(l, 3);
+    int c = that->m_pal[0][(int)col & 0xf];
 
-    that->setspixel(x, y, c);
+    that->setspixel((int)x, (int)y, c);
 
     return 0;
 }

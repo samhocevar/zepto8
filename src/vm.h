@@ -46,8 +46,8 @@ public:
     void print_ansi(lol::ivec2 term_size = lol::ivec2(128, 128),
                     uint8_t const *prev_screen = nullptr) const;
 
-    void button(int index, int state) { m_buttons[1][index] = state; }
-    void mouse(lol::ivec2 coords, int buttons) { m_mouse = lol::ivec3(coords, buttons); }
+    void button(int index, int state);
+    void mouse(lol::ivec2 coords, int buttons);
 
     static const lol::LuaObjectLibrary* GetLib();
     static vm* New(lua_State* l, int arg_nb);
@@ -145,6 +145,9 @@ private:
     };
 
 private:
+    uint8_t getpixel(fix32 x, fix32 y);
+    void setpixel(fix32 x, fix32 y, fix32 color);
+
     int getpixel(int x, int y);
     void setpixel(int x, int y, int color);
     void setpixel(int x, int y, int color1, int color2);
@@ -163,15 +166,14 @@ private:
     cart m_cart;
 
     // Graphics
-    uint8_t m_colors;
-    lol::ivec2 m_camera, m_cursor;
-    lol::ibox2 m_clip;
+    fix32 m_colors, m_fillp;
+    struct { fix32 x, y; } m_camera, m_cursor;
+    struct { struct { fix32 x, y; } aa, bb; } m_clip;
     uint8_t m_pal[2][16], m_palt[16];
-    uint32_t m_fillp;
 
     // Input
     int m_buttons[2][64];
-    lol::ivec3 m_mouse;
+    struct { fix32 x, y, b; } m_mouse;
 
     // Audio
     struct channel
@@ -204,22 +206,7 @@ static inline int32_t double2fixed(double x)
     return (int32_t)(int64_t)lol::round(x * double(1 << 16));
 }
 
-static inline double fixed2double(int32_t x)
-{
-    return x / double(1 << 16);
-}
-
-static inline double clamp64(double x)
-{
-    return fixed2double(double2fixed(x));
-}
-
 // Not Lua functions, but behave like them
-static inline double lua_toclamp64(lua_State *l, int index)
-{
-    return clamp64(lua_tonumber(l, index));
-}
-
 static inline fix32 lua_tofix32(lua_State *l, int index)
 {
     return fix32::frombits(double2fixed(lua_tonumber(l, index)));
@@ -228,6 +215,12 @@ static inline fix32 lua_tofix32(lua_State *l, int index)
 static inline void lua_pushfix32(lua_State *l, fix32 const &x)
 {
     return lua_pushnumber(l, (double)x);
+}
+
+// FIXME: this should disappear one day
+static inline double lua_toclamp64(lua_State *l, int index)
+{
+    return (double)lua_tofix32(l, index);
 }
 
 } // namespace z8
