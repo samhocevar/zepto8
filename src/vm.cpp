@@ -255,9 +255,9 @@ int vm::api::reload(lua_State *l)
     // PICO-8 fully reloads the cartridge if not all arguments are passed
     if (!lua_isnone(l, 3))
     {
-        dst = (int)lua_toclamp64(l, 1) & 0xffff;
-        src = (int)lua_toclamp64(l, 2) & 0xffff;
-        size = (int)lua_toclamp64(l, 3);
+        dst = (int)lua_tofix32(l, 1) & 0xffff;
+        src = (int)lua_tofix32(l, 2) & 0xffff;
+        size = (int)lua_tofix32(l, 3);
     }
 
     if (size <= 0)
@@ -297,7 +297,7 @@ int vm::api::reload(lua_State *l)
 int vm::api::peek(lua_State *l)
 {
     // Note: peek() is the same as peek(0)
-    int addr = (int)lua_toclamp64(l, 1) & 0xffff;
+    int addr = (int)lua_tofix32(l, 1);
     if (addr < 0 || addr >= SIZE_MEMORY)
         return 0;
 
@@ -308,7 +308,7 @@ int vm::api::peek(lua_State *l)
 
 int vm::api::peek4(lua_State *l)
 {
-    int addr = (int)lua_toclamp64(l, 1) & 0xffff;
+    int addr = (int)lua_tofix32(l, 1) & 0xffff;
     uint8_t const *p = get_this(l)->get_mem(addr);
     int32_t bits = 0;
     for (int i = 0; i < 4; ++i)
@@ -327,8 +327,8 @@ int vm::api::peek4(lua_State *l)
 int vm::api::poke(lua_State *l)
 {
     // Note: poke() is the same as poke(0, 0)
-    int addr = (int)lua_toclamp64(l, 1) & 0xffff;
-    int val = (int)lua_toclamp64(l, 2);
+    int addr = (int)lua_tofix32(l, 1);
+    int val = (int)lua_tofix32(l, 2);
     if (addr < 0 || addr > SIZE_MEMORY - 1)
         return luaL_error(l, "bad memory access");
 
@@ -340,11 +340,11 @@ int vm::api::poke(lua_State *l)
 int vm::api::poke4(lua_State *l)
 {
     // Note: poke4() is the same as poke(0, 0)
-    int addr = (int)lua_toclamp64(l, 1) & 0xffff;
+    int addr = (int)lua_tofix32(l, 1);
     if (addr < 0 || addr > SIZE_MEMORY - 4)
         return luaL_error(l, "bad memory access");
 
-    uint32_t x = (uint32_t)double2fixed(lua_tonumber(l, 2));
+    uint32_t x = (uint32_t)lua_tofix32(l, 2).bits();
     uint8_t *p = get_this(l)->get_mem(addr);
     p[0] = x;
     p[1] = x >> 8;
@@ -356,9 +356,9 @@ int vm::api::poke4(lua_State *l)
 
 int vm::api::memcpy(lua_State *l)
 {
-    int dst = (int)lua_toclamp64(l, 1) & 0xffff;
-    int src = (int)lua_toclamp64(l, 2) & 0xffff;
-    int size = (int)lua_toclamp64(l, 3);
+    int dst = (int)lua_tofix32(l, 1);
+    int src = (int)lua_tofix32(l, 2) & 0xffff;
+    int size = (int)lua_tofix32(l, 3);
 
     if (size <= 0)
         return 0;
@@ -367,7 +367,7 @@ int vm::api::memcpy(lua_State *l)
 
     // Attempting to write outside the memory area raises an error. Everything
     // else seems legal, especially reading from anywhere.
-    if (dst + size > SIZE_MEMORY)
+    if (dst < 0 || dst + size > SIZE_MEMORY)
     {
         msg::info("z8:segv:memcpy(0x%x,0x%x,0x%x)\n", src, dst, size);
         return luaL_error(l, "bad memory access");
@@ -402,9 +402,9 @@ int vm::api::memcpy(lua_State *l)
 
 int vm::api::memset(lua_State *l)
 {
-    int dst = (int)lua_toclamp64(l, 1) & 0xffff;
-    int val = (int)lua_toclamp64(l, 2) & 0xffff;
-    int size = (int)lua_toclamp64(l, 3);
+    int dst = (int)lua_tofix32(l, 1);
+    int val = (int)lua_tofix32(l, 2) & 0xff;
+    int size = (int)lua_tofix32(l, 3);
 
     if (size <= 0)
         return 0;
@@ -426,7 +426,7 @@ int vm::api::memset(lua_State *l)
 int vm::api::stat(lua_State *l)
 {
     vm *that = get_this(l);
-    int id = (int)lua_toclamp64(l, 1);
+    int id = (int)lua_tofix32(l, 1);
     fix32 ret(0.0);
 
     if (id == 0)

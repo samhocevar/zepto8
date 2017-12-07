@@ -148,12 +148,11 @@ private:
     uint8_t getpixel(fix32 x, fix32 y);
     void setpixel(fix32 x, fix32 y, fix32 color);
 
-    int getpixel(int x, int y);
     void setpixel(int x, int y, int color);
     void setpixel(int x, int y, int color1, int color2);
 
-    void hline(int x1, int x2, int y, int color1, int color2);
-    void vline(int x, int y1, int y2, int color1, int color2);
+    void hline(fix32 x1, fix32 x2, fix32 y, fix32 color);
+    void vline(fix32 x, fix32 y1, fix32 y2, fix32 color);
 
     int getspixel(int x, int y);
     void setspixel(int x, int y, int color);

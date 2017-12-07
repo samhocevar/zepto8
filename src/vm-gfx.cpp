@@ -94,20 +94,6 @@ void vm::setpixel(int x, int y, int color1, int color2)
     m_memory[offset] = (m_memory[offset] & mask) | p;
 }
 
-int vm::getpixel(int x, int y)
-{
-    /* pget() is affected by camera() and by clip() */
-    x -= (int)m_camera.x;
-    y -= (int)m_camera.y;
-
-    if (x < (int)m_clip.aa.x || x >= (int)m_clip.bb.x
-         || y < (int)m_clip.aa.y || y >= (int)m_clip.bb.y)
-        return 0;
-
-    int offset = OFFSET_SCREEN + (128 * y + x) / 2;
-    return (x & 1) ? m_memory[offset] >> 4 : m_memory[offset] & 0xf;
-}
-
 void vm::setspixel(int x, int y, int color)
 {
     if (x < 0 || x >= 128 || y < 0 || y >= 128)
@@ -128,88 +114,85 @@ int vm::getspixel(int x, int y)
     return (x & 1) ? m_memory[offset] >> 4 : m_memory[offset] & 0xf;
 }
 
-void vm::hline(int x1, int x2, int y, int color1, int color2)
+void vm::hline(fix32 x1, fix32 x2, fix32 y, fix32 c)
 {
-    // FIXME: very inefficient when fillp is active
-    if (m_fillp.bits())
-    {
-        for (int x = x1; ; x += x1 < x2 ? 1 : -1)
-        {
-            setpixel(x, y, color1, color2);
-            if (x == x2)
-                return;
-        }
-    }
-
-    x1 -= (int)m_camera.x;
-    x2 -= (int)m_camera.x;
-    y -= (int)m_camera.y;
-
-    if (y < (int)m_clip.aa.y || y >= (int)m_clip.bb.y)
-        return;
-
     if (x1 > x2)
         std::swap(x1, x2);
 
-    x1 = lol::max(x1, (int)m_clip.aa.x);
-    x2 = lol::min(x2, (int)m_clip.bb.x - 1);
+    // FIXME: very inefficient when fillp is active
+    if (m_fillp.bits())
+    {
+        for (fix32 x = x1; x <= x2; x += fix32(1.0))
+            setpixel(x, y, c);
+        return;
+    }
+
+    x1 -= m_camera.x;
+    x2 -= m_camera.x;
+    y -= m_camera.y;
+
+    if (y < m_clip.aa.y || y >= m_clip.bb.y)
+        return;
+
+    x1 = fix32::max(x1, m_clip.aa.x);
+    x2 = fix32::min(x2, m_clip.bb.x - fix32(1.0));
 
     if (x1 > x2)
         return;
 
-    int offset = OFFSET_SCREEN + (128 * y) / 2;
-    if (x1 & 1)
+    int color = m_pal[0][(int)c & 0xf];
+    int offset = OFFSET_SCREEN + (128 * (int)y) / 2;
+
+    if ((int)x1 & 1)
     {
-        m_memory[offset + x1 / 2]
-            = (m_memory[offset + x1 / 2] & 0x0f) | (color1 << 4);
-        ++x1;
+        m_memory[offset + (int)x1 / 2]
+            = (m_memory[offset + (int)x1 / 2] & 0x0f) | (color << 4);
+        x1 += fix32(1.0);
     }
 
-    if ((x2 & 1) == 0)
+    if (((int)x2 & 1) == 0)
     {
-        m_memory[offset + x2 / 2]
-            = (m_memory[offset + x2 / 2] & 0xf0) | color1;
-        --x2;
+        m_memory[offset + (int)x2 / 2]
+            = (m_memory[offset + (int)x2 / 2] & 0xf0) | color;
+        x2 -= fix32(1.0);
     }
 
-    ::memset(get_mem(offset + x1 / 2), color1 * 0x11, (x2 - x1 + 1) / 2);
+    ::memset(get_mem(offset + (int)x1 / 2), color * 0x11, ((int)x2 - (int)x1 + 1) / 2);
 }
 
-void vm::vline(int x, int y1, int y2, int color1, int color2)
+void vm::vline(fix32 x, fix32 y1, fix32 y2, fix32 c)
 {
-    // FIXME: very inefficient when fillp is active
-    if (m_fillp.bits())
-    {
-        for (int y = y1; ; y += y1 < y2 ? 1 : -1)
-        {
-            setpixel(x, y, color1, color2);
-            if (y == y2)
-                return;
-        }
-    }
-
-    x -= (int)m_camera.x;
-    y1 -= (int)m_camera.y;
-    y2 -= (int)m_camera.y;
-
-    if (x < (int)m_clip.aa.x || x >= (int)m_clip.bb.x)
-        return;
-
     if (y1 > y2)
         std::swap(y1, y2);
 
-    y1 = lol::max(y1, (int)m_clip.aa.y);
-    y2 = lol::min(y2, (int)m_clip.bb.y - 1);
+    // FIXME: very inefficient when fillp is active
+    if (m_fillp.bits())
+    {
+        for (fix32 y = y1; y <= y2; y += fix32(1.0))
+            setpixel(x, y, c);
+        return;
+    }
+
+    x -= m_camera.x;
+    y1 -= m_camera.y;
+    y2 -= m_camera.y;
+
+    if (x < m_clip.aa.x || x >= m_clip.bb.x)
+        return;
+
+    y1 = fix32::max(y1, m_clip.aa.y);
+    y2 = fix32::min(y2, m_clip.bb.y - fix32(1.0));
 
     if (y1 > y2)
         return;
 
-    int mask = (x & 1) ? 0x0f : 0xf0;
-    int p = (x & 1) ? color1 << 4 : color1;
+    int mask = ((int)x & 1) ? 0x0f : 0xf0;
+    int color = m_pal[0][(int)c & 0xf];
+    int p = ((int)x & 1) ? color << 4 : color;
 
-    for (int y = y1; y <= y2; ++y)
+    for (int y = (int)y1; y <= (int)y2; ++y)
     {
-        int offset = OFFSET_SCREEN + (128 * y + x) / 2;
+        int offset = OFFSET_SCREEN + (128 * y + (int)x) / 2;
         m_memory[offset] = (m_memory[offset] & mask) | p;
     }
 }
@@ -239,14 +222,15 @@ static void lua_pushtostr(lua_State *l, bool do_hex)
         str = lua_tostring(l, 1);
     else if (lua_isnumber(l, 1))
     {
+        fix32 x = lua_tofix32(l, 1);
         if (do_hex)
         {
-            uint32_t x = (uint32_t)double2fixed(lua_tonumber(l, 1));
-            sprintf(buffer, "0x%04x.%04x", (x >> 16) & 0xffff, x & 0xffff);
+            uint32_t b = (uint32_t)x.bits();
+            sprintf(buffer, "0x%04x.%04x", (b >> 16) & 0xffff, b & 0xffff);
         }
         else
         {
-            int n = sprintf(buffer, "%.4f", lua_toclamp64(l, 1));
+            int n = sprintf(buffer, "%.4f", (double)x);
             // Remove trailing zeroes and comma
             while (n > 2 && buffer[n - 1] == '0' && ::isdigit(buffer[n - 2]))
                 buffer[--n] = '\0';
@@ -405,21 +389,21 @@ int vm::api::circfill(lua_State *l)
 {
     vm *that = get_this(l);
 
-    int x = lua_toclamp64(l, 1);
-    int y = lua_toclamp64(l, 2);
-    int r = lua_toclamp64(l, 3);
+    fix32 x = lua_tofix32(l, 1);
+    fix32 y = lua_tofix32(l, 2);
+    int r = (int)lua_tofix32(l, 3);
     if (!lua_isnone(l, 4))
         that->m_colors = lua_tofix32(l, 4);
-    int c1 = that->m_pal[0][(int)that->m_colors & 0xf];
-    int c2 = that->m_pal[0][((int)that->m_colors >> 4) & 0xf];
 
     for (int dx = r, dy = 0, err = 0; dx >= dy; )
     {
+        fix32 fdx((double)dx), fdy((double)dy);
+
         /* Some minor overdraw here, but nothing serious */
-        that->hline(x - dx, x + dx, y - dy, c1, c2);
-        that->hline(x - dx, x + dx, y + dy, c1, c2);
-        that->vline(x - dy, y - dx, y + dx, c1, c2);
-        that->vline(x + dy, y - dx, y + dx, c1, c2);
+        that->hline(x - fdx, x + fdx, y - fdy, that->m_colors);
+        that->hline(x - fdx, x + fdx, y + fdy, that->m_colors);
+        that->vline(x - fdy, y - fdx, y + fdx, that->m_colors);
+        that->vline(x + fdy, y - fdx, y + fdx, that->m_colors);
 
         dy += 1;
         err += 1 + 2 * dy;
@@ -454,7 +438,7 @@ int vm::api::clip(lua_State *l)
         fix32 x1 = x0 + lua_tofix32(l, 3);
         fix32 y1 = y0 + lua_tofix32(l, 4);
 
-        /* FIXME: check the clamp order */
+        /* FIXME: check the clamp order… before or after above addition? */
         that->m_clip.aa.x = fix32::max(x0, 0.0);
         that->m_clip.aa.y = fix32::max(y0, 0.0);
         that->m_clip.bb.x = fix32::min(x1, 128.0);
@@ -702,10 +686,10 @@ int vm::api::pget(lua_State *l)
 {
     vm *that = get_this(l);
 
-    int x = lua_toclamp64(l, 1);
-    int y = lua_toclamp64(l, 2);
+    fix32 x = lua_tofix32(l, 1);
+    fix32 y = lua_tofix32(l, 2);
 
-    lua_pushnumber(l, that->getpixel(x, y));
+    lua_pushfix32(l, fix32((double)that->getpixel(x, y)));
 
     return 1;
 }
@@ -730,14 +714,12 @@ int vm::api::rect(lua_State *l)
 {
     vm *that = get_this(l);
 
-    int x0 = lua_toclamp64(l, 1);
-    int y0 = lua_toclamp64(l, 2);
-    int x1 = lua_toclamp64(l, 3);
-    int y1 = lua_toclamp64(l, 4);
+    fix32 x0 = lua_tofix32(l, 1);
+    fix32 y0 = lua_tofix32(l, 2);
+    fix32 x1 = lua_tofix32(l, 3);
+    fix32 y1 = lua_tofix32(l, 4);
     if (!lua_isnone(l, 5))
         that->m_colors = lua_tofix32(l, 5);
-    int c1 = that->m_pal[0][(int)that->m_colors & 0xf];
-    int c2 = that->m_pal[0][((int)that->m_colors >> 4) & 0xf];
 
     if (x0 > x1)
         std::swap(x0, x1);
@@ -745,13 +727,13 @@ int vm::api::rect(lua_State *l)
     if (y0 > y1)
         std::swap(y0, y1);
 
-    that->hline(x0, x1, y0, c1, c2);
-    that->hline(x0, x1, y1, c1, c2);
+    that->hline(x0, x1, y0, that->m_colors);
+    that->hline(x0, x1, y1, that->m_colors);
 
-    if (y0 + 1 < y1)
+    if (y0 + fix32(1.0) < y1)
     {
-        that->vline(x0, y0 + 1, y1 - 1, c1, c2);
-        that->vline(x1, y0 + 1, y1 - 1, c1, c2);
+        that->vline(x0, y0 + fix32(1.0), y1 - fix32(1.0), that->m_colors);
+        that->vline(x1, y0 + fix32(1.0), y1 - fix32(1.0), that->m_colors);
     }
 
     return 0;
@@ -761,17 +743,19 @@ int vm::api::rectfill(lua_State *l)
 {
     vm *that = get_this(l);
 
-    int x0 = lua_toclamp64(l, 1);
-    int y0 = lua_toclamp64(l, 2);
-    int x1 = lua_toclamp64(l, 3);
-    int y1 = lua_toclamp64(l, 4);
+    fix32 x0 = lua_tofix32(l, 1);
+    fix32 y0 = lua_tofix32(l, 2);
+    fix32 x1 = lua_tofix32(l, 3);
+    fix32 y1 = lua_tofix32(l, 4);
     if (!lua_isnone(l, 5))
         that->m_colors = lua_tofix32(l, 5);
-    int c1 = that->m_pal[0][(int)that->m_colors & 0xf];
-    int c2 = that->m_pal[0][((int)that->m_colors >> 4) & 0xf];
 
-    for (int y = lol::min(y0, y1); y <= lol::max(y0, y1); ++y)
-        that->hline(lol::min(x0, x1), lol::max(x0, x1), y, c1, c2);
+    if (y0 > y1)
+        std::swap(y0, y1);
+
+    // FIXME: broken when y0 = 0.5, y1 = 1.4... 2nd line is not printed
+    for (fix32 y = y0; y <= y1; y += fix32(1.0))
+        that->hline(x0, x1, y, that->m_colors);
 
     return 0;
 }
