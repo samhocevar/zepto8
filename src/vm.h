@@ -53,96 +53,101 @@ public:
     static vm* New(lua_State* l, int arg_nb);
 
 private:
-    void set_this(lua_State *l);
-    static vm* get_this(lua_State *l);
     static void hook(lua_State *l, lua_Debug *ar);
 
-    struct api
+    /* Helpers to dispatch C++ functions to Lua C bindings */
+    typedef int (vm::*api_func)(lua_State *);
+
+    template<api_func f>
+    static int dispatch(lua_State *l)
     {
-        // System
-        static int run(lua_State *l);
-        static int menuitem(lua_State *l);
-        static int cartdata(lua_State *l);
-        static int reload(lua_State *l);
-        static int peek(lua_State *l);
-        static int peek4(lua_State *l);
-        static int poke(lua_State *l);
-        static int poke4(lua_State *l);
-        static int memcpy(lua_State *l);
-        static int memset(lua_State *l);
-        static int stat(lua_State *l);
-        static int printh(lua_State *l);
-        static int extcmd(lua_State *l);
+        vm *that = *static_cast<vm**>(lua_getextraspace(l));
+        return ((*that).*f)(l);
+    }
 
-        // I/O
-        static int update_buttons(lua_State *l);
-        static int btn(lua_State *l);
-        static int btnp(lua_State *l);
+    // System
+    int api_run(lua_State *l);
+    int api_menuitem(lua_State *l);
+    int api_cartdata(lua_State *l);
+    int api_reload(lua_State *l);
+    int api_peek(lua_State *l);
+    int api_peek4(lua_State *l);
+    int api_poke(lua_State *l);
+    int api_poke4(lua_State *l);
+    int api_memcpy(lua_State *l);
+    int api_memset(lua_State *l);
+    int api_stat(lua_State *l);
+    static int api_printh(lua_State *l);
+    int api_extcmd(lua_State *l);
 
-        // Text
-        static int cursor(lua_State *l);
-        static int print(lua_State *l);
-        static int tonum(lua_State *l);
-        static int tostr(lua_State *l);
+    // I/O
+    int api_update_buttons(lua_State *l);
+    int api_btn(lua_State *l);
+    int api_btnp(lua_State *l);
 
-        // Maths
-        static int max(lua_State *l);
-        static int min(lua_State *l);
-        static int mid(lua_State *l);
-        static int ceil(lua_State *l);
-        static int flr(lua_State *l);
-        static int cos(lua_State *l);
-        static int sin(lua_State *l);
-        static int atan2(lua_State *l);
-        static int sqrt(lua_State *l);
-        static int abs(lua_State *l);
-        static int sgn(lua_State *l);
+    // Text
+    int api_cursor(lua_State *l);
+    int api_print(lua_State *l);
+    static int api_tonum(lua_State *l);
+    static int api_tostr(lua_State *l);
 
-        static int rnd(lua_State *l);
-        static int srand(lua_State *l);
+    // Maths
+    static int api_max(lua_State *l);
+    static int api_min(lua_State *l);
+    static int api_mid(lua_State *l);
+    static int api_ceil(lua_State *l);
+    static int api_flr(lua_State *l);
+    static int api_cos(lua_State *l);
+    static int api_sin(lua_State *l);
+    static int api_atan2(lua_State *l);
+    static int api_sqrt(lua_State *l);
+    static int api_abs(lua_State *l);
+    static int api_sgn(lua_State *l);
 
-        static int band(lua_State *l);
-        static int bor(lua_State *l);
-        static int bxor(lua_State *l);
-        static int bnot(lua_State *l);
-        static int shl(lua_State *l);
-        static int shr(lua_State *l);
-        static int lshr(lua_State *l);
-        static int rotl(lua_State *l);
-        static int rotr(lua_State *l);
+    int api_rnd(lua_State *l);
+    int api_srand(lua_State *l);
 
-        // Graphics
-        static int camera(lua_State *l);
-        static int circ(lua_State *l);
-        static int circfill(lua_State *l);
-        static int clip(lua_State *l);
-        static int cls(lua_State *l);
-        static int color(lua_State *l);
-        static int fillp(lua_State *l);
-        static int fget(lua_State *l);
-        static int fset(lua_State *l);
-        static int line(lua_State *l);
-        static int map(lua_State *l);
-        static int mget(lua_State *l);
-        static int mset(lua_State *l);
-        static int pal(lua_State *l);
-        static int palt(lua_State *l);
-        static int pget(lua_State *l);
-        static int pset(lua_State *l);
-        static int rect(lua_State *l);
-        static int rectfill(lua_State *l);
-        static int sget(lua_State *l);
-        static int sset(lua_State *l);
-        static int spr(lua_State *l);
-        static int sspr(lua_State *l);
+    static int api_band(lua_State *l);
+    static int api_bor(lua_State *l);
+    static int api_bxor(lua_State *l);
+    static int api_bnot(lua_State *l);
+    static int api_shl(lua_State *l);
+    static int api_shr(lua_State *l);
+    static int api_lshr(lua_State *l);
+    static int api_rotl(lua_State *l);
+    static int api_rotr(lua_State *l);
 
-        // Sound
-        static int music(lua_State *l);
-        static int sfx(lua_State *l);
+    // Graphics
+    int api_camera(lua_State *l);
+    int api_circ(lua_State *l);
+    int api_circfill(lua_State *l);
+    int api_clip(lua_State *l);
+    int api_cls(lua_State *l);
+    int api_color(lua_State *l);
+    int api_fillp(lua_State *l);
+    int api_fget(lua_State *l);
+    int api_fset(lua_State *l);
+    int api_line(lua_State *l);
+    int api_map(lua_State *l);
+    int api_mget(lua_State *l);
+    int api_mset(lua_State *l);
+    int api_pal(lua_State *l);
+    int api_palt(lua_State *l);
+    int api_pget(lua_State *l);
+    int api_pset(lua_State *l);
+    int api_rect(lua_State *l);
+    int api_rectfill(lua_State *l);
+    int api_sget(lua_State *l);
+    int api_sset(lua_State *l);
+    int api_spr(lua_State *l);
+    int api_sspr(lua_State *l);
 
-        // Deprecated
-        static int time(lua_State *l);
-    };
+    // Sound
+    int api_music(lua_State *l);
+    int api_sfx(lua_State *l);
+
+    // Deprecated
+    int api_time(lua_State *l);
 
 private:
     uint8_t get_pixel(fix32 x, fix32 y) const;
@@ -189,7 +194,7 @@ private:
     struct sfx const &get_sfx(int n) const;
 
     lol::Timer m_timer;
-    uint32_t m_seed;
+    fix32 m_seed;
     int m_instructions;
 };
 

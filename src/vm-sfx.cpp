@@ -239,14 +239,14 @@ struct sfx const &vm::get_sfx(int n) const
 // Sound
 //
 
-int vm::api::music(lua_State *l)
+int vm::api_music(lua_State *l)
 {
     UNUSED(l);
     msg::info("z8:stub:music\n");
     return 0;
 }
 
-int vm::api::sfx(lua_State *l)
+int vm::api_sfx(lua_State *l)
 {
     // SFX index: valid values are 0..63 for actual samples,
     // -1 to stop sound on a channel, -2 to stop looping on a channel
@@ -260,7 +260,6 @@ int vm::api::sfx(lua_State *l)
     if (sfx < -2 || sfx > 63 || chan < -1 || chan > 4 || offset > 31)
         return 0;
 
-    vm *that = get_this(l);
     if (sfx == -1)
     {
         // TODO: stop channel
@@ -278,8 +277,8 @@ int vm::api::sfx(lua_State *l)
         if (chan == -1)
         {
             for (int i = 0; i < 4; ++i)
-                if (that->m_channels[i].m_sfx == -1 ||
-                    that->m_channels[i].m_sfx == sfx)
+                if (m_channels[i].m_sfx == -1 ||
+                    m_channels[i].m_sfx == sfx)
                 {
                     chan = i;
                     break;
@@ -292,7 +291,7 @@ int vm::api::sfx(lua_State *l)
         {
             for (int i = 0; i < 4; ++i)
                if (chan == -1 ||
-                    that->m_channels[i].m_sfx < that->m_channels[chan].m_sfx)
+                    m_channels[i].m_sfx < m_channels[chan].m_sfx)
                    chan = i;
         }
 
@@ -301,12 +300,12 @@ int vm::api::sfx(lua_State *l)
         {
             // Stop any channel playing the same sfx
             for (int i = 0; i < 4; ++i)
-                if (that->m_channels[i].m_sfx == sfx)
-                    that->m_channels[i].m_sfx = -1;
+                if (m_channels[i].m_sfx == sfx)
+                    m_channels[i].m_sfx = -1;
 
-            that->m_channels[chan].m_sfx = sfx;
-            that->m_channels[chan].m_offset = offset;
-            that->m_channels[chan].m_phi = 0.f;
+            m_channels[chan].m_sfx = sfx;
+            m_channels[chan].m_offset = offset;
+            m_channels[chan].m_phi = 0.f;
         }
     }
 

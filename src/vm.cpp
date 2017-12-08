@@ -25,7 +25,7 @@ vm::vm()
     lua_State *l = GetLuaState();
 
     // Store a pointer to us in global state
-    set_this(l);
+    *static_cast<vm**>(lua_getextraspace(l)) = this;
 
     // Automatically yield every 1000 instructions
     lua_sethook(l, &vm::hook, LUA_MASKCOUNT, 1000);
@@ -47,19 +47,9 @@ vm::~vm()
 {
 }
 
-void vm::set_this(lua_State *l)
-{
-    *static_cast<vm**>(lua_getextraspace(l)) = this;
-}
-
-vm* vm::get_this(lua_State *l)
-{
-    return *static_cast<vm**>(lua_getextraspace(l));
-}
-
 void vm::hook(lua_State *l, lua_Debug *)
 {
-    vm *that = get_this(l);
+    vm *that = *static_cast<vm**>(lua_getextraspace(l));
 
     // The value 135000 was found using trial and error, but it causes
     // side effects in lots of cases. Use 300000 instead.
@@ -99,80 +89,80 @@ const lol::LuaObjectLibrary* vm::GetLib()
 
         // Statics
         {
-            { "run",      &vm::api::run },
-            { "menuitem", &vm::api::menuitem },
-            { "cartdata", &vm::api::cartdata },
-            { "reload",   &vm::api::reload },
-            { "peek",     &vm::api::peek },
-            { "peek4",    &vm::api::peek4 },
-            { "poke",     &vm::api::poke },
-            { "poke4",    &vm::api::poke4 },
-            { "memcpy",   &vm::api::memcpy },
-            { "memset",   &vm::api::memset },
-            { "stat",     &vm::api::stat },
-            { "printh",   &vm::api::printh },
-            { "extcmd",   &vm::api::extcmd },
+            { "run",      &dispatch<&vm::api_run> },
+            { "menuitem", &dispatch<&vm::api_menuitem> },
+            { "cartdata", &dispatch<&vm::api_cartdata> },
+            { "reload",   &dispatch<&vm::api_reload> },
+            { "peek",     &dispatch<&vm::api_peek> },
+            { "peek4",    &dispatch<&vm::api_peek4> },
+            { "poke",     &dispatch<&vm::api_poke> },
+            { "poke4",    &dispatch<&vm::api_poke4> },
+            { "memcpy",   &dispatch<&vm::api_memcpy> },
+            { "memset",   &dispatch<&vm::api_memset> },
+            { "stat",     &dispatch<&vm::api_stat> },
+            { "printh",   &vm::api_printh },
+            { "extcmd",   &dispatch<&vm::api_extcmd> },
 
-            { "_update_buttons", &vm::api::update_buttons },
-            { "btn",  &vm::api::btn },
-            { "btnp", &vm::api::btnp },
+            { "_update_buttons", &dispatch<&vm::api_update_buttons> },
+            { "btn",  &dispatch<&vm::api_btn> },
+            { "btnp", &dispatch<&vm::api_btnp> },
 
-            { "cursor", &vm::api::cursor },
-            { "print",  &vm::api::print },
-            { "tonum",  &vm::api::tonum },
-            { "tostr",  &vm::api::tostr },
+            { "cursor", &dispatch<&vm::api_cursor> },
+            { "print",  &dispatch<&vm::api_print> },
+            { "tonum",  &vm::api_tonum },
+            { "tostr",  &vm::api_tostr },
 
-            { "max",   &vm::api::max },
-            { "min",   &vm::api::min },
-            { "mid",   &vm::api::mid },
-            { "ceil",  &vm::api::ceil },
-            { "flr",   &vm::api::flr },
-            { "cos",   &vm::api::cos },
-            { "sin",   &vm::api::sin },
-            { "atan2", &vm::api::atan2 },
-            { "sqrt",  &vm::api::sqrt },
-            { "abs",   &vm::api::abs },
-            { "sgn",   &vm::api::sgn },
-            { "rnd",   &vm::api::rnd },
-            { "srand", &vm::api::srand },
-            { "band",  &vm::api::band },
-            { "bor",   &vm::api::bor },
-            { "bxor",  &vm::api::bxor },
-            { "bnot",  &vm::api::bnot },
-            { "shl",   &vm::api::shl },
-            { "shr",   &vm::api::shr },
-            { "lshr",  &vm::api::lshr },
-            { "rotl",  &vm::api::rotl },
-            { "rotr",  &vm::api::rotr },
+            { "max",   &vm::api_max },
+            { "min",   &vm::api_min },
+            { "mid",   &vm::api_mid },
+            { "ceil",  &vm::api_ceil },
+            { "flr",   &vm::api_flr },
+            { "cos",   &vm::api_cos },
+            { "sin",   &vm::api_sin },
+            { "atan2", &vm::api_atan2 },
+            { "sqrt",  &vm::api_sqrt },
+            { "abs",   &vm::api_abs },
+            { "sgn",   &vm::api_sgn },
+            { "rnd",   &dispatch<&vm::api_rnd> },
+            { "srand", &dispatch<&vm::api_srand> },
+            { "band",  &vm::api_band },
+            { "bor",   &vm::api_bor },
+            { "bxor",  &vm::api_bxor },
+            { "bnot",  &vm::api_bnot },
+            { "shl",   &vm::api_shl },
+            { "shr",   &vm::api_shr },
+            { "lshr",  &vm::api_lshr },
+            { "rotl",  &vm::api_rotl },
+            { "rotr",  &vm::api_rotr },
 
-            { "camera",   &vm::api::camera },
-            { "circ",     &vm::api::circ },
-            { "circfill", &vm::api::circfill },
-            { "clip",     &vm::api::clip },
-            { "cls",      &vm::api::cls },
-            { "color",    &vm::api::color },
-            { "fillp",    &vm::api::fillp },
-            { "fget",     &vm::api::fget },
-            { "fset",     &vm::api::fset },
-            { "line",     &vm::api::line },
-            { "map",      &vm::api::map },
-            { "mget",     &vm::api::mget },
-            { "mset",     &vm::api::mset },
-            { "pal",      &vm::api::pal },
-            { "palt",     &vm::api::palt },
-            { "pget",     &vm::api::pget },
-            { "pset",     &vm::api::pset },
-            { "rect",     &vm::api::rect },
-            { "rectfill", &vm::api::rectfill },
-            { "sget",     &vm::api::sget },
-            { "sset",     &vm::api::sset },
-            { "spr",      &vm::api::spr },
-            { "sspr",     &vm::api::sspr },
+            { "camera",   &dispatch<&vm::api_camera> },
+            { "circ",     &dispatch<&vm::api_circ> },
+            { "circfill", &dispatch<&vm::api_circfill> },
+            { "clip",     &dispatch<&vm::api_clip> },
+            { "cls",      &dispatch<&vm::api_cls> },
+            { "color",    &dispatch<&vm::api_color> },
+            { "fillp",    &dispatch<&vm::api_fillp> },
+            { "fget",     &dispatch<&vm::api_fget> },
+            { "fset",     &dispatch<&vm::api_fset> },
+            { "line",     &dispatch<&vm::api_line> },
+            { "map",      &dispatch<&vm::api_map> },
+            { "mget",     &dispatch<&vm::api_mget> },
+            { "mset",     &dispatch<&vm::api_mset> },
+            { "pal",      &dispatch<&vm::api_pal> },
+            { "palt",     &dispatch<&vm::api_palt> },
+            { "pget",     &dispatch<&vm::api_pget> },
+            { "pset",     &dispatch<&vm::api_pset> },
+            { "rect",     &dispatch<&vm::api_rect> },
+            { "rectfill", &dispatch<&vm::api_rectfill> },
+            { "sget",     &dispatch<&vm::api_sget> },
+            { "sset",     &dispatch<&vm::api_sset> },
+            { "spr",      &dispatch<&vm::api_spr> },
+            { "sspr",     &dispatch<&vm::api_sspr> },
 
-            { "music", &vm::api::music },
-            { "sfx",   &vm::api::sfx },
+            { "music", &dispatch<&vm::api_music> },
+            { "sfx",   &dispatch<&vm::api_sfx> },
 
-            { "time", &vm::api::time },
+            { "time", &dispatch<&vm::api_time> },
 
             { nullptr, nullptr }
         },
@@ -214,37 +204,35 @@ void vm::mouse(lol::ivec2 coords, int buttons)
 // System
 //
 
-int vm::api::run(lua_State *l)
+int vm::api_run(lua_State *l)
 {
-    vm *that = get_this(l);
-
     // Initialise VM state (TODO: check what else to init)
-    ::memset(that->m_buttons, 0, sizeof(that->m_buttons));
+    ::memset(m_buttons, 0, sizeof(m_buttons));
 
     // Load cartridge code and call _z8.run() on it
     lua_getglobal(l, "_z8");
     lua_getfield(l, -1, "run");
-    luaL_loadstring(l, that->m_cart.get_lua().C());
+    luaL_loadstring(l, m_cart.get_lua().C());
     lua_pcall(l, 1, 0, 0);
 
     return 0;
 }
 
-int vm::api::menuitem(lua_State *l)
+int vm::api_menuitem(lua_State *l)
 {
     UNUSED(l);
     msg::info("z8:stub:menuitem\n");
     return 0;
 }
 
-int vm::api::cartdata(lua_State *l)
+int vm::api_cartdata(lua_State *l)
 {
     int x = (int)lua_tonumber(l, 1);
     msg::info("z8:stub:cartdata %d\n", x);
     return 0;
 }
 
-int vm::api::reload(lua_State *l)
+int vm::api_reload(lua_State *l)
 {
     int dst = 0, src = 0, size = OFFSET_CODE;
 
@@ -266,13 +254,11 @@ int vm::api::reload(lua_State *l)
     if (dst + size > SIZE_MEMORY)
         return luaL_error(l, "bad memory access");
 
-    vm *that = get_this(l);
-
     // If reading from after the cart, fill with zeroes
     if (src > OFFSET_CODE)
     {
         int amount = lol::min(size, 0x10000 - src);
-        ::memset(that->get_mem(dst), 0, amount);
+        ::memset(get_mem(dst), 0, amount);
         dst += amount;
         src = (src + amount) & 0xffff;
         size -= amount;
@@ -280,32 +266,31 @@ int vm::api::reload(lua_State *l)
 
     // Now copy possibly legal data
     int amount = lol::min(size, OFFSET_CODE - src);
-    ::memcpy(that->get_mem(dst), that->m_cart.get_rom().data() + src, amount);
+    ::memcpy(get_mem(dst), m_cart.get_rom().data() + src, amount);
     dst += amount;
     size -= amount;
 
     // If there is anything left to copy, it’s zeroes again
-    ::memset(that->get_mem(dst), 0, size);
+    ::memset(get_mem(dst), 0, size);
 
     return 0;
 }
 
-int vm::api::peek(lua_State *l)
+int vm::api_peek(lua_State *l)
 {
     // Note: peek() is the same as peek(0)
     int addr = (int)lua_tofix32(l, 1);
     if (addr < 0 || addr >= SIZE_MEMORY)
         return 0;
 
-    vm *that = get_this(l);
-    lua_pushnumber(l, that->m_memory[addr]);
+    lua_pushnumber(l, m_memory[addr]);
     return 1;
 }
 
-int vm::api::peek4(lua_State *l)
+int vm::api_peek4(lua_State *l)
 {
     int addr = (int)lua_tofix32(l, 1) & 0xffff;
-    uint8_t const *p = get_this(l)->get_mem(addr);
+    uint8_t const *p = get_mem(addr);
     int32_t bits = 0;
     for (int i = 0; i < 4; ++i)
     {
@@ -320,7 +305,7 @@ int vm::api::peek4(lua_State *l)
     return 1;
 }
 
-int vm::api::poke(lua_State *l)
+int vm::api_poke(lua_State *l)
 {
     // Note: poke() is the same as poke(0, 0)
     int addr = (int)lua_tofix32(l, 1);
@@ -328,12 +313,11 @@ int vm::api::poke(lua_State *l)
     if (addr < 0 || addr > SIZE_MEMORY - 1)
         return luaL_error(l, "bad memory access");
 
-    vm *that = get_this(l);
-    that->m_memory[addr] = (uint8_t)val;
+    m_memory[addr] = (uint8_t)val;
     return 0;
 }
 
-int vm::api::poke4(lua_State *l)
+int vm::api_poke4(lua_State *l)
 {
     // Note: poke4() is the same as poke(0, 0)
     int addr = (int)lua_tofix32(l, 1);
@@ -341,7 +325,7 @@ int vm::api::poke4(lua_State *l)
         return luaL_error(l, "bad memory access");
 
     uint32_t x = (uint32_t)lua_tofix32(l, 2).bits();
-    uint8_t *p = get_this(l)->get_mem(addr);
+    uint8_t *p = get_mem(addr);
     p[0] = x;
     p[1] = x >> 8;
     p[2] = x >> 16;
@@ -350,7 +334,7 @@ int vm::api::poke4(lua_State *l)
     return 0;
 }
 
-int vm::api::memcpy(lua_State *l)
+int vm::api_memcpy(lua_State *l)
 {
     int dst = (int)lua_tofix32(l, 1);
     int src = (int)lua_tofix32(l, 2) & 0xffff;
@@ -369,8 +353,6 @@ int vm::api::memcpy(lua_State *l)
         return luaL_error(l, "bad memory access");
     }
 
-    vm *that = get_this(l);
-
     // If source is outside main memory, this will be memset(0). But we
     // delay the operation in case the source and the destinations overlap.
     int saved_dst = dst, saved_size = 0;
@@ -384,19 +366,19 @@ int vm::api::memcpy(lua_State *l)
 
     // Now copy possibly legal data
     int amount = lol::min(size, SIZE_MEMORY - src);
-    memmove(that->get_mem(dst), that->get_mem(src), amount);
+    memmove(get_mem(dst), get_mem(src), amount);
     dst += amount;
     size -= amount;
 
     // Fill possible zeroes we saved before, and if there is still something
     // to copy, it’s zeroes again
-    ::memset(that->get_mem(saved_dst), 0, saved_size);
-    ::memset(that->get_mem(dst), 0, size);
+    ::memset(get_mem(saved_dst), 0, saved_size);
+    ::memset(get_mem(dst), 0, size);
 
     return 0;
 }
 
-int vm::api::memset(lua_State *l)
+int vm::api_memset(lua_State *l)
 {
     int dst = (int)lua_tofix32(l, 1);
     int val = (int)lua_tofix32(l, 2) & 0xff;
@@ -413,15 +395,13 @@ int vm::api::memset(lua_State *l)
         return luaL_error(l, "bad memory access");
     }
 
-    vm *that = get_this(l);
-    ::memset(that->get_mem(dst), val, size);
+    ::memset(get_mem(dst), val, size);
 
     return 0;
 }
 
-int vm::api::stat(lua_State *l)
+int vm::api_stat(lua_State *l)
 {
-    vm *that = get_this(l);
     int id = (int)lua_tofix32(l, 1);
     fix32 ret(0.0);
 
@@ -447,7 +427,7 @@ int vm::api::stat(lua_State *l)
     {
         // undocumented parameters for stat(n):
         // 16..19: the sfx currently playing on each channel or -1 for none
-        ret = fix32(that->m_channels[id - 16].m_sfx);
+        ret = fix32(m_channels[id - 16].m_sfx);
     }
     else if (id >= 20 && id <= 23)
     {
@@ -455,19 +435,19 @@ int vm::api::stat(lua_State *l)
         // 20..23: the currently playing row number (0..31) or -1 for none
         // TODO
     }
-    else if (id >= 32 && id <= 34 && *that->get_mem(0x5f2d) == 1)
+    else if (id >= 32 && id <= 34 && *get_mem(0x5f2d) == 1)
     {
         // undocumented mouse support
-        ret = id == 32 ? that->m_mouse.x
-            : id == 33 ? that->m_mouse.y
-            : that->m_mouse.b;
+        ret = id == 32 ? m_mouse.x
+            : id == 33 ? m_mouse.y
+            : m_mouse.b;
     }
 
     lua_pushfix32(l, ret);
     return 1;
 }
 
-int vm::api::printh(lua_State *l)
+int vm::api_printh(lua_State *l)
 {
     char const *str;
     if (lua_isnoneornil(l, 1))
@@ -483,7 +463,7 @@ int vm::api::printh(lua_State *l)
     return 0;
 }
 
-int vm::api::extcmd(lua_State *l)
+int vm::api_extcmd(lua_State *l)
 {
     char const *str;
     if (lua_isnoneornil(l, 1))
@@ -506,43 +486,39 @@ int vm::api::extcmd(lua_State *l)
 // I/O
 //
 
-int vm::api::update_buttons(lua_State *l)
+int vm::api_update_buttons(lua_State *l)
 {
-    vm *that = get_this(l);
-
     // Update button state
     for (int i = 0; i < 64; ++i)
     {
-        if (that->m_buttons[1][i])
-            ++that->m_buttons[0][i];
+        if (m_buttons[1][i])
+            ++m_buttons[0][i];
         else
-            that->m_buttons[0][i] = 0;
+            m_buttons[0][i] = 0;
     }
 
     return 0;
 }
 
-int vm::api::btn(lua_State *l)
+int vm::api_btn(lua_State *l)
 {
-    vm *that = get_this(l);
-
     if (lua_isnone(l, 1))
     {
         int bits = 0;
         for (int i = 0; i < 16; ++i)
-            bits |= that->m_buttons[0][i] ? 1 << i : 0;
+            bits |= m_buttons[0][i] ? 1 << i : 0;
         lua_pushnumber(l, bits);
     }
     else
     {
         int index = (int)lua_tonumber(l, 1) + 8 * (int)lua_tonumber(l, 2);
-        lua_pushboolean(l, that->m_buttons[0][index]);
+        lua_pushboolean(l, m_buttons[0][index]);
     }
 
     return 1;
 }
 
-int vm::api::btnp(lua_State *l)
+int vm::api_btnp(lua_State *l)
 {
     auto was_pressed = [](int i)
     {
@@ -555,19 +531,17 @@ int vm::api::btnp(lua_State *l)
         return false;
     };
 
-    vm *that = get_this(l);
-
     if (lua_isnone(l, 1))
     {
         int bits = 0;
         for (int i = 0; i < 16; ++i)
-            bits |= was_pressed(that->m_buttons[0][i]) ? 1 << i : 0;
+            bits |= was_pressed(m_buttons[0][i]) ? 1 << i : 0;
         lua_pushnumber(l, bits);
     }
     else
     {
         int index = (int)lua_tonumber(l, 1) + 8 * (int)lua_tonumber(l, 2);
-        lua_pushboolean(l, was_pressed(that->m_buttons[0][index]));
+        lua_pushboolean(l, was_pressed(m_buttons[0][index]));
     }
 
     return 1;
@@ -577,10 +551,9 @@ int vm::api::btnp(lua_State *l)
 // Deprecated
 //
 
-int vm::api::time(lua_State *l)
+int vm::api_time(lua_State *l)
 {
-    vm *that = get_this(l);
-    float time = lol::fmod(that->m_timer.Poll(), 65536.0f);
+    float time = lol::fmod(m_timer.Poll(), 65536.0f);
     lua_pushnumber(l, time < 32768.f ? time : time - 65536.0f);
     return 1;
 }
