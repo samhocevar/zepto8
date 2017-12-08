@@ -32,9 +32,25 @@ struct fix32
         return std::ldexp((double)m_bits, -16);
     }
 
-    /* Convert from int16_t and to int */
+    /* Conversions up to int16_t are allowed */
+    inline fix32(int8_t x) : m_bits(x << 16) {}
+    inline fix32(uint8_t x) : m_bits(x << 16) {}
     inline fix32(int16_t x) : m_bits(x << 16) {}
-    inline operator int() const { return m_bits >> 16; }
+
+    /* Anything above int16_t is disallowed because of precision loss */
+    inline fix32(uint16_t x) = delete;
+    inline fix32(int32_t x) = delete;
+    inline fix32(uint32_t x) = delete;
+
+    /* Explicit casts are all allowed */
+    inline operator int8_t() const { return m_bits >> 16; }
+    inline operator uint8_t() const { return m_bits >> 16; }
+    inline operator int16_t() const { return m_bits >> 16; }
+    inline operator uint16_t() const { return m_bits >> 16; }
+    inline operator int32_t() const { return m_bits >> 16; }
+    inline operator uint32_t() const { return m_bits >> 16; }
+    inline operator int64_t() const { return m_bits >> 16; }
+    inline operator uint64_t() const { return m_bits >> 16; }
 
     /* Directly initialise bits */
     static inline fix32 frombits(int32_t x)
@@ -51,6 +67,12 @@ struct fix32
     bool operator  >(fix32 x) const { return m_bits  > x.m_bits; }
     bool operator <=(fix32 x) const { return m_bits <= x.m_bits; }
     bool operator >=(fix32 x) const { return m_bits >= x.m_bits; }
+
+    /* Increments */
+    fix32& operator ++() { m_bits += 0x10000; return *this; }
+    fix32& operator --() { m_bits -= 0x10000; return *this; }
+    fix32 operator ++(int) { fix32 ret = *this; ++*this; return ret; }
+    fix32 operator --(int) { fix32 ret = *this; --*this; return ret; }
 
     /* Math operations */
     fix32 const &operator +() const { return *this; }

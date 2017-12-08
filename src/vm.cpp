@@ -447,7 +447,7 @@ int vm::api::stat(lua_State *l)
     {
         // undocumented parameters for stat(n):
         // 16..19: the sfx currently playing on each channel or -1 for none
-        ret = fix32((double)that->m_channels[id - 16].m_sfx);
+        ret = fix32(that->m_channels[id - 16].m_sfx);
     }
     else if (id >= 20 && id <= 23)
     {

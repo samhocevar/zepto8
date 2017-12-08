@@ -176,7 +176,7 @@ private:
     {
         channel();
 
-        int m_sfx;
+        int16_t m_sfx;
         float m_offset, m_phi;
 #if DEBUG_EXPORT_WAV
         FILE *m_fd;
