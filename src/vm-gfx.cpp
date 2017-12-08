@@ -19,7 +19,39 @@ namespace z8
 
 using lol::msg;
 
-uint8_t vm::getpixel(fix32 x, fix32 y)
+/* Return color bits for use with set_pixel().
+ *  - bits 0x0000ffff: fillp pattern
+ *  - bits 0x000f0000: default color (palette applied)
+ *  - bits 0x00f00000: color for patterns (palette applied)
+ *  - bit  0x01000000: transparency for patterns */
+uint32_t vm::get_color_bits() const
+{
+    int32_t bits = 0;
+    uint8_t c1 = (m_colors.bits() >> 16) & 0xf;
+    uint8_t c2 = (m_colors.bits() >> 20) & 0xf;
+
+    /* From the PICO-8 documentation:
+     *  -- bit  0x1000.0000 means the non-colour bits should be observed
+     *  -- bit  0x0100.0000 transparency bit
+     *  -- bits 0x00FF.0000 are the usual colour bits
+     *  -- bits 0x0000.FFFF are interpreted as the fill pattern */
+    if (m_colors.bits() & 0x1000000)
+    {
+        bits |= (m_colors.bits() & 0x100ffff);
+    }
+    else
+    {
+        bits |= (m_fillp.bits() >> 16) & 0xffff;
+        bits |= (m_fillp.bits() << 9) & 0x1000000;
+    }
+
+    bits |= m_pal[0][c1] << 16;
+    bits |= m_pal[0][c2] << 20;
+
+    return bits;
+}
+
+uint8_t vm::get_pixel(fix32 x, fix32 y) const
 {
     if (x < m_clip.aa.x || x >= m_clip.bb.x
          || y < m_clip.aa.y || y >= m_clip.bb.y)
@@ -29,24 +61,23 @@ uint8_t vm::getpixel(fix32 x, fix32 y)
     return ((int)x & 1) ? m_memory[offset] >> 4 : m_memory[offset] & 0xf;
 }
 
-void vm::setpixel(fix32 x, fix32 y, fix32 c)
+void vm::set_pixel(fix32 x, fix32 y, uint32_t color_bits)
 {
     if (x < m_clip.aa.x || x >= m_clip.bb.x
          || y < m_clip.aa.y || y >= m_clip.bb.y)
         return;
 
-    int color = m_pal[0][(int)c & 0xf];
-
-    if ((m_fillp.bits() >> (((int)x & 3) + 4 * ((int)y & 3))) & 0x10000)
+    uint8_t color = (color_bits >> 16) & 0xf;
+    if ((color_bits >> (((int)x & 3) + 4 * ((int)y & 3))) & 0x1)
     {
-        if (m_fillp.bits() & 0x8000) // Special transparency bit
+        if (color_bits & 0x1000000) // Special transparency bit
             return;
-        color = m_pal[0][((int)c >> 4) & 0xf];
+        color = (color_bits >> 20) & 0xf;
     }
 
     int offset = OFFSET_SCREEN + (128 * (int)y + (int)x) / 2;
-    int mask = ((int)x & 1) ? 0x0f : 0xf0;
-    int p = ((int)x & 1) ? color << 4 : color;
+    uint8_t mask = ((int)x & 1) ? 0x0f : 0xf0;
+    uint8_t p = ((int)x & 1) ? color << 4 : color;
     m_memory[offset] = (m_memory[offset] & mask) | p;
 }
 
@@ -56,8 +87,8 @@ void vm::setspixel(int x, int y, int color)
         return;
 
     int offset = OFFSET_GFX + (128 * y + x) / 2;
-    int mask = (x & 1) ? 0x0f : 0xf0;
-    int p = (x & 1) ? color << 4 : color;
+    uint8_t mask = (x & 1) ? 0x0f : 0xf0;
+    uint8_t p = (x & 1) ? color << 4 : color;
     m_memory[offset] = (m_memory[offset] & mask) | p;
 }
 
@@ -70,16 +101,16 @@ int vm::getspixel(int x, int y)
     return (x & 1) ? m_memory[offset] >> 4 : m_memory[offset] & 0xf;
 }
 
-void vm::hline(fix32 x1, fix32 x2, fix32 y, fix32 c)
+void vm::hline(fix32 x1, fix32 x2, fix32 y, uint32_t color_bits)
 {
     if (x1 > x2)
         std::swap(x1, x2);
 
     // FIXME: very inefficient when fillp is active
-    if (m_fillp.bits())
+    if (color_bits & 0xffff)
     {
         for (fix32 x = x1; x <= x2; x += fix32(1.0))
-            setpixel(x, y, c);
+            set_pixel(x, y, color_bits);
         return;
     }
 
@@ -92,7 +123,7 @@ void vm::hline(fix32 x1, fix32 x2, fix32 y, fix32 c)
     if (x1 > x2)
         return;
 
-    int color = m_pal[0][(int)c & 0xf];
+    uint8_t color = (color_bits >> 16) & 0xf;
     int offset = OFFSET_SCREEN + (128 * (int)y) / 2;
 
     if ((int)x1 & 1)
@@ -112,16 +143,16 @@ void vm::hline(fix32 x1, fix32 x2, fix32 y, fix32 c)
     ::memset(get_mem(offset + (int)x1 / 2), color * 0x11, ((int)x2 - (int)x1 + 1) / 2);
 }
 
-void vm::vline(fix32 x, fix32 y1, fix32 y2, fix32 c)
+void vm::vline(fix32 x, fix32 y1, fix32 y2, uint32_t color_bits)
 {
     if (y1 > y2)
         std::swap(y1, y2);
 
     // FIXME: very inefficient when fillp is active
-    if (m_fillp.bits())
+    if (color_bits & 0xffff)
     {
         for (fix32 y = y1; y <= y2; y += fix32(1.0))
-            setpixel(x, y, c);
+            set_pixel(x, y, color_bits);
         return;
     }
 
@@ -134,9 +165,9 @@ void vm::vline(fix32 x, fix32 y1, fix32 y2, fix32 c)
     if (y1 > y2)
         return;
 
-    int mask = ((int)x & 1) ? 0x0f : 0xf0;
-    int color = m_pal[0][(int)c & 0xf];
-    int p = ((int)x & 1) ? color << 4 : color;
+    uint8_t mask = ((int)x & 1) ? 0x0f : 0xf0;
+    uint8_t color = (color_bits >> 16) & 0xf;
+    uint8_t p = ((int)x & 1) ? color << 4 : color;
 
     for (int y = (int)y1; y <= (int)y2; ++y)
     {
@@ -217,6 +248,8 @@ int vm::api::print(lua_State *l)
         that->m_colors = lua_tofix32(l, 4);
     fix32 initial_x = x;
 
+    uint32_t color_bits = that->get_color_bits();
+
     auto pixels = that->m_font.lock<lol::PixelFormat::RGBA_8>();
     for (int n = 0; str[n]; ++n)
     {
@@ -242,7 +275,7 @@ int vm::api::print(lua_State *l)
                     fix32 screen_y = y - that->m_camera.y + fix32(dy);
 
                     if (pixels[(index / 16 * h + dy) * 128 + (index % 16 * w + dx)].r > 0)
-                        that->setpixel(screen_x, screen_y, that->m_colors);
+                        that->set_pixel(screen_x, screen_y, color_bits);
                 }
 
             x += fix32(w);
@@ -311,18 +344,20 @@ int vm::api::circ(lua_State *l)
     if (!lua_isnone(l, 4))
         that->m_colors = lua_tofix32(l, 4);
 
+    uint32_t color_bits = that->get_color_bits();
+
     for (int16_t dx = r, dy = 0, err = 0; dx >= dy; )
     {
         fix32 fdx(dx), fdy(dy);
 
-        that->setpixel(x + fdx, y + fdy, that->m_colors);
-        that->setpixel(x + fdy, y + fdx, that->m_colors);
-        that->setpixel(x - fdy, y + fdx, that->m_colors);
-        that->setpixel(x - fdx, y + fdy, that->m_colors);
-        that->setpixel(x - fdx, y - fdy, that->m_colors);
-        that->setpixel(x - fdy, y - fdx, that->m_colors);
-        that->setpixel(x + fdy, y - fdx, that->m_colors);
-        that->setpixel(x + fdx, y - fdy, that->m_colors);
+        that->set_pixel(x + fdx, y + fdy, color_bits);
+        that->set_pixel(x + fdy, y + fdx, color_bits);
+        that->set_pixel(x - fdy, y + fdx, color_bits);
+        that->set_pixel(x - fdx, y + fdy, color_bits);
+        that->set_pixel(x - fdx, y - fdy, color_bits);
+        that->set_pixel(x - fdy, y - fdx, color_bits);
+        that->set_pixel(x + fdy, y - fdx, color_bits);
+        that->set_pixel(x + fdx, y - fdy, color_bits);
 
         dy += 1;
         err += 1 + 2 * dy;
@@ -348,15 +383,17 @@ int vm::api::circfill(lua_State *l)
     if (!lua_isnone(l, 4))
         that->m_colors = lua_tofix32(l, 4);
 
+    uint32_t color_bits = that->get_color_bits();
+
     for (int16_t dx = r, dy = 0, err = 0; dx >= dy; )
     {
         fix32 fdx(dx), fdy(dy);
 
         /* Some minor overdraw here, but nothing serious */
-        that->hline(x - fdx, x + fdx, y - fdy, that->m_colors);
-        that->hline(x - fdx, x + fdx, y + fdy, that->m_colors);
-        that->vline(x - fdy, y - fdx, y + fdx, that->m_colors);
-        that->vline(x + fdy, y - fdx, y + fdx, that->m_colors);
+        that->hline(x - fdx, x + fdx, y - fdy, color_bits);
+        that->hline(x - fdx, x + fdx, y + fdy, color_bits);
+        that->vline(x - fdy, y - fdx, y + fdx, color_bits);
+        that->vline(x + fdy, y - fdx, y + fdx, color_bits);
 
         dy += 1;
         err += 1 + 2 * dy;
@@ -483,16 +520,18 @@ int vm::api::line(lua_State *l)
     if (!lua_isnone(l, 5))
         that->m_colors = lua_tofix32(l, 5);
 
+    uint32_t color_bits = that->get_color_bits();
+
     if (x0 == x1 && y0 == y1)
     {
-        that->setpixel(x0, y0, that->m_colors);
+        that->set_pixel(x0, y0, color_bits);
     }
     else if (fix32::abs(x1 - x0) > fix32::abs(y1 - y0))
     {
         for (int16_t x = (int16_t)fix32::min(x0, x1); x <= (int16_t)fix32::max(x0, x1); ++x)
         {
             int16_t y = lol::round(lol::mix((double)y0, (double)y1, (x - (double)x0) / (double)(x1 - x0)));
-            that->setpixel(fix32(x), fix32(y), that->m_colors);
+            that->set_pixel(fix32(x), fix32(y), color_bits);
         }
     }
     else
@@ -500,7 +539,7 @@ int vm::api::line(lua_State *l)
         for (int16_t y = (int16_t)fix32::min(y0, y1); y <= (int16_t)fix32::max(y0, y1); ++y)
         {
             int16_t x = lol::round(lol::mix((double)x0, (double)x1, (y -(double)y0) / (double)(y1 - y0)));
-            that->setpixel(fix32(x), fix32(y), that->m_colors);
+            that->set_pixel(fix32(x), fix32(y), color_bits);
         }
     }
 
@@ -543,8 +582,8 @@ int vm::api::map(lua_State *l)
             int col = that->getspixel(sprite % 16 * 8 + dx % 8, sprite / 16 * 8 + dy % 8);
             if (!that->m_palt[col])
             {
-                fix32 c = fix32(that->m_pal[0][col & 0xf]);
-                that->setpixel(sx + fix32(dx), sy + fix32(dy), c);
+                uint32_t color_bits = that->m_pal[0][col & 0xf] << 16;
+                that->set_pixel(sx + fix32(dx), sy + fix32(dy), color_bits);
             }
         }
     }
@@ -641,7 +680,7 @@ int vm::api::pget(lua_State *l)
     fix32 x = lua_tofix32(l, 1) - that->m_camera.x;
     fix32 y = lua_tofix32(l, 2) - that->m_camera.y;
 
-    lua_pushfix32(l, fix32(that->getpixel(x, y)));
+    lua_pushfix32(l, fix32(that->get_pixel(x, y)));
 
     return 1;
 }
@@ -655,7 +694,8 @@ int vm::api::pset(lua_State *l)
     if (!lua_isnone(l, 3))
         that->m_colors = lua_tofix32(l, 3);
 
-    that->setpixel(x, y, that->m_colors);
+    uint32_t color_bits = that->get_color_bits();
+    that->set_pixel(x, y, color_bits);
 
     return 0;
 }
@@ -671,19 +711,21 @@ int vm::api::rect(lua_State *l)
     if (!lua_isnone(l, 5))
         that->m_colors = lua_tofix32(l, 5);
 
+    uint32_t color_bits = that->get_color_bits();
+
     if (x0 > x1)
         std::swap(x0, x1);
 
     if (y0 > y1)
         std::swap(y0, y1);
 
-    that->hline(x0, x1, y0, that->m_colors);
-    that->hline(x0, x1, y1, that->m_colors);
+    that->hline(x0, x1, y0, color_bits);
+    that->hline(x0, x1, y1, color_bits);
 
     if (y0 + fix32(1.0) < y1)
     {
-        that->vline(x0, y0 + fix32(1.0), y1 - fix32(1.0), that->m_colors);
-        that->vline(x1, y0 + fix32(1.0), y1 - fix32(1.0), that->m_colors);
+        that->vline(x0, y0 + fix32(1.0), y1 - fix32(1.0), color_bits);
+        that->vline(x1, y0 + fix32(1.0), y1 - fix32(1.0), color_bits);
     }
 
     return 0;
@@ -700,12 +742,14 @@ int vm::api::rectfill(lua_State *l)
     if (!lua_isnone(l, 5))
         that->m_colors = lua_tofix32(l, 5);
 
+    uint32_t color_bits = that->get_color_bits();
+
     if (y0 > y1)
         std::swap(y0, y1);
 
     // FIXME: broken when y0 = 0.5, y1 = 1.4... 2nd line is not printed
     for (fix32 y = y0; y <= y1; y += fix32(1.0))
-        that->hline(x0, x1, y, that->m_colors);
+        that->hline(x0, x1, y, color_bits);
 
     return 0;
 }
@@ -757,8 +801,8 @@ int vm::api::spr(lua_State *l)
             int col = that->getspixel(n % 16 * 8 + di, n / 16 * 8 + dj);
             if (!that->m_palt[col])
             {
-                fix32 c = fix32(that->m_pal[0][col]);
-                that->setpixel(x + fix32(i), y + fix32(j), c);
+                uint32_t color_bits = that->m_pal[0][col] << 16;
+                that->set_pixel(x + fix32(i), y + fix32(j), color_bits);
             }
         }
 
@@ -794,8 +838,8 @@ int vm::api::sspr(lua_State *l)
         int col = that->getspixel(x, y);
         if (!that->m_palt[col])
         {
-            fix32 c = fix32(that->m_pal[0][col]);
-            that->setpixel(dx + fix32(i), dy + fix32(j), c);
+            uint32_t color_bits = that->m_pal[0][col] << 16;
+            that->set_pixel(dx + fix32(i), dy + fix32(j), color_bits);
         }
     }
 

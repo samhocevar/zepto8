@@ -145,11 +145,13 @@ private:
     };
 
 private:
-    uint8_t getpixel(fix32 x, fix32 y);
-    void setpixel(fix32 x, fix32 y, fix32 color);
+    uint8_t get_pixel(fix32 x, fix32 y) const;
+    uint32_t get_color_bits() const;
 
-    void hline(fix32 x1, fix32 x2, fix32 y, fix32 color);
-    void vline(fix32 x, fix32 y1, fix32 y2, fix32 color);
+    void set_pixel(fix32 x, fix32 y, uint32_t color_bits);
+
+    void hline(fix32 x1, fix32 x2, fix32 y, uint32_t color_bits);
+    void vline(fix32 x, fix32 y1, fix32 y2, uint32_t color_bits);
 
     int getspixel(int x, int y);
     void setspixel(int x, int y, int color);
