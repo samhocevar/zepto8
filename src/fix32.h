@@ -65,7 +65,7 @@ struct fix32
 
     fix32 operator *(fix32 x) const
     {
-        return frombits(((int64_t)m_bits * x.m_bits) >> 16);
+        return frombits((int64_t)m_bits * x.m_bits / 0x10000);
     }
 
     fix32 operator /(fix32 x) const
@@ -73,7 +73,7 @@ struct fix32
         /* XXX: PICO-8 returns 0x8000.0001 instead of 0x8000.0000 */
         if (x.m_bits == 0)
             return frombits(m_bits >= 0 ? 0x7ffffff : 0x80000001);
-        return frombits(((int64_t)m_bits / x.m_bits) >> 16);
+        return frombits((int64_t)m_bits * 0x10000 / x.m_bits);
     }
 
     inline fix32& operator +=(fix32 x) { return *this = *this + x; }
