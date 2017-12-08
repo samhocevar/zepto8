@@ -150,16 +150,16 @@ private:
     int api_time(lua_State *l);
 
 private:
-    uint8_t get_pixel(fix32 x, fix32 y) const;
+    uint8_t get_pixel(int16_t x, int16_t y) const;
     uint32_t get_color_bits() const;
 
-    void set_pixel(fix32 x, fix32 y, uint32_t color_bits);
+    void set_pixel(int16_t x, int16_t y, uint32_t color_bits);
 
-    void hline(fix32 x1, fix32 x2, fix32 y, uint32_t color_bits);
-    void vline(fix32 x, fix32 y1, fix32 y2, uint32_t color_bits);
+    void hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits);
+    void vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits);
 
-    int getspixel(int x, int y);
-    void setspixel(int x, int y, int color);
+    uint8_t getspixel(int16_t x, int16_t y);
+    void setspixel(int16_t x, int16_t y, uint8_t color);
 
     void getaudio(int channel, void *buffer, int bytes);
 
@@ -171,7 +171,7 @@ private:
     // Graphics
     fix32 m_colors, m_fillp;
     struct { fix32 x, y; } m_camera, m_cursor;
-    struct { struct { fix32 x, y; } aa, bb; } m_clip;
+    struct { lol::i16vec2 aa, bb; } m_clip;
     uint8_t m_pal[2][16], m_palt[16];
 
     // Input

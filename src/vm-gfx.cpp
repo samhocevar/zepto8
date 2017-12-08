@@ -51,37 +51,37 @@ uint32_t vm::get_color_bits() const
     return bits;
 }
 
-uint8_t vm::get_pixel(fix32 x, fix32 y) const
+uint8_t vm::get_pixel(int16_t x, int16_t y) const
 {
     if (x < m_clip.aa.x || x >= m_clip.bb.x
          || y < m_clip.aa.y || y >= m_clip.bb.y)
         return 0;
 
-    int offset = OFFSET_SCREEN + (128 * (int)y + (int)x) / 2;
-    return ((int)x & 1) ? m_memory[offset] >> 4 : m_memory[offset] & 0xf;
+    int offset = OFFSET_SCREEN + (128 * y + x) / 2;
+    return (x & 1) ? m_memory[offset] >> 4 : m_memory[offset] & 0xf;
 }
 
-void vm::set_pixel(fix32 x, fix32 y, uint32_t color_bits)
+void vm::set_pixel(int16_t x, int16_t y, uint32_t color_bits)
 {
     if (x < m_clip.aa.x || x >= m_clip.bb.x
          || y < m_clip.aa.y || y >= m_clip.bb.y)
         return;
 
     uint8_t color = (color_bits >> 16) & 0xf;
-    if ((color_bits >> (((int)x & 3) + 4 * ((int)y & 3))) & 0x1)
+    if ((color_bits >> ((x & 3) + 4 * (y & 3))) & 0x1)
     {
         if (color_bits & 0x1000000) // Special transparency bit
             return;
         color = (color_bits >> 20) & 0xf;
     }
 
-    int offset = OFFSET_SCREEN + (128 * (int)y + (int)x) / 2;
-    uint8_t mask = ((int)x & 1) ? 0x0f : 0xf0;
-    uint8_t p = ((int)x & 1) ? color << 4 : color;
+    int offset = OFFSET_SCREEN + (128 * y + x) / 2;
+    uint8_t mask = (x & 1) ? 0x0f : 0xf0;
+    uint8_t p = (x & 1) ? color << 4 : color;
     m_memory[offset] = (m_memory[offset] & mask) | p;
 }
 
-void vm::setspixel(int x, int y, int color)
+void vm::setspixel(int16_t x, int16_t y, uint8_t color)
 {
     if (x < 0 || x >= 128 || y < 0 || y >= 128)
         return;
@@ -92,7 +92,7 @@ void vm::setspixel(int x, int y, int color)
     m_memory[offset] = (m_memory[offset] & mask) | p;
 }
 
-int vm::getspixel(int x, int y)
+uint8_t vm::getspixel(int16_t x, int16_t y)
 {
     if (x < 0 || x >= 128 || y < 0 || y >= 128)
         return 0;
@@ -101,78 +101,80 @@ int vm::getspixel(int x, int y)
     return (x & 1) ? m_memory[offset] >> 4 : m_memory[offset] & 0xf;
 }
 
-void vm::hline(fix32 x1, fix32 x2, fix32 y, uint32_t color_bits)
+void vm::hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits)
 {
-    if (x1 > x2)
-        std::swap(x1, x2);
-
-    // FIXME: very inefficient when fillp is active
-    if (color_bits & 0xffff)
-    {
-        for (fix32 x = x1; x <= x2; x += fix32(1.0))
-            set_pixel(x, y, color_bits);
-        return;
-    }
-
     if (y < m_clip.aa.y || y >= m_clip.bb.y)
         return;
 
-    x1 = fix32::max(x1, m_clip.aa.x);
-    x2 = fix32::min(x2, m_clip.bb.x - fix32(1.0));
+    if (x1 > x2)
+        std::swap(x1, x2);
+
+    x1 = std::max(x1, m_clip.aa.x);
+    x2 = std::min(x2, (int16_t)(m_clip.bb.x - 1));
 
     if (x1 > x2)
         return;
 
-    uint8_t color = (color_bits >> 16) & 0xf;
-    int offset = OFFSET_SCREEN + (128 * (int)y) / 2;
-
-    if ((int)x1 & 1)
+    // FIXME: very inefficient when fillp is active
+    if (color_bits & 0xffff)
     {
-        m_memory[offset + (int)x1 / 2]
-            = (m_memory[offset + (int)x1 / 2] & 0x0f) | (color << 4);
-        x1 += fix32(1.0);
+        for (int16_t x = x1; x <= x2; ++x)
+            set_pixel(x, y, color_bits);
     }
-
-    if (((int)x2 & 1) == 0)
+    else
     {
-        m_memory[offset + (int)x2 / 2]
-            = (m_memory[offset + (int)x2 / 2] & 0xf0) | color;
-        x2 -= fix32(1.0);
-    }
+        uint8_t color = (color_bits >> 16) & 0xf;
+        int offset = OFFSET_SCREEN + (128 * y) / 2;
 
-    ::memset(get_mem(offset + (int)x1 / 2), color * 0x11, ((int)x2 - (int)x1 + 1) / 2);
+        if (x1 & 1)
+        {
+            m_memory[offset + x1 / 2]
+                = (m_memory[offset + x1 / 2] & 0x0f) | (color << 4);
+            ++x1;
+        }
+
+        if ((x2 & 1) == 0)
+        {
+            m_memory[offset + x2 / 2]
+                = (m_memory[offset + x2 / 2] & 0xf0) | color;
+            --x2;
+        }
+
+        ::memset(get_mem(offset + x1 / 2), color * 0x11, (x2 - x1 + 1) / 2);
+    }
 }
 
-void vm::vline(fix32 x, fix32 y1, fix32 y2, uint32_t color_bits)
+void vm::vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits)
 {
+    if (x < m_clip.aa.x || x >= m_clip.bb.x)
+        return;
+
     if (y1 > y2)
         std::swap(y1, y2);
+
+    y1 = std::max(y1, m_clip.aa.y);
+    y2 = std::min(y2, (int16_t)(m_clip.bb.y - 1));
+
+    if (y1 > y2)
+        return;
 
     // FIXME: very inefficient when fillp is active
     if (color_bits & 0xffff)
     {
-        for (fix32 y = y1; y <= y2; y += fix32(1.0))
+        for (int16_t y = y1; y <= y2; ++y)
             set_pixel(x, y, color_bits);
-        return;
     }
-
-    if (x < m_clip.aa.x || x >= m_clip.bb.x)
-        return;
-
-    y1 = fix32::max(y1, m_clip.aa.y);
-    y2 = fix32::min(y2, m_clip.bb.y - fix32(1.0));
-
-    if (y1 > y2)
-        return;
-
-    uint8_t mask = ((int)x & 1) ? 0x0f : 0xf0;
-    uint8_t color = (color_bits >> 16) & 0xf;
-    uint8_t p = ((int)x & 1) ? color << 4 : color;
-
-    for (int y = (int)y1; y <= (int)y2; ++y)
+    else
     {
-        int offset = OFFSET_SCREEN + (128 * y + (int)x) / 2;
-        m_memory[offset] = (m_memory[offset] & mask) | p;
+        uint8_t mask = (x & 1) ? 0x0f : 0xf0;
+        uint8_t color = (color_bits >> 16) & 0xf;
+        uint8_t p = (x & 1) ? color << 4 : color;
+
+        for (int16_t y = y1; y <= y2; ++y)
+        {
+            int offset = OFFSET_SCREEN + (128 * y + x) / 2;
+            m_memory[offset] = (m_memory[offset] & mask) | p;
+        }
     }
 }
 
@@ -238,6 +240,7 @@ int vm::api_print(lua_State *l)
     char const *str = lua_tostring(l, -1);
     lua_pop(l, 1);
 
+    // FIXME: make x and y int16_t instead?
     bool use_cursor = lua_isnone(l, 2) || lua_isnone(l, 3);
     fix32 x = use_cursor ? m_cursor.x : lua_tofix32(l, 2);
     fix32 y = use_cursor ? m_cursor.y : lua_tofix32(l, 3);
@@ -268,8 +271,9 @@ int vm::api_print(lua_State *l)
             for (int16_t dy = 0; dy < h; ++dy)
                 for (int16_t dx = 0; dx < w; ++dx)
                 {
-                    fix32 screen_x = x - m_camera.x + fix32(dx);
-                    fix32 screen_y = y - m_camera.y + fix32(dy);
+                    // FIXME: precompute -m_camera.x?
+                    int16_t screen_x = (int16_t)(x - m_camera.x) + dx;
+                    int16_t screen_y = (int16_t)(y - m_camera.y) + dy;
 
                     if (pixels[(index / 16 * h + dy) * 128 + (index % 16 * w + dx)].r > 0)
                         set_pixel(screen_x, screen_y, color_bits);
@@ -332,8 +336,8 @@ int vm::api_camera(lua_State *l)
 
 int vm::api_circ(lua_State *l)
 {
-    fix32 x = lua_tofix32(l, 1) - m_camera.x;
-    fix32 y = lua_tofix32(l, 2) - m_camera.y;
+    int16_t x = (int16_t)(lua_tofix32(l, 1) - m_camera.x);
+    int16_t y = (int16_t)(lua_tofix32(l, 2) - m_camera.y);
     int16_t r = (int16_t)lua_tofix32(l, 3);
     if (!lua_isnone(l, 4))
         m_colors = lua_tofix32(l, 4);
@@ -342,16 +346,14 @@ int vm::api_circ(lua_State *l)
 
     for (int16_t dx = r, dy = 0, err = 0; dx >= dy; )
     {
-        fix32 fdx(dx), fdy(dy);
-
-        set_pixel(x + fdx, y + fdy, color_bits);
-        set_pixel(x + fdy, y + fdx, color_bits);
-        set_pixel(x - fdy, y + fdx, color_bits);
-        set_pixel(x - fdx, y + fdy, color_bits);
-        set_pixel(x - fdx, y - fdy, color_bits);
-        set_pixel(x - fdy, y - fdx, color_bits);
-        set_pixel(x + fdy, y - fdx, color_bits);
-        set_pixel(x + fdx, y - fdy, color_bits);
+        set_pixel(x + dx, y + dy, color_bits);
+        set_pixel(x + dy, y + dx, color_bits);
+        set_pixel(x - dy, y + dx, color_bits);
+        set_pixel(x - dx, y + dy, color_bits);
+        set_pixel(x - dx, y - dy, color_bits);
+        set_pixel(x - dy, y - dx, color_bits);
+        set_pixel(x + dy, y - dx, color_bits);
+        set_pixel(x + dx, y - dy, color_bits);
 
         dy += 1;
         err += 1 + 2 * dy;
@@ -369,8 +371,8 @@ int vm::api_circ(lua_State *l)
 
 int vm::api_circfill(lua_State *l)
 {
-    fix32 x = lua_tofix32(l, 1) - m_camera.x;
-    fix32 y = lua_tofix32(l, 2) - m_camera.y;
+    int16_t x = (int16_t)(lua_tofix32(l, 1) - m_camera.x);
+    int16_t y = (int16_t)(lua_tofix32(l, 2) - m_camera.y);
     int16_t r = (int16_t)lua_tofix32(l, 3);
     if (!lua_isnone(l, 4))
         m_colors = lua_tofix32(l, 4);
@@ -379,13 +381,11 @@ int vm::api_circfill(lua_State *l)
 
     for (int16_t dx = r, dy = 0, err = 0; dx >= dy; )
     {
-        fix32 fdx(dx), fdy(dy);
-
         /* Some minor overdraw here, but nothing serious */
-        hline(x - fdx, x + fdx, y - fdy, color_bits);
-        hline(x - fdx, x + fdx, y + fdy, color_bits);
-        vline(x - fdy, y - fdx, y + fdx, color_bits);
-        vline(x + fdy, y - fdx, y + fdx, color_bits);
+        hline(x - dx, x + dx, y - dy, color_bits);
+        hline(x - dx, x + dx, y + dy, color_bits);
+        vline(x - dy, y - dx, y + dx, color_bits);
+        vline(x + dy, y - dx, y + dx, color_bits);
 
         dy += 1;
         err += 1 + 2 * dy;
@@ -408,8 +408,8 @@ int vm::api_clip(lua_State *l)
      * was actually "" instead of nil. */
     if (lua_isnone(l, 4))
     {
-        m_clip.aa.x = m_clip.aa.y = 0.0;
-        m_clip.bb.x = m_clip.bb.y = 128.0;
+        m_clip.aa = lol::i16vec2(0);
+        m_clip.bb = lol::i16vec2(128);
     }
     else
     {
@@ -419,10 +419,10 @@ int vm::api_clip(lua_State *l)
         fix32 y1 = y0 + lua_tofix32(l, 4);
 
         /* FIXME: check the clamp order… before or after above addition? */
-        m_clip.aa.x = fix32::max(x0, 0.0);
-        m_clip.aa.y = fix32::max(y0, 0.0);
-        m_clip.bb.x = fix32::min(x1, 128.0);
-        m_clip.bb.y = fix32::min(y1, 128.0);
+        m_clip.aa.x = std::max((int)x0, 0);
+        m_clip.aa.y = std::max((int)y0, 0);
+        m_clip.bb.x = std::min((int)x1, 128);
+        m_clip.bb.y = std::min((int)y1, 128);
     }
 
     return 0;
@@ -496,10 +496,10 @@ int vm::api_fset(lua_State *l)
 
 int vm::api_line(lua_State *l)
 {
-    fix32 x0 = fix32::floor(lua_tofix32(l, 1) - m_camera.x);
-    fix32 y0 = fix32::floor(lua_tofix32(l, 2) - m_camera.y);
-    fix32 x1 = fix32::floor(lua_tofix32(l, 3) - m_camera.x);
-    fix32 y1 = fix32::floor(lua_tofix32(l, 4) - m_camera.y);
+    int16_t x0 = (int16_t)(lua_tofix32(l, 1) - m_camera.x);
+    int16_t y0 = (int16_t)(lua_tofix32(l, 2) - m_camera.y);
+    int16_t x1 = (int16_t)(lua_tofix32(l, 3) - m_camera.x);
+    int16_t y1 = (int16_t)(lua_tofix32(l, 4) - m_camera.y);
     if (!lua_isnone(l, 5))
         m_colors = lua_tofix32(l, 5);
 
@@ -509,20 +509,20 @@ int vm::api_line(lua_State *l)
     {
         set_pixel(x0, y0, color_bits);
     }
-    else if (fix32::abs(x1 - x0) > fix32::abs(y1 - y0))
+    else if (lol::abs(x1 - x0) > lol::abs(y1 - y0))
     {
-        for (int16_t x = (int16_t)fix32::min(x0, x1); x <= (int16_t)fix32::max(x0, x1); ++x)
+        for (int16_t x = std::min(x0, x1); x <= std::max(x0, x1); ++x)
         {
-            int16_t y = lol::round(lol::mix((double)y0, (double)y1, (x - (double)x0) / (double)(x1 - x0)));
-            set_pixel(fix32(x), fix32(y), color_bits);
+            int16_t y = lol::round(lol::mix((double)y0, (double)y1, (double)(x - x0) / (x1 - x0)));
+            set_pixel(x, y, color_bits);
         }
     }
     else
     {
-        for (int16_t y = (int16_t)fix32::min(y0, y1); y <= (int16_t)fix32::max(y0, y1); ++y)
+        for (int16_t y = std::min(y0, y1); y <= std::max(y0, y1); ++y)
         {
-            int16_t x = lol::round(lol::mix((double)x0, (double)x1, (y -(double)y0) / (double)(y1 - y0)));
-            set_pixel(fix32(x), fix32(y), color_bits);
+            int16_t x = lol::round(lol::mix((double)x0, (double)x1, (double)(y - y0) / (y1 - y0)));
+            set_pixel(x, y, color_bits);
         }
     }
 
@@ -531,16 +531,16 @@ int vm::api_line(lua_State *l)
 
 int vm::api_map(lua_State *l)
 {
-    int cel_x = (int)lua_tofix32(l, 1);
-    int cel_y = (int)lua_tofix32(l, 2);
-    fix32 sx = lua_tofix32(l, 3) - m_camera.x;
-    fix32 sy = lua_tofix32(l, 4) - m_camera.y;
+    int16_t cel_x = (int16_t)lua_tofix32(l, 1);
+    int16_t cel_y = (int16_t)lua_tofix32(l, 2);
+    int16_t sx = (int16_t)(lua_tofix32(l, 3) - m_camera.x);
+    int16_t sy = (int16_t)(lua_tofix32(l, 4) - m_camera.y);
     // PICO-8 documentation: “If cel_w and cel_h are not specified,
     // defaults to 128,32”.
     bool no_size = lua_isnone(l, 5) && lua_isnone(l, 6);
-    int cel_w = no_size ? 128 : (int)lua_tofix32(l, 5);
-    int cel_h = no_size ? 32 : (int)lua_tofix32(l, 6);
-    int layer = (int)lua_tofix32(l, 7);
+    int16_t cel_w = no_size ? 128 : (int16_t)lua_tofix32(l, 5);
+    int16_t cel_h = no_size ? 32 : (int16_t)lua_tofix32(l, 6);
+    int16_t layer = (int16_t)lua_tofix32(l, 7);
 
     for (int16_t dy = 0; dy < cel_h * 8; ++dy)
     for (int16_t dx = 0; dx < cel_w * 8; ++dx)
@@ -564,7 +564,7 @@ int vm::api_map(lua_State *l)
             if (!m_palt[col])
             {
                 uint32_t color_bits = m_pal[0][col & 0xf] << 16;
-                set_pixel(sx + fix32(dx), sy + fix32(dy), color_bits);
+                set_pixel(sx + dx, sy + dy, color_bits);
             }
         }
     }
@@ -650,8 +650,8 @@ int vm::api_palt(lua_State *l)
 int vm::api_pget(lua_State *l)
 {
     /* pget() is affected by camera() and by clip() */
-    fix32 x = lua_tofix32(l, 1) - m_camera.x;
-    fix32 y = lua_tofix32(l, 2) - m_camera.y;
+    int16_t x = (int16_t)(lua_tofix32(l, 1) - m_camera.x);
+    int16_t y = (int16_t)(lua_tofix32(l, 2) - m_camera.y);
 
     lua_pushfix32(l, fix32(get_pixel(x, y)));
 
@@ -660,8 +660,8 @@ int vm::api_pget(lua_State *l)
 
 int vm::api_pset(lua_State *l)
 {
-    fix32 x = lua_tofix32(l, 1) - m_camera.x;
-    fix32 y = lua_tofix32(l, 2) - m_camera.y;
+    int16_t x = (int16_t)(lua_tofix32(l, 1) - m_camera.x);
+    int16_t y = (int16_t)(lua_tofix32(l, 2) - m_camera.y);
     if (!lua_isnone(l, 3))
         m_colors = lua_tofix32(l, 3);
 
@@ -673,10 +673,10 @@ int vm::api_pset(lua_State *l)
 
 int vm::api_rect(lua_State *l)
 {
-    fix32 x0 = lua_tofix32(l, 1) - m_camera.x;
-    fix32 y0 = lua_tofix32(l, 2) - m_camera.y;
-    fix32 x1 = lua_tofix32(l, 3) - m_camera.x;
-    fix32 y1 = lua_tofix32(l, 4) - m_camera.y;
+    int16_t x0 = (int16_t)(lua_tofix32(l, 1) - m_camera.x);
+    int16_t y0 = (int16_t)(lua_tofix32(l, 2) - m_camera.y);
+    int16_t x1 = (int16_t)(lua_tofix32(l, 3) - m_camera.x);
+    int16_t y1 = (int16_t)(lua_tofix32(l, 4) - m_camera.y);
     if (!lua_isnone(l, 5))
         m_colors = lua_tofix32(l, 5);
 
@@ -691,10 +691,10 @@ int vm::api_rect(lua_State *l)
     hline(x0, x1, y0, color_bits);
     hline(x0, x1, y1, color_bits);
 
-    if (y0 + fix32(1.0) < y1)
+    if (y0 + 1 < y1)
     {
-        vline(x0, y0 + fix32(1.0), y1 - fix32(1.0), color_bits);
-        vline(x1, y0 + fix32(1.0), y1 - fix32(1.0), color_bits);
+        vline(x0, y0 + 1, y1 - 1, color_bits);
+        vline(x1, y0 + 1, y1 - 1, color_bits);
     }
 
     return 0;
@@ -702,10 +702,10 @@ int vm::api_rect(lua_State *l)
 
 int vm::api_rectfill(lua_State *l)
 {
-    fix32 x0 = lua_tofix32(l, 1) - m_camera.x;
-    fix32 y0 = lua_tofix32(l, 2) - m_camera.y;
-    fix32 x1 = lua_tofix32(l, 3) - m_camera.x;
-    fix32 y1 = lua_tofix32(l, 4) - m_camera.y;
+    int16_t x0 = (int16_t)(lua_tofix32(l, 1) - m_camera.x);
+    int16_t y0 = (int16_t)(lua_tofix32(l, 2) - m_camera.y);
+    int16_t x1 = (int16_t)(lua_tofix32(l, 3) - m_camera.x);
+    int16_t y1 = (int16_t)(lua_tofix32(l, 4) - m_camera.y);
     if (!lua_isnone(l, 5))
         m_colors = lua_tofix32(l, 5);
 
@@ -714,8 +714,7 @@ int vm::api_rectfill(lua_State *l)
     if (y0 > y1)
         std::swap(y0, y1);
 
-    // FIXME: broken when y0 = 0.5, y1 = 1.4... 2nd line is not printed
-    for (fix32 y = y0; y <= y1; y += fix32(1.0))
+    for (int16_t y = y0; y <= y1; ++y)
         hline(x0, x1, y, color_bits);
 
     return 0;
@@ -723,22 +722,22 @@ int vm::api_rectfill(lua_State *l)
 
 int vm::api_sget(lua_State *l)
 {
-    fix32 x = lua_tofix32(l, 1);
-    fix32 y = lua_tofix32(l, 2);
+    int16_t x = (int16_t)lua_tofix32(l, 1);
+    int16_t y = (int16_t)lua_tofix32(l, 2);
 
-    lua_pushnumber(l, getspixel((int)x, (int)y));
+    lua_pushnumber(l, getspixel(x, y));
 
     return 1;
 }
 
 int vm::api_sset(lua_State *l)
 {
-    fix32 x = lua_tofix32(l, 1);
-    fix32 y = lua_tofix32(l, 2);
-    fix32 col = lua_isnone(l, 3) ? m_colors : lua_tofix32(l, 3);
-    int c = m_pal[0][(int)col & 0xf];
+    int16_t x = lua_tofix32(l, 1);
+    int16_t y = lua_tofix32(l, 2);
+    uint8_t col = lua_isnone(l, 3) ? (uint8_t)m_colors : (uint8_t)lua_tofix32(l, 3);
+    int c = m_pal[0][col & 0xf];
 
-    setspixel((int)x, (int)y, c);
+    setspixel(x, y, c);
 
     return 0;
 }
@@ -746,24 +745,24 @@ int vm::api_sset(lua_State *l)
 int vm::api_spr(lua_State *l)
 {
     // FIXME: should we abort if n == 0?
-    int n = (int)lua_tofix32(l, 1);
-    fix32 x = lua_tofix32(l, 2) - m_camera.x;
-    fix32 y = lua_tofix32(l, 3) - m_camera.y;
-    int w8 = lua_isnoneornil(l, 4) ? 8 : (int)(lua_tofix32(l, 4) * fix32(8.0));
-    int h8 = lua_isnoneornil(l, 5) ? 8 : (int)(lua_tofix32(l, 5) * fix32(8.0));
+    int16_t n = (int16_t)lua_tofix32(l, 1);
+    int16_t x = (int16_t)(lua_tofix32(l, 2) - m_camera.x);
+    int16_t y = (int16_t)(lua_tofix32(l, 3) - m_camera.y);
+    int16_t w8 = lua_isnoneornil(l, 4) ? 8 : (int16_t)(lua_tofix32(l, 4) * fix32(8.0));
+    int16_t h8 = lua_isnoneornil(l, 5) ? 8 : (int16_t)(lua_tofix32(l, 5) * fix32(8.0));
     int flip_x = lua_toboolean(l, 6);
     int flip_y = lua_toboolean(l, 7);
 
     for (int16_t j = 0; j < h8; ++j)
         for (int16_t i = 0; i < w8; ++i)
         {
-            int di = flip_x ? w8 - 1 - i : i;
-            int dj = flip_y ? h8 - 1 - j : j;
-            int col = getspixel(n % 16 * 8 + di, n / 16 * 8 + dj);
+            int16_t di = flip_x ? w8 - 1 - i : i;
+            int16_t dj = flip_y ? h8 - 1 - j : j;
+            uint8_t col = getspixel(n % 16 * 8 + di, n / 16 * 8 + dj);
             if (!m_palt[col])
             {
                 uint32_t color_bits = m_pal[0][col] << 16;
-                set_pixel(x + fix32(i), y + fix32(j), color_bits);
+                set_pixel(x + i, y + j, color_bits);
             }
         }
 
@@ -772,33 +771,34 @@ int vm::api_spr(lua_State *l)
 
 int vm::api_sspr(lua_State *l)
 {
-    int sx = (int)lua_tofix32(l, 1);
-    int sy = (int)lua_tofix32(l, 2);
-    int sw = (int)lua_tofix32(l, 3);
-    int sh = (int)lua_tofix32(l, 4);
-    fix32 dx = lua_tofix32(l, 5) - m_camera.x;
-    fix32 dy = lua_tofix32(l, 6) - m_camera.y;
-    int dw = lua_isnone(l, 7) ? sw : (int)lua_tofix32(l, 7);
-    int dh = lua_isnone(l, 8) ? sh : (int)lua_tofix32(l, 8);
+    int16_t sx = (int16_t)lua_tofix32(l, 1);
+    int16_t sy = (int16_t)lua_tofix32(l, 2);
+    int16_t sw = (int16_t)lua_tofix32(l, 3);
+    int16_t sh = (int16_t)lua_tofix32(l, 4);
+    int16_t dx = (int16_t)(lua_tofix32(l, 5) - m_camera.x);
+    int16_t dy = (int16_t)(lua_tofix32(l, 6) - m_camera.y);
+    int16_t dw = lua_isnone(l, 7) ? sw : (int16_t)lua_tofix32(l, 7);
+    int16_t dh = lua_isnone(l, 8) ? sh : (int16_t)lua_tofix32(l, 8);
     int flip_x = lua_toboolean(l, 9);
     int flip_y = lua_toboolean(l, 10);
 
     // Iterate over destination pixels
+    // FIXME: maybe clamp if target area is too big?
     for (int16_t j = 0; j < dh; ++j)
     for (int16_t i = 0; i < dw; ++i)
     {
-        int di = flip_x ? dw - 1 - i : i;
-        int dj = flip_y ? dh - 1 - j : j;
+        int16_t di = flip_x ? dw - 1 - i : i;
+        int16_t dj = flip_y ? dh - 1 - j : j;
 
         // Find source
-        int x = sx + sw * di / dw;
-        int y = sy + sh * dj / dh;
+        int16_t x = sx + sw * di / dw;
+        int16_t y = sy + sh * dj / dh;
 
-        int col = getspixel(x, y);
+        uint8_t col = getspixel(x, y);
         if (!m_palt[col])
         {
             uint32_t color_bits = m_pal[0][col] << 16;
-            set_pixel(dx + fix32(i), dy + fix32(j), color_bits);
+            set_pixel(dx + i, dy + j, color_bits);
         }
     }
 
