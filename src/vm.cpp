@@ -49,16 +49,12 @@ vm::~vm()
 
 void vm::set_this(lua_State *l)
 {
-    lua_pushlightuserdata(l, this);
-    lua_setglobal(l, "\x01");
+    *static_cast<vm**>(lua_getextraspace(l)) = this;
 }
 
 vm* vm::get_this(lua_State *l)
 {
-    lua_getglobal(l, "\x01");
-    vm *ret = (vm *)lua_touserdata(l, -1);
-    lua_remove(l, -1);
-    return ret;
+    return *static_cast<vm**>(lua_getextraspace(l));
 }
 
 void vm::hook(lua_State *l, lua_Debug *)
