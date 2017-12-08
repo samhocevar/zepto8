@@ -148,9 +148,6 @@ private:
     uint8_t getpixel(fix32 x, fix32 y);
     void setpixel(fix32 x, fix32 y, fix32 color);
 
-    void setpixel(int x, int y, int color);
-    void setpixel(int x, int y, int color1, int color2);
-
     void hline(fix32 x1, fix32 x2, fix32 y, fix32 color);
     void vline(fix32 x, fix32 y1, fix32 y2, fix32 color);
 
@@ -214,12 +211,6 @@ static inline fix32 lua_tofix32(lua_State *l, int index)
 static inline void lua_pushfix32(lua_State *l, fix32 const &x)
 {
     return lua_pushnumber(l, (double)x);
-}
-
-// FIXME: this should disappear one day
-static inline double lua_toclamp64(lua_State *l, int index)
-{
-    return (double)lua_tofix32(l, index);
 }
 
 } // namespace z8
