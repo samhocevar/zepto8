@@ -27,23 +27,17 @@ using lol::msg;
 uint32_t vm::get_color_bits() const
 {
     int32_t bits = 0;
-    uint8_t c1 = (m_colors.bits() >> 16) & 0xf;
-    uint8_t c2 = (m_colors.bits() >> 20) & 0xf;
+    uint8_t c1 = m_memory[OFFSET_COLOR] & 0xf;
+    uint8_t c2 = m_memory[OFFSET_COLOR] >> 4;
 
     /* From the PICO-8 documentation:
      *  -- bit  0x1000.0000 means the non-colour bits should be observed
      *  -- bit  0x0100.0000 transparency bit
      *  -- bits 0x00FF.0000 are the usual colour bits
      *  -- bits 0x0000.FFFF are interpreted as the fill pattern */
-    if (m_colors.bits() & 0x1000000)
-    {
-        bits |= (m_colors.bits() & 0x100ffff);
-    }
-    else
-    {
-        bits |= (m_fillp.bits() >> 16) & 0xffff;
-        bits |= (m_fillp.bits() << 9) & 0x1000000;
-    }
+    bits |= m_memory[OFFSET_FILLP];
+    bits |= m_memory[OFFSET_FILLP + 1] << 8;
+    bits |= m_memory[OFFSET_FILLP + 2] << 24;
 
     bits |= (pal(0, c1) & 0xf) << 16;
     bits |= (pal(0, c2) & 0xf) << 20;
@@ -256,7 +250,10 @@ int vm::api_print(lua_State *l)
     fix32 x = use_cursor ? fix32(*get_mem(OFFSET_CURSOR_X)) : lua_tofix32(l, 2);
     fix32 y = use_cursor ? fix32(*get_mem(OFFSET_CURSOR_Y)) : lua_tofix32(l, 3);
     if (!lua_isnone(l, 4))
-        m_colors = lua_tofix32(l, 4);
+    {
+        fix32 colors = lua_tofix32(l, 4);
+        m_memory[OFFSET_COLOR] = (uint8_t)colors;
+    }
     fix32 initial_x = x;
 
     uint32_t color_bits = get_color_bits();
@@ -358,7 +355,10 @@ int vm::api_circ(lua_State *l)
     int16_t y = (int16_t)lua_tofix32(l, 2) - get_camera_y();
     int16_t r = (int16_t)lua_tofix32(l, 3);
     if (!lua_isnone(l, 4))
-        m_colors = lua_tofix32(l, 4);
+    {
+        fix32 colors = lua_tofix32(l, 4);
+        m_memory[OFFSET_COLOR] = (uint8_t)colors;
+    }
 
     uint32_t color_bits = get_color_bits();
 
@@ -393,7 +393,10 @@ int vm::api_circfill(lua_State *l)
     int16_t y = (int16_t)lua_tofix32(l, 2) - get_camera_y();
     int16_t r = (int16_t)lua_tofix32(l, 3);
     if (!lua_isnone(l, 4))
-        m_colors = lua_tofix32(l, 4);
+    {
+        fix32 colors = lua_tofix32(l, 4);
+        m_memory[OFFSET_COLOR] = (uint8_t)colors;
+    }
 
     uint32_t color_bits = get_color_bits();
 
@@ -449,13 +452,16 @@ int vm::api_cls(lua_State *l)
 
 int vm::api_color(lua_State *l)
 {
-    m_colors = lua_tofix32(l, 1);
+    fix32 colors = lua_tofix32(l, 1);
+    m_memory[OFFSET_COLOR] = (uint8_t)colors;
     return 0;
 }
 
 int vm::api_fillp(lua_State *l)
 {
-    m_fillp = lua_tofix32(l, 1);
+    fix32 fillp = lua_tofix32(l, 1);
+    m_memory[OFFSET_FILLP] = (uint8_t)fillp;
+    m_memory[OFFSET_FILLP + 1] = (uint16_t)fillp >> 8;
     return 0;
 }
 
@@ -512,7 +518,10 @@ int vm::api_line(lua_State *l)
     int16_t x1 = (int16_t)lua_tofix32(l, 3) - get_camera_x();
     int16_t y1 = (int16_t)lua_tofix32(l, 4) - get_camera_y();
     if (!lua_isnone(l, 5))
-        m_colors = lua_tofix32(l, 5);
+    {
+        fix32 colors = lua_tofix32(l, 5);
+        m_memory[OFFSET_COLOR] = (uint8_t)colors;
+    }
 
     uint32_t color_bits = get_color_bits();
 
@@ -627,7 +636,9 @@ int vm::api_pal(lua_State *l)
             pal(0, i) = i | (i ? 0x00 : 0x10);
             pal(1, i) = i;
         }
-        m_fillp = 0.0;
+        m_memory[OFFSET_FILLP] = 0;
+        m_memory[OFFSET_FILLP + 1] = 0;
+        m_memory[OFFSET_FILLP + 2] = 0;
     }
     else
     {
@@ -679,7 +690,10 @@ int vm::api_pset(lua_State *l)
     int16_t x = (int16_t)lua_tofix32(l, 1) - get_camera_x();
     int16_t y = (int16_t)lua_tofix32(l, 2) - get_camera_y();
     if (!lua_isnone(l, 3))
-        m_colors = lua_tofix32(l, 3);
+    {
+        fix32 colors = lua_tofix32(l, 3);
+        m_memory[OFFSET_COLOR] = (uint8_t)colors;
+    }
 
     uint32_t color_bits = get_color_bits();
     set_pixel(x, y, color_bits);
@@ -694,7 +708,10 @@ int vm::api_rect(lua_State *l)
     int16_t x1 = (int16_t)lua_tofix32(l, 3) - get_camera_x();
     int16_t y1 = (int16_t)lua_tofix32(l, 4) - get_camera_y();
     if (!lua_isnone(l, 5))
-        m_colors = lua_tofix32(l, 5);
+    {
+        fix32 colors = lua_tofix32(l, 5);
+        m_memory[OFFSET_COLOR] = (uint8_t)colors;
+    }
 
     uint32_t color_bits = get_color_bits();
 
@@ -723,7 +740,10 @@ int vm::api_rectfill(lua_State *l)
     int16_t x1 = (int16_t)lua_tofix32(l, 3) - get_camera_x();
     int16_t y1 = (int16_t)lua_tofix32(l, 4) - get_camera_y();
     if (!lua_isnone(l, 5))
-        m_colors = lua_tofix32(l, 5);
+    {
+        fix32 colors = lua_tofix32(l, 5);
+        m_memory[OFFSET_COLOR] = (uint8_t)colors;
+    }
 
     uint32_t color_bits = get_color_bits();
 
@@ -750,7 +770,7 @@ int vm::api_sset(lua_State *l)
 {
     int16_t x = lua_tofix32(l, 1);
     int16_t y = lua_tofix32(l, 2);
-    uint8_t col = lua_isnone(l, 3) ? (uint8_t)m_colors : (uint8_t)lua_tofix32(l, 3);
+    uint8_t col = lua_isnone(l, 3) ? m_memory[OFFSET_COLOR] : (uint8_t)lua_tofix32(l, 3);
     int c = pal(0, col & 0xf);
 
     setspixel(x, y, c);

@@ -182,9 +182,6 @@ private:
     // Files
     std::string m_cartdata;
 
-    // Graphics
-    fix32 m_colors, m_fillp;
-
     // Input
     int m_buttons[2][64];
     struct { fix32 x, y, b; } m_mouse;

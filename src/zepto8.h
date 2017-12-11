@@ -59,9 +59,11 @@ enum
     OFFSET_PAL1       = 0x5f00,
     OFFSET_PAL2       = 0x5f10,
     OFFSET_CLIP       = 0x5f20,
+    OFFSET_COLOR      = 0x5f25,
     OFFSET_CURSOR_X   = 0x5f26,
     OFFSET_CURSOR_Y   = 0x5f27,
     OFFSET_CAMERA     = 0x5f28,
+    OFFSET_FILLP      = 0x5f31,
 
     SIZE_GFX        = OFFSET_GFX2       - OFFSET_GFX,
     SIZE_GFX2       = OFFSET_MAP        - OFFSET_GFX2,
