@@ -58,6 +58,7 @@ enum
 
     OFFSET_CURSOR_X   = 0x5f26,
     OFFSET_CURSOR_Y   = 0x5f27,
+    OFFSET_CAMERA     = 0x5f28,
 
     SIZE_GFX        = OFFSET_GFX2       - OFFSET_GFX,
     SIZE_GFX2       = OFFSET_MAP        - OFFSET_GFX2,

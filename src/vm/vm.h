@@ -153,6 +153,8 @@ private:
 
 private:
     uint8_t get_pixel(int16_t x, int16_t y) const;
+    int16_t get_camera_x() const;
+    int16_t get_camera_y() const;
     uint32_t get_color_bits() const;
 
     void set_pixel(int16_t x, int16_t y, uint32_t color_bits);
@@ -175,7 +177,6 @@ private:
 
     // Graphics
     fix32 m_colors, m_fillp;
-    struct { fix32 x, y; } m_camera;
     struct { lol::i16vec2 aa, bb; } m_clip;
     uint8_t m_pal[2][16], m_palt[16];
 
