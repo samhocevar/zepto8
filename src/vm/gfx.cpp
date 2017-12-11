@@ -53,8 +53,8 @@ uint32_t vm::get_color_bits() const
 
 uint8_t vm::get_pixel(int16_t x, int16_t y) const
 {
-    if (x < m_clip.aa.x || x >= m_clip.bb.x
-         || y < m_clip.aa.y || y >= m_clip.bb.y)
+    if (x < get_clip_aa_x() || x >= get_clip_bb_x()
+         || y < get_clip_aa_y() || y >= get_clip_bb_y())
         return 0;
 
     int offset = OFFSET_SCREEN + (128 * y + x) / 2;
@@ -63,8 +63,8 @@ uint8_t vm::get_pixel(int16_t x, int16_t y) const
 
 void vm::set_pixel(int16_t x, int16_t y, uint32_t color_bits)
 {
-    if (x < m_clip.aa.x || x >= m_clip.bb.x
-         || y < m_clip.aa.y || y >= m_clip.bb.y)
+    if (x < get_clip_aa_x() || x >= get_clip_bb_x()
+         || y < get_clip_aa_y() || y >= get_clip_bb_y())
         return;
 
     uint8_t color = (color_bits >> 16) & 0xf;
@@ -103,14 +103,14 @@ uint8_t vm::getspixel(int16_t x, int16_t y)
 
 void vm::hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits)
 {
-    if (y < m_clip.aa.y || y >= m_clip.bb.y)
+    if (y < get_clip_aa_y() || y >= get_clip_bb_y())
         return;
 
     if (x1 > x2)
         std::swap(x1, x2);
 
-    x1 = std::max(x1, m_clip.aa.x);
-    x2 = std::min(x2, (int16_t)(m_clip.bb.x - 1));
+    x1 = std::max(x1, (int16_t)get_clip_aa_x());
+    x2 = std::min(x2, (int16_t)(get_clip_bb_x() - 1));
 
     if (x1 > x2)
         return;
@@ -146,14 +146,14 @@ void vm::hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits)
 
 void vm::vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits)
 {
-    if (x < m_clip.aa.x || x >= m_clip.bb.x)
+    if (x < get_clip_aa_x() || x >= get_clip_bb_x())
         return;
 
     if (y1 > y2)
         std::swap(y1, y2);
 
-    y1 = std::max(y1, m_clip.aa.y);
-    y2 = std::min(y2, (int16_t)(m_clip.bb.y - 1));
+    y1 = std::max(y1, (int16_t)get_clip_aa_y());
+    y2 = std::min(y2, (int16_t)(get_clip_bb_y() - 1));
 
     if (y1 > y2)
         return;
@@ -423,28 +423,22 @@ int vm::api_circfill(lua_State *l)
 
 int vm::api_clip(lua_State *l)
 {
+    int x1 = 0, y1 = 0, x2 = 128, y2 = 128;
+
     /* XXX: there were rendering issues with Hyperspace by J.Fry when we were
      * only checking for lua_isnone(l,1) (instead of 4) because first argument
      * was actually "" instead of nil. */
-    if (lua_isnone(l, 4))
+    if (!lua_isnone(l, 4))
     {
-        m_clip.aa = lol::i16vec2(0);
-        m_clip.bb = lol::i16vec2(128);
-    }
-    else
-    {
-        fix32 x0 = lua_tofix32(l, 1);
-        fix32 y0 = lua_tofix32(l, 2);
-        fix32 x1 = x0 + lua_tofix32(l, 3);
-        fix32 y1 = y0 + lua_tofix32(l, 4);
-
-        /* FIXME: check the clamp order… before or after above addition? */
-        m_clip.aa.x = std::max((int)x0, 0);
-        m_clip.aa.y = std::max((int)y0, 0);
-        m_clip.bb.x = std::min((int)x1, 128);
-        m_clip.bb.y = std::min((int)y1, 128);
+        x1 = std::max(x1, (int)lua_tofix32(l, 1));
+        y1 = std::max(y1, (int)lua_tofix32(l, 2));
+        x2 = std::min(x2, x1 + (int)lua_tofix32(l, 3));
+        y2 = std::min(y2, y1 + (int)lua_tofix32(l, 4));
     }
 
+    uint8_t *p = get_mem(OFFSET_CLIP);
+    p[0] = (uint8_t)x1; p[1] = (uint8_t)y1;
+    p[2] = (uint8_t)x2; p[3] = (uint8_t)y2;
     return 0;
 }
 

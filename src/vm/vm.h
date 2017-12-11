@@ -155,6 +155,10 @@ private:
     uint8_t get_pixel(int16_t x, int16_t y) const;
     int16_t get_camera_x() const;
     int16_t get_camera_y() const;
+    inline uint8_t get_clip_aa_x() const { return *get_mem(OFFSET_CLIP); }
+    inline uint8_t get_clip_aa_y() const { return *get_mem(OFFSET_CLIP + 1); }
+    inline uint8_t get_clip_bb_x() const { return *get_mem(OFFSET_CLIP + 2); }
+    inline uint8_t get_clip_bb_y() const { return *get_mem(OFFSET_CLIP + 3); }
     uint32_t get_color_bits() const;
 
     void set_pixel(int16_t x, int16_t y, uint32_t color_bits);
@@ -177,7 +181,6 @@ private:
 
     // Graphics
     fix32 m_colors, m_fillp;
-    struct { lol::i16vec2 aa, bb; } m_clip;
     uint8_t m_pal[2][16], m_palt[16];
 
     // Input

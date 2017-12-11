@@ -56,6 +56,7 @@ enum
     OFFSET_SCREEN     = 0x6000,
     OFFSET_END        = 0x8000,
 
+    OFFSET_CLIP       = 0x5f20,
     OFFSET_CURSOR_X   = 0x5f26,
     OFFSET_CURSOR_Y   = 0x5f27,
     OFFSET_CAMERA     = 0x5f28,
