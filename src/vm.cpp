@@ -28,7 +28,7 @@ vm::vm()
     *static_cast<vm**>(lua_getextraspace(l)) = this;
 
     // Automatically yield every 1000 instructions
-    lua_sethook(l, &vm::hook, LUA_MASKCOUNT, 1000);
+    lua_sethook(l, &vm::instruction_hook, LUA_MASKCOUNT, 1000);
 
     // Register our Lua module
     lol::LuaObjectHelper::Register<vm>(l);
@@ -47,7 +47,7 @@ vm::~vm()
 {
 }
 
-void vm::hook(lua_State *l, lua_Debug *)
+void vm::instruction_hook(lua_State *l, lua_Debug *)
 {
     vm *that = *static_cast<vm**>(lua_getextraspace(l));
 
@@ -91,7 +91,6 @@ const lol::LuaObjectLibrary* vm::GetLib()
         {
             { "run",      &dispatch<&vm::api_run> },
             { "menuitem", &dispatch<&vm::api_menuitem> },
-            { "cartdata", &dispatch<&vm::api_cartdata> },
             { "reload",   &dispatch<&vm::api_reload> },
             { "peek",     &dispatch<&vm::api_peek> },
             { "peek4",    &dispatch<&vm::api_peek4> },
@@ -164,6 +163,8 @@ const lol::LuaObjectLibrary* vm::GetLib()
 
             { "time", &dispatch<&vm::api_time> },
 
+            { "__cartdata", &dispatch<&vm::private_cartdata> },
+
             { nullptr, nullptr }
         },
 
@@ -225,11 +226,25 @@ int vm::api_menuitem(lua_State *l)
     return 0;
 }
 
-int vm::api_cartdata(lua_State *l)
+int vm::private_cartdata(lua_State *l)
 {
-    int x = (int)lua_tonumber(l, 1);
-    msg::info("z8:stub:cartdata %d\n", x);
-    return 0;
+    if (lua_isnone(l, 1))
+    {
+        // No argument given: we return whether there is data
+        lua_pushboolean(l, m_cartdata.size() > 0);
+        return 1;
+    }
+    else if (!lua_isstring(l, 1))
+    {
+        // Nil or invalid argument given: get rid of cart data
+        m_cartdata = "";
+        return 0;
+    }
+
+    m_cartdata = lua_tostring(l, 1);
+    msg::info("z8:stub:cartdata \"%s\"\n", m_cartdata.c_str());
+    lua_pushboolean(l, false);
+    return 1;
 }
 
 int vm::api_reload(lua_State *l)

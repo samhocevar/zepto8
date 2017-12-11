@@ -53,7 +53,7 @@ public:
     static vm* New(lua_State* l, int arg_nb);
 
 private:
-    static void hook(lua_State *l, lua_Debug *ar);
+    static void instruction_hook(lua_State *l, lua_Debug *ar);
 
     /* Helpers to dispatch C++ functions to Lua C bindings */
     typedef int (vm::*api_func)(lua_State *);
@@ -65,10 +65,12 @@ private:
         return ((*that).*f)(l);
     }
 
+    // Private methods (hidden from the user)
+    int private_cartdata(lua_State *l);
+
     // System
     int api_run(lua_State *l);
     int api_menuitem(lua_State *l);
-    int api_cartdata(lua_State *l);
     int api_reload(lua_State *l);
     int api_peek(lua_State *l);
     int api_peek4(lua_State *l);
@@ -167,6 +169,9 @@ private:
     uint8_t m_memory[SIZE_MEMORY];
     lol::image m_font;
     cart m_cart;
+
+    // Files
+    std::string m_cartdata;
 
     // Graphics
     fix32 m_colors, m_fillp;

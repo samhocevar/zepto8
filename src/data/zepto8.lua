@@ -63,6 +63,29 @@ do
         if n >= 0 and n < 64 then poke4(0x5e00 + 4 * n, x) end
     end
 
+    local match = string.match
+
+    cartdata = function(s)
+        if _z8.__cartdata() then
+            print('cartdata() can only be called once')
+            abort()
+            return false
+        end
+        -- PICO-8 documentation: id is a string up to 64 characters long
+        if #s == 0 or #s > 64 then
+            print('cart data id too long')
+            abort()
+            return false
+        end
+        -- PICO-8 documentation: legal characters are a..z, 0..9 and underscore (_)
+        if match(s, '[^abcdefghijklmnopqrstuvwxyz0123456789_]') then
+            print('cart data id: bad char')
+            abort()
+            return false
+        end
+        return _z8.__cartdata(s)
+    end
+
     -- All flip() does for now is yield so that the C++ VM gets a chance
     -- to draw something even if Lua is in an infinite loop
     flip = function()
@@ -79,7 +102,7 @@ end
 -- According to https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0 :
 --  _G global table has been removed.
 --
-for k, v in pairs(_z8) do _G[k] = v end
+for k, v in pairs(_z8) do _G[k] = string.sub(k, 1, 2) ~= '__' and v or nil end
 _G = nil
 
 
@@ -105,6 +128,10 @@ _z8.reset_drawstate = function()
     clip() camera() pal() color(6) fillp()
 end
 
+_z8.reset_cartdata = function()
+    _z8.__cartdata(nil)
+end
+
 _z8.run = function(cart_code)
     _z8.loop = cocreate(function()
         local do_frame = true
@@ -114,6 +141,7 @@ _z8.run = function(cart_code)
         reload()
 
         _z8.reset_drawstate()
+        _z8.reset_cartdata()
 
         -- Load cart
         cart_code()
