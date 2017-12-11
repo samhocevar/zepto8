@@ -267,6 +267,20 @@ void analyzer::bump(int offset, int delta)
     }
 }
 
+bool analyzer::is_numeral(char const *str)
+{
+    try
+    {
+        pegtl::memory_input<> in(str, "num");
+        pegtl::parse<pegtl::must<lua53::numeral, pegtl::eof>>(in);
+        return true;
+    }
+    catch (...)
+    {
+        return false;
+    }
+}
+
 String analyzer::fix()
 {
     String code = m_code;
@@ -345,22 +359,15 @@ String analyzer::fix()
     {
         ASSERT(code[pos[0]] == '0' && code[pos[0] + 1] == 'b');
 
-        int a = 0, b = 0, comma_bits = 0;
-        bool has_comma = false;
-        for (int n = pos[0] + 2; n < pos[1]; ++n)
-        {
-            if (code[n] == '.')
-                has_comma = true;
-            else if (has_comma)
-            {
-                ++comma_bits;
-                b += b + (code[n] == '1');
-            }
-            else
-                a += a + (code[n] == '1');
-        }
+        int32_t bits = fix32::parse_binary(code.C() + pos[0]).bits();
+        bool negative = bits < 0;
+        /* We need to use unsigned arithmetics because -INT_MIN is
+         * undefined behaviour. */
+        if (negative)
+            bits = (int32_t)-(uint32_t)bits;
         char buffer[20];
-        sprintf(buffer, "0x%x.%x", a, b << ((4 - comma_bits) & 3));
+        sprintf(buffer, "%s0x%x.%04x", negative ? "-" : "",
+                (uint16_t)(bits >> 16), (uint16_t)bits);
 
         code = code.sub(0, pos[0])
              + buffer

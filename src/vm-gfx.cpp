@@ -317,9 +317,14 @@ int vm::api_tostr(lua_State *l)
 
 int vm::api_tonum(lua_State *l)
 {
-    UNUSED(l);
-    msg::info("z8:stub:tonum\n");
-    lua_pushfix32(l, fix32(0.0));
+    char const *str = lua_tostring(l, 1);
+
+    // If parsing failed, PICO-8 returns nothing
+    if (!analyzer::is_numeral(str))
+        return 0;
+
+    fix32 x = str[1] == 'b' ? fix32::parse_binary(str) : lua_tofix32(l, 1);
+    lua_pushfix32(l, x);
     return 1;
 }
 

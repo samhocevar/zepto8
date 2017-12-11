@@ -83,7 +83,7 @@ int vm::api_sqrt(lua_State *l)
 {
     fix32 x = lua_tofix32(l, 1);
     /* FIXME PICO-8 actually returns stuff for negative values */
-    lua_pushfix32(l, fix32(x >= fix32(0.0) ? lol::sqrt((double)x) : 0));
+    lua_pushfix32(l, fix32(x.bits() >= 0 ? lol::sqrt((double)x) : 0));
     return 1;
 }
 
@@ -96,7 +96,7 @@ int vm::api_abs(lua_State *l)
 int vm::api_sgn(lua_State *l)
 {
     fix32 x = lua_tofix32(l, 1);
-    lua_pushfix32(l, fix32(x >= fix32(0.0) ? 1.0 : -1.0));
+    lua_pushfix32(l, fix32(x.bits() >= 0 ? 1.0 : -1.0));
     return 1;
 }
 
@@ -117,7 +117,7 @@ int vm::api_rnd(lua_State *l)
 int vm::api_srand(lua_State *l)
 {
     m_seed = lua_tofix32(l, 1);
-    if (m_seed == fix32(0.0))
+    if (m_seed.bits() == 0)
         m_seed = fix32::frombits(0xdeadbeef);
     return 0;
 }

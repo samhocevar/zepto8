@@ -14,6 +14,8 @@
 
 #include <lol/engine.h>
 
+#include "fix32.h"
+
 namespace z8
 {
     class analyzer
@@ -21,6 +23,8 @@ namespace z8
     public:
         analyzer(lol::String const &code);
         lol::String fix();
+
+        static bool is_numeral(char const *str);
 
         lol::array<int> m_notequals;
         lol::array<int> m_cpp_comments;

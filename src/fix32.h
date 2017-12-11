@@ -32,6 +32,34 @@ struct fix32
         return std::ldexp((double)m_bits, -16);
     }
 
+    /* Parse 0b... number */
+    static fix32 parse_binary(char const *str)
+    {
+        ASSERT(str[0] == '0' && str[1] == 'b');
+
+        uint32_t bits = 0;
+        for (str = str + 2; *str != '\0' && *str != '.'; ++str)
+        {
+            if (*str == '1')
+                bits = (bits << 1) | 0x10000;
+            else if (*str == '0')
+                bits <<= 1;
+            else
+                break;
+        }
+
+        if (*str == '.')
+        {
+            for (int i = 1; i <= 16 && str[i] != '\0'; ++i)
+                if (str[i] == '1')
+                    bits |= 0x10000 >> i;
+                else if (str[i] != '0')
+                    break;
+        }
+
+        return frombits(bits);
+    }
+
     /* Conversions up to int16_t are allowed */
     inline fix32(int8_t x) : m_bits(x << 16) {}
     inline fix32(uint8_t x) : m_bits(x << 16) {}
