@@ -184,8 +184,8 @@ void vm::vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits)
 
 int vm::api_cursor(lua_State *l)
 {
-    m_cursor.x = lua_tofix32(l, 1);
-    m_cursor.y = lua_tofix32(l, 2);
+    *get_mem(OFFSET_CURSOR_X) = (uint8_t)lua_tofix32(l, 1);
+    *get_mem(OFFSET_CURSOR_Y) = (uint8_t)lua_tofix32(l, 2);
     return 0;
 }
 
@@ -242,8 +242,8 @@ int vm::api_print(lua_State *l)
 
     // FIXME: make x and y int16_t instead?
     bool use_cursor = lua_isnone(l, 2) || lua_isnone(l, 3);
-    fix32 x = use_cursor ? m_cursor.x : lua_tofix32(l, 2);
-    fix32 y = use_cursor ? m_cursor.y : lua_tofix32(l, 3);
+    fix32 x = use_cursor ? fix32(*get_mem(OFFSET_CURSOR_X)) : lua_tofix32(l, 2);
+    fix32 y = use_cursor ? fix32(*get_mem(OFFSET_CURSOR_Y)) : lua_tofix32(l, 3);
     if (!lua_isnone(l, 4))
         m_colors = lua_tofix32(l, 4);
     fix32 initial_x = x;
@@ -301,8 +301,8 @@ int vm::api_print(lua_State *l)
             y -= fix32(lines);
         }
 
-        m_cursor.x = initial_x;
-        m_cursor.y = y + fix32(lines);
+        *get_mem(OFFSET_CURSOR_X) = (uint8_t)initial_x;
+        *get_mem(OFFSET_CURSOR_Y) = (uint8_t)(y + fix32(lines));
     }
 
     return 0;
@@ -437,7 +437,7 @@ int vm::api_cls(lua_State *l)
 {
     int c = (int)lua_tofix32(l, 1) & 0xf;
     ::memset(&m_memory[OFFSET_SCREEN], c * 0x11, SIZE_SCREEN);
-    m_cursor.x = m_cursor.y = 0.0;
+    *get_mem(OFFSET_CURSOR_X) = *get_mem(OFFSET_CURSOR_Y) = 0;
     return 0;
 }
 

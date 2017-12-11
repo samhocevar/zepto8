@@ -175,7 +175,7 @@ private:
 
     // Graphics
     fix32 m_colors, m_fillp;
-    struct { fix32 x, y; } m_camera, m_cursor;
+    struct { fix32 x, y; } m_camera;
     struct { lol::i16vec2 aa, bb; } m_clip;
     uint8_t m_pal[2][16], m_palt[16];
 
