@@ -572,7 +572,7 @@ int vm::api_map(lua_State *l)
         if (sprite)
         {
             int col = getspixel(sprite % 16 * 8 + dx % 8, sprite / 16 * 8 + dy % 8);
-            if ((pal(0, col) & 0x80) == 0)
+            if ((pal(0, col) & 0x10) == 0)
             {
                 uint32_t color_bits = (pal(0, col) & 0xf) << 16;
                 set_pixel(sx + dx, sy + dy, color_bits);
@@ -624,7 +624,7 @@ int vm::api_pal(lua_State *l)
         // transparency values and fill pattern)”
         for (int i = 0; i < 16; ++i)
         {
-            pal(0, i) = i | (i ? 0x00 : 0x80);
+            pal(0, i) = i | (i ? 0x00 : 0x10);
             pal(1, i) = i;
         }
         m_fillp = 0.0;
@@ -635,7 +635,7 @@ int vm::api_pal(lua_State *l)
         int c1 = (int)lua_tofix32(l, 2) & 0xf;
         int p = (int)lua_tofix32(l, 3);
 
-        pal(p & 1, c0) &= 0x80;
+        pal(p & 1, c0) &= 0x10;
         pal(p & 1, c0) |= c1;
     }
 
@@ -649,7 +649,7 @@ int vm::api_palt(lua_State *l)
         for (int i = 0; i < 16; ++i)
         {
             pal(0, i) &= 0x7f;
-            pal(0, i) |= i ? 0x00 : 0x80;
+            pal(0, i) |= i ? 0x00 : 0x10;
         }
     }
     else
@@ -657,7 +657,7 @@ int vm::api_palt(lua_State *l)
         int c = (int)lua_tofix32(l, 1) & 0xf;
         int t = lua_toboolean(l, 2);
         pal(0, c) &= 0x7f;
-        pal(0, c) |= t ? 0x80 : 0x00;
+        pal(0, c) |= t ? 0x10 : 0x00;
     }
 
     return 0;
@@ -775,7 +775,7 @@ int vm::api_spr(lua_State *l)
             int16_t di = flip_x ? w8 - 1 - i : i;
             int16_t dj = flip_y ? h8 - 1 - j : j;
             uint8_t col = getspixel(n % 16 * 8 + di, n / 16 * 8 + dj);
-            if ((pal(0, col) & 0x80) == 0)
+            if ((pal(0, col) & 0x10) == 0)
             {
                 uint32_t color_bits = (pal(0, col) & 0xf) << 16;
                 set_pixel(x + i, y + j, color_bits);
@@ -811,7 +811,7 @@ int vm::api_sspr(lua_State *l)
         int16_t y = sy + sh * dj / dh;
 
         uint8_t col = getspixel(x, y);
-        if ((pal(0, col) & 0x80) == 0)
+        if ((pal(0, col) & 0x10) == 0)
         {
             uint32_t color_bits = (pal(0, col) & 0xf) << 16;
             set_pixel(dx + i, dy + j, color_bits);
