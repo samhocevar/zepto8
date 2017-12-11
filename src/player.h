@@ -16,7 +16,7 @@
 
 #include "zepto8.h"
 #include "cart.h"
-#include "vm.h"
+#include "vm/vm.h"
 
 namespace z8
 {

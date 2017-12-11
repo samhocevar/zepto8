@@ -20,7 +20,7 @@
 #include <sstream>
 
 #include "zepto8.h"
-#include "vm.h"
+#include "vm/vm.h"
 #include "telnet.h"
 #include "splore.h"
 

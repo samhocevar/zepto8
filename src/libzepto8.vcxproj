@@ -60,17 +60,18 @@
   <ItemGroup>
     <ClCompile Include="analyzer.cpp" />
     <ClCompile Include="cart.cpp" />
-    <ClCompile Include="vm.cpp" />
-    <ClCompile Include="vm-maths.cpp" />
-    <ClCompile Include="vm-gfx.cpp" />
-    <ClCompile Include="vm-render.cpp" />
-    <ClCompile Include="vm-sfx.cpp" />
+    <ClCompile Include="vm\maths.cpp" />
+    <ClCompile Include="vm\gfx.cpp" />
+    <ClCompile Include="vm\private.cpp" />
+    <ClCompile Include="vm\render.cpp" />
+    <ClCompile Include="vm\vm.cpp" />
+    <ClCompile Include="vm\sfx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analyzer.h" />
     <ClInclude Include="cart.h" />
     <ClInclude Include="lua53-parse.h" />
-    <ClInclude Include="vm.h" />
+    <ClInclude Include="vm\vm.h" />
     <ClInclude Include="zepto8.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

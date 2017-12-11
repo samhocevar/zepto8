@@ -13,7 +13,7 @@
 #include <lol/engine.h>
 
 #include "player.h"
-#include "vm.h"
+#include "vm/vm.h"
 
 namespace z8
 {
