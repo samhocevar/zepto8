@@ -156,7 +156,7 @@ private:
     int16_t get_camera_x() const;
     int16_t get_camera_y() const;
 
-    uint32_t get_color_bits() const;
+    uint32_t lua_to_color_bits(lua_State *l, int n);
 
     void set_pixel(int16_t x, int16_t y, uint32_t color_bits);
 
