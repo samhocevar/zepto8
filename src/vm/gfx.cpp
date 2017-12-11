@@ -45,16 +45,15 @@ uint32_t vm::get_color_bits() const
         bits |= (m_fillp.bits() << 9) & 0x1000000;
     }
 
-    bits |= m_pal[0][c1] << 16;
-    bits |= m_pal[0][c2] << 20;
+    bits |= (pal(0, c1) & 0xf) << 16;
+    bits |= (pal(0, c2) & 0xf) << 20;
 
     return bits;
 }
 
 uint8_t vm::get_pixel(int16_t x, int16_t y) const
 {
-    if (x < get_clip_aa_x() || x >= get_clip_bb_x()
-         || y < get_clip_aa_y() || y >= get_clip_bb_y())
+    if (x < clip(0) || x >= clip(2) || y < clip(1) || y >= clip(3))
         return 0;
 
     int offset = OFFSET_SCREEN + (128 * y + x) / 2;
@@ -63,8 +62,7 @@ uint8_t vm::get_pixel(int16_t x, int16_t y) const
 
 void vm::set_pixel(int16_t x, int16_t y, uint32_t color_bits)
 {
-    if (x < get_clip_aa_x() || x >= get_clip_bb_x()
-         || y < get_clip_aa_y() || y >= get_clip_bb_y())
+    if (x < clip(0) || x >= clip(2) || y < clip(1) || y >= clip(3))
         return;
 
     uint8_t color = (color_bits >> 16) & 0xf;
@@ -103,14 +101,14 @@ uint8_t vm::getspixel(int16_t x, int16_t y)
 
 void vm::hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits)
 {
-    if (y < get_clip_aa_y() || y >= get_clip_bb_y())
+    if (y < clip(1) || y >= clip(3))
         return;
 
     if (x1 > x2)
         std::swap(x1, x2);
 
-    x1 = std::max(x1, (int16_t)get_clip_aa_x());
-    x2 = std::min(x2, (int16_t)(get_clip_bb_x() - 1));
+    x1 = std::max(x1, (int16_t)clip(0));
+    x2 = std::min(x2, (int16_t)(clip(2) - 1));
 
     if (x1 > x2)
         return;
@@ -146,14 +144,14 @@ void vm::hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits)
 
 void vm::vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits)
 {
-    if (x < get_clip_aa_x() || x >= get_clip_bb_x())
+    if (x < clip(0) || x >= clip(2))
         return;
 
     if (y1 > y2)
         std::swap(y1, y2);
 
-    y1 = std::max(y1, (int16_t)get_clip_aa_y());
-    y2 = std::min(y2, (int16_t)(get_clip_bb_y() - 1));
+    y1 = std::max(y1, (int16_t)clip(1));
+    y2 = std::min(y2, (int16_t)(clip(3) - 1));
 
     if (y1 > y2)
         return;
@@ -436,9 +434,8 @@ int vm::api_clip(lua_State *l)
         y2 = std::min(y2, y1 + (int)lua_tofix32(l, 4));
     }
 
-    uint8_t *p = get_mem(OFFSET_CLIP);
-    p[0] = (uint8_t)x1; p[1] = (uint8_t)y1;
-    p[2] = (uint8_t)x2; p[3] = (uint8_t)y2;
+    clip(0) = x1; clip(1) = y1;
+    clip(2) = x2; clip(3) = y2;
     return 0;
 }
 
@@ -575,9 +572,9 @@ int vm::api_map(lua_State *l)
         if (sprite)
         {
             int col = getspixel(sprite % 16 * 8 + dx % 8, sprite / 16 * 8 + dy % 8);
-            if (!m_palt[col])
+            if ((pal(0, col) & 0x80) == 0)
             {
-                uint32_t color_bits = m_pal[0][col & 0xf] << 16;
+                uint32_t color_bits = (pal(0, col) & 0xf) << 16;
                 set_pixel(sx + dx, sy + dy, color_bits);
             }
         }
@@ -627,18 +624,19 @@ int vm::api_pal(lua_State *l)
         // transparency values and fill pattern)”
         for (int i = 0; i < 16; ++i)
         {
-            m_pal[0][i] = m_pal[1][i] = i;
-            m_palt[i] = i ? 0 : 1;
+            pal(0, i) = i | (i ? 0x00 : 0x80);
+            pal(1, i) = i;
         }
         m_fillp = 0.0;
     }
     else
     {
-        int c0 = (int)lua_tofix32(l, 1);
-        int c1 = (int)lua_tofix32(l, 2);
+        int c0 = (int)lua_tofix32(l, 1) & 0xf;
+        int c1 = (int)lua_tofix32(l, 2) & 0xf;
         int p = (int)lua_tofix32(l, 3);
 
-        m_pal[p & 1][c0 & 0xf] = c1 & 0xf;
+        pal(p & 1, c0) &= 0x80;
+        pal(p & 1, c0) |= c1;
     }
 
     return 0;
@@ -649,13 +647,17 @@ int vm::api_palt(lua_State *l)
     if (lua_isnone(l, 1) || lua_isnone(l, 2))
     {
         for (int i = 0; i < 16; ++i)
-            m_palt[i] = i ? 0 : 1;
+        {
+            pal(0, i) &= 0x7f;
+            pal(0, i) |= i ? 0x00 : 0x80;
+        }
     }
     else
     {
-        int c = (int)lua_tofix32(l, 1);
+        int c = (int)lua_tofix32(l, 1) & 0xf;
         int t = lua_toboolean(l, 2);
-        m_palt[c & 0xf] = t;
+        pal(0, c) &= 0x7f;
+        pal(0, c) |= t ? 0x80 : 0x00;
     }
 
     return 0;
@@ -749,7 +751,7 @@ int vm::api_sset(lua_State *l)
     int16_t x = lua_tofix32(l, 1);
     int16_t y = lua_tofix32(l, 2);
     uint8_t col = lua_isnone(l, 3) ? (uint8_t)m_colors : (uint8_t)lua_tofix32(l, 3);
-    int c = m_pal[0][col & 0xf];
+    int c = pal(0, col & 0xf);
 
     setspixel(x, y, c);
 
@@ -773,9 +775,9 @@ int vm::api_spr(lua_State *l)
             int16_t di = flip_x ? w8 - 1 - i : i;
             int16_t dj = flip_y ? h8 - 1 - j : j;
             uint8_t col = getspixel(n % 16 * 8 + di, n / 16 * 8 + dj);
-            if (!m_palt[col])
+            if ((pal(0, col) & 0x80) == 0)
             {
-                uint32_t color_bits = m_pal[0][col] << 16;
+                uint32_t color_bits = (pal(0, col) & 0xf) << 16;
                 set_pixel(x + i, y + j, color_bits);
             }
         }
@@ -809,9 +811,9 @@ int vm::api_sspr(lua_State *l)
         int16_t y = sy + sh * dj / dh;
 
         uint8_t col = getspixel(x, y);
-        if (!m_palt[col])
+        if ((pal(0, col) & 0x80) == 0)
         {
-            uint32_t color_bits = m_pal[0][col] << 16;
+            uint32_t color_bits = (pal(0, col) & 0xf) << 16;
             set_pixel(dx + i, dy + j, color_bits);
         }
     }

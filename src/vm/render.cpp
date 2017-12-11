@@ -24,8 +24,8 @@ void vm::render(lol::u8vec4 *screen) const
     for (int n = 0; n < 128 * 128 / 2; ++n)
     {
         uint8_t data = m_memory[OFFSET_SCREEN + n];
-        screen[2 * n] = palette::get(m_pal[1][data & 0xf]);
-        screen[2 * n + 1] = palette::get(m_pal[1][data >> 4]);
+        screen[2 * n] = palette::get(pal(1, data & 0xf));
+        screen[2 * n + 1] = palette::get(pal(1, data >> 4));
     }
 }
 
@@ -81,14 +81,14 @@ void vm::print_ansi(lol::ivec2 term_size,
             if (fg == oldfg)
             {
                 if (bg != oldbg)
-                    printf("\x1b[48;5;%dm", ansi_palette[m_pal[1][bg]]);
+                    printf("\x1b[48;5;%dm", ansi_palette[pal(1, bg)]);
             }
             else
             {
                 if (bg == oldbg)
-                    printf("\x1b[38;5;%dm", ansi_palette[m_pal[1][fg]]);
+                    printf("\x1b[38;5;%dm", ansi_palette[pal(1, fg)]);
                 else
-                    printf("\x1b[38;5;%d;48;5;%dm", ansi_palette[m_pal[1][fg]], ansi_palette[m_pal[1][bg]]);
+                    printf("\x1b[38;5;%d;48;5;%dm", ansi_palette[pal(1, fg)], ansi_palette[pal(1, bg)]);
             }
 
             printf(glyph);

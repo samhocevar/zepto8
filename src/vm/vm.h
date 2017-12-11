@@ -155,16 +155,19 @@ private:
     uint8_t get_pixel(int16_t x, int16_t y) const;
     int16_t get_camera_x() const;
     int16_t get_camera_y() const;
-    inline uint8_t get_clip_aa_x() const { return *get_mem(OFFSET_CLIP); }
-    inline uint8_t get_clip_aa_y() const { return *get_mem(OFFSET_CLIP + 1); }
-    inline uint8_t get_clip_bb_x() const { return *get_mem(OFFSET_CLIP + 2); }
-    inline uint8_t get_clip_bb_y() const { return *get_mem(OFFSET_CLIP + 3); }
+
     uint32_t get_color_bits() const;
 
     void set_pixel(int16_t x, int16_t y, uint32_t color_bits);
 
     void hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits);
     void vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits);
+
+    inline uint8_t &clip(int n) { return m_memory[OFFSET_CLIP + n]; }
+    inline uint8_t const &clip(int n) const { return m_memory[OFFSET_CLIP + n]; }
+
+    inline uint8_t &pal(int n, int c) { return m_memory[OFFSET_PAL1 + n * 16 + c]; }
+    inline uint8_t const &pal(int n, int c) const { return m_memory[OFFSET_PAL1 + n * 16 + c]; }
 
     uint8_t getspixel(int16_t x, int16_t y);
     void setspixel(int16_t x, int16_t y, uint8_t color);
@@ -181,7 +184,6 @@ private:
 
     // Graphics
     fix32 m_colors, m_fillp;
-    uint8_t m_pal[2][16], m_palt[16];
 
     // Input
     int m_buttons[2][64];
