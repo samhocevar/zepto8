@@ -51,7 +51,7 @@ uint32_t vm::lua_to_color_bits(lua_State *l, int n)
     bits |= m_memory[OFFSET_FILLP + 2] << 24;
 
     uint8_t c1 = m_memory[OFFSET_COLOR] & 0xf;
-    uint8_t c2 = m_memory[OFFSET_COLOR] >> 4;
+    uint8_t c2 = (m_memory[OFFSET_COLOR] >> 4) & 0xf;
 
     bits |= (pal(0, c1) & 0xf) << 16;
     bits |= (pal(0, c2) & 0xf) << 20;
@@ -456,9 +456,9 @@ int vm::api_color(lua_State *l)
 int vm::api_fillp(lua_State *l)
 {
     fix32 fillp = lua_tofix32(l, 1);
-    m_memory[OFFSET_FILLP] = fillp.bits();
-    m_memory[OFFSET_FILLP + 1] = fillp.bits() >> 8;
-    m_memory[OFFSET_FILLP + 2] = (fillp.bits() << 1) & 1;
+    m_memory[OFFSET_FILLP] = fillp.bits() >> 16;
+    m_memory[OFFSET_FILLP + 1] = fillp.bits() >> 24;
+    m_memory[OFFSET_FILLP + 2] = (fillp.bits() >> 15) & 1;
     return 0;
 }
 
@@ -650,7 +650,7 @@ int vm::api_palt(lua_State *l)
     {
         for (int i = 0; i < 16; ++i)
         {
-            pal(0, i) &= 0x7f;
+            pal(0, i) &= 0xf;
             pal(0, i) |= i ? 0x00 : 0x10;
         }
     }
@@ -658,7 +658,7 @@ int vm::api_palt(lua_State *l)
     {
         int c = (int)lua_tofix32(l, 1) & 0xf;
         int t = lua_toboolean(l, 2);
-        pal(0, c) &= 0x7f;
+        pal(0, c) &= 0xf;
         pal(0, c) |= t ? 0x10 : 0x00;
     }
 
