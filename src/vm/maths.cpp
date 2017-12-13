@@ -177,7 +177,7 @@ int vm::api_rotl(lua_State *l)
 {
     int32_t xbits = lua_tofix32(l, 1).bits();
     int y = 0x1f & (int)lua_tofix32(l, 2);
-    lua_pushfix32(l, fix32::frombits((xbits << y) | (xbits >> (32 - y))));
+    lua_pushfix32(l, fix32::frombits((xbits << y) | ((uint32_t)xbits >> (32 - y))));
     return 1;
 }
 
@@ -185,7 +185,7 @@ int vm::api_rotr(lua_State *l)
 {
     int32_t xbits = lua_tofix32(l, 1).bits();
     int y = 0x1f & (int)lua_tofix32(l, 2);
-    lua_pushfix32(l, fix32::frombits((xbits >> y) | (xbits << (32 - y))));
+    lua_pushfix32(l, fix32::frombits(((uint32_t)xbits >> y) | (xbits << (32 - y))));
     return 1;
 }
 
