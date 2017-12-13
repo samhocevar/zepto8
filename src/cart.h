@@ -27,12 +27,12 @@ public:
 
     bool load(char const *filename);
 
-    lol::array<uint8_t> const &get_rom() const
+    memory const &get_rom() const
     {
         return m_rom;
     }
 
-    lol::array<uint8_t> &get_rom()
+    memory &get_rom()
     {
         return m_rom;
     }
@@ -63,7 +63,7 @@ private:
     bool load_png(char const *filename);
     bool load_p8(char const *filename);
 
-    lol::array<uint8_t> m_rom;
+    memory m_rom;
     lol::array<uint8_t> m_label;
     lol::String m_code, m_lua;
     int m_version;

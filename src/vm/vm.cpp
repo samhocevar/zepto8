@@ -260,7 +260,7 @@ int vm::api_reload(lua_State *l)
 
     // Now copy possibly legal data
     int amount = lol::min(size, OFFSET_CODE - src);
-    ::memcpy(&m_ram[dst], m_cart.get_rom().data() + src, amount);
+    ::memcpy(&m_ram[dst], &m_cart.get_rom()[src], amount);
     dst += amount;
     size -= amount;
 

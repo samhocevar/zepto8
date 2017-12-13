@@ -52,18 +52,18 @@ bool cart::load_png(char const *filename)
     img.load(filename);
     ivec2 size = img.size();
 
-    if (size.x * size.y < SIZE_MEMORY + 1)
+    if (size.x * size.y < (int)sizeof(m_rom) + 1)
         return false;
 
     u8vec4 const *pixels = img.lock<PixelFormat::RGBA_8>();
 
     // Retrieve cartridge data from lower image bits
-    int pixel_count = size.x * size.y;
-    m_rom.resize(pixel_count);
-    for (int n = 0; n < pixel_count; ++n)
+    uint8_t version = 0;
+    for (int n = 0; n < (int)sizeof(m_rom) + 1; ++n)
     {
         u8vec4 p = pixels[n] * 64;
-        m_rom[n] = p.a + p.r / 4 + p.g / 16 + p.b / 64;
+        uint8_t byte = p.a + p.r / 4 + p.g / 16 + p.b / 64;
+        (n < (int)sizeof(m_rom) ? m_rom[n] : version) = byte;
     }
 
     // Retrieve label from image pixels
@@ -85,34 +85,31 @@ bool cart::load_png(char const *filename)
     img.unlock(pixels);
 
     // Retrieve code, with optional decompression
-    int version = m_rom[SIZE_MEMORY];
-    if (version == 0 || m_rom[OFFSET_CODE] != ':'
-                     || m_rom[OFFSET_CODE + 1] != 'c'
-                     || m_rom[OFFSET_CODE + 2] != ':'
-                     || m_rom[OFFSET_CODE + 3] != '\0')
+    if (version == 0 || m_rom.code[0] != ':' || m_rom.code[1] != 'c'
+                     || m_rom.code[2] != ':' || m_rom.code[3] != '\0')
     {
         int length = 0;
         while (OFFSET_CODE + length < SIZE_MEMORY
-                && m_rom[OFFSET_CODE + length] != '\0')
+                && m_rom.code[length] != '\0')
             ++length;
 
         m_code.resize(length);
-        memcpy(m_code.C(), m_rom.data() + OFFSET_CODE, length);
+        memcpy(m_code.C(), &m_rom.code, length);
         m_code[length] = '\0';
     }
     else if (version == 1 || version >= 5)
     {
         // Expected data length (including trailing zero)
-        int length = m_rom[OFFSET_CODE + 4] * 256
-                   + m_rom[OFFSET_CODE + 5];
+        int length = m_rom.code[4] * 256
+                   + m_rom.code[5];
 
         m_code.resize(0);
-        for (int i = OFFSET_CODE + 8; i < m_rom.count() && m_code.count() < length; ++i)
+        for (int i = 8; OFFSET_CODE + i < SIZE_MEMORY && m_code.count() < length; ++i)
         {
-            if (m_rom[i] >= 0x3c)
+            if (m_rom.code[i] >= 0x3c)
             {
-                int a = (m_rom[i] - 0x3c) * 16 + (m_rom[i + 1] & 0xf);
-                int b = m_rom[i + 1] / 16 + 2;
+                int a = (m_rom.code[i] - 0x3c) * 16 + (m_rom.code[i + 1] & 0xf);
+                int b = m_rom.code[i + 1] / 16 + 2;
                 if (m_code.count() >= a)
                     while (b--)
                         m_code += m_code[m_code.count() - a];
@@ -120,7 +117,8 @@ bool cart::load_png(char const *filename)
             }
             else
             {
-                m_code += m_rom[i] ? decompress_lut[m_rom[i] - 1] : m_rom[++i];
+                m_code += m_rom.code[i] ? decompress_lut[m_rom.code[i] - 1]
+                                        : m_rom.code[++i];
             }
         }
 
@@ -319,8 +317,7 @@ bool cart::load_p8(char const *filename)
 
     m_code = reader.m_code;
 
-    m_rom.resize(0x8000);
-    memset(m_rom.data(), 0, m_rom.bytes());
+    memset(&m_rom, 0, sizeof(m_rom));
 
     auto const &gfx = reader.m_sections[(int8_t)p8_reader::section::gfx];
     auto const &gff = reader.m_sections[(int8_t)p8_reader::section::gff];
@@ -339,22 +336,22 @@ bool cart::load_p8(char const *filename)
               lab.count(), LABEL_WIDTH * LABEL_HEIGHT / 2);
 
     // The optional second chunk of gfx is contiguous, we can copy it directly
-    memcpy(m_rom.data() + OFFSET_GFX, gfx.data(), lol::min(SIZE_GFX + SIZE_GFX2, gfx.count()));
+    memcpy(&m_rom.gfx, gfx.data(), lol::min(SIZE_GFX + SIZE_GFX2, gfx.count()));
 
-    memcpy(m_rom.data() + OFFSET_GFX_PROPS, gff.data(), lol::min(SIZE_GFX_PROPS, gff.count()));
+    memcpy(&m_rom.gfx_props, gff.data(), lol::min(SIZE_GFX_PROPS, gff.count()));
 
     // Map data + optional second chunk
-    memcpy(m_rom.data() + OFFSET_MAP, map.data(), lol::min(SIZE_MAP, map.count()));
+    memcpy(&m_rom.map, map.data(), lol::min(SIZE_MAP, map.count()));
     if (map.count() > SIZE_MAP)
-        memcpy(m_rom.data() + OFFSET_MAP2, map.data() + SIZE_MAP, lol::min(SIZE_MAP2, map.count() - SIZE_MAP));
+        memcpy(&m_rom.map2, map.data() + SIZE_MAP, lol::min(SIZE_MAP2, map.count() - SIZE_MAP));
 
     // Song data is encoded slightly differently
     for (int i = 0; i < lol::min(SIZE_SONG / 4, mus.count() / 5); ++i)
     {
-        m_rom[OFFSET_SONG + i * 4 + 0] = mus[i * 5 + 1] + ((mus[i * 5] << 7) & 0x80);
-        m_rom[OFFSET_SONG + i * 4 + 1] = mus[i * 5 + 2] + ((mus[i * 5] << 6) & 0x80);
-        m_rom[OFFSET_SONG + i * 4 + 2] = mus[i * 5 + 3] + ((mus[i * 5] << 5) & 0x80);
-        m_rom[OFFSET_SONG + i * 4 + 3] = mus[i * 5 + 4] + ((mus[i * 5] << 4) & 0x80);
+        m_rom.song[i * 4 + 0] = mus[i * 5 + 1] + ((mus[i * 5] << 7) & 0x80);
+        m_rom.song[i * 4 + 1] = mus[i * 5 + 2] + ((mus[i * 5] << 6) & 0x80);
+        m_rom.song[i * 4 + 2] = mus[i * 5 + 3] + ((mus[i * 5] << 5) & 0x80);
+        m_rom.song[i * 4 + 3] = mus[i * 5 + 4] + ((mus[i * 5] << 4) & 0x80);
     }
 
     // SFX data is packed
@@ -416,7 +413,7 @@ lol::image cart::get_png() const
     }
 
     /* Create ROM data */
-    lol::array<uint8_t> rom = get_bin();
+    lol::array<uint8_t> const &rom = get_bin();
 
     /* Write ROM to lower image bits */
     for (int n = 0; n < rom.count(); ++n)
@@ -514,18 +511,20 @@ lol::array<uint8_t> cart::get_compressed_code() const
 lol::array<uint8_t> cart::get_bin() const
 {
     /* Create ROM data */
-    lol::array<uint8_t> ret = m_rom;
+    lol::array<uint8_t> ret;
 
     ret.resize(OFFSET_CODE);
+    memcpy(ret.data(), &m_rom, OFFSET_CODE);
+
     ret << ':' << 'c' << ':' << '\0';
     ret << (m_code.count() >> 8);
     ret << (m_code.count() & 0xff);
     ret << 0 << 0; /* FIXME: what is this? */
     ret += get_compressed_code();
-    msg::info("compressed code length: %d/%d\n",
-              ret.count() - OFFSET_CODE, SIZE_MEMORY - OFFSET_CODE);
 
-    ret.resize(SIZE_MEMORY);
+    int max_len = SIZE_MEMORY - OFFSET_CODE;
+    msg::info("compressed code length: %d/%d\n", ret.count() - OFFSET_CODE, max_len);
+
     ret << EXPORT_VERSION;
 
     return ret;
@@ -544,7 +543,7 @@ lol::String cart::get_p8() const
     ret += "__gfx__\n";
     for (int i = 0; i < SIZE_GFX + SIZE_GFX2; ++i)
     {
-        ret += lol::String::format("%02x", uint8_t(m_rom.data()[OFFSET_GFX + i] * 0x101 / 0x10));
+        ret += lol::String::format("%02x", uint8_t(m_rom.gfx[i] * 0x101 / 0x10));
         if ((i + 1) % 64 == 0)
             ret += '\n';
     }
@@ -564,7 +563,7 @@ lol::String cart::get_p8() const
     ret += "__gff__\n";
     for (int i = 0; i < SIZE_GFX_PROPS; ++i)
     {
-        ret += lol::String::format("%02x", m_rom.data()[OFFSET_GFX_PROPS + i]);
+        ret += lol::String::format("%02x", m_rom.gfx_props[i]);
         if ((i + 1) % 128 == 0)
             ret += '\n';
     }
@@ -572,7 +571,7 @@ lol::String cart::get_p8() const
     ret += "__map__\n";
     for (int i = 0; i < SIZE_MAP; ++i)
     {
-        ret += lol::String::format("%02x", m_rom.data()[OFFSET_MAP + i]);
+        ret += lol::String::format("%02x", m_rom.map[i]);
         if ((i + 1) % 128 == 0)
             ret += '\n';
     }
@@ -580,7 +579,7 @@ lol::String cart::get_p8() const
     ret += "__sfx__\n";
     for (int n = 0; n < SIZE_SFX; n += 68)
     {
-        uint8_t const *data = m_rom.data() + OFFSET_SFX + n;
+        uint8_t const *data = (uint8_t const *)&m_rom.sfx[n];
         ret += lol::String::format("%02x%02x%02x%02x", data[64], data[65], data[66], data[67]);
         for (int j = 0; j < 64; j += 2)
         {
@@ -596,7 +595,7 @@ lol::String cart::get_p8() const
     ret += "__music__\n";
     for (int n = 0; n < SIZE_SONG; n += 4)
     {
-        uint8_t const *data = m_rom.data() + OFFSET_SONG + n;
+        uint8_t const *data = &m_rom.song[n];
         int flags = (data[0] >> 7) | ((data[1] >> 6) & 0x2)
                      | ((data[2] >> 5) & 0x4) | ((data[3] >> 4) & 0x8);
         ret += lol::String::format("%02x %02x%02x%02x%02x\n", flags,

@@ -41,6 +41,52 @@ struct sfx
     int instrument(int n) const;
 };
 
+struct draw_state
+{
+    // Palette information (draw palette, screen palette)
+    uint8_t pal[2][16];
+
+    // Clipping information
+    struct
+    {
+        uint8_t x1, y1, x2, y2;
+    }
+    clip;
+
+    uint8_t undocumented1[1];
+
+    // Pen colors:
+    //  0x0f — default colour
+    //  0xf0 — alternate collor for fillp
+    uint8_t pen;
+
+    // Text cursor coordinates
+    struct
+    {
+        uint8_t x, y;
+    }
+    cursor;
+
+    // Camera coordinates
+    struct
+    {
+        uint8_t lo_x, hi_x, lo_y, hi_y;
+
+        inline int16_t x() const { return (int16_t)(lo_x | (hi_x << 8)); }
+        inline int16_t y() const { return (int16_t)(lo_y | (hi_y << 8)); }
+    }
+    camera;
+
+    uint8_t undocumented3[1];
+
+    // Mouse flag
+    uint8_t mouse_flag;
+
+    uint8_t undocumented4[3];
+    uint8_t fillp[2], fillp_trans, fillp_flag;
+    uint8_t undocumented5[11];
+};
+
 struct memory
 {
     uint8_t gfx[0x1000];
@@ -62,67 +108,26 @@ struct memory
 
     union
     {
-        uint8_t user_data[0x1b00];
-        uint8_t code[0x1b00];
+        uint8_t code[0x3d00];
+
+        struct
+        {
+            uint8_t user_data[0x1b00];
+
+            uint8_t persistent[0x100];
+
+            // Draw state
+            struct draw_state draw_state;
+
+            // Hardware state (mostly undocumented)
+            uint8_t hw_state[0x40];
+
+            uint8_t gpio_pins[0x80];
+
+            // The screen, as an array of bytes
+            uint8_t screen[0x2000];
+        };
     };
-
-    uint8_t persistent[0x100];
-
-    // Draw state
-    struct
-    {
-        // Palette information (draw palette, screen palette)
-        uint8_t pal[2][16];
-
-        // Clipping information
-        struct
-        {
-            uint8_t x1, y1, x2, y2;
-        }
-        clip;
-
-        uint8_t undocumented1[1];
-
-        // Pen colors:
-        //  0x0f — default colour
-        //  0xf0 — alternate collor for fillp
-        uint8_t pen;
-
-        // Text cursor coordinates
-        struct
-        {
-            uint8_t x, y;
-        }
-        cursor;
-
-        // Camera coordinates
-        struct
-        {
-            uint8_t lo_x, hi_x, lo_y, hi_y;
-
-            inline int16_t x() const { return (int16_t)(lo_x | (hi_x << 8)); }
-            inline int16_t y() const { return (int16_t)(lo_y | (hi_y << 8)); }
-        }
-        camera;
-
-        uint8_t undocumented3[1];
-
-        // Mouse flag
-        uint8_t mouse_flag;
-
-        uint8_t undocumented4[3];
-        uint8_t fillp[2], fillp_trans, fillp_flag;
-        uint8_t undocumented5[11];
-    }
-    draw_state;
-
-    // Hardware state (mostly undocumented)
-    uint8_t hw_state[0x40];
-
-    uint8_t gpio_pins[0x80];
-
-    // The screen, as an array of bytes
-    uint8_t screen[0x2000];
 
     // Standard accessors
     inline uint8_t &operator[](int n)
@@ -153,6 +158,7 @@ static_check_section(map,        0x2000, 0x1000);
 static_check_section(gfx_props,  0x3000,  0x100);
 static_check_section(song,       0x3100,  0x100);
 static_check_section(sfx,        0x3200, 0x1100);
+static_check_section(code,       0x4300, 0x3d00);
 static_check_section(user_data,  0x4300, 0x1b00);
 static_check_section(persistent, 0x5e00,  0x100);
 static_check_section(draw_state, 0x5f00,   0x40);

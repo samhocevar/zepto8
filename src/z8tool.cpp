@@ -132,7 +132,7 @@ int main(int argc, char **argv)
                     break;
                 }
             }
-            memcpy(cart.get_rom().data(), s.C(), lol::min(s.count(), 0x4300));
+            memcpy(&cart.get_rom(), s.C(), lol::min(s.count(), 0x4300));
         }
 
         if (run_mode == mode::tolua)
@@ -145,7 +145,8 @@ int main(int argc, char **argv)
         }
         else if (run_mode == mode::tobin)
         {
-            fwrite(cart.get_bin().data(), 1, cart.get_bin().count(), stdout);
+            auto const &bin = cart.get_bin();
+            fwrite(&bin, 1, sizeof(bin), stdout);
         }
         else if (run_mode == mode::topng)
         {
@@ -155,7 +156,7 @@ int main(int argc, char **argv)
         }
         else if (run_mode == mode::todata)
         {
-            fwrite(cart.get_rom().data(), 1, 0x4300, stdout);
+            fwrite(&cart.get_rom(), 1, 0x4300, stdout);
         }
     }
     else if (run_mode == mode::run || run_mode == mode::headless)
