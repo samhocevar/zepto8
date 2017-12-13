@@ -37,7 +37,7 @@ vm::vm()
     m_font.load("data/font.png");
 
     // Clear memory
-    ::memset(get_mem(), 0, SIZE_MEMORY);
+    ::memset(&m_ram, 0, sizeof(m_ram));
 
     // Initialize Zepto8
     ExecLuaFile("data/zepto8.lua");
@@ -245,14 +245,14 @@ int vm::api_reload(lua_State *l)
 
     // Attempting to write outside the memory area raises an error. Everything
     // else seems legal, especially reading from anywhere.
-    if (dst + size > SIZE_MEMORY)
+    if (dst + size > (int)sizeof(m_ram))
         return luaL_error(l, "bad memory access");
 
     // If reading from after the cart, fill with zeroes
     if (src > OFFSET_CODE)
     {
         int amount = lol::min(size, 0x10000 - src);
-        ::memset(get_mem(dst), 0, amount);
+        ::memset(&m_ram[dst], 0, amount);
         dst += amount;
         src = (src + amount) & 0xffff;
         size -= amount;
@@ -260,12 +260,12 @@ int vm::api_reload(lua_State *l)
 
     // Now copy possibly legal data
     int amount = lol::min(size, OFFSET_CODE - src);
-    ::memcpy(get_mem(dst), m_cart.get_rom().data() + src, amount);
+    ::memcpy(&m_ram[dst], m_cart.get_rom().data() + src, amount);
     dst += amount;
     size -= amount;
 
     // If there is anything left to copy, it’s zeroes again
-    ::memset(get_mem(dst), 0, size);
+    ::memset(&m_ram[dst], 0, size);
 
     return 0;
 }
@@ -274,25 +274,24 @@ int vm::api_peek(lua_State *l)
 {
     // Note: peek() is the same as peek(0)
     int addr = (int)lua_tofix32(l, 1);
-    if (addr < 0 || addr >= SIZE_MEMORY)
+    if (addr < 0 || addr >= (int)sizeof(m_ram))
         return 0;
 
-    lua_pushnumber(l, m_memory[addr]);
+    lua_pushnumber(l, m_ram[addr]);
     return 1;
 }
 
 int vm::api_peek4(lua_State *l)
 {
     int addr = (int)lua_tofix32(l, 1) & 0xffff;
-    uint8_t const *p = get_mem(addr);
     int32_t bits = 0;
     for (int i = 0; i < 4; ++i)
     {
         /* This code handles partial reads by adding zeroes */
-        if (addr + i < SIZE_MEMORY)
-            bits |= p[i] << (8 * i);
+        if (addr + i < (int)sizeof(m_ram))
+            bits |= m_ram[addr + i] << (8 * i);
         else if (addr + i >= 0x10000)
-            bits |= p[i - 0x10000] << (8 * i);
+            bits |= m_ram[addr + i - 0x10000] << (8 * i);
     }
 
     lua_pushfix32(l, fix32::frombits(bits));
@@ -304,10 +303,10 @@ int vm::api_poke(lua_State *l)
     // Note: poke() is the same as poke(0, 0)
     int addr = (int)lua_tofix32(l, 1);
     int val = (int)lua_tofix32(l, 2);
-    if (addr < 0 || addr > SIZE_MEMORY - 1)
+    if (addr < 0 || addr > (int)sizeof(m_ram) - 1)
         return luaL_error(l, "bad memory access");
 
-    m_memory[addr] = (uint8_t)val;
+    m_ram[addr] = (uint8_t)val;
     return 0;
 }
 
@@ -315,15 +314,14 @@ int vm::api_poke4(lua_State *l)
 {
     // Note: poke4() is the same as poke(0, 0)
     int addr = (int)lua_tofix32(l, 1);
-    if (addr < 0 || addr > SIZE_MEMORY - 4)
+    if (addr < 0 || addr > (int)sizeof(m_ram) - 4)
         return luaL_error(l, "bad memory access");
 
     uint32_t x = (uint32_t)lua_tofix32(l, 2).bits();
-    uint8_t *p = get_mem(addr);
-    p[0] = x;
-    p[1] = x >> 8;
-    p[2] = x >> 16;
-    p[3] = x >> 24;
+    m_ram[addr + 0] = x;
+    m_ram[addr + 1] = x >> 8;
+    m_ram[addr + 2] = x >> 16;
+    m_ram[addr + 3] = x >> 24;
 
     return 0;
 }
@@ -341,7 +339,7 @@ int vm::api_memcpy(lua_State *l)
 
     // Attempting to write outside the memory area raises an error. Everything
     // else seems legal, especially reading from anywhere.
-    if (dst < 0 || dst + size > SIZE_MEMORY)
+    if (dst < 0 || dst + size > (int)sizeof(m_ram))
     {
         msg::info("z8:segv:memcpy(0x%x,0x%x,0x%x)\n", src, dst, size);
         return luaL_error(l, "bad memory access");
@@ -350,7 +348,7 @@ int vm::api_memcpy(lua_State *l)
     // If source is outside main memory, this will be memset(0). But we
     // delay the operation in case the source and the destinations overlap.
     int saved_dst = dst, saved_size = 0;
-    if (src > SIZE_MEMORY)
+    if (src > (int)sizeof(m_ram))
     {
         saved_size = lol::min(size, 0x10000 - src);
         dst += saved_size;
@@ -359,15 +357,15 @@ int vm::api_memcpy(lua_State *l)
     }
 
     // Now copy possibly legal data
-    int amount = lol::min(size, SIZE_MEMORY - src);
-    memmove(get_mem(dst), get_mem(src), amount);
+    int amount = lol::min(size, (int)sizeof(m_ram) - src);
+    memmove(&m_ram[dst], &m_ram[src], amount);
     dst += amount;
     size -= amount;
 
     // Fill possible zeroes we saved before, and if there is still something
     // to copy, it’s zeroes again
-    ::memset(get_mem(saved_dst), 0, saved_size);
-    ::memset(get_mem(dst), 0, size);
+    ::memset(&m_ram[saved_dst], 0, saved_size);
+    ::memset(&m_ram[dst], 0, size);
 
     return 0;
 }
@@ -383,13 +381,13 @@ int vm::api_memset(lua_State *l)
 
     size = size & 0xffff;
 
-    if (dst < 0 || dst + size > SIZE_MEMORY)
+    if (dst < 0 || dst + size > (int)sizeof(m_ram))
     {
         msg::info("z8:segv:memset(0x%x,0x%x,0x%x)\n", dst, val, size);
         return luaL_error(l, "bad memory access");
     }
 
-    ::memset(get_mem(dst), val, size);
+    ::memset(&m_ram[dst], val, size);
 
     return 0;
 }
@@ -429,7 +427,7 @@ int vm::api_stat(lua_State *l)
         // 20..23: the currently playing row number (0..31) or -1 for none
         // TODO
     }
-    else if (id >= 32 && id <= 34 && *get_mem(0x5f2d) == 1)
+    else if (id >= 32 && id <= 34 && m_ram.draw_state.mouse_flag == 1)
     {
         // undocumented mouse support
         ret = id == 32 ? m_mouse.x

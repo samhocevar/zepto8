@@ -58,32 +58,56 @@ struct memory
         }
         clip;
 
-        uint8_t const undocumented1[1];
+        uint8_t undocumented1[1];
+
+        // Pen colors:
+        //  0x0f — default colour
+        //  0xf0 — alternate collor for fillp
         uint8_t pen;
+
+        // Text cursor coordinates
         struct
         {
             uint8_t x, y;
         }
         cursor;
+
         uint8_t camera[4];
-        uint8_t const undocumented2[5];
+        uint8_t undocumented3[1];
+        uint8_t mouse_flag;
+        uint8_t undocumented4[3];
         uint8_t fillp[2], fillp_trans, fillp_flag;
-        uint8_t const undocumented3[11];
+        uint8_t undocumented5[11];
     }
     draw_state;
 
+    // Hardware state (mostly undocumented)
     uint8_t hw_state[0x40];
 
     uint8_t gpio_pins[0x80];
 
+    // The screen, as an array of bytes
     uint8_t screen[0x2000];
+
+    // Standard accessors
+    inline uint8_t &operator[](int n)
+    {
+        return ((uint8_t *)this)[n];
+    }
+
+    inline uint8_t const &operator[](int n) const
+    {
+        return ((uint8_t const *)this)[n];
+    }
 };
 
+// Check all section offsets and sizes
 #define static_check_section(name, offset, size) \
-    static_assert(offsetof(memory, name) == offset); \
-    static_assert(sizeof(memory::name) == size)
+    static_assert(offsetof(memory, name) == offset, \
+                  "memory::"#name" should have offset "#offset); \
+    static_assert(sizeof(memory::name) == size, \
+                  "memory::"#name" should have size "#size);
 
-// Check all table offsets and sizes
 static_check_section(gfx,        0x0000, 0x1000);
 static_check_section(gfx2,       0x1000, 0x1000);
 static_check_section(map2,       0x1000, 0x1000);
@@ -97,6 +121,7 @@ static_check_section(draw_state, 0x5f00,   0x40);
 static_check_section(hw_state,   0x5f40,   0x40);
 static_check_section(gpio_pins,  0x5f80,   0x80);
 static_check_section(screen,     0x6000, 0x2000);
+#undef static_check_section
 
 // Final sanity check
 static_assert(sizeof(memory) == 0x8000);

@@ -40,8 +40,6 @@ public:
     void run();
     void step(float seconds);
 
-    inline uint8_t *get_mem(int offset = 0) { return &m_memory[offset]; }
-    inline uint8_t const *get_mem(int offset = 0) const { return &m_memory[offset]; }
     inline memory &get_ram() { return m_ram; }
     inline memory const &get_ram() const { return m_ram; }
 
@@ -172,14 +170,9 @@ private:
     void getaudio(int channel, void *buffer, int bytes);
 
 private:
-    union
-    {
-        uint8_t m_memory[SIZE_MEMORY];
-        memory m_ram;
-    };
-
     lol::image m_font;
     cart m_cart;
+    memory m_ram;
 
     // Files
     std::string m_cartdata;

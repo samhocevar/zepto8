@@ -98,10 +98,10 @@ void vm::setspixel(int16_t x, int16_t y, uint8_t color)
     if (x < 0 || x >= 128 || y < 0 || y >= 128)
         return;
 
-    int offset = OFFSET_GFX + (128 * y + x) / 2;
+    int offset = (128 * y + x) / 2;
     uint8_t mask = (x & 1) ? 0x0f : 0xf0;
     uint8_t p = (x & 1) ? color << 4 : color;
-    m_memory[offset] = (m_memory[offset] & mask) | p;
+    m_ram.gfx[offset] = (m_ram.gfx[offset] & mask) | p;
 }
 
 uint8_t vm::getspixel(int16_t x, int16_t y)
@@ -109,8 +109,8 @@ uint8_t vm::getspixel(int16_t x, int16_t y)
     if (x < 0 || x >= 128 || y < 0 || y >= 128)
         return 0;
 
-    int offset = OFFSET_GFX + (128 * y + x) / 2;
-    return (x & 1) ? m_memory[offset] >> 4 : m_memory[offset] & 0xf;
+    int offset = (128 * y + x) / 2;
+    return (x & 1) ? m_ram.gfx[offset] >> 4 : m_ram.gfx[offset] & 0xf;
 }
 
 void vm::hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits)
@@ -484,9 +484,9 @@ int vm::api_fget(lua_State *l)
     int n = (int)lua_tofix32(l, 1);
     uint8_t bits = 0;
 
-    if (n >= 0 && n < SIZE_GFX_PROPS)
+    if (n >= 0 && n < (int)sizeof(m_ram.gfx_props))
     {
-        bits = m_memory[OFFSET_GFX_PROPS + n];
+        bits = m_ram.gfx_props[n];
     }
 
     if (lua_isnone(l, 2))
@@ -504,9 +504,9 @@ int vm::api_fset(lua_State *l)
 
     int n = (int)lua_tofix32(l, 1);
 
-    if (n >= 0 && n < SIZE_GFX_PROPS)
+    if (n >= 0 && n < (int)sizeof(m_ram.gfx_props))
     {
-        uint8_t bits = m_memory[OFFSET_GFX_PROPS + n];
+        uint8_t bits = m_ram.gfx_props[n];
         int f = (int)lua_tofix32(l, 2);
 
         if (lua_isnone(l, 3))
@@ -516,7 +516,7 @@ int vm::api_fset(lua_State *l)
         else
             bits &= ~(1 << (int)f);
 
-        m_memory[OFFSET_GFX_PROPS + n] = bits;
+        m_ram.gfx_props[n] = bits;
     }
 
     return 0;
@@ -575,11 +575,9 @@ int vm::api_map(lua_State *l)
         if (cx < 0 || cx >= 128 || cy < 0 || cy >= 64)
             continue;
 
-        int16_t line = cy < 32 ? OFFSET_MAP + 128 * cy
-                               : OFFSET_MAP2 + 128 * (cy - 32);
-        int sprite = m_memory[line + cx];
-
-        uint8_t bits = m_memory[OFFSET_GFX_PROPS + sprite];
+        uint8_t sprite = cy < 32 ? m_ram.map[128 * cy + cx]
+                                 : m_ram.map2[128 * (cy - 32) + cx];
+        uint8_t bits = m_ram.gfx_props[sprite];
         if (layer && !(bits & layer))
             continue;
 
@@ -601,13 +599,12 @@ int vm::api_mget(lua_State *l)
 {
     int x = (int)lua_tofix32(l, 1);
     int y = (int)lua_tofix32(l, 2);
-    int16_t n = 0;
+    uint8_t n = 0;
 
     if (x >= 0 && x < 128 && y >= 0 && y < 64)
     {
-        int line = y < 32 ? OFFSET_MAP + 128 * y
-                          : OFFSET_MAP2 + 128 * (y - 32);
-        n = m_memory[line + x];
+        n = y < 32 ? m_ram.map[128 * y + x]
+                   : m_ram.map2[128 * (y - 32) + x];
     }
 
     lua_pushfix32(l, fix32(n));
@@ -622,9 +619,8 @@ int vm::api_mset(lua_State *l)
 
     if (x >= 0 && x < 128 && y >= 0 && y < 64)
     {
-        int line = y < 32 ? OFFSET_MAP + 128 * y
-                          : OFFSET_MAP2 + 128 * (y - 32);
-        m_memory[line + x] = n;
+        (y < 32 ? m_ram.map[128 * y + x]
+                : m_ram.map2[128 * (y - 32) + x]) = n;
     }
 
     return 0;

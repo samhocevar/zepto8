@@ -232,7 +232,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
 struct sfx const &vm::get_sfx(int n) const
 {
     ASSERT(n >= 0 && n < 64);
-    return *reinterpret_cast<struct sfx const *>(get_mem(OFFSET_SFX + 68 * n));
+    return *reinterpret_cast<struct sfx const *>(&m_ram.sfx[68 * n]);
 }
 
 //
