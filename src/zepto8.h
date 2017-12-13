@@ -13,6 +13,9 @@
 #pragma once
 
 #include <lol/engine.h>
+#include <cstddef>
+
+#include "vm/memory.h"
 
 #define DEBUG_EXPORT_WAV 0
 
@@ -26,8 +29,17 @@ enum
 
 enum
 {
-    WINDOW_WIDTH = 576,
-    WINDOW_HEIGHT = 576,
+    // FIXME: this should be a runtime setting
+    DISPLAY_SCALE = 3,
+};
+
+enum
+{
+    SCREEN_WIDTH = 128 * DISPLAY_SCALE,
+    SCREEN_HEIGHT = 128 * DISPLAY_SCALE,
+
+    WINDOW_WIDTH = 144 * DISPLAY_SCALE,
+    WINDOW_HEIGHT = 144 * DISPLAY_SCALE,
 };
 
 enum

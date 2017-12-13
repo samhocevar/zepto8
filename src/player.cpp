@@ -123,8 +123,8 @@ void player::TickGame(float seconds)
         int buttons = (m_controller->IsKeyPressed(0) ? 1 : 0)
                     + (m_controller->IsKeyPressed(1) ? 2 : 0)
                     + (m_controller->IsKeyPressed(2) ? 4 : 0);
-        m_vm.mouse(lol::ivec2(mousepos.x - (WINDOW_WIDTH - 512) / 2,
-                              WINDOW_HEIGHT - 1 - mousepos.y - (WINDOW_HEIGHT - 512) / 2) / 4,
+        m_vm.mouse(lol::ivec2(mousepos.x - (WINDOW_WIDTH - SCREEN_WIDTH) / 2,
+                              WINDOW_HEIGHT - 1 - mousepos.y - (WINDOW_HEIGHT - SCREEN_HEIGHT) / 2) / 4,
                    buttons);
     }
 
@@ -143,9 +143,10 @@ void player::TickDraw(float seconds, lol::Scene &scene)
     m_tile->GetTexture()->Bind();
     m_tile->GetTexture()->SetData(m_screen.data());
 
-    int delta_x = (WINDOW_WIDTH - 512) / 2;
-    int delta_y = (WINDOW_HEIGHT - 512) / 2;
-    scene.AddTile(m_tile, 0, lol::vec3(delta_x, delta_y, 10.f), 0, lol::vec2(4.f), 0.f);
+    int delta_x = (WINDOW_WIDTH - SCREEN_WIDTH) / 2;
+    int delta_y = (WINDOW_HEIGHT - SCREEN_HEIGHT) / 2;
+    float scale = (float)SCREEN_WIDTH / 128;
+    scene.AddTile(m_tile, 0, lol::vec3(delta_x, delta_y, 10.f), 0, lol::vec2(scale), 0.f);
 }
 
 } // namespace z8
