@@ -37,6 +37,8 @@ struct telnet
         vm.load(cart);
         vm.run();
 
+        auto const &ram = vm.get_ram();
+
         while (true)
         {
             lol::Timer t;
@@ -84,8 +86,8 @@ struct telnet
             vm.print_ansi(m_term_size,
                           m_screen.count() ? m_screen.data() : nullptr);
 
-            m_screen.resize(SIZE_SCREEN);
-            ::memcpy(m_screen.data(), vm.get_mem(OFFSET_SCREEN), SIZE_SCREEN);
+            m_screen.resize(sizeof(ram.screen));
+            ::memcpy(m_screen.data(), &ram.screen, sizeof(ram.screen));
 
             t.Wait(1.f / 60.f);
         }

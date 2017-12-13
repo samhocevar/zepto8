@@ -17,6 +17,7 @@
 #include "zepto8.h"
 #include "cart.h"
 #include "fix32.h"
+#include "vm/memory.h"
 
 namespace z8
 {
@@ -41,6 +42,8 @@ public:
 
     inline uint8_t *get_mem(int offset = 0) { return &m_memory[offset]; }
     inline uint8_t const *get_mem(int offset = 0) const { return &m_memory[offset]; }
+    inline memory &get_ram() { return m_ram; }
+    inline memory const &get_ram() const { return m_ram; }
 
     void render(lol::u8vec4 *screen) const;
     void print_ansi(lol::ivec2 term_size = lol::ivec2(128, 128),
@@ -163,19 +166,18 @@ private:
     void hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits);
     void vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits);
 
-    inline uint8_t &clip(int n) { return m_memory[OFFSET_CLIP + n]; }
-    inline uint8_t const &clip(int n) const { return m_memory[OFFSET_CLIP + n]; }
-
-    inline uint8_t &pal(int n, int c) { return m_memory[OFFSET_PAL1 + n * 16 + c]; }
-    inline uint8_t const &pal(int n, int c) const { return m_memory[OFFSET_PAL1 + n * 16 + c]; }
-
     uint8_t getspixel(int16_t x, int16_t y);
     void setspixel(int16_t x, int16_t y, uint8_t color);
 
     void getaudio(int channel, void *buffer, int bytes);
 
 private:
-    uint8_t m_memory[SIZE_MEMORY];
+    union
+    {
+        uint8_t m_memory[SIZE_MEMORY];
+        memory m_ram;
+    };
+
     lol::image m_font;
     cart m_cart;
 

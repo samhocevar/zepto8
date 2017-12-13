@@ -21,11 +21,13 @@ using lol::msg;
 
 void vm::render(lol::u8vec4 *screen) const
 {
+    auto &ds = m_ram.draw_state;
+
     for (int n = 0; n < 128 * 128 / 2; ++n)
     {
-        uint8_t data = m_memory[OFFSET_SCREEN + n];
-        screen[2 * n] = palette::get(pal(1, data & 0xf));
-        screen[2 * n + 1] = palette::get(pal(1, data >> 4));
+        uint8_t data = m_ram.screen[n];
+        screen[2 * n] = palette::get(ds.pal[1][data & 0xf]);
+        screen[2 * n + 1] = palette::get(ds.pal[1][data >> 4]);
     }
 }
 
@@ -54,9 +56,11 @@ void vm::print_ansi(lol::ivec2 term_size,
 
     printf("\x1b[?25l"); // hide cursor
 
+    auto &ds = m_ram.draw_state;
+
     for (int y = 0; y < 2 * lol::min(64, term_size.y); y += 2)
     {
-        if (prev_screen && !memcmp(get_mem(OFFSET_SCREEN + y * 64),
+        if (prev_screen && !memcmp(&m_ram.screen + y * 64,
                                    prev_screen + y * 64, 128))
             continue;
 
@@ -68,8 +72,8 @@ void vm::print_ansi(lol::ivec2 term_size,
         {
             int offset = y * 64 + x / 2;
             int shift = 4 * (x & 1);
-            uint8_t fg = (m_memory[OFFSET_SCREEN + offset] >> shift) & 0xf;
-            uint8_t bg = (m_memory[OFFSET_SCREEN + offset + 64] >> shift) & 0xf;
+            uint8_t fg = (m_ram.screen[offset] >> shift) & 0xf;
+            uint8_t bg = (m_ram.screen[offset + 64] >> shift) & 0xf;
             char const *glyph = "▀";
 
             if (fg < bg)
@@ -81,14 +85,14 @@ void vm::print_ansi(lol::ivec2 term_size,
             if (fg == oldfg)
             {
                 if (bg != oldbg)
-                    printf("\x1b[48;5;%dm", ansi_palette[pal(1, bg)]);
+                    printf("\x1b[48;5;%dm", ansi_palette[ds.pal[1][bg]]);
             }
             else
             {
                 if (bg == oldbg)
-                    printf("\x1b[38;5;%dm", ansi_palette[pal(1, fg)]);
+                    printf("\x1b[38;5;%dm", ansi_palette[ds.pal[1][fg]]);
                 else
-                    printf("\x1b[38;5;%d;48;5;%dm", ansi_palette[pal(1, fg)], ansi_palette[pal(1, bg)]);
+                    printf("\x1b[38;5;%d;48;5;%dm", ansi_palette[ds.pal[1][fg]], ansi_palette[ds.pal[1][bg]]);
             }
 
             printf(glyph);
