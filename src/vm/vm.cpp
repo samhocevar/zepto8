@@ -228,7 +228,7 @@ int vm::api_menuitem(lua_State *l)
 
 int vm::api_reload(lua_State *l)
 {
-    int dst = 0, src = 0, size = OFFSET_CODE;
+    int dst = 0, src = 0, size = offsetof(memory, code);
 
     // PICO-8 fully reloads the cartridge if not all arguments are passed
     if (!lua_isnone(l, 3))
@@ -248,10 +248,10 @@ int vm::api_reload(lua_State *l)
     if (dst + size > (int)sizeof(m_ram))
         return luaL_error(l, "bad memory access");
 
-    // If reading from after the cart, fill with zeroes
-    if (src > OFFSET_CODE)
+    // If reading from after the cart, fill that part with zeroes
+    if (src > (int)offsetof(memory, code))
     {
-        int amount = lol::min(size, 0x10000 - src);
+        int amount = lol::min(size, (int)sizeof(m_ram) - src);
         ::memset(&m_ram[dst], 0, amount);
         dst += amount;
         src = (src + amount) & 0xffff;
@@ -259,7 +259,7 @@ int vm::api_reload(lua_State *l)
     }
 
     // Now copy possibly legal data
-    int amount = lol::min(size, OFFSET_CODE - src);
+    int amount = lol::min(size, (int)offsetof(memory, code) - src);
     ::memcpy(&m_ram[dst], &m_cart.get_rom()[src], amount);
     dst += amount;
     size -= amount;
@@ -290,8 +290,8 @@ int vm::api_peek4(lua_State *l)
         /* This code handles partial reads by adding zeroes */
         if (addr + i < (int)sizeof(m_ram))
             bits |= m_ram[addr + i] << (8 * i);
-        else if (addr + i >= 0x10000)
-            bits |= m_ram[addr + i - 0x10000] << (8 * i);
+        else if (addr + i >= (int)sizeof(m_ram))
+            bits |= m_ram[addr + i - (int)sizeof(m_ram)] << (8 * i);
     }
 
     lua_pushfix32(l, fix32::frombits(bits));
@@ -350,7 +350,7 @@ int vm::api_memcpy(lua_State *l)
     int saved_dst = dst, saved_size = 0;
     if (src > (int)sizeof(m_ram))
     {
-        saved_size = lol::min(size, 0x10000 - src);
+        saved_size = lol::min(size, (int)sizeof(m_ram) - src);
         dst += saved_size;
         src = (src + saved_size) & 0xffff;
         size -= saved_size;

@@ -50,15 +50,6 @@ enum
     LABEL_Y = 24,
 };
 
-enum
-{
-    OFFSET_CODE     = offsetof(memory, code),
-
-    SIZE_MAP2       = sizeof(memory::map2),
-    SIZE_MAP        = sizeof(memory::map),
-    SIZE_SONG       = sizeof(memory::song),
-};
-
 struct palette
 {
     static lol::u8vec4 get(int n)

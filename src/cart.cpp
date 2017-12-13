@@ -329,9 +329,9 @@ bool cart::load_p8(char const *filename)
               "sfx: %d/%d mus: %d/%d lab: %d/%d\n", m_code.count(),
               gfx.count(), (int)sizeof(m_rom.gfx),
               gff.count(), (int)sizeof(m_rom.gfx_props),
-              map.count(), SIZE_MAP + SIZE_MAP2,
+              map.count(), (int)(sizeof(m_rom.map) + sizeof(m_rom.map2)),
               sfx.count() / (4 + 80) * (4 + 64), (int)sizeof(m_rom.sfx),
-              mus.count() / 5 * 4, SIZE_SONG,
+              mus.count() / 5 * 4, (int)sizeof(m_rom.song),
               lab.count(), LABEL_WIDTH * LABEL_HEIGHT / 2);
 
     // The optional second chunk of gfx is contiguous, we can copy it directly
@@ -340,12 +340,18 @@ bool cart::load_p8(char const *filename)
     memcpy(&m_rom.gfx_props, gff.data(), lol::min((int)sizeof(m_rom.gfx_props), gff.count()));
 
     // Map data + optional second chunk
-    memcpy(&m_rom.map, map.data(), lol::min(SIZE_MAP, map.count()));
-    if (map.count() > SIZE_MAP)
-        memcpy(&m_rom.map2, map.data() + SIZE_MAP, lol::min(SIZE_MAP2, map.count() - SIZE_MAP));
+    memcpy(&m_rom.map, map.data(), lol::min((int)sizeof(m_rom.map), map.count()));
+    if (map.count() > (int)sizeof(m_rom.map))
+    {
+        int map2_count = lol::min((int)sizeof(m_rom.map2),
+                                  map.count() - (int)sizeof(m_rom.map));
+        memcpy(&m_rom.map2, map.data() + (int)sizeof(m_rom.map), map2_count);
+    }
 
     // Song data is encoded slightly differently
-    for (int i = 0; i < lol::min(SIZE_SONG / 4, mus.count() / 5); ++i)
+    int song_count = lol::min((int)sizeof(m_rom.song) / 4,
+                              mus.count() / 5);
+    for (int i = 0; i < song_count; ++i)
     {
         m_rom.song[i * 4 + 0] = mus[i * 5 + 1] + ((mus[i * 5] << 7) & 0x80);
         m_rom.song[i * 4 + 1] = mus[i * 5 + 2] + ((mus[i * 5] << 6) & 0x80);
@@ -511,11 +517,13 @@ lol::array<uint8_t> cart::get_compressed_code() const
 
 lol::array<uint8_t> cart::get_bin() const
 {
+    int const data_size = offsetof(memory, code);
+
     /* Create ROM data */
     lol::array<uint8_t> ret;
 
-    ret.resize(OFFSET_CODE);
-    memcpy(ret.data(), &m_rom, OFFSET_CODE);
+    ret.resize(data_size);
+    memcpy(ret.data(), &m_rom, data_size);
 
     ret << ':' << 'c' << ':' << '\0';
     ret << (m_code.count() >> 8);
@@ -524,7 +532,7 @@ lol::array<uint8_t> cart::get_bin() const
     ret += get_compressed_code();
 
     int max_len = (int)sizeof(m_rom.code);
-    msg::info("compressed code length: %d/%d\n", ret.count() - OFFSET_CODE, max_len);
+    msg::info("compressed code length: %d/%d\n", ret.count() - data_size, max_len);
 
     ret << EXPORT_VERSION;
 
@@ -569,8 +577,10 @@ lol::String cart::get_p8() const
             ret += '\n';
     }
 
+    // Only serialise m_rom.map, because m_rom.map2 overlaps with m_rom.gfx
+    // which has already been serialised.
     ret += "__map__\n";
-    for (int i = 0; i < SIZE_MAP; ++i)
+    for (int i = 0; i < (int)sizeof(m_rom.map); ++i)
     {
         ret += lol::String::format("%02x", m_rom.map[i]);
         if ((i + 1) % 128 == 0)
@@ -594,7 +604,7 @@ lol::String cart::get_p8() const
     }
 
     ret += "__music__\n";
-    for (int n = 0; n < SIZE_SONG; n += 4)
+    for (int n = 0; n < (int)sizeof(m_rom.song); n += 4)
     {
         uint8_t const *data = &m_rom.song[n];
         int flags = (data[0] >> 7) | ((data[1] >> 6) & 0x2)
