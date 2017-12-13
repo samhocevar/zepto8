@@ -319,6 +319,12 @@ int vm::api_print(lua_State *l)
         *get_mem(OFFSET_CURSOR_X) = (uint8_t)initial_x;
         *get_mem(OFFSET_CURSOR_Y) = (uint8_t)(y + fix32(lines));
     }
+    else
+    {
+        // FIXME: should a multiline print update y?
+        *get_mem(OFFSET_CURSOR_X) = (uint8_t)initial_x;
+        *get_mem(OFFSET_CURSOR_Y) = (uint8_t)y;
+    }
 
     return 0;
 }
