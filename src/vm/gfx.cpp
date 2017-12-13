@@ -580,8 +580,7 @@ int vm::api_map(lua_State *l)
         if (cx < 0 || cx >= 128 || cy < 0 || cy >= 64)
             continue;
 
-        uint8_t sprite = cy < 32 ? m_ram.map[128 * cy + cx]
-                                 : m_ram.map2[128 * (cy - 32) + cx];
+        uint8_t sprite = m_ram.map[128 * cy + cx];
         uint8_t bits = m_ram.gfx_props[sprite];
         if (layer && !(bits & layer))
             continue;
@@ -607,10 +606,7 @@ int vm::api_mget(lua_State *l)
     uint8_t n = 0;
 
     if (x >= 0 && x < 128 && y >= 0 && y < 64)
-    {
-        n = y < 32 ? m_ram.map[128 * y + x]
-                   : m_ram.map2[128 * (y - 32) + x];
-    }
+        n = m_ram.map[128 * y + x];
 
     lua_pushfix32(l, fix32(n));
     return 1;
@@ -623,10 +619,7 @@ int vm::api_mset(lua_State *l)
     int n = (int)lua_tofix32(l, 3);
 
     if (x >= 0 && x < 128 && y >= 0 && y < 64)
-    {
-        (y < 32 ? m_ram.map[128 * y + x]
-                : m_ram.map2[128 * (y - 32) + x]) = n;
-    }
+        m_ram.map[128 * y + x] = n;
 
     return 0;
 }

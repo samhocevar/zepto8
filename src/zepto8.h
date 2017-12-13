@@ -54,13 +54,9 @@ enum
 {
     OFFSET_CODE     = offsetof(memory, code),
 
-    SIZE_GFX        = sizeof(memory::gfx),
-    SIZE_GFX2       = sizeof(memory::gfx2),
     SIZE_MAP2       = sizeof(memory::map2),
     SIZE_MAP        = sizeof(memory::map),
-    SIZE_GFX_PROPS  = sizeof(memory::gfx_props),
     SIZE_SONG       = sizeof(memory::song),
-    SIZE_SFX        = sizeof(memory::sfx),
 };
 
 struct palette

@@ -89,8 +89,7 @@ bool cart::load_png(char const *filename)
                      || m_rom.code[2] != ':' || m_rom.code[3] != '\0')
     {
         int length = 0;
-        while (length < (int)sizeof(memory::code)
-                && m_rom.code[length] != '\0')
+        while (length < (int)sizeof(m_rom.code) && m_rom.code[length] != '\0')
             ++length;
 
         m_code.resize(length);
@@ -104,7 +103,7 @@ bool cart::load_png(char const *filename)
                    + m_rom.code[5];
 
         m_code.resize(0);
-        for (int i = 8; i < (int)sizeof(memory::code) && m_code.count() < length; ++i)
+        for (int i = 8; i < (int)sizeof(m_rom.code) && m_code.count() < length; ++i)
         {
             if (m_rom.code[i] >= 0x3c)
             {
@@ -328,17 +327,17 @@ bool cart::load_p8(char const *filename)
 
     msg::info("code: %d gfx: %d/%d gff: %d/%d map: %d/%d "
               "sfx: %d/%d mus: %d/%d lab: %d/%d\n", m_code.count(),
-              gfx.count(), SIZE_GFX + SIZE_GFX2,
-              gff.count(), SIZE_GFX_PROPS,
+              gfx.count(), (int)sizeof(m_rom.gfx),
+              gff.count(), (int)sizeof(m_rom.gfx_props),
               map.count(), SIZE_MAP + SIZE_MAP2,
-              sfx.count() / (4 + 80) * (4 + 64), SIZE_SFX,
+              sfx.count() / (4 + 80) * (4 + 64), (int)sizeof(m_rom.sfx),
               mus.count() / 5 * 4, SIZE_SONG,
               lab.count(), LABEL_WIDTH * LABEL_HEIGHT / 2);
 
     // The optional second chunk of gfx is contiguous, we can copy it directly
-    memcpy(&m_rom.gfx, gfx.data(), lol::min(SIZE_GFX + SIZE_GFX2, gfx.count()));
+    memcpy(&m_rom.gfx, gfx.data(), lol::min((int)sizeof(m_rom.gfx), gfx.count()));
 
-    memcpy(&m_rom.gfx_props, gff.data(), lol::min(SIZE_GFX_PROPS, gff.count()));
+    memcpy(&m_rom.gfx_props, gff.data(), lol::min((int)sizeof(m_rom.gfx_props), gff.count()));
 
     // Map data + optional second chunk
     memcpy(&m_rom.map, map.data(), lol::min(SIZE_MAP, map.count()));
@@ -355,7 +354,9 @@ bool cart::load_p8(char const *filename)
     }
 
     // SFX data is packed
-    for (int i = 0; i < lol::min(SIZE_SFX / (4 + 32 * 2), sfx.count() / (4 + 32 * 5 / 2)); ++i)
+    int sfx_count = lol::min((int)sizeof(m_rom.sfx) / (4 + 32 * 2),
+                             sfx.count() / (4 + 32 * 5 / 2));
+    for (int i = 0; i < sfx_count; ++i)
     {
         // FIXME move this to the parser maybe?
         for (int j = 0; j < 32; ++j)
@@ -503,7 +504,7 @@ lol::array<uint8_t> cart::get_compressed_code() const
     }
 
     msg::info("compressed code (%d bytes, max %d)\n",
-              ret.count(), (int)sizeof(memory::code) - 8);
+              ret.count(), (int)sizeof(m_rom.code) - 8);
 
     return ret;
 }
@@ -522,7 +523,7 @@ lol::array<uint8_t> cart::get_bin() const
     ret << 0 << 0; /* FIXME: what is this? */
     ret += get_compressed_code();
 
-    int max_len = (int)sizeof(memory::code);
+    int max_len = (int)sizeof(m_rom.code);
     msg::info("compressed code length: %d/%d\n", ret.count() - OFFSET_CODE, max_len);
 
     ret << EXPORT_VERSION;
@@ -541,7 +542,7 @@ lol::String cart::get_p8() const
         ret += '\n';
 
     ret += "__gfx__\n";
-    for (int i = 0; i < SIZE_GFX + SIZE_GFX2; ++i)
+    for (int i = 0; i < (int)sizeof(m_rom.gfx); ++i)
     {
         ret += lol::String::format("%02x", uint8_t(m_rom.gfx[i] * 0x101 / 0x10));
         if ((i + 1) % 64 == 0)
@@ -561,7 +562,7 @@ lol::String cart::get_p8() const
     }
 
     ret += "__gff__\n";
-    for (int i = 0; i < SIZE_GFX_PROPS; ++i)
+    for (int i = 0; i < (int)sizeof(m_rom.gfx_props); ++i)
     {
         ret += lol::String::format("%02x", m_rom.gfx_props[i]);
         if ((i + 1) % 128 == 0)
@@ -577,7 +578,7 @@ lol::String cart::get_p8() const
     }
 
     ret += "__sfx__\n";
-    for (int n = 0; n < SIZE_SFX; n += 68)
+    for (int n = 0; n < (int)sizeof(m_rom.sfx); n += 68)
     {
         uint8_t const *data = (uint8_t const *)&m_rom.sfx[n];
         ret += lol::String::format("%02x%02x%02x%02x", data[64], data[65], data[66], data[67]);

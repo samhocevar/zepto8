@@ -89,15 +89,38 @@ struct draw_state
 
 struct memory
 {
-    uint8_t gfx[0x1000];
-
+    // This union handles the gfx/map shared section
     union
     {
-        uint8_t gfx2[0x1000];
-        uint8_t map2[0x1000];
-    };
+        uint8_t gfx[0x2000];
 
-    uint8_t map[0x1000];
+        struct
+        {
+            uint8_t padding[0x1000];
+
+            uint8_t map2[0x1000];
+
+            struct
+            {
+                 // These accessors allow to access map2
+                 inline uint8_t &operator[](int n)
+                 {
+                     ASSERT(n >= 0 && n < (int)(sizeof(map) + sizeof(map2)));
+                     return b[(n ^ 0x1000) - 0x1000];
+                 }
+
+                 inline uint8_t const &operator[](int n) const
+                 {
+                     ASSERT(n >= 0 && n < (int)(sizeof(map) + sizeof(map2)));
+                     return b[(n ^ 0x1000) - 0x1000];
+                 }
+
+            private:
+                uint8_t b[0x1000];
+            }
+            map;
+        };
+    };
 
     uint8_t gfx_props[0x100];
 
@@ -132,11 +155,13 @@ struct memory
     // Standard accessors
     inline uint8_t &operator[](int n)
     {
+        ASSERT(n >= 0 && n < (int)sizeof(memory));
         return ((uint8_t *)this)[n];
     }
 
     inline uint8_t const &operator[](int n) const
     {
+        ASSERT(n >= 0 && n < (int)sizeof(memory));
         return ((uint8_t const *)this)[n];
     }
 };
@@ -151,8 +176,7 @@ static_assert(sizeof(sfx) == 68, "z8::sfx has incorrect size");
     static_assert(sizeof(memory::name) == size, \
                   "z8::memory::"#name" should have size "#size);
 
-static_check_section(gfx,        0x0000, 0x1000);
-static_check_section(gfx2,       0x1000, 0x1000);
+static_check_section(gfx,        0x0000, 0x2000);
 static_check_section(map2,       0x1000, 0x1000);
 static_check_section(map,        0x2000, 0x1000);
 static_check_section(gfx_props,  0x3000,  0x100);
