@@ -89,7 +89,7 @@ bool cart::load_png(char const *filename)
                      || m_rom.code[2] != ':' || m_rom.code[3] != '\0')
     {
         int length = 0;
-        while (OFFSET_CODE + length < SIZE_MEMORY
+        while (length < (int)sizeof(memory::code)
                 && m_rom.code[length] != '\0')
             ++length;
 
@@ -104,7 +104,7 @@ bool cart::load_png(char const *filename)
                    + m_rom.code[5];
 
         m_code.resize(0);
-        for (int i = 8; OFFSET_CODE + i < SIZE_MEMORY && m_code.count() < length; ++i)
+        for (int i = 8; i < (int)sizeof(memory::code) && m_code.count() < length; ++i)
         {
             if (m_rom.code[i] >= 0x3c)
             {
@@ -372,14 +372,14 @@ bool cart::load_p8(char const *filename)
                          | ((ins & 0x00070) >> 3)  // volume
                          | ((ins & 0x0000f) << 4); // effect
 
-            m_rom[OFFSET_SFX + i * (4 + 64) + j * 2 + 0] = dst >> 8;
-            m_rom[OFFSET_SFX + i * (4 + 64) + j * 2 + 1] = dst & 0x00ff;
+            m_rom.sfx[i].notes[j][0] = dst >> 8;
+            m_rom.sfx[i].notes[j][1] = dst & 0x00ff;
         }
 
-        m_rom[OFFSET_SFX + i * (4 + 64) + 64 + 0] = sfx[i * (4 + 32 * 5 / 2) + 0];
-        m_rom[OFFSET_SFX + i * (4 + 64) + 64 + 1] = sfx[i * (4 + 32 * 5 / 2) + 1];
-        m_rom[OFFSET_SFX + i * (4 + 64) + 64 + 2] = sfx[i * (4 + 32 * 5 / 2) + 2];
-        m_rom[OFFSET_SFX + i * (4 + 64) + 64 + 3] = sfx[i * (4 + 32 * 5 / 2) + 3];
+        m_rom.sfx[i].editor_mode = sfx[i * (4 + 32 * 5 / 2) + 0];
+        m_rom.sfx[i].speed       = sfx[i * (4 + 32 * 5 / 2) + 1];
+        m_rom.sfx[i].loop_start  = sfx[i * (4 + 32 * 5 / 2) + 2];
+        m_rom.sfx[i].loop_end    = sfx[i * (4 + 32 * 5 / 2) + 3];
     }
 
     // Optional cartridge label
@@ -503,7 +503,7 @@ lol::array<uint8_t> cart::get_compressed_code() const
     }
 
     msg::info("compressed code (%d bytes, max %d)\n",
-              ret.count(), SIZE_MEMORY - OFFSET_CODE - 8);
+              ret.count(), (int)sizeof(memory::code) - 8);
 
     return ret;
 }
@@ -522,7 +522,7 @@ lol::array<uint8_t> cart::get_bin() const
     ret << 0 << 0; /* FIXME: what is this? */
     ret += get_compressed_code();
 
-    int max_len = SIZE_MEMORY - OFFSET_CODE;
+    int max_len = (int)sizeof(memory::code);
     msg::info("compressed code length: %d/%d\n", ret.count() - OFFSET_CODE, max_len);
 
     ret << EXPORT_VERSION;
