@@ -154,8 +154,6 @@ private:
 
 private:
     uint8_t get_pixel(int16_t x, int16_t y) const;
-    int16_t get_camera_x() const;
-    int16_t get_camera_y() const;
 
     uint32_t lua_to_color_bits(lua_State *l, int n);
 
@@ -193,8 +191,6 @@ private:
 #endif
     }
     m_channels[4];
-
-    struct sfx const &get_sfx(int n) const;
 
     lol::Timer m_timer;
     fix32 m_seed;

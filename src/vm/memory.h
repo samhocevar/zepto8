@@ -19,6 +19,28 @@
 namespace z8
 {
 
+struct sfx
+{
+    // Use uint8_t[2] instead of uint16_t so that 1-byte aligned storage
+    // is still possible.
+    uint8_t notes[32][2];
+
+    // 0: editor mode
+    // 1: speed (1-255)
+    // 2: loop start
+    // 3: loop end
+    uint8_t editor_mode;
+    uint8_t speed;
+    uint8_t loop_start;
+    uint8_t loop_end;
+
+    // Accessors for data transformation
+    float frequency(int n) const;
+    float volume(int n) const;
+    int effect(int n) const;
+    int instrument(int n) const;
+};
+
 struct memory
 {
     uint8_t gfx[0x1000];
@@ -35,7 +57,8 @@ struct memory
 
     uint8_t song[0x100];
 
-    uint8_t sfx[0x1100];
+    // 64 SFX samples
+    struct sfx sfx[0x40];
 
     union
     {
@@ -72,9 +95,21 @@ struct memory
         }
         cursor;
 
-        uint8_t camera[4];
+        // Camera coordinates
+        struct
+        {
+            uint8_t lo_x, hi_x, lo_y, hi_y;
+
+            inline int16_t x() const { return (int16_t)(lo_x | (hi_x << 8)); }
+            inline int16_t y() const { return (int16_t)(lo_y | (hi_y << 8)); }
+        }
+        camera;
+
         uint8_t undocumented3[1];
+
+        // Mouse flag
         uint8_t mouse_flag;
+
         uint8_t undocumented4[3];
         uint8_t fillp[2], fillp_trans, fillp_flag;
         uint8_t undocumented5[11];
@@ -101,12 +136,15 @@ struct memory
     }
 };
 
+// Check type sizes
+static_assert(sizeof(sfx) == 68, "z8::sfx has incorrect size");
+
 // Check all section offsets and sizes
 #define static_check_section(name, offset, size) \
     static_assert(offsetof(memory, name) == offset, \
-                  "memory::"#name" should have offset "#offset); \
+                  "z8::memory::"#name" should have offset "#offset); \
     static_assert(sizeof(memory::name) == size, \
-                  "memory::"#name" should have size "#size);
+                  "z8::memory::"#name" should have size "#size);
 
 static_check_section(gfx,        0x0000, 0x1000);
 static_check_section(gfx2,       0x1000, 0x1000);

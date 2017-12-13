@@ -116,6 +116,7 @@ uint8_t vm::getspixel(int16_t x, int16_t y)
 void vm::hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits)
 {
     auto &ds = m_ram.draw_state;
+
     if (y < ds.clip.y1 || y >= ds.clip.y2)
         return;
 
@@ -158,6 +159,7 @@ void vm::hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits)
 void vm::vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits)
 {
     auto &ds = m_ram.draw_state;
+
     if (x < ds.clip.x1 || x >= ds.clip.x2)
         return;
 
@@ -188,18 +190,6 @@ void vm::vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits)
             m_ram.screen[offset] = (m_ram.screen[offset] & mask) | p;
         }
     }
-}
-
-int16_t vm::get_camera_x() const
-{
-    uint8_t const *p = m_ram.draw_state.camera;
-    return (int16_t)(p[0] | (p[1] << 8));
-}
-
-int16_t vm::get_camera_y() const
-{
-    uint8_t const *p = m_ram.draw_state.camera;
-    return (int16_t)(p[2] | (p[3] << 8));
 }
 
 
@@ -257,6 +247,8 @@ static void lua_pushtostr(lua_State *l, bool do_hex)
 
 int vm::api_print(lua_State *l)
 {
+    auto &ds = m_ram.draw_state;
+
     if (lua_isnone(l, 1))
         return 0;
 
@@ -267,8 +259,8 @@ int vm::api_print(lua_State *l)
 
     // FIXME: make x and y int16_t instead?
     bool use_cursor = lua_isnone(l, 2) || lua_isnone(l, 3);
-    fix32 x = use_cursor ? fix32(m_ram.draw_state.cursor.x) : lua_tofix32(l, 2);
-    fix32 y = use_cursor ? fix32(m_ram.draw_state.cursor.y) : lua_tofix32(l, 3);
+    fix32 x = use_cursor ? fix32(ds.cursor.x) : lua_tofix32(l, 2);
+    fix32 y = use_cursor ? fix32(ds.cursor.y) : lua_tofix32(l, 3);
     // FIXME: we ignore fillp here, but should we set it in lua_to_color_bits()?
     uint32_t color_bits = lua_to_color_bits(l, 4) & 0xf0000;
     fix32 initial_x = x;
@@ -294,8 +286,8 @@ int vm::api_print(lua_State *l)
             for (int16_t dy = 0; dy < h; ++dy)
                 for (int16_t dx = 0; dx < w; ++dx)
                 {
-                    int16_t screen_x = (int16_t)x - get_camera_x() + dx;
-                    int16_t screen_y = (int16_t)y - get_camera_y() + dy;
+                    int16_t screen_x = (int16_t)x - ds.camera.x() + dx;
+                    int16_t screen_y = (int16_t)y - ds.camera.y() + dy;
 
                     if (pixels[(index / 16 * h + dy) * 128 + (index % 16 * w + dx)].r > 0)
                         set_pixel(screen_x, screen_y, color_bits);
@@ -323,14 +315,14 @@ int vm::api_print(lua_State *l)
             y -= fix32(lines);
         }
 
-        m_ram.draw_state.cursor.x = (uint8_t)initial_x;
-        m_ram.draw_state.cursor.y = (uint8_t)(y + fix32(lines));
+        ds.cursor.x = (uint8_t)initial_x;
+        ds.cursor.y = (uint8_t)(y + fix32(lines));
     }
     else
     {
         // FIXME: should a multiline print update y?
-        m_ram.draw_state.cursor.x = (uint8_t)initial_x;
-        m_ram.draw_state.cursor.y = (uint8_t)y;
+        ds.cursor.x = (uint8_t)initial_x;
+        ds.cursor.y = (uint8_t)y;
     }
 
     return 0;
@@ -362,18 +354,23 @@ int vm::api_tonum(lua_State *l)
 
 int vm::api_camera(lua_State *l)
 {
+    auto &ds = m_ram.draw_state;
+
     int16_t x = (int16_t)lua_tofix32(l, 1);
     int16_t y = (int16_t)lua_tofix32(l, 2);
-    uint8_t *p = m_ram.draw_state.camera;
-    p[0] = (uint8_t)x; p[1] = (uint8_t)(x >> 8);
-    p[2] = (uint8_t)y; p[3] = (uint8_t)(y >> 8);
+    ds.camera.lo_x = (uint8_t)x;
+    ds.camera.hi_x = (uint8_t)(x >> 8);
+    ds.camera.lo_y = (uint8_t)y;
+    ds.camera.hi_y = (uint8_t)(y >> 8);
     return 0;
 }
 
 int vm::api_circ(lua_State *l)
 {
-    int16_t x = (int16_t)lua_tofix32(l, 1) - get_camera_x();
-    int16_t y = (int16_t)lua_tofix32(l, 2) - get_camera_y();
+    auto &ds = m_ram.draw_state;
+
+    int16_t x = (int16_t)lua_tofix32(l, 1) - ds.camera.x();
+    int16_t y = (int16_t)lua_tofix32(l, 2) - ds.camera.y();
     int16_t r = (int16_t)lua_tofix32(l, 3);
     uint32_t color_bits = lua_to_color_bits(l, 4);
 
@@ -404,8 +401,10 @@ int vm::api_circ(lua_State *l)
 
 int vm::api_circfill(lua_State *l)
 {
-    int16_t x = (int16_t)lua_tofix32(l, 1) - get_camera_x();
-    int16_t y = (int16_t)lua_tofix32(l, 2) - get_camera_y();
+    auto &ds = m_ram.draw_state;
+
+    int16_t x = (int16_t)lua_tofix32(l, 1) - ds.camera.x();
+    int16_t y = (int16_t)lua_tofix32(l, 2) - ds.camera.y();
     int16_t r = (int16_t)lua_tofix32(l, 3);
     uint32_t color_bits = lua_to_color_bits(l, 4);
 
@@ -447,8 +446,10 @@ int vm::api_clip(lua_State *l)
     }
 
     auto &ds = m_ram.draw_state;
-    ds.clip.x1 = x1; ds.clip.y1 = y1;
-    ds.clip.x2 = x2; ds.clip.y2 = y2;
+    ds.clip.x1 = x1;
+    ds.clip.y1 = y1;
+    ds.clip.x2 = x2;
+    ds.clip.y2 = y2;
     return 0;
 }
 
@@ -524,10 +525,12 @@ int vm::api_fset(lua_State *l)
 
 int vm::api_line(lua_State *l)
 {
-    int16_t x0 = (int16_t)lua_tofix32(l, 1) - get_camera_x();
-    int16_t y0 = (int16_t)lua_tofix32(l, 2) - get_camera_y();
-    int16_t x1 = (int16_t)lua_tofix32(l, 3) - get_camera_x();
-    int16_t y1 = (int16_t)lua_tofix32(l, 4) - get_camera_y();
+    auto &ds = m_ram.draw_state;
+
+    int16_t x0 = (int16_t)lua_tofix32(l, 1) - ds.camera.x();
+    int16_t y0 = (int16_t)lua_tofix32(l, 2) - ds.camera.y();
+    int16_t x1 = (int16_t)lua_tofix32(l, 3) - ds.camera.x();
+    int16_t y1 = (int16_t)lua_tofix32(l, 4) - ds.camera.y();
     uint32_t color_bits = lua_to_color_bits(l, 5);
 
     if (x0 == x1 && y0 == y1)
@@ -556,10 +559,12 @@ int vm::api_line(lua_State *l)
 
 int vm::api_map(lua_State *l)
 {
+    auto &ds = m_ram.draw_state;
+
     int16_t cel_x = (int16_t)lua_tofix32(l, 1);
     int16_t cel_y = (int16_t)lua_tofix32(l, 2);
-    int16_t sx = (int16_t)lua_tofix32(l, 3) - get_camera_x();
-    int16_t sy = (int16_t)lua_tofix32(l, 4) - get_camera_y();
+    int16_t sx = (int16_t)lua_tofix32(l, 3) - ds.camera.x();
+    int16_t sy = (int16_t)lua_tofix32(l, 4) - ds.camera.y();
     // PICO-8 documentation: “If cel_w and cel_h are not specified,
     // defaults to 128,32”.
     bool no_size = lua_isnone(l, 5) && lua_isnone(l, 6);
@@ -584,9 +589,9 @@ int vm::api_map(lua_State *l)
         if (sprite)
         {
             int col = getspixel(sprite % 16 * 8 + dx % 8, sprite / 16 * 8 + dy % 8);
-            if ((m_ram.draw_state.pal[0][col] & 0x10) == 0)
+            if ((ds.pal[0][col] & 0x10) == 0)
             {
-                uint32_t color_bits = (m_ram.draw_state.pal[0][col] & 0xf) << 16;
+                uint32_t color_bits = (ds.pal[0][col] & 0xf) << 16;
                 set_pixel(sx + dx, sy + dy, color_bits);
             }
         }
@@ -681,10 +686,12 @@ int vm::api_palt(lua_State *l)
 
 int vm::api_pget(lua_State *l)
 {
-    /* pget() is affected by camera() and by clip() */
-    int16_t x = (int16_t)lua_tofix32(l, 1) - get_camera_x();
-    int16_t y = (int16_t)lua_tofix32(l, 2) - get_camera_y();
+    auto &ds = m_ram.draw_state;
 
+    /* pget() is affected by camera() and by clip() */
+    // FIXME: "and by clip()"? wut?
+    int16_t x = (int16_t)lua_tofix32(l, 1) - ds.camera.x();
+    int16_t y = (int16_t)lua_tofix32(l, 2) - ds.camera.y();
     lua_pushfix32(l, fix32(get_pixel(x, y)));
 
     return 1;
@@ -692,8 +699,10 @@ int vm::api_pget(lua_State *l)
 
 int vm::api_pset(lua_State *l)
 {
-    int16_t x = (int16_t)lua_tofix32(l, 1) - get_camera_x();
-    int16_t y = (int16_t)lua_tofix32(l, 2) - get_camera_y();
+    auto &ds = m_ram.draw_state;
+
+    int16_t x = (int16_t)lua_tofix32(l, 1) - ds.camera.x();
+    int16_t y = (int16_t)lua_tofix32(l, 2) - ds.camera.y();
     uint32_t color_bits = lua_to_color_bits(l, 3);
     set_pixel(x, y, color_bits);
 
@@ -702,10 +711,12 @@ int vm::api_pset(lua_State *l)
 
 int vm::api_rect(lua_State *l)
 {
-    int16_t x0 = (int16_t)lua_tofix32(l, 1) - get_camera_x();
-    int16_t y0 = (int16_t)lua_tofix32(l, 2) - get_camera_y();
-    int16_t x1 = (int16_t)lua_tofix32(l, 3) - get_camera_x();
-    int16_t y1 = (int16_t)lua_tofix32(l, 4) - get_camera_y();
+    auto &ds = m_ram.draw_state;
+
+    int16_t x0 = (int16_t)lua_tofix32(l, 1) - ds.camera.x();
+    int16_t y0 = (int16_t)lua_tofix32(l, 2) - ds.camera.y();
+    int16_t x1 = (int16_t)lua_tofix32(l, 3) - ds.camera.x();
+    int16_t y1 = (int16_t)lua_tofix32(l, 4) - ds.camera.y();
     uint32_t color_bits = lua_to_color_bits(l, 5);
 
     if (x0 > x1)
@@ -728,10 +739,12 @@ int vm::api_rect(lua_State *l)
 
 int vm::api_rectfill(lua_State *l)
 {
-    int16_t x0 = (int16_t)lua_tofix32(l, 1) - get_camera_x();
-    int16_t y0 = (int16_t)lua_tofix32(l, 2) - get_camera_y();
-    int16_t x1 = (int16_t)lua_tofix32(l, 3) - get_camera_x();
-    int16_t y1 = (int16_t)lua_tofix32(l, 4) - get_camera_y();
+    auto &ds = m_ram.draw_state;
+
+    int16_t x0 = (int16_t)lua_tofix32(l, 1) - ds.camera.x();
+    int16_t y0 = (int16_t)lua_tofix32(l, 2) - ds.camera.y();
+    int16_t x1 = (int16_t)lua_tofix32(l, 3) - ds.camera.x();
+    int16_t y1 = (int16_t)lua_tofix32(l, 4) - ds.camera.y();
     uint32_t color_bits = lua_to_color_bits(l, 5);
 
     if (y0 > y1)
@@ -755,10 +768,12 @@ int vm::api_sget(lua_State *l)
 
 int vm::api_sset(lua_State *l)
 {
+    auto &ds = m_ram.draw_state;
+
     int16_t x = lua_tofix32(l, 1);
     int16_t y = lua_tofix32(l, 2);
-    uint8_t col = lua_isnone(l, 3) ? m_ram.draw_state.pen : (uint8_t)lua_tofix32(l, 3);
-    int c = m_ram.draw_state.pal[0][col & 0xf];
+    uint8_t col = lua_isnone(l, 3) ? ds.pen : (uint8_t)lua_tofix32(l, 3);
+    int c = ds.pal[0][col & 0xf];
 
     setspixel(x, y, c);
 
@@ -767,10 +782,12 @@ int vm::api_sset(lua_State *l)
 
 int vm::api_spr(lua_State *l)
 {
+    auto &ds = m_ram.draw_state;
+
     // FIXME: should we abort if n == 0?
     int16_t n = (int16_t)lua_tofix32(l, 1);
-    int16_t x = (int16_t)lua_tofix32(l, 2) - get_camera_x();
-    int16_t y = (int16_t)lua_tofix32(l, 3) - get_camera_y();
+    int16_t x = (int16_t)lua_tofix32(l, 2) - ds.camera.x();
+    int16_t y = (int16_t)lua_tofix32(l, 3) - ds.camera.y();
     int16_t w8 = lua_isnoneornil(l, 4) ? 8 : (int16_t)(lua_tofix32(l, 4) * fix32(8.0));
     int16_t h8 = lua_isnoneornil(l, 5) ? 8 : (int16_t)(lua_tofix32(l, 5) * fix32(8.0));
     int flip_x = lua_toboolean(l, 6);
@@ -782,9 +799,9 @@ int vm::api_spr(lua_State *l)
             int16_t di = flip_x ? w8 - 1 - i : i;
             int16_t dj = flip_y ? h8 - 1 - j : j;
             uint8_t col = getspixel(n % 16 * 8 + di, n / 16 * 8 + dj);
-            if ((m_ram.draw_state.pal[0][col] & 0x10) == 0)
+            if ((ds.pal[0][col] & 0x10) == 0)
             {
-                uint32_t color_bits = (m_ram.draw_state.pal[0][col] & 0xf) << 16;
+                uint32_t color_bits = (ds.pal[0][col] & 0xf) << 16;
                 set_pixel(x + i, y + j, color_bits);
             }
         }
@@ -794,12 +811,14 @@ int vm::api_spr(lua_State *l)
 
 int vm::api_sspr(lua_State *l)
 {
+    auto &ds = m_ram.draw_state;
+
     int16_t sx = (int16_t)lua_tofix32(l, 1);
     int16_t sy = (int16_t)lua_tofix32(l, 2);
     int16_t sw = (int16_t)lua_tofix32(l, 3);
     int16_t sh = (int16_t)lua_tofix32(l, 4);
-    int16_t dx = (int16_t)lua_tofix32(l, 5) - get_camera_x();
-    int16_t dy = (int16_t)lua_tofix32(l, 6) - get_camera_y();
+    int16_t dx = (int16_t)lua_tofix32(l, 5) - ds.camera.x();
+    int16_t dy = (int16_t)lua_tofix32(l, 6) - ds.camera.y();
     int16_t dw = lua_isnone(l, 7) ? sw : (int16_t)lua_tofix32(l, 7);
     int16_t dh = lua_isnone(l, 8) ? sh : (int16_t)lua_tofix32(l, 8);
     int flip_x = lua_toboolean(l, 9);
@@ -818,9 +837,9 @@ int vm::api_sspr(lua_State *l)
         int16_t y = sy + sh * dj / dh;
 
         uint8_t col = getspixel(x, y);
-        if ((m_ram.draw_state.pal[0][col] & 0x10) == 0)
+        if ((ds.pal[0][col] & 0x10) == 0)
         {
-            uint32_t color_bits = (m_ram.draw_state.pal[0][col] & 0xf) << 16;
+            uint32_t color_bits = (ds.pal[0][col] & 0xf) << 16;
             set_pixel(dx + i, dy + j, color_bits);
         }
     }

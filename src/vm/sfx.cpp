@@ -19,70 +19,51 @@ namespace z8
 
 using lol::msg;
 
-lol::perlin_noise<1> noise;
+static lol::perlin_noise<1> noise;
 
-struct sfx
+inline float sfx::frequency(int n) const
 {
-    // Use uint8_t[2] instead of uint16_t so that 1-byte aligned storage
-    // is still possible.
-    uint8_t notes[32][2];
-    // 0: editor mode
-    // 1: speed (1-255)
-    // 2: loop start
-    // 3: loop end
-    uint8_t flags[4];
-
-    float frequency(int n) const
+    static float const lut[] =
     {
-        static float const lut[] =
-        {
-            0.0f,
-            69.295658f, 73.416192f, 77.781746f, 82.406889f, 87.307058f,
-            92.498606f, 97.998859f, 103.82617f, 110.00000f, 116.54094f,
-            123.47082f, 130.81278f, 138.59131f, 146.83238f, 155.56349f,
-            164.81377f, 174.61411f, 184.99721f, 195.99771f, 207.65234f,
-            220.00000f, 233.08188f, 246.94165f, 261.62556f, 277.18263f,
-            293.66476f, 311.12698f, 329.62755f, 349.22823f, 369.99442f,
-            391.99543f, 415.30469f, 440.00000f, 466.16376f, 493.88330f,
-            523.25113f, 554.36526f, 587.32953f, 622.25396f, 659.25511f,
-            698.45646f, 739.98884f, 783.99087f, 830.60939f, 880.00000f,
-            932.32752f, 987.76660f, 1046.5022f, 1108.7305f, 1174.6590f,
-            1244.5079f, 1318.5102f, 1396.9129f, 1479.9776f, 1567.9817f,
-            1661.2187f, 1760.0000f, 1864.6550f, 1975.5332f, 2093.0045f,
-            2217.4610f, 2349.3181f, 2489.0158f,
-        };
+        0.0f,
+        69.295658f, 73.416192f, 77.781746f, 82.406889f, 87.307058f,
+        92.498606f, 97.998859f, 103.82617f, 110.00000f, 116.54094f,
+        123.47082f, 130.81278f, 138.59131f, 146.83238f, 155.56349f,
+        164.81377f, 174.61411f, 184.99721f, 195.99771f, 207.65234f,
+        220.00000f, 233.08188f, 246.94165f, 261.62556f, 277.18263f,
+        293.66476f, 311.12698f, 329.62755f, 349.22823f, 369.99442f,
+        391.99543f, 415.30469f, 440.00000f, 466.16376f, 493.88330f,
+        523.25113f, 554.36526f, 587.32953f, 622.25396f, 659.25511f,
+        698.45646f, 739.98884f, 783.99087f, 830.60939f, 880.00000f,
+        932.32752f, 987.76660f, 1046.5022f, 1108.7305f, 1174.6590f,
+        1244.5079f, 1318.5102f, 1396.9129f, 1479.9776f, 1567.9817f,
+        1661.2187f, 1760.0000f, 1864.6550f, 1975.5332f, 2093.0045f,
+        2217.4610f, 2349.3181f, 2489.0158f,
+    };
 
-        ASSERT(n >= 0 && n <= 31);
-        return lut[notes[n][0] & 0x3f];
-    }
+    ASSERT(n >= 0 && n <= 31);
+    return lut[notes[n][0] & 0x3f];
+}
 
-    float volume(int n) const
-    {
-        ASSERT(n >= 0 && n <= 31);
-        return ((notes[n][1] >> 1) & 0x7) / 7.f;
-    }
+inline float sfx::volume(int n) const
+{
+    ASSERT(n >= 0 && n <= 31);
+    return ((notes[n][1] >> 1) & 0x7) / 7.f;
+}
 
-    int effect(int n) const
-    {
-        // FIXME: there is an actual extra bit for the effect but I don’t
-        // know what it’s for: PICO-8 documentation says 0…7, not 0…15
-        ASSERT(n >= 0 && n <= 31);
-        return (notes[n][1] >> 4) & 0x7;
-    }
+inline int sfx::effect(int n) const
+{
+    // FIXME: there is an actual extra bit for the effect but I don’t
+    // know what it’s for: PICO-8 documentation says 0…7, not 0…15
+    ASSERT(n >= 0 && n <= 31);
+    return (notes[n][1] >> 4) & 0x7;
+}
 
-    int instrument(int n) const
-    {
-        ASSERT(n >= 0 && n <= 31);
-        return ((notes[n][1] << 2) & 0x4) | (notes[n][0] >> 6);
-    }
-
-    int speed() const { return flags[1]; }
-    int loop_start() const { return flags[2]; }
-    int loop_end() const { return flags[3]; }
-};
-
-static_assert(sizeof(sfx) == 68, "z8::sfx has incorrect size");
-
+inline int sfx::instrument(int n) const
+{
+    ASSERT(n >= 0 && n <= 31);
+    return ((notes[n][1] << 2) & 0x4) | (notes[n][0] >> 6);
+}
 
 vm::channel::channel()
   : m_sfx(-1),
@@ -116,9 +97,12 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
             continue;
         }
 
+        int index = m_channels[chan].m_sfx;
+        ASSERT(index >= 0 && index < 64);
+        struct sfx const &sfx = m_ram.sfx[index];
+
         // Speed must be 1—255 otherwise the SFX is invalid
-        struct sfx const &sfx = get_sfx(m_channels[chan].m_sfx);
-        int speed = lol::max(1, sfx.speed());
+        int speed = lol::max(1, (int)sfx.speed);
 
         float offset = m_channels[chan].m_offset;
         float phi = m_channels[chan].m_phi;
@@ -227,12 +211,6 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
 #if DEBUG_EXPORT_WAV
     fwrite(in_buffer, in_bytes, 1, m_channels[chan].m_fd);
 #endif
-}
-
-struct sfx const &vm::get_sfx(int n) const
-{
-    ASSERT(n >= 0 && n < 64);
-    return *reinterpret_cast<struct sfx const *>(&m_ram.sfx[68 * n]);
 }
 
 //
