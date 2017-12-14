@@ -146,7 +146,7 @@ void player::TickDraw(float seconds, lol::Scene &scene)
     int delta_x = (WINDOW_WIDTH - SCREEN_WIDTH) / 2;
     int delta_y = (WINDOW_HEIGHT - SCREEN_HEIGHT) / 2;
     float scale = (float)SCREEN_WIDTH / 128;
-    scene.AddTile(m_tile, 0, lol::vec3(delta_x, delta_y, 10.f), 0, lol::vec2(scale), 0.f);
+    scene.AddTile(m_tile, 0, lol::vec3(delta_x, delta_y, 10.f), lol::vec2(scale), 0.f);
 }
 
 } // namespace z8

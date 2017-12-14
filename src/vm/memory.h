@@ -105,13 +105,13 @@ struct memory
                  // These accessors allow to access map2
                  inline uint8_t &operator[](int n)
                  {
-                     ASSERT(n >= 0 && n < (int)(sizeof(map) + sizeof(map2)));
+                     ASSERT(n >= 0 && n < (int)(sizeof(memory::map) + sizeof(memory::map2)));
                      return b[(n ^ 0x1000) - 0x1000];
                  }
 
                  inline uint8_t const &operator[](int n) const
                  {
-                     ASSERT(n >= 0 && n < (int)(sizeof(map) + sizeof(map2)));
+                     ASSERT(n >= 0 && n < (int)(sizeof(memory::map) + sizeof(memory::map2)));
                      return b[(n ^ 0x1000) - 0x1000];
                  }
 
@@ -192,7 +192,7 @@ static_check_section(screen,     0x6000, 0x2000);
 #undef static_check_section
 
 // Final sanity check
-static_assert(sizeof(memory) == 0x8000);
+static_assert(sizeof(memory) == 0x8000, "z8::memory should have size 0x8000");
 
 }
 

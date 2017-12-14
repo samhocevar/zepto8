@@ -144,8 +144,6 @@ struct p8_reader
     // Grammar rules
     //
 
-    struct r_bom : pegtl::opt<TAOCPP_PEGTL_STRING("\xef\xbb\xbf")> {};
-
     struct r_lua : TAOCPP_PEGTL_STRING("__lua__") {};
     struct r_gfx : TAOCPP_PEGTL_STRING("__gfx__") {};
     struct r_gff : TAOCPP_PEGTL_STRING("__gff__") {};
@@ -173,7 +171,7 @@ struct p8_reader
 
     struct r_header: pegtl::seq<TAOCPP_PEGTL_STRING("pico-8 cartridge"), pegtl::until<pegtl::eol>,
                                 TAOCPP_PEGTL_STRING("version "), r_version, pegtl::until<pegtl::eol>> {};
-    struct r_file : pegtl::seq<r_bom, r_header, pegtl::star<r_section>, pegtl::eof> {};
+    struct r_file : pegtl::seq<pegtl::opt<pegtl::utf8::bom>, r_header, pegtl::star<r_section>, pegtl::eof> {};
 
     //
     // Grammar actions
