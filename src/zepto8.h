@@ -24,7 +24,7 @@ namespace z8
 
 enum
 {
-    EXPORT_VERSION = 8,
+    EXPORT_VERSION = 15,
 };
 
 enum

@@ -547,14 +547,24 @@ lol::String cart::get_p8() const
     if (ret.last() != '\n')
         ret += '\n';
 
-    ret += "__gfx__\n";
+    // Export gfx section
+    int gfx_lines = 0;
     for (int i = 0; i < (int)sizeof(m_rom.gfx); ++i)
+        if (m_rom.gfx[i] != 0)
+            gfx_lines = 1 + i / 64;
+
+    for (int line = 0; line < gfx_lines; ++line)
     {
-        ret += lol::String::format("%02x", uint8_t(m_rom.gfx[i] * 0x101 / 0x10));
-        if ((i + 1) % 64 == 0)
-            ret += '\n';
+        if (line == 0)
+            ret += "__gfx__\n";
+
+        for (int i = 0; i < 64; ++i)
+            ret += lol::String::format("%02x", uint8_t(m_rom.gfx[64 * line + i] * 0x101 / 0x10));
+
+        ret += '\n';
     }
 
+    // Export label
     if (m_label.count() >= LABEL_WIDTH * LABEL_HEIGHT / 2)
     {
         ret += "__label__\n";
@@ -567,28 +577,56 @@ lol::String cart::get_p8() const
         ret += '\n';
     }
 
-    ret += "__gff__\n";
+    // Export gff section
+    int gff_lines = 0;
     for (int i = 0; i < (int)sizeof(m_rom.gfx_props); ++i)
+        if (m_rom.gfx_props[i] != 0)
+            gff_lines = 1 + i / 128;
+
+    for (int line = 0; line < gff_lines; ++line)
     {
-        ret += lol::String::format("%02x", m_rom.gfx_props[i]);
-        if ((i + 1) % 128 == 0)
-            ret += '\n';
+        if (line == 0)
+            ret += "__gff__\n";
+
+        for (int i = 0; i < 128; ++i)
+            ret += lol::String::format("%02x", m_rom.gfx_props[128 * line + i]);
+
+        ret += '\n';
     }
 
     // Only serialise m_rom.map, because m_rom.map2 overlaps with m_rom.gfx
     // which has already been serialised.
-    ret += "__map__\n";
+    // FIXME: we could choose between map2 and gfx2 by looking at line
+    // patterns, because the stride is different. See mandel.p8 for an
+    // example.
+    int map_lines = 0;
     for (int i = 0; i < (int)sizeof(m_rom.map); ++i)
+        if (m_rom.map[i] != 0)
+            map_lines = 1 + i / 128;
+
+    for (int line = 0; line < map_lines; ++line)
     {
-        ret += lol::String::format("%02x", m_rom.map[i]);
-        if ((i + 1) % 128 == 0)
-            ret += '\n';
+        if (line == 0)
+            ret += "__map__\n";
+
+        for (int i = 0; i < 128; ++i)
+            ret += lol::String::format("%02x", m_rom.map[128 * line + i]);
+
+        ret += '\n';
     }
 
-    ret += "__sfx__\n";
-    for (int n = 0; n < (int)sizeof(m_rom.sfx); n += 68)
+    // Export sfx section
+    int sfx_lines = 0;
+    for (int i = 0; i < (int)sizeof(m_rom.sfx); ++i)
+        if (((uint8_t const *)&m_rom.sfx)[i] != 0)
+            sfx_lines = 1 + i / (int)sizeof(m_rom.sfx[0]);
+
+    for (int line = 0; line < sfx_lines; ++line)
     {
-        uint8_t const *data = (uint8_t const *)&m_rom.sfx[n];
+        if (line == 0)
+            ret += "__sfx__\n";
+
+        uint8_t const *data = (uint8_t const *)&m_rom.sfx[line];
         ret += lol::String::format("%02x%02x%02x%02x", data[64], data[65], data[66], data[67]);
         for (int j = 0; j < 64; j += 2)
         {
@@ -598,13 +636,22 @@ lol::String cart::get_p8() const
             int effect = (data[j + 1] >> 4) & 0xf;
             ret += lol::String::format("%02x%1x%1x%1x", pitch, instrument, volume, effect);
         }
+
         ret += '\n';
     }
 
-    ret += "__music__\n";
-    for (int n = 0; n < (int)sizeof(m_rom.song); n += 4)
+    // Export music section
+    int music_lines = 0;
+    for (int i = 0; i < (int)sizeof(m_rom.song); ++i)
+        if (m_rom.song[i] != 0)
+            music_lines = 1 + i / 4;
+
+    for (int line = 0; line < music_lines; ++line)
     {
-        uint8_t const *data = &m_rom.song[n];
+        if (line == 0)
+            ret += "__music__\n";
+
+        uint8_t const *data = &m_rom.song[line * 4];
         int flags = (data[0] >> 7) | ((data[1] >> 6) & 0x2)
                      | ((data[2] >> 5) & 0x4) | ((data[3] >> 4) & 0x8);
         ret += lol::String::format("%02x %02x%02x%02x%02x\n", flags,
