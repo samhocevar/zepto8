@@ -364,7 +364,7 @@ String analyzer::fix()
         /* We need to use unsigned arithmetics because -INT_MIN is
          * undefined behaviour. */
         if (negative)
-            bits = (int32_t)-(uint32_t)bits;
+            bits = (int32_t)(1 + ~(uint32_t)bits);
         char buffer[20];
         sprintf(buffer, "%s0x%x.%04x", negative ? "-" : "",
                 (uint16_t)(bits >> 16), (uint16_t)bits);

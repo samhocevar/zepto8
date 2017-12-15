@@ -1,7 +1,7 @@
 --
 --  ZEPTO-8 — Fantasy console emulator
 --
---  Copyright © 2016 Sam Hocevar <sam@hocevar.net>
+--  Copyright © 2016—2017 Sam Hocevar <sam@hocevar.net>
 --
 --  This program is free software. It comes without any warranty, to
 --  the extent permitted by applicable law. You can redistribute it
@@ -203,7 +203,7 @@ _z8.loop = cocreate(function()
         [36] = function() color(7) print("\n\x9a\x9b\x9c\x9d\x9e\x9f")
                            local a = {0,0,12,0,0,0,13,7,11,0,14,7,7,7,10,0,15,7,9,0,0,0,8,0,0}
                            for j=0,#a-1 do pset(41+j%5,2+j/5,a[j+1]) end end,
-        [45] = function() color(6) print("\nzepto-8 0.0.0") end,
+        [45] = function() color(6) print("\nzepto-8 0.0.0 beta") end,
         [50] = function() print("(c) 2016-17 sam hocevar et al.\n\n") end,
     }
 
