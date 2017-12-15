@@ -343,7 +343,11 @@ bool cart::load_p8(char const *filename)
     {
         int map2_count = lol::min((int)sizeof(m_rom.map2),
                                   map.count() - (int)sizeof(m_rom.map));
-        memcpy(&m_rom.map2, map.data() + (int)sizeof(m_rom.map), map2_count);
+        // Use binary OR because some old versions of PICO-8 would store
+        // a full gfx+gfx2 section AND a full map+map2 section, so we cannot
+        // really decide which one is relevant.
+        for (int i = 0; i < map2_count; ++i)
+            m_rom.map2[i] |= map[(int)sizeof(m_rom.map) + i];
     }
 
     // Song data is encoded slightly differently
