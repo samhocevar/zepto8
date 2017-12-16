@@ -65,6 +65,18 @@ inline int sfx::instrument(int n) const
     return ((notes[n][1] << 2) & 0x4) | (notes[n][0] >> 6);
 }
 
+uint8_t song::flags() const
+{
+    return (data[0] >> 7) | ((data[1] >> 6) & 0x2)
+        | ((data[2] >> 5) & 0x4) | ((data[3] >> 4) & 0x8);
+}
+
+uint8_t song::sfx(int n) const
+{
+    ASSERT(n >= 0 && n <= 3);
+    return data[n] & 0x7f;
+}
+
 vm::channel::channel()
   : m_sfx(-1),
     m_offset(0),

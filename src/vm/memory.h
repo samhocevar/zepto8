@@ -41,6 +41,16 @@ struct sfx
     int instrument(int n) const;
 };
 
+struct song
+{
+    // The four song channels that should play
+    uint8_t data[4];
+
+    // Accessors for data transformation
+    uint8_t flags() const;
+    uint8_t sfx(int n) const;
+};
+
 struct draw_state
 {
     // Palette information (draw palette, screen palette)
@@ -124,7 +134,8 @@ struct memory
 
     uint8_t gfx_props[0x100];
 
-    uint8_t song[0x100];
+    // 64 songs
+    struct song song[0x40];
 
     // 64 SFX samples
     struct sfx sfx[0x40];

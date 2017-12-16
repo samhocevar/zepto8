@@ -355,10 +355,10 @@ bool cart::load_p8(char const *filename)
                               mus.count() / 5);
     for (int i = 0; i < song_count; ++i)
     {
-        m_rom.song[i * 4 + 0] = mus[i * 5 + 1] + ((mus[i * 5] << 7) & 0x80);
-        m_rom.song[i * 4 + 1] = mus[i * 5 + 2] + ((mus[i * 5] << 6) & 0x80);
-        m_rom.song[i * 4 + 2] = mus[i * 5 + 3] + ((mus[i * 5] << 5) & 0x80);
-        m_rom.song[i * 4 + 3] = mus[i * 5 + 4] + ((mus[i * 5] << 4) & 0x80);
+        m_rom.song[i].data[0] = mus[i * 5 + 1] | ((mus[i * 5] << 7) & 0x80);
+        m_rom.song[i].data[1] = mus[i * 5 + 2] | ((mus[i * 5] << 6) & 0x80);
+        m_rom.song[i].data[2] = mus[i * 5 + 3] | ((mus[i * 5] << 5) & 0x80);
+        m_rom.song[i].data[3] = mus[i * 5 + 4] | ((mus[i * 5] << 4) & 0x80);
     }
 
     // SFX data is packed
@@ -647,20 +647,18 @@ lol::String cart::get_p8() const
     // Export music section
     int music_lines = 0;
     for (int i = 0; i < (int)sizeof(m_rom.song); ++i)
-        if (m_rom.song[i] != 0)
-            music_lines = 1 + i / 4;
+        if (((uint8_t const *)&m_rom.song)[i] != 0)
+            music_lines = 1 + i / (int)sizeof(m_rom.song[0]);
 
     for (int line = 0; line < music_lines; ++line)
     {
         if (line == 0)
             ret += "__music__\n";
 
-        uint8_t const *data = &m_rom.song[line * 4];
-        int flags = (data[0] >> 7) | ((data[1] >> 6) & 0x2)
-                     | ((data[2] >> 5) & 0x4) | ((data[3] >> 4) & 0x8);
-        ret += lol::String::format("%02x %02x%02x%02x%02x\n", flags,
-                                   data[0] & 0x7f, data[1] & 0x7f,
-                                   data[2] & 0x7f, data[3] & 0x7f);
+        auto const &song = m_rom.song[line];
+        ret += lol::String::format("%02x %02x%02x%02x%02x\n", song.flags(),
+                                   song.sfx(0), song.sfx(1),
+                                   song.sfx(2), song.sfx(3));
     }
 
     ret += '\n';
