@@ -345,15 +345,16 @@ int vm::api_memcpy(lua_State *l)
         return luaL_error(l, "bad memory access");
     }
 
-    // If source is outside main memory, this will be memset(0). But we
-    // delay the operation in case the source and the destinations overlap.
-    int saved_dst = dst, saved_size = 0;
+    // If source is outside main memory, part of the operation will be
+    // memset(0). But we delay the operation in case the source and the
+    // destination overlap.
+    int delayed_dst = dst, delayed_size = 0;
     if (src > (int)sizeof(m_ram))
     {
-        saved_size = lol::min(size, (int)sizeof(m_ram) - src);
-        dst += saved_size;
-        src = (src + saved_size) & 0xffff;
-        size -= saved_size;
+        delayed_size = lol::min(size, (int)sizeof(m_ram) - src);
+        dst += delayed_size;
+        src = (src + delayed_size) & 0xffff;
+        size -= delayed_size;
     }
 
     // Now copy possibly legal data
@@ -364,8 +365,10 @@ int vm::api_memcpy(lua_State *l)
 
     // Fill possible zeroes we saved before, and if there is still something
     // to copy, it’s zeroes again
-    ::memset(&m_ram[saved_dst], 0, saved_size);
-    ::memset(&m_ram[dst], 0, size);
+    if (delayed_size)
+        ::memset(&m_ram[delayed_dst], 0, delayed_size);
+    if (size)
+        ::memset(&m_ram[dst], 0, size);
 
     return 0;
 }
