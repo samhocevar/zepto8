@@ -58,6 +58,7 @@ int main(int argc, char **argv)
     lol::sys::init(argc, argv);
 
     lol::getopt opt(argc, argv);
+    opt.add_opt('h',                 "help",     false);
     opt.add_opt(int(mode::run),      "run",      false);
     opt.add_opt(int(mode::headless), "headless", false);
     opt.add_opt(int(mode::tolua),    "tolua",    false);
@@ -84,6 +85,9 @@ int main(int argc, char **argv)
 
         switch (c)
         {
+        case 'h':
+            usage();
+            return EXIT_SUCCESS;
         case (int)mode::tolua:
         case (int)mode::topng:
         case (int)mode::top8:
