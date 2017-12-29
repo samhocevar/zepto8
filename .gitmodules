@@ -4,3 +4,7 @@
 [submodule "wiki"]
 	path = wiki
 	url = ../zepto8.wiki.git
+[submodule "src/z8lua"]
+	path = src/z8lua
+	url = ../z8lua.git
+	branch = zepto8

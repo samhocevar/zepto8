@@ -1,3 +1,7 @@
+# Our binaries
+zepto8
+z8lua
+z8tool
 # Autotools cruft
 *.o
 *.lo
