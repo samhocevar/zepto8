@@ -16,8 +16,9 @@
 
 #include "zepto8.h"
 #include "cart.h"
-#include "fix32.h"
 #include "vm/memory.h"
+#include "z8lua/lua.h"
+#include "z8lua/lauxlib.h"
 
 namespace z8
 {
@@ -27,8 +28,7 @@ using lol::u8vec4;
 
 class player;
 
-class vm : public lol::LuaLoader,
-           public lol::LuaObject
+class vm
 {
     friend class z8::player;
 
@@ -50,21 +50,11 @@ public:
     void button(int index, int state);
     void mouse(lol::ivec2 coords, int buttons);
 
-    static const lol::LuaObjectLibrary* GetLib();
-    static vm* New(lua_State* l, int arg_nb);
-
 private:
     static void instruction_hook(lua_State *l, lua_Debug *ar);
 
     /* Helpers to dispatch C++ functions to Lua C bindings */
     typedef int (vm::*api_func)(lua_State *);
-
-    template<api_func f>
-    static int dispatch(lua_State *l)
-    {
-        vm *that = *static_cast<vm**>(lua_getextraspace(l));
-        return ((*that).*f)(l);
-    }
 
     // Private methods (hidden from the user)
     int private_cartdata(lua_State *l);
@@ -91,34 +81,10 @@ private:
     // Text
     int api_cursor(lua_State *l);
     int api_print(lua_State *l);
-    static int api_tonum(lua_State *l);
-    static int api_tostr(lua_State *l);
 
     // Maths
-    static int api_max(lua_State *l);
-    static int api_min(lua_State *l);
-    static int api_mid(lua_State *l);
-    static int api_ceil(lua_State *l);
-    static int api_flr(lua_State *l);
-    static int api_cos(lua_State *l);
-    static int api_sin(lua_State *l);
-    static int api_atan2(lua_State *l);
-    static int api_sqrt(lua_State *l);
-    static int api_abs(lua_State *l);
-    static int api_sgn(lua_State *l);
-
     int api_rnd(lua_State *l);
     int api_srand(lua_State *l);
-
-    static int api_band(lua_State *l);
-    static int api_bor(lua_State *l);
-    static int api_bxor(lua_State *l);
-    static int api_bnot(lua_State *l);
-    static int api_shl(lua_State *l);
-    static int api_shr(lua_State *l);
-    static int api_lshr(lua_State *l);
-    static int api_rotl(lua_State *l);
-    static int api_rotr(lua_State *l);
 
     // Graphics
     int api_camera(lua_State *l);
@@ -168,6 +134,7 @@ private:
     void getaudio(int channel, void *buffer, int bytes);
 
 private:
+    lua_State *m_lua;
     lol::image m_font;
     cart m_cart;
     memory m_ram;

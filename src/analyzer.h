@@ -14,8 +14,6 @@
 
 #include <lol/engine.h>
 
-#include "fix32.h"
-
 namespace z8
 {
     class analyzer

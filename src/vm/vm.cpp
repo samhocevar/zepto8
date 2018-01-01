@@ -19,19 +19,82 @@ namespace z8
 
 using lol::msg;
 
+template<vm::api_func f>
+static int dispatch(lua_State *l)
+{
+    vm *that = *static_cast<vm**>(lua_getextraspace(l));
+    return ((*that).*f)(l);
+}
+
+#if 0
+    { "run",      &dispatch<&vm::api_run> },
+    { "menuitem", &dispatch<&vm::api_menuitem> },
+    { "reload",   &dispatch<&vm::api_reload> },
+    { "peek",     &dispatch<&vm::api_peek> },
+    { "peek4",    &dispatch<&vm::api_peek4> },
+    { "poke",     &dispatch<&vm::api_poke> },
+    { "poke4",    &dispatch<&vm::api_poke4> },
+    { "memcpy",   &dispatch<&vm::api_memcpy> },
+    { "memset",   &dispatch<&vm::api_memset> },
+    { "stat",     &dispatch<&vm::api_stat> },
+    { "printh",   &vm::api_printh },
+    { "extcmd",   &dispatch<&vm::api_extcmd> },
+
+    { "_update_buttons", &dispatch<&vm::api_update_buttons> },
+    { "btn",  &dispatch<&vm::api_btn> },
+    { "btnp", &dispatch<&vm::api_btnp> },
+
+    { "cursor", &dispatch<&vm::api_cursor> },
+    { "print",  &dispatch<&vm::api_print> },
+
+    { "rnd",   &dispatch<&vm::api_rnd> },
+    { "srand", &dispatch<&vm::api_srand> },
+
+    { "camera",   &dispatch<&vm::api_camera> },
+    { "circ",     &dispatch<&vm::api_circ> },
+    { "circfill", &dispatch<&vm::api_circfill> },
+    { "clip",     &dispatch<&vm::api_clip> },
+    { "cls",      &dispatch<&vm::api_cls> },
+    { "color",    &dispatch<&vm::api_color> },
+    { "fillp",    &dispatch<&vm::api_fillp> },
+    { "fget",     &dispatch<&vm::api_fget> },
+    { "fset",     &dispatch<&vm::api_fset> },
+    { "line",     &dispatch<&vm::api_line> },
+    { "map",      &dispatch<&vm::api_map> },
+    { "mget",     &dispatch<&vm::api_mget> },
+    { "mset",     &dispatch<&vm::api_mset> },
+    { "pal",      &dispatch<&vm::api_pal> },
+    { "palt",     &dispatch<&vm::api_palt> },
+    { "pget",     &dispatch<&vm::api_pget> },
+    { "pset",     &dispatch<&vm::api_pset> },
+    { "rect",     &dispatch<&vm::api_rect> },
+    { "rectfill", &dispatch<&vm::api_rectfill> },
+    { "sget",     &dispatch<&vm::api_sget> },
+    { "sset",     &dispatch<&vm::api_sset> },
+    { "spr",      &dispatch<&vm::api_spr> },
+    { "sspr",     &dispatch<&vm::api_sspr> },
+
+    { "music", &dispatch<&vm::api_music> },
+    { "sfx",   &dispatch<&vm::api_sfx> },
+
+    { "time", &dispatch<&vm::api_time> },
+
+    { "__cartdata", &dispatch<&vm::private_cartdata> },
+#endif
+
 vm::vm()
   : m_instructions(0)
 {
-    lua_State *l = GetLuaState();
+    m_lua = luaL_newstate();
+    // FIXME: disabled
+    //lua_atpanic(m_lua_state, LuaBaseData::LuaPanic);
+    luaL_openlibs(m_lua);
 
     // Store a pointer to us in global state
-    *static_cast<vm**>(lua_getextraspace(l)) = this;
+    *static_cast<vm**>(lua_getextraspace(m_lua)) = this;
 
     // Automatically yield every 1000 instructions
-    lua_sethook(l, &vm::instruction_hook, LUA_MASKCOUNT, 1000);
-
-    // Register our Lua module
-    lol::LuaObjectHelper::Register<vm>(l);
+    lua_sethook(m_lua, &vm::instruction_hook, LUA_MASKCOUNT, 1000);
 
     // Load font
     m_font.load("src/data/font.png");
@@ -40,7 +103,8 @@ vm::vm()
     ::memset(&m_ram, 0, sizeof(m_ram));
 
     // Initialize Zepto8
-    ExecLuaFile("src/data/zepto8.lua");
+    // FIXME
+    //ExecLuaFile("src/data/zepto8.lua");
 }
 
 vm::~vm()
@@ -66,127 +130,24 @@ void vm::load(char const *name)
 void vm::run()
 {
     // Start the cartridge!
-    ExecLuaCode("run()");
+    int status = luaL_dostring(m_lua, "run()");
+    if (status == 1)
+    {
+        msg::error("Lua error %s\n", lua_tostring(m_lua, -1));
+        lua_pop(m_lua, 1);
+    }
 }
 
 void vm::step(float seconds)
 {
     UNUSED(seconds);
 
-    lua_State *l = GetLuaState();
-    lua_getglobal(l, "_z8");
-    lua_getfield(l, -1, "tick");
-    lua_pcall(l, 0, 0, 0);
-    lua_remove(l, -1);
+    lua_getglobal(m_lua, "_z8");
+    lua_getfield(m_lua, -1, "tick");
+    lua_pcall(m_lua, 0, 0, 0);
+    lua_remove(m_lua, -1);
 
     m_instructions = 0;
-}
-
-const lol::LuaObjectLibrary* vm::GetLib()
-{
-    static const lol::LuaObjectLibrary lib = lol::LuaObjectLibrary(
-        "_z8",
-
-        // Statics
-        {
-            { "run",      &dispatch<&vm::api_run> },
-            { "menuitem", &dispatch<&vm::api_menuitem> },
-            { "reload",   &dispatch<&vm::api_reload> },
-            { "peek",     &dispatch<&vm::api_peek> },
-            { "peek4",    &dispatch<&vm::api_peek4> },
-            { "poke",     &dispatch<&vm::api_poke> },
-            { "poke4",    &dispatch<&vm::api_poke4> },
-            { "memcpy",   &dispatch<&vm::api_memcpy> },
-            { "memset",   &dispatch<&vm::api_memset> },
-            { "stat",     &dispatch<&vm::api_stat> },
-            { "printh",   &vm::api_printh },
-            { "extcmd",   &dispatch<&vm::api_extcmd> },
-
-            { "_update_buttons", &dispatch<&vm::api_update_buttons> },
-            { "btn",  &dispatch<&vm::api_btn> },
-            { "btnp", &dispatch<&vm::api_btnp> },
-
-            { "cursor", &dispatch<&vm::api_cursor> },
-            { "print",  &dispatch<&vm::api_print> },
-            { "tonum",  &vm::api_tonum },
-            { "tostr",  &vm::api_tostr },
-
-            { "max",   &vm::api_max },
-            { "min",   &vm::api_min },
-            { "mid",   &vm::api_mid },
-            { "ceil",  &vm::api_ceil },
-            { "flr",   &vm::api_flr },
-            { "cos",   &vm::api_cos },
-            { "sin",   &vm::api_sin },
-            { "atan2", &vm::api_atan2 },
-            { "sqrt",  &vm::api_sqrt },
-            { "abs",   &vm::api_abs },
-            { "sgn",   &vm::api_sgn },
-            { "rnd",   &dispatch<&vm::api_rnd> },
-            { "srand", &dispatch<&vm::api_srand> },
-            { "band",  &vm::api_band },
-            { "bor",   &vm::api_bor },
-            { "bxor",  &vm::api_bxor },
-            { "bnot",  &vm::api_bnot },
-            { "shl",   &vm::api_shl },
-            { "shr",   &vm::api_shr },
-            { "lshr",  &vm::api_lshr },
-            { "rotl",  &vm::api_rotl },
-            { "rotr",  &vm::api_rotr },
-
-            { "camera",   &dispatch<&vm::api_camera> },
-            { "circ",     &dispatch<&vm::api_circ> },
-            { "circfill", &dispatch<&vm::api_circfill> },
-            { "clip",     &dispatch<&vm::api_clip> },
-            { "cls",      &dispatch<&vm::api_cls> },
-            { "color",    &dispatch<&vm::api_color> },
-            { "fillp",    &dispatch<&vm::api_fillp> },
-            { "fget",     &dispatch<&vm::api_fget> },
-            { "fset",     &dispatch<&vm::api_fset> },
-            { "line",     &dispatch<&vm::api_line> },
-            { "map",      &dispatch<&vm::api_map> },
-            { "mget",     &dispatch<&vm::api_mget> },
-            { "mset",     &dispatch<&vm::api_mset> },
-            { "pal",      &dispatch<&vm::api_pal> },
-            { "palt",     &dispatch<&vm::api_palt> },
-            { "pget",     &dispatch<&vm::api_pget> },
-            { "pset",     &dispatch<&vm::api_pset> },
-            { "rect",     &dispatch<&vm::api_rect> },
-            { "rectfill", &dispatch<&vm::api_rectfill> },
-            { "sget",     &dispatch<&vm::api_sget> },
-            { "sset",     &dispatch<&vm::api_sset> },
-            { "spr",      &dispatch<&vm::api_spr> },
-            { "sspr",     &dispatch<&vm::api_sspr> },
-
-            { "music", &dispatch<&vm::api_music> },
-            { "sfx",   &dispatch<&vm::api_sfx> },
-
-            { "time", &dispatch<&vm::api_time> },
-
-            { "__cartdata", &dispatch<&vm::private_cartdata> },
-
-            { nullptr, nullptr }
-        },
-
-        // Methods
-        {
-            { nullptr, nullptr },
-        },
-
-        // Variables
-        {
-            { nullptr, nullptr, nullptr },
-        });
-
-    return &lib;
-}
-
-vm* vm::New(lua_State* l, int argc)
-{
-    // FIXME: I have no idea what this function is for
-    UNUSED(l);
-    msg::info("requesting new(%d) on vm\n", argc);
-    return nullptr;
 }
 
 void vm::button(int index, int state)

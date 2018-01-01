@@ -328,26 +328,6 @@ int vm::api_print(lua_State *l)
     return 0;
 }
 
-int vm::api_tostr(lua_State *l)
-{
-    bool do_hex = lua_toboolean(l, 2);
-    lua_pushtostr(l, do_hex);
-    return 1;
-}
-
-int vm::api_tonum(lua_State *l)
-{
-    char const *str = lua_tostring(l, 1);
-
-    // If parsing failed, PICO-8 returns nothing
-    if (!analyzer::is_numeral(str))
-        return 0;
-
-    fix32 x = str[1] == 'b' ? fix32::parse_binary(str) : lua_tofix32(l, 1);
-    lua_pushfix32(l, x);
-    return 1;
-}
-
 //
 // Graphics
 //
