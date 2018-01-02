@@ -45,12 +45,12 @@ enum class mode
 static void usage()
 {
     printf("Usage: z8tool [--tolua|--topng|--top8|--tobin|--todata] [--data <file>] <cart> [-o <file>]\n");
-#if HAVE_UNISTD_H
     printf("       z8tool --run <cart>\n");
     printf("       z8tool --headless <cart>\n");
+#if HAVE_UNISTD_H
     printf("       z8tool --telnet <cart>\n");
-    printf("       z8tool --splore <image>\n");
 #endif
+    printf("       z8tool --splore <image>\n");
 }
 
 int main(int argc, char **argv)
