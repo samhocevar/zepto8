@@ -436,7 +436,7 @@ int vm::api_clip(lua_State *l)
 int vm::api_cls(lua_State *l)
 {
     int c = (int)lua_tofix32(l, 1) & 0xf;
-    ::memset(&m_ram.screen, c * 0x11, sizeof(m_ram.screen));
+    ::memset(&m_ram.screen[0], c * 0x11, sizeof(m_ram.screen));
     m_ram.draw_state.cursor.x = m_ram.draw_state.cursor.y = 0;
     return 0;
 }

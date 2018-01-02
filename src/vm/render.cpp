@@ -60,8 +60,8 @@ void vm::print_ansi(lol::ivec2 term_size,
 
     for (int y = 0; y < 2 * lol::min(64, term_size.y); y += 2)
     {
-        if (prev_screen && !memcmp(&m_ram.screen + y * 64,
-                                   prev_screen + y * 64, 128))
+        if (prev_screen && !memcmp(&m_ram.screen[y * 64],
+                                   &prev_screen[y * 64], 128))
             continue;
 
         printf("\x1b[%d;1H", y / 2 + 1);
