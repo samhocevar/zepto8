@@ -240,12 +240,12 @@ int vm::api_sfx(lua_State *l)
 {
     // SFX index: valid values are 0..63 for actual samples,
     // -1 to stop sound on a channel, -2 to stop looping on a channel
-    int sfx = (int)lua_tofix32(l, 1);
+    int sfx = (int)lua_tonumber(l, 1);
     // Audio channel: valid values are 0..3 or -1 (autoselect)
-    int chan = lua_isnone(l, 2) ? -1 : (int)lua_tofix32(l, 2);
+    int chan = lua_isnone(l, 2) ? -1 : (int)lua_tonumber(l, 2);
     // Sound offset: valid values are 0..31, negative values act as 0,
     // and fractional values are ignored
-    int offset = lol::max(0, (int)lua_tofix32(l, 3));
+    int offset = lol::max(0, (int)lua_tonumber(l, 3));
 
     if (sfx < -2 || sfx > 63 || chan < -1 || chan > 4 || offset > 31)
         return 0;

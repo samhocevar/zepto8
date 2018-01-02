@@ -254,9 +254,9 @@ int vm::api_reload(lua_State *l)
     // PICO-8 fully reloads the cartridge if not all arguments are passed
     if (!lua_isnone(l, 3))
     {
-        dst = (int)lua_tofix32(l, 1) & 0xffff;
-        src = (int)lua_tofix32(l, 2) & 0xffff;
-        size = (int)lua_tofix32(l, 3);
+        dst = (int)lua_tonumber(l, 1) & 0xffff;
+        src = (int)lua_tonumber(l, 2) & 0xffff;
+        size = (int)lua_tonumber(l, 3);
     }
 
     if (size <= 0)
@@ -294,7 +294,7 @@ int vm::api_reload(lua_State *l)
 int vm::api_peek(lua_State *l)
 {
     // Note: peek() is the same as peek(0)
-    int addr = (int)lua_tofix32(l, 1);
+    int addr = (int)lua_tonumber(l, 1);
     if (addr < 0 || addr >= (int)sizeof(m_ram))
         return 0;
 
@@ -304,7 +304,7 @@ int vm::api_peek(lua_State *l)
 
 int vm::api_peek4(lua_State *l)
 {
-    int addr = (int)lua_tofix32(l, 1) & 0xffff;
+    int addr = (int)lua_tonumber(l, 1) & 0xffff;
     int32_t bits = 0;
     for (int i = 0; i < 4; ++i)
     {
@@ -315,15 +315,15 @@ int vm::api_peek4(lua_State *l)
             bits |= m_ram[addr + i - (int)sizeof(m_ram)] << (8 * i);
     }
 
-    lua_pushfix32(l, fix32::frombits(bits));
+    lua_pushnumber(l, fix32::frombits(bits));
     return 1;
 }
 
 int vm::api_poke(lua_State *l)
 {
     // Note: poke() is the same as poke(0, 0)
-    int addr = (int)lua_tofix32(l, 1);
-    int val = (int)lua_tofix32(l, 2);
+    int addr = (int)lua_tonumber(l, 1);
+    int val = (int)lua_tonumber(l, 2);
     if (addr < 0 || addr > (int)sizeof(m_ram) - 1)
         return luaL_error(l, "bad memory access");
 
@@ -334,11 +334,11 @@ int vm::api_poke(lua_State *l)
 int vm::api_poke4(lua_State *l)
 {
     // Note: poke4() is the same as poke(0, 0)
-    int addr = (int)lua_tofix32(l, 1);
+    int addr = (int)lua_tonumber(l, 1);
     if (addr < 0 || addr > (int)sizeof(m_ram) - 4)
         return luaL_error(l, "bad memory access");
 
-    uint32_t x = (uint32_t)lua_tofix32(l, 2).bits();
+    uint32_t x = (uint32_t)lua_tonumber(l, 2).bits();
     m_ram[addr + 0] = x;
     m_ram[addr + 1] = x >> 8;
     m_ram[addr + 2] = x >> 16;
@@ -349,9 +349,9 @@ int vm::api_poke4(lua_State *l)
 
 int vm::api_memcpy(lua_State *l)
 {
-    int dst = (int)lua_tofix32(l, 1);
-    int src = (int)lua_tofix32(l, 2) & 0xffff;
-    int size = (int)lua_tofix32(l, 3);
+    int dst = (int)lua_tonumber(l, 1);
+    int src = (int)lua_tonumber(l, 2) & 0xffff;
+    int size = (int)lua_tonumber(l, 3);
 
     if (size <= 0)
         return 0;
@@ -396,9 +396,9 @@ int vm::api_memcpy(lua_State *l)
 
 int vm::api_memset(lua_State *l)
 {
-    int dst = (int)lua_tofix32(l, 1);
-    int val = (int)lua_tofix32(l, 2) & 0xff;
-    int size = (int)lua_tofix32(l, 3);
+    int dst = (int)lua_tonumber(l, 1);
+    int val = (int)lua_tonumber(l, 2) & 0xff;
+    int size = (int)lua_tonumber(l, 3);
 
     if (size <= 0)
         return 0;
@@ -418,7 +418,7 @@ int vm::api_memset(lua_State *l)
 
 int vm::api_stat(lua_State *l)
 {
-    int id = (int)lua_tofix32(l, 1);
+    int id = (int)lua_tonumber(l, 1);
     fix32 ret(0.0);
 
     if (id == 0)
@@ -459,7 +459,7 @@ int vm::api_stat(lua_State *l)
             : m_mouse.b;
     }
 
-    lua_pushfix32(l, ret);
+    lua_pushnumber(l, ret);
     return 1;
 }
 

@@ -27,15 +27,15 @@ int vm::api_rnd(lua_State *l)
     /* FIXME: behaves incorrectly when b is negative */
     double a = 0.f;
     double b = lua_isnone(l, 1) ? 1.0
-             : (double)fix32::min(lua_tofix32(l, 1), fix32::frombits(0x7ffffff));
+             : (double)fix32::min(lua_tonumber(l, 1), fix32::frombits(0x7ffffff));
     double c = lol::mix(a, b, x / (1.0 + (uint32_t)-1));
-    lua_pushfix32(l, fix32(c));
+    lua_pushnumber(l, fix32(c));
     return 1;
 }
 
 int vm::api_srand(lua_State *l)
 {
-    m_seed = lua_tofix32(l, 1);
+    m_seed = lua_tonumber(l, 1);
     if (m_seed.bits() == 0)
         m_seed = fix32::frombits(0xdeadbeef);
     return 0;
