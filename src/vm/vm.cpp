@@ -13,85 +13,107 @@
 #include <lol/engine.h>
 
 #include "vm.h"
+#include "z8lua/lualib.h"
+
+// FIXME: activate this one day, when we use Lua 5.3
+#define HAVE_LUA_GETEXTRASPACE 0
 
 namespace z8
 {
 
 using lol::msg;
 
-template<vm::api_func f>
-static int dispatch(lua_State *l)
+/* Helper to dispatch C++ functions to Lua C bindings */
+typedef int (vm::*api_func)(lua_State *);
+
+template<api_func f> static int dispatch(lua_State *l)
 {
+#if HAVE_LUA_GETEXTRASPACE
     vm *that = *static_cast<vm**>(lua_getextraspace(l));
+#else
+    lua_getglobal(l, "\x01");
+    vm *that = (vm *)lua_touserdata(l, -1);
+    lua_remove(l, -1);
+#endif
     return ((*that).*f)(l);
 }
-
-#if 0
-    { "run",      &dispatch<&vm::api_run> },
-    { "menuitem", &dispatch<&vm::api_menuitem> },
-    { "reload",   &dispatch<&vm::api_reload> },
-    { "peek",     &dispatch<&vm::api_peek> },
-    { "peek4",    &dispatch<&vm::api_peek4> },
-    { "poke",     &dispatch<&vm::api_poke> },
-    { "poke4",    &dispatch<&vm::api_poke4> },
-    { "memcpy",   &dispatch<&vm::api_memcpy> },
-    { "memset",   &dispatch<&vm::api_memset> },
-    { "stat",     &dispatch<&vm::api_stat> },
-    { "printh",   &vm::api_printh },
-    { "extcmd",   &dispatch<&vm::api_extcmd> },
-
-    { "_update_buttons", &dispatch<&vm::api_update_buttons> },
-    { "btn",  &dispatch<&vm::api_btn> },
-    { "btnp", &dispatch<&vm::api_btnp> },
-
-    { "cursor", &dispatch<&vm::api_cursor> },
-    { "print",  &dispatch<&vm::api_print> },
-
-    { "rnd",   &dispatch<&vm::api_rnd> },
-    { "srand", &dispatch<&vm::api_srand> },
-
-    { "camera",   &dispatch<&vm::api_camera> },
-    { "circ",     &dispatch<&vm::api_circ> },
-    { "circfill", &dispatch<&vm::api_circfill> },
-    { "clip",     &dispatch<&vm::api_clip> },
-    { "cls",      &dispatch<&vm::api_cls> },
-    { "color",    &dispatch<&vm::api_color> },
-    { "fillp",    &dispatch<&vm::api_fillp> },
-    { "fget",     &dispatch<&vm::api_fget> },
-    { "fset",     &dispatch<&vm::api_fset> },
-    { "line",     &dispatch<&vm::api_line> },
-    { "map",      &dispatch<&vm::api_map> },
-    { "mget",     &dispatch<&vm::api_mget> },
-    { "mset",     &dispatch<&vm::api_mset> },
-    { "pal",      &dispatch<&vm::api_pal> },
-    { "palt",     &dispatch<&vm::api_palt> },
-    { "pget",     &dispatch<&vm::api_pget> },
-    { "pset",     &dispatch<&vm::api_pset> },
-    { "rect",     &dispatch<&vm::api_rect> },
-    { "rectfill", &dispatch<&vm::api_rectfill> },
-    { "sget",     &dispatch<&vm::api_sget> },
-    { "sset",     &dispatch<&vm::api_sset> },
-    { "spr",      &dispatch<&vm::api_spr> },
-    { "sspr",     &dispatch<&vm::api_sspr> },
-
-    { "music", &dispatch<&vm::api_music> },
-    { "sfx",   &dispatch<&vm::api_sfx> },
-
-    { "time", &dispatch<&vm::api_time> },
-
-    { "__cartdata", &dispatch<&vm::private_cartdata> },
-#endif
 
 vm::vm()
   : m_instructions(0)
 {
     m_lua = luaL_newstate();
-    // FIXME: disabled
-    //lua_atpanic(m_lua_state, LuaBaseData::LuaPanic);
+    lua_atpanic(m_lua, &vm::panic_hook);
     luaL_openlibs(m_lua);
 
     // Store a pointer to us in global state
+#if HAVE_LUA_GETEXTRASPACE
     *static_cast<vm**>(lua_getextraspace(m_lua)) = this;
+#else
+    lua_pushlightuserdata(m_lua, this);
+    lua_setglobal(m_lua, "\x01");
+#endif
+
+    static const luaL_Reg zepto8lib[] =
+    {
+        { "run",      &dispatch<&vm::api_run> },
+        { "menuitem", &dispatch<&vm::api_menuitem> },
+        { "reload",   &dispatch<&vm::api_reload> },
+        { "peek",     &dispatch<&vm::api_peek> },
+        { "peek4",    &dispatch<&vm::api_peek4> },
+        { "poke",     &dispatch<&vm::api_poke> },
+        { "poke4",    &dispatch<&vm::api_poke4> },
+        { "memcpy",   &dispatch<&vm::api_memcpy> },
+        { "memset",   &dispatch<&vm::api_memset> },
+        { "stat",     &dispatch<&vm::api_stat> },
+        { "printh",   &vm::api_printh },
+        { "extcmd",   &dispatch<&vm::api_extcmd> },
+
+        { "_update_buttons", &dispatch<&vm::api_update_buttons> },
+        { "btn",  &dispatch<&vm::api_btn> },
+        { "btnp", &dispatch<&vm::api_btnp> },
+
+        { "cursor", &dispatch<&vm::api_cursor> },
+        { "print",  &dispatch<&vm::api_print> },
+
+        { "rnd",   &dispatch<&vm::api_rnd> },
+        { "srand", &dispatch<&vm::api_srand> },
+
+        { "camera",   &dispatch<&vm::api_camera> },
+        { "circ",     &dispatch<&vm::api_circ> },
+        { "circfill", &dispatch<&vm::api_circfill> },
+        { "clip",     &dispatch<&vm::api_clip> },
+        { "cls",      &dispatch<&vm::api_cls> },
+        { "color",    &dispatch<&vm::api_color> },
+        { "fillp",    &dispatch<&vm::api_fillp> },
+        { "fget",     &dispatch<&vm::api_fget> },
+        { "fset",     &dispatch<&vm::api_fset> },
+        { "line",     &dispatch<&vm::api_line> },
+        { "map",      &dispatch<&vm::api_map> },
+        { "mget",     &dispatch<&vm::api_mget> },
+        { "mset",     &dispatch<&vm::api_mset> },
+        { "pal",      &dispatch<&vm::api_pal> },
+        { "palt",     &dispatch<&vm::api_palt> },
+        { "pget",     &dispatch<&vm::api_pget> },
+        { "pset",     &dispatch<&vm::api_pset> },
+        { "rect",     &dispatch<&vm::api_rect> },
+        { "rectfill", &dispatch<&vm::api_rectfill> },
+        { "sget",     &dispatch<&vm::api_sget> },
+        { "sset",     &dispatch<&vm::api_sset> },
+        { "spr",      &dispatch<&vm::api_spr> },
+        { "sspr",     &dispatch<&vm::api_sspr> },
+
+        { "music", &dispatch<&vm::api_music> },
+        { "sfx",   &dispatch<&vm::api_sfx> },
+
+        { "time", &dispatch<&vm::api_time> },
+
+        { "__cartdata", &dispatch<&vm::private_cartdata> },
+
+        { nullptr, nullptr },
+    };
+
+    lua_pushglobaltable(m_lua);
+    luaL_setfuncs(m_lua, zepto8lib, 0);
 
     // Automatically yield every 1000 instructions
     lua_sethook(m_lua, &vm::instruction_hook, LUA_MASKCOUNT, 1000);
@@ -102,18 +124,56 @@ vm::vm()
     // Clear memory
     ::memset(&m_ram, 0, sizeof(m_ram));
 
-    // Initialize Zepto8
-    // FIXME
-    //ExecLuaFile("src/data/zepto8.lua");
+    // Initialize Zepto8 runtime
+    char const *filename = "src/data/zepto8.lua";
+    lol::File f;
+    int status = LUA_ERRFILE;
+    for (auto candidate : lol::sys::get_path_list(filename))
+    {
+        f.Open(candidate, lol::FileAccess::Read);
+        if (f.IsValid())
+        {
+            lol::String s = f.ReadString();
+            f.Close();
+
+            msg::debug("loading Lua file %s\n", candidate.C());
+            status = luaL_dostring(m_lua, s.C());
+            break;
+        }
+    }
+
+    if (status == LUA_ERRFILE)
+        msg::error("could not find Lua file %s\n", filename);
+    else if (status == 1)
+    {
+        char const *message = lua_tostring(m_lua, -1);
+        msg::error("%s\n", message);
+        lua_pop(m_lua, 1);
+        lol::Abort();
+    }
 }
 
 vm::~vm()
 {
 }
 
+int vm::panic_hook(lua_State* l)
+{
+    char const *message = lua_tostring(l, -1);
+    msg::error("%s\n", message);
+    lol::Abort();
+    return 0;
+}
+
 void vm::instruction_hook(lua_State *l, lua_Debug *)
 {
+#if HAVE_LUA_GETEXTRASPACE
     vm *that = *static_cast<vm**>(lua_getextraspace(l));
+#else
+    lua_getglobal(l, "\x01");
+    vm *that = (vm *)lua_touserdata(l, -1);
+    lua_remove(l, -1);
+#endif
 
     // The value 135000 was found using trial and error, but it causes
     // side effects in lots of cases. Use 300000 instead.

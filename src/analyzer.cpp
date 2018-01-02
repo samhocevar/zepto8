@@ -82,6 +82,11 @@ struct query_at_sol
 namespace z8
 {
 
+analyzer::analyzer(String const &code)
+  : m_code(code)
+{
+}
+
 String analyzer::fix()
 {
     String code = m_code;

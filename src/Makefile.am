@@ -12,8 +12,8 @@ ___zepto8_SOURCES = \
     player.cpp player.h \
     $(NULL)
 ___zepto8_CPPFLAGS = $(AM_CPPFLAGS)
-___zepto8_LDFLAGS = libzepto8.a $(AM_LDFLAGS)
-___zepto8_DEPENDENCIES = libzepto8.a @LOL_DEPS@
+___zepto8_LDFLAGS = libzepto8.a libz8lua.a $(AM_LDFLAGS)
+___zepto8_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@
 ___zepto8_DATA = data/zepto8.lua data/font.png
 
 EXTRA_DIST += zepto8.vcxproj
@@ -23,10 +23,19 @@ ___z8tool_SOURCES = \
     splore.cpp splore.h \
     $(NULL)
 ___z8tool_CPPFLAGS = $(AM_CPPFLAGS)
-___z8tool_LDFLAGS = libzepto8.a $(AM_LDFLAGS)
-___z8tool_DEPENDENCIES = libzepto8.a @LOL_DEPS@
+___z8tool_LDFLAGS = libzepto8.a libz8lua.a $(AM_LDFLAGS)
+___z8tool_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@
 
 EXTRA_DIST += z8tool.vcxproj
+
+___z8lua_SOURCES = \
+    z8lua/lua.c dummy.cpp \
+    $(NULL)
+___z8lua_CPPFLAGS = -xc++ -Iz8lua $(lua_cflags)
+___z8lua_LDFLAGS = libz8lua.a $(lua_ldflags)
+___z8lua_DEPENDENCIES = libz8lua.a
+
+#EXTRA_DIST += z8lua.vcxproj
 
 libzepto8_a_SOURCES = \
     zepto8.h \
@@ -36,12 +45,7 @@ libzepto8_a_SOURCES = \
     vm/private.cpp vm/maths.cpp vm/gfx.cpp vm/render.cpp vm/sfx.cpp \
     $(NULL)
 
-___z8lua_SOURCES = \
-    z8lua/lua.c dummy.cpp \
-    $(NULL)
-___z8lua_CPPFLAGS = -xc++ -Iz8lua $(lua_cflags)
-___z8lua_LDFLAGS = libz8lua.a $(lua_ldflags)
-___z8lua_DEPENDENCIES = libz8lua.a
+EXTRA_DIST += libzepto8.vcxproj
 
 libz8lua_a_SOURCES = \
     z8lua/lapi.c z8lua/lcode.c z8lua/ldebug.c z8lua/ldo.c z8lua/ldump.c \
@@ -66,8 +70,12 @@ lua_cflags += -DLUA_USE_READLINE
 lua_ldflags += -lreadline
 endif
 
+#EXTRA_DIST += libz8lua.vcxproj
+
 dither_SOURCES = dither.cpp
 dither_CPPFLAGS = $(AM_CPPFLAGS)
 dither_LDFLAGS = $(AM_LDFLAGS)
 dither_DEPENDENCIES = @LOL_DEPS@
+
+#EXTRA_DIST += dither.vcxproj
 

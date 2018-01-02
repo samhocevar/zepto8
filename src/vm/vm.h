@@ -51,10 +51,8 @@ public:
     void mouse(lol::ivec2 coords, int buttons);
 
 private:
+    static int panic_hook(lua_State *l);
     static void instruction_hook(lua_State *l, lua_Debug *ar);
-
-    /* Helpers to dispatch C++ functions to Lua C bindings */
-    typedef int (vm::*api_func)(lua_State *);
 
     // Private methods (hidden from the user)
     int private_cartdata(lua_State *l);

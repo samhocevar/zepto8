@@ -12,6 +12,12 @@
 
 
 --
+-- Private object -- should be refactored in a better way
+--
+_z8 = {}
+
+
+--
 -- Aliases for PICO-8 compatibility
 --
 do
@@ -50,7 +56,7 @@ do
     end
 
     -- PICO-8 documentation: t() aliased to time()
-    t = _z8.time
+    t = time
 
     -- Use the new peek4() and poke4() functions
     dget = function(n)
@@ -64,9 +70,10 @@ do
     end
 
     local match = string.match
+    local __cartdata = __cartdata
 
     cartdata = function(s)
-        if _z8.__cartdata() then
+        if __cartdata() then
             print('cartdata() can only be called once')
             abort()
             return false
@@ -83,7 +90,7 @@ do
             abort()
             return false
         end
-        return _z8.__cartdata(s)
+        return __cartdata(s)
     end
 
     -- All flip() does for now is yield so that the C++ VM gets a chance
@@ -93,16 +100,14 @@ do
     end
 
     -- Backward compatibility for old PICO-8 versions
-    mapdraw = _z8.map
+    mapdraw = map
 end
 
 
 --
--- Make all our C++ static methods global then hide _G
 -- According to https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0 :
 --  _G global table has been removed.
 --
-for k, v in pairs(_z8) do _G[k] = string.sub(k, 1, 2) ~= '__' and v or nil end
 _G = nil
 
 
@@ -129,7 +134,7 @@ _z8.reset_drawstate = function()
 end
 
 _z8.reset_cartdata = function()
-    _z8.__cartdata(nil)
+    __cartdata(nil)
 end
 
 _z8.run = function(cart_code)

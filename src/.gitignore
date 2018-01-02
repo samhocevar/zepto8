@@ -1,4 +1,5 @@
 # Our binaries
-zepto8
-z8tool
 dither
+# Autotools cruft
+src/z8lua/.deps
+src/z8lua/.dirstamp
