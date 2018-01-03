@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -41,7 +41,7 @@ struct telnet
 
         while (true)
         {
-            lol::Timer t;
+            lol::timer t;
 
             for (int i = 0; i < 16; ++i)
                 vm.button(i, 0);
@@ -89,7 +89,7 @@ struct telnet
             m_screen.resize(sizeof(ram.screen));
             ::memcpy(m_screen.data(), &ram.screen, sizeof(ram.screen));
 
-            t.Wait(1.f / 60.f);
+            t.wait(1.f / 60.f);
         }
     }
 

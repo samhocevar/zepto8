@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2017 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -569,8 +569,7 @@ int vm::api_btnp(lua_State *l)
 
 int vm::api_time(lua_State *l)
 {
-    float time = lol::fmod(m_timer.Poll(), 65536.0f);
-    lua_pushnumber(l, time < 32768.f ? time : time - 65536.0f);
+    lua_pushnumber(l, (double)m_timer.poll());
     return 1;
 }
 

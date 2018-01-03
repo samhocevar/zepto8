@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2017 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -156,7 +156,7 @@ private:
     }
     m_channels[4];
 
-    lol::Timer m_timer;
+    lol::timer m_timer;
     fix32 m_seed;
     int m_instructions;
 };

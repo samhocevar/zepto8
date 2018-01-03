@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -199,7 +199,7 @@ struct p8_reader
     };
 
     section m_current_section;
-    lol::map<int8_t, lol::array<uint8_t>> m_sections;
+    std::map<int8_t, lol::array<uint8_t>> m_sections;
     std::string m_code;
 
     //
