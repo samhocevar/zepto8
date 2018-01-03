@@ -111,7 +111,7 @@ struct telnet
     int get_key()
     {
 #if HAVE_UNISTD_H
-        static lol::String seq;
+        static std::string seq;
 
         fd_set fds;
         FD_ZERO(&fds);
@@ -129,7 +129,7 @@ struct telnet
         if (read(STDIN_FILENO, &ch, 1) <= 0)
             exit(EXIT_SUCCESS);
 
-        if (ch != '\x1b' && ch != '\xff' && seq.count() == 0)
+        if (ch != '\x1b' && ch != '\xff' && seq.length() == 0)
             return ch;
 
         seq += ch;
@@ -149,7 +149,7 @@ struct telnet
                     return -1; // wait for more data
                 if (seq[2] != '\x1f')
                     goto reset; // can’t happen
-                if (seq.count() < 9)
+                if (seq.length() < 9)
                     return -1; // wait for more data
                 m_term_size.x = (uint8_t)seq[3] * 256 + (uint8_t)seq[4];
                 m_term_size.y = (uint8_t)seq[5] * 256 + (uint8_t)seq[6];
@@ -157,7 +157,7 @@ struct telnet
                 m_screen.empty();
                 goto reset;
             }
-            else if (seq.count() >= 3)
+            else if (seq.length() >= 3)
             {
                 goto reset;
             }

@@ -12,6 +12,8 @@
 
 #include <lol/engine.h>
 
+#include <string>
+
 #include "zepto8.h"
 #include "splore.h"
 
@@ -23,7 +25,6 @@ using lol::ivec2;
 using lol::msg;
 using lol::u8vec4;
 using lol::PixelFormat;
-using lol::String;
 
 bool splore::dump(char const *filename)
 {
@@ -39,7 +40,7 @@ bool splore::dump(char const *filename)
 
     for (int cart = 0; cart < 32; ++cart)
     {
-        String info_lines[3];
+        std::string info_lines[3];
 
         for (int line = 0; line < 3; ++line)
         {
@@ -52,7 +53,7 @@ bool splore::dump(char const *filename)
                 info_lines[line] += (char)p.r;
             }
 
-            printf("%d: %s\n", cart, info_lines[line].C());
+            printf("%d: %s\n", cart, info_lines[line].c_str());
         }
     }
 

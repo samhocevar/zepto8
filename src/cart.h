@@ -42,21 +42,21 @@ public:
         return m_label;
     }
 
-    lol::String const &get_code() const
+    std::string const &get_code() const
     {
         return m_code;
     }
 
-    lol::String const &get_lua()
+    std::string const &get_lua()
     {
-        if (m_lua.count() == 0)
-            m_lua = analyzer(m_code).fix();
+        if (m_lua.length() == 0)
+            m_lua = analyzer().fix(m_code);
         return m_lua;
     }
 
     lol::array<uint8_t> get_compressed_code() const;
     lol::array<uint8_t> get_bin() const;
-    lol::String get_p8() const;
+    std::string get_p8() const;
     lol::image get_png() const;
 
 private:
@@ -65,7 +65,7 @@ private:
 
     memory m_rom;
     lol::array<uint8_t> m_label;
-    lol::String m_code, m_lua;
+    std::string m_code, m_lua;
     int m_version;
 };
 

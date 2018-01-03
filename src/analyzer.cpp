@@ -12,13 +12,15 @@
 
 #include <lol/engine.h>
 
+#include <string>
+#include <regex>
+
 #include <tao/pegtl.hpp>
 
 #include "analyzer.h"
 #define WITH_PICO8 1
 #include "lua53-parse.h"
 
-using lol::String;
 using lol::ivec2;
 using lol::ivec3;
 using lol::msg;
@@ -82,24 +84,14 @@ struct query_at_sol
 namespace z8
 {
 
-analyzer::analyzer(String const &code)
-  : m_code(code)
+std::string analyzer::fix(std::string const &code)
 {
-}
-
-String analyzer::fix()
-{
-    String code = m_code;
-
     /* PNG carts have a “if(_update60)_update…” code snippet added by PICO-8
      * for backwards compatibility. But some buggy versions apparently miss
      * a carriage return or space, leading to syntax errors or maybe this
      * code being lost in a comment. */
-    int index = code.last_index_of("if(_update60)_update");
-    if (index > 0 && code[index] != '\n')
-        code = code.sub(0, index) + '\n' + code.sub(index);
-
-    return code;
+    static std::regex pattern("if(_update60)_update=function()_update60()_update_buttons()_update60()end");
+    return std::regex_replace(code, pattern, "");
 }
 
 } // namespace z8

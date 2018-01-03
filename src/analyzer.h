@@ -14,32 +14,16 @@
 
 #include <lol/engine.h>
 
+#include <string>
+
 namespace z8
 {
     class analyzer
     {
     public:
-        analyzer(lol::String const &code);
-        lol::String fix();
-
-        static bool is_numeral(char const *str);
-
-        lol::array<int> m_notequals;
-        lol::array<int> m_cpp_comments;
-
-        lol::array<int> m_reassign_ops;
-        lol::array<lol::ivec3> m_reassigns;
+        std::string fix(std::string const &str);
 
         int m_disable_crlf = 0;
-        lol::array<lol::ivec2> m_if_do_trails;
-        lol::array<lol::ivec2> m_short_ifs;
-        lol::array<lol::ivec2> m_short_prints;
-        lol::array<lol::ivec2> m_binary_literals;
-
-    private:
-        void bump(int offset, int delta);
-
-        lol::String m_code;
     };
 }
 

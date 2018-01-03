@@ -121,31 +121,31 @@ int main(int argc, char **argv)
 
         if (data)
         {
-            lol::String s;
+            std::string s;
             lol::File f;
             for (auto candidate : lol::sys::get_path_list(data))
             {
                 f.Open(candidate, lol::FileAccess::Read);
                 if (f.IsValid())
                 {
-                    s = f.ReadString();
+                    s = f.ReadString().C();
                     f.Close();
 
                     lol::msg::debug("loaded file %s (%d bytes, max %d)\n",
-                                    candidate.C(), int(s.count()), 0x4300);
+                                    candidate.C(), int(s.length()), 0x4300);
                     break;
                 }
             }
-            memcpy(&cart.get_rom(), s.C(), lol::min(s.count(), 0x4300));
+            memcpy(&cart.get_rom(), s.c_str(), lol::min(int(s.length()), 0x4300));
         }
 
         if (run_mode == mode::tolua)
         {
-            printf("%s", cart.get_lua().C());
+            printf("%s", cart.get_lua().c_str());
         }
         else if (run_mode == mode::top8)
         {
-            printf("%s", cart.get_p8().C());
+            printf("%s", cart.get_p8().c_str());
         }
         else if (run_mode == mode::tobin)
         {

@@ -133,11 +133,11 @@ vm::vm()
         f.Open(candidate, lol::FileAccess::Read);
         if (f.IsValid())
         {
-            lol::String s = f.ReadString();
+            std::string s = f.ReadString().C();
             f.Close();
 
             msg::debug("loading Lua file %s\n", candidate.C());
-            status = luaL_dostring(m_lua, s.C());
+            status = luaL_dostring(m_lua, s.c_str());
             break;
         }
     }
@@ -234,7 +234,7 @@ int vm::api_run(lua_State *l)
     // Load cartridge code and call _z8.run() on it
     lua_getglobal(l, "_z8");
     lua_getfield(l, -1, "run");
-    luaL_loadstring(l, m_cart.get_lua().C());
+    luaL_loadstring(l, m_cart.get_lua().c_str());
     lua_pcall(l, 1, 0, 0);
 
     return 0;

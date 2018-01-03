@@ -34,7 +34,7 @@ bool cart::load(char const *filename)
     {
         // Dump code to stdout
         //msg::info("Cartridge code:\n");
-        //printf("%s", m_code.C());
+        //printf("%s", m_code.c_str());
 
         return true;
     }
@@ -93,8 +93,7 @@ bool cart::load_png(char const *filename)
             ++length;
 
         m_code.resize(length);
-        memcpy(m_code.C(), &m_rom.code, length);
-        m_code[length] = '\0';
+        memcpy(&m_code[0], &m_rom.code, length);
     }
     else if (version == 1 || version >= 5)
     {
@@ -103,15 +102,15 @@ bool cart::load_png(char const *filename)
                    + m_rom.code[5];
 
         m_code.resize(0);
-        for (int i = 8; i < (int)sizeof(m_rom.code) && m_code.count() < length; ++i)
+        for (int i = 8; i < (int)sizeof(m_rom.code) && (int)m_code.length() < length; ++i)
         {
             if (m_rom.code[i] >= 0x3c)
             {
                 int a = (m_rom.code[i] - 0x3c) * 16 + (m_rom.code[i + 1] & 0xf);
                 int b = m_rom.code[i + 1] / 16 + 2;
-                if (m_code.count() >= a)
+                if ((int)m_code.length() >= a)
                     while (b--)
-                        m_code += m_code[m_code.count() - a];
+                        m_code += m_code[m_code.length() - a];
                 ++i;
             }
             else
@@ -121,12 +120,12 @@ bool cart::load_png(char const *filename)
             }
         }
 
-        if (length != (int)m_code.count())
-            msg::warn("expected %d code bytes, got %d\n", length, (int)m_code.count());
+        if (length != (int)m_code.length())
+            msg::warn("expected %d code bytes, got %d\n", length, (int)m_code.length());
     }
 
     // Remove possible trailing zeroes
-    m_code.resize(strlen(m_code.C()));
+    m_code.resize(strlen(m_code.c_str()));
 
     // Invalidate code cache
     m_lua.resize(0);
@@ -201,7 +200,7 @@ struct p8_reader
 
     section m_current_section;
     lol::map<int8_t, lol::array<uint8_t>> m_sections;
-    lol::String m_code;
+    std::string m_code;
 
     //
     // Actual reader
@@ -261,7 +260,7 @@ struct p8_reader::action<p8_reader::r_data>
         if (r.m_current_section == section::lua)
         {
             // Copy the code verbatim
-            r.m_code = lol::String(in.string().c_str());
+            r.m_code = in.string();
         }
         else
         {
@@ -288,14 +287,14 @@ struct p8_reader::action<p8_reader::r_data>
 
 bool cart::load_p8(char const *filename)
 {
-    lol::String s;
+    std::string s;
     lol::File f;
     for (auto candidate : lol::sys::get_path_list(filename))
     {
         f.Open(candidate, lol::FileAccess::Read);
         if (f.IsValid())
         {
-            s = f.ReadString();
+            s = f.ReadString().C();
             f.Close();
 
             msg::debug("loaded file %s\n", candidate.C());
@@ -303,11 +302,11 @@ bool cart::load_p8(char const *filename)
         }
     }
 
-    if (s.count() == 0)
+    if (s.length() == 0)
         return false;
 
     p8_reader reader;
-    reader.parse(s.C());
+    reader.parse(s.c_str());
 
     if (reader.m_version < 0)
         return false;
@@ -324,7 +323,7 @@ bool cart::load_p8(char const *filename)
     auto const &lab = reader.m_sections[(int8_t)p8_reader::section::lab];
 
     msg::info("code: %d gfx: %d/%d gff: %d/%d map: %d/%d "
-              "sfx: %d/%d mus: %d/%d lab: %d/%d\n", m_code.count(),
+              "sfx: %d/%d mus: %d/%d lab: %d/%d\n", (int)m_code.length(),
               gfx.count(), (int)sizeof(m_rom.gfx),
               gff.count(), (int)sizeof(m_rom.gfx_props),
               map.count(), (int)(sizeof(m_rom.map) + sizeof(m_rom.map2)),
@@ -453,16 +452,16 @@ lol::array<uint8_t> cart::get_compressed_code() const
     /* FIXME: PICO-8 appears to be adding an implicit \n at the
      * end of the code, and ignoring it when compressing code. So
      * for the moment we write one char too many. */
-    for (int i = 0; i < m_code.count(); ++i)
+    for (int i = 0; i < (int)m_code.length(); ++i)
     {
         /* Look behind for possible patterns */
         int best_j = 0, best_len = 0;
         for (int j = lol::max(i - 3135, 0); j < i; ++j)
         {
-            int end = lol::min(m_code.count() - j, 17);
+            int end = lol::min((int)m_code.length() - j, 17);
 
             /* XXX: official PICO-8 stops at i - j, despite being able
-             * to support m_code.count() - j, it seems. */
+             * to support m_code.length() - j, it seems. */
             end = lol::min(end, i - j);
 
             for (int k = 0; ; ++k)
@@ -528,8 +527,8 @@ lol::array<uint8_t> cart::get_bin() const
     memcpy(ret.data(), &m_rom, data_size);
 
     ret << ':' << 'c' << ':' << '\0';
-    ret << (m_code.count() >> 8);
-    ret << (m_code.count() & 0xff);
+    ret << (m_code.length() >> 8);
+    ret << (m_code.length() & 0xff);
     ret << 0 << 0; /* FIXME: what is this? */
     ret += get_compressed_code();
 
@@ -541,14 +540,14 @@ lol::array<uint8_t> cart::get_bin() const
     return ret;
 }
 
-lol::String cart::get_p8() const
+std::string cart::get_p8() const
 {
-    lol::String ret = "pico-8 cartridge // http://www.pico-8.com\n";
-    ret += lol::String::format("version %d\n", EXPORT_VERSION);
+    std::string ret = "pico-8 cartridge // http://www.pico-8.com\n";
+    ret += lol::format("version %d\n", EXPORT_VERSION);
 
     ret += "__lua__\n";
     ret += get_code();
-    if (ret.last() != '\n')
+    if (ret.back() != '\n')
         ret += '\n';
 
     // Export gfx section
@@ -563,7 +562,7 @@ lol::String cart::get_p8() const
             ret += "__gfx__\n";
 
         for (int i = 0; i < 64; ++i)
-            ret += lol::String::format("%02x", uint8_t(m_rom.gfx[64 * line + i] * 0x101 / 0x10));
+            ret += lol::format("%02x", uint8_t(m_rom.gfx[64 * line + i] * 0x101 / 0x10));
 
         ret += '\n';
     }
@@ -574,7 +573,7 @@ lol::String cart::get_p8() const
         ret += "__label__\n";
         for (int i = 0; i < LABEL_WIDTH * LABEL_HEIGHT / 2; ++i)
         {
-            ret += lol::String::format("%02x", uint8_t(m_label.data()[i] * 0x101 / 0x10));
+            ret += lol::format("%02x", uint8_t(m_label.data()[i] * 0x101 / 0x10));
             if ((i + 1) % (LABEL_WIDTH / 2) == 0)
                 ret += '\n';
         }
@@ -593,7 +592,7 @@ lol::String cart::get_p8() const
             ret += "__gff__\n";
 
         for (int i = 0; i < 128; ++i)
-            ret += lol::String::format("%02x", m_rom.gfx_props[128 * line + i]);
+            ret += lol::format("%02x", m_rom.gfx_props[128 * line + i]);
 
         ret += '\n';
     }
@@ -614,7 +613,7 @@ lol::String cart::get_p8() const
             ret += "__map__\n";
 
         for (int i = 0; i < 128; ++i)
-            ret += lol::String::format("%02x", m_rom.map[128 * line + i]);
+            ret += lol::format("%02x", m_rom.map[128 * line + i]);
 
         ret += '\n';
     }
@@ -631,14 +630,14 @@ lol::String cart::get_p8() const
             ret += "__sfx__\n";
 
         uint8_t const *data = (uint8_t const *)&m_rom.sfx[line];
-        ret += lol::String::format("%02x%02x%02x%02x", data[64], data[65], data[66], data[67]);
+        ret += lol::format("%02x%02x%02x%02x", data[64], data[65], data[66], data[67]);
         for (int j = 0; j < 64; j += 2)
         {
             int pitch = data[j] & 0x3f;
             int instrument = ((data[j + 1] << 2) & 0x4) | (data[j] >> 6);
             int volume = (data[j + 1] >> 1) & 0x7;
             int effect = (data[j + 1] >> 4) & 0xf;
-            ret += lol::String::format("%02x%1x%1x%1x", pitch, instrument, volume, effect);
+            ret += lol::format("%02x%1x%1x%1x", pitch, instrument, volume, effect);
         }
 
         ret += '\n';
@@ -656,7 +655,7 @@ lol::String cart::get_p8() const
             ret += "__music__\n";
 
         auto const &song = m_rom.song[line];
-        ret += lol::String::format("%02x %02x%02x%02x%02x\n", song.flags(),
+        ret += lol::format("%02x %02x%02x%02x%02x\n", song.flags(),
                                    song.sfx(0), song.sfx(1),
                                    song.sfx(2), song.sfx(3));
     }
