@@ -206,9 +206,9 @@ struct p8_reader
     // Actual reader
     //
 
-    void parse(char const *str)
+    void parse(std::string const &str)
     {
-        pegtl::memory_input<> in(str, "p8");
+        pegtl::string_input<> in(str, "p8");
         pegtl::parse<r_file, action>(in, *this);
     }
 };
@@ -289,15 +289,15 @@ bool cart::load_p8(char const *filename)
 {
     std::string s;
     lol::File f;
-    for (auto candidate : lol::sys::get_path_list(filename))
+    for (auto const &candidate : lol::sys::get_path_list(filename))
     {
         f.Open(candidate, lol::FileAccess::Read);
         if (f.IsValid())
         {
-            s = f.ReadString().C();
+            s = f.ReadString();
             f.Close();
 
-            msg::debug("loaded file %s\n", candidate.C());
+            msg::debug("loaded file %s\n", candidate.c_str());
             break;
         }
     }

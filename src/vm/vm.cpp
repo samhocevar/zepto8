@@ -128,15 +128,15 @@ vm::vm()
     char const *filename = "src/data/zepto8.lua";
     lol::File f;
     int status = LUA_ERRFILE;
-    for (auto candidate : lol::sys::get_path_list(filename))
+    for (auto const &candidate : lol::sys::get_path_list(filename))
     {
         f.Open(candidate, lol::FileAccess::Read);
         if (f.IsValid())
         {
-            std::string s = f.ReadString().C();
+            std::string s = f.ReadString();
             f.Close();
 
-            msg::debug("loading Lua file %s\n", candidate.C());
+            msg::debug("loading Lua file %s\n", candidate.c_str());
             status = luaL_dostring(m_lua, s.c_str());
             break;
         }
@@ -504,6 +504,8 @@ int vm::api_extcmd(lua_State *l)
 
 int vm::api_update_buttons(lua_State *l)
 {
+    UNUSED(l);
+
     // Update button state
     for (int i = 0; i < 64; ++i)
     {

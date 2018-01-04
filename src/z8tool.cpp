@@ -123,16 +123,16 @@ int main(int argc, char **argv)
         {
             std::string s;
             lol::File f;
-            for (auto candidate : lol::sys::get_path_list(data))
+            for (auto const &candidate : lol::sys::get_path_list(data))
             {
                 f.Open(candidate, lol::FileAccess::Read);
                 if (f.IsValid())
                 {
-                    s = f.ReadString().C();
+                    s = f.ReadString();
                     f.Close();
 
                     lol::msg::debug("loaded file %s (%d bytes, max %d)\n",
-                                    candidate.C(), int(s.length()), 0x4300);
+                                    candidate.c_str(), int(s.length()), 0x4300);
                     break;
                 }
             }
