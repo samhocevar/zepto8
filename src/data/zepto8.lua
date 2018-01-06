@@ -1,7 +1,7 @@
 --
 --  ZEPTO-8 — Fantasy console emulator
 --
---  Copyright © 2016—2017 Sam Hocevar <sam@hocevar.net>
+--  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
 --
 --  This program is free software. It comes without any warranty, to
 --  the extent permitted by applicable law. You can redistribute it
@@ -14,7 +14,9 @@
 --
 -- Private object -- should be refactored in a better way
 --
-_z8 = {}
+_z8 = {
+    stopped=false
+}
 
 
 --
@@ -30,25 +32,31 @@ do
     costatus = coroutine.status
     yield = coroutine.yield
 
+    -- The debug library is not needed either, but we need trace()
+    trace = debug.traceback
+
+    local error = error
+    stop = function() _z8.stopped = true error() end
+
     -- use closure so that we don’t need “table” later
     local insert = table.insert
     local remove = table.remove
 
-    count = function(a) return a ~= nil and #a or 0 end
-    add = function(a, x) if a ~= nil then insert(a, x) end return x end
+    count = function(a) return a != nil and #a or 0 end
+    add = function(a, x) if a != nil then insert(a, x) end return x end
     sub = string.sub
 
     foreach = function(a, f)
-        if a ~= nil then for k, v in ipairs(a) do f(v) end end
+        if a != nil then for k, v in ipairs(a) do f(v) end end
     end
 
     all = function(a)
-        local i, n = 0, a ~= nil and #a or 0
+        local i, n = 0, a != nil and #a or 0
         return function() i = i + 1 if i <= n then return a[i] end end
     end
 
     del = function(a, v)
-        if a ~= nil then
+        if a != nil then
             for k, v2 in ipairs(a) do
                 if v == v2 then remove(a, k) return end
             end
@@ -112,6 +120,13 @@ _G = nil
 
 
 --
+-- Hide these functions
+--
+error = nil
+pcall = nil
+
+
+--
 -- Hide these modules, they should not be accessible
 --
 table = nil
@@ -152,36 +167,56 @@ _z8.run = function(cart_code)
         cart_code()
 
         -- Initialise if available
-        if _init ~= nil then _init() end
+        if (_init != nil) _init()
 
         -- Execute the user functions
         while true do
-            if _update60 ~= nil then
+            if _update60 != nil then
                 _update_buttons()
                 _update60()
-            elseif _update ~= nil then
-                if do_frame then
-                    _update_buttons()
-                    _update()
-                end
+            elseif _update != nil then
+                if (do_frame) _update_buttons() _update()
                 do_frame = not do_frame
             end
-            if _draw ~= nil and do_frame then
-                _draw()
-            end
+            if (_draw != nil and do_frame) _draw()
             yield()
         end
     end)
 end
 
 _z8.tick = function()
-    if costatus(_z8.loop) == "dead" then
-        return
-    end
+    if (costatus(_z8.loop) == "dead") return
     ret, err = coresume(_z8.loop)
-    if not ret then
-        printh(err)
+    if _z8.stopped then _z8.stopped = false -- FIXME: what now?
+    elseif not ret then printh(tostr(err))
     end
+end
+
+
+--
+-- Splash sequence
+--
+_z8.splash = function()
+    _z8.loop = cocreate(function()
+        _z8.reset_drawstate()
+
+        local steps =
+        {
+            [1] =  function() for i=2,127,8 do for j=0,127 do pset(i,j,rnd()*4+j/40) end end end,
+            [7] =  function() for i=0,127,4 do for j=0,127,2 do pset(i,j,(i+j)/8%8+6) end end end,
+            [12] = function() for i=2,127,4 do for j=0,127,3 do pset(i,j,rnd()*4+10) end end end,
+            [17] = function() for i=1,127,2 do for j=0,127 do pset(i,j,pget(i+1,j)) end end end,
+            [22] = function() for j=0,31 do memset(0x6040+j*256,0,192) end end,
+            [27] = cls,
+            [36] = function() color(7) print("\n\x9a\x9b\x9c\x9d\x9e\x9f")
+                               local a = {0,0,12,0,0,0,13,7,11,0,14,7,7,7,10,0,15,7,9,0,0,0,8,0,0}
+                               for j=0,#a-1 do pset(41+j%5,2+j/5,a[j+1]) end end,
+            [45] = function() color(6) print("\nzepto-8 0.0.0 beta") end,
+            [50] = function() print("(c) 2016-18 sam hocevar et al.\n\n") end,
+        }
+
+        for step=0,60 do if steps[step] then steps[step]() end flip() end
+    end)
 end
 
 
@@ -189,29 +224,5 @@ end
 -- Initialise the VM
 --
 srand(0)
-
-
---
--- Splash sequence
---
-_z8.loop = cocreate(function()
-    _z8.reset_drawstate()
-
-    local steps =
-    {
-        [1] =  function() for i=2,127,8 do for j=0,127 do pset(i,j,rnd()*4+j/40) end end end,
-        [7] =  function() for i=0,127,4 do for j=0,127,2 do pset(i,j,(i+j)/8%8+6) end end end,
-        [12] = function() for i=2,127,4 do for j=0,127,3 do pset(i,j,rnd()*4+10) end end end,
-        [17] = function() for i=1,127,2 do for j=0,127 do pset(i,j,pget(i+1,j)) end end end,
-        [22] = function() for j=0,31 do memset(0x6040+j*256,0,192) end end,
-        [27] = cls,
-        [36] = function() color(7) print("\n\x9a\x9b\x9c\x9d\x9e\x9f")
-                           local a = {0,0,12,0,0,0,13,7,11,0,14,7,7,7,10,0,15,7,9,0,0,0,8,0,0}
-                           for j=0,#a-1 do pset(41+j%5,2+j/5,a[j+1]) end end,
-        [45] = function() color(6) print("\nzepto-8 0.0.0 beta") end,
-        [50] = function() print("(c) 2016-17 sam hocevar et al.\n\n") end,
-    }
-
-    for step=0,60 do if steps[step] then steps[step]() end flip() end
-end)
+_z8.splash()
 

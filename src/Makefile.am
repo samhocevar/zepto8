@@ -54,6 +54,7 @@ libz8lua_a_SOURCES = \
     z8lua/ltable.c z8lua/ltm.c z8lua/lundump.c z8lua/lvm.c z8lua/lzio.c \
     z8lua/lctype.c z8lua/lauxlib.c z8lua/lbaselib.c z8lua/lcorolib.c \
     z8lua/ltablib.c z8lua/lstrlib.c z8lua/lpico8lib.c z8lua/linit.c \
+    z8lua/ldblib.c \
     \
     z8lua/fix32.h z8lua/lapi.h z8lua/lauxlib.h z8lua/lcode.h z8lua/lctype.h \
     z8lua/ldebug.h z8lua/ldo.h z8lua/lfunc.h z8lua/lgc.h z8lua/llex.h \
