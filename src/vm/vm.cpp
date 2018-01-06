@@ -126,28 +126,34 @@ vm::vm()
 
     // Initialize Zepto8 runtime
     char const *filename = "src/data/zepto8.lua";
-    lol::File f;
+    std::string s;
     int status = LUA_ERRFILE;
     for (auto const &candidate : lol::sys::get_path_list(filename))
     {
+        lol::File f;
         f.Open(candidate, lol::FileAccess::Read);
         if (f.IsValid())
         {
-            std::string s = f.ReadString();
-            f.Close();
-
             msg::debug("loading Lua file %s\n", candidate.c_str());
-            status = luaL_dostring(m_lua, s.c_str());
+            s = f.ReadString();
+            f.Close();
+            status = LUA_OK;
             break;
         }
     }
 
     if (status == LUA_ERRFILE)
-        msg::error("could not find Lua file %s\n", filename);
-    else if (status == 1)
+    {
+        msg::error("could not load %s\n", filename);
+        lol::Abort();
+    }
+
+    status = luaL_dostring(m_lua, s.c_str());
+
+    if (status != LUA_OK)
     {
         char const *message = lua_tostring(m_lua, -1);
-        msg::error("%s\n", message);
+        msg::error("error %d loading %s: %s\n", status, s.c_str(), message);
         lua_pop(m_lua, 1);
         lol::Abort();
     }
