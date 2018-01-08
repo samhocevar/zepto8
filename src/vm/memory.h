@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2017 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -87,7 +87,8 @@ struct draw_state
     }
     camera;
 
-    uint8_t undocumented3[1];
+    // Screen mode (double width, etc.)
+    uint8_t screen_mode;
 
     // Mouse flag
     uint8_t mouse_flag;
@@ -174,6 +175,19 @@ struct memory
     {
         ASSERT(n >= 0 && n < (int)sizeof(memory));
         return ((uint8_t const *)this)[n];
+    }
+
+    // Hardware pixel accessor
+    uint8_t pixel(int x, int y) const
+    {
+        ASSERT(x >= 0 && x < 128 && y >= 0 && y < 128);
+        uint8_t const mode = draw_state.screen_mode;
+        x = (mode & 0xfd) == 5 ? std::min(x, 127 - x)
+          : (mode & 0xfd) == 1 ? x / 2 : x;
+        y = (mode & 0xfe) == 6 ? std::min(y, 127 - y)
+          : (mode & 0xfe) == 2 ? y / 2 : y;
+        uint8_t const data = screen[y * 64 + x / 2];
+        return x & 1 ? data >> 4 : data & 0xf;
     }
 };
 

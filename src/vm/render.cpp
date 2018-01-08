@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2017 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -23,12 +23,15 @@ void vm::render(lol::u8vec4 *screen) const
 {
     auto &ds = m_ram.draw_state;
 
-    for (int n = 0; n < 128 * 128 / 2; ++n)
-    {
-        uint8_t data = m_ram.screen[n];
-        screen[2 * n] = palette::get(ds.pal[1][data & 0xf]);
-        screen[2 * n + 1] = palette::get(ds.pal[1][data >> 4]);
-    }
+    /* Precompute the current palette */
+    u8vec4 lut[16];
+    for (int n = 0; n < 16; ++n)
+        lut[n] = palette::get(ds.pal[1][n]);
+
+    /* Render actual screen */
+    for (int y = 0; y < 128; ++y)
+    for (int x = 0; x < 128; ++x)
+        screen[y * 128 + x] = lut[m_ram.pixel(x, y)];
 }
 
 void vm::print_ansi(lol::ivec2 term_size,
