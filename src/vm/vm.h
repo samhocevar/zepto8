@@ -129,6 +129,7 @@ private:
     void setspixel(int16_t x, int16_t y, uint8_t color);
 
     void getaudio(int channel, void *buffer, int bytes);
+    void update_prng();
 
 private:
     lua_State *m_lua;
@@ -157,7 +158,7 @@ private:
     m_channels[4];
 
     lol::timer m_timer;
-    fix32 m_seed;
+    uint32_t m_seed1, m_seed2;
     int m_instructions;
 };
 

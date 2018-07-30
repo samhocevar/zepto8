@@ -61,7 +61,6 @@
   <ItemGroup>
     <ClCompile Include="analyzer.cpp" />
     <ClCompile Include="cart.cpp" />
-    <ClCompile Include="vm\maths.cpp" />
     <ClCompile Include="vm\gfx.cpp" />
     <ClCompile Include="vm\private.cpp" />
     <ClCompile Include="vm\render.cpp" />

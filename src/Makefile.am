@@ -42,7 +42,7 @@ libzepto8_a_SOURCES = \
     cart.cpp cart.h \
     analyzer.cpp analyzer.h lua53-parse.h \
     vm/vm.cpp vm/vm.h \
-    vm/private.cpp vm/maths.cpp vm/gfx.cpp vm/render.cpp vm/sfx.cpp \
+    vm/private.cpp vm/gfx.cpp vm/render.cpp vm/sfx.cpp \
     $(NULL)
 
 EXTRA_DIST += libzepto8.vcxproj

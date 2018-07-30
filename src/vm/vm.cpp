@@ -505,6 +505,34 @@ int vm::api_extcmd(lua_State *l)
 }
 
 //
+// PRNG
+//
+
+void vm::update_prng()
+{
+    m_seed2 = m_seed1 + ((m_seed2 >> 16) | (m_seed2 << 16));
+    m_seed1 += m_seed2;
+}
+
+int vm::api_rnd(lua_State *l)
+{
+    uint32_t range = lua_isnone(l, 1) ? 0x10000 : lua_tonumber(l, 1).bits();
+    update_prng();
+    lua_pushnumber(l, fix32::frombits(m_seed2 % range));
+    return 1;
+}
+
+int vm::api_srand(lua_State *l)
+{
+    uint32_t seed = lua_tonumber(l, 1).bits();
+    m_seed1 = seed ? seed : 0xdeadbeef;
+    m_seed2 = m_seed1 ^ 0xbead29ba;
+    for (int i = 0; i < 32; ++i)
+        update_prng();
+    return 0;
+}
+
+//
 // I/O
 //
 
