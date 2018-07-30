@@ -79,10 +79,6 @@ private:
     int api_cursor(lua_State *l);
     int api_print(lua_State *l);
 
-    // Maths
-    int api_rnd(lua_State *l);
-    int api_srand(lua_State *l);
-
     // Graphics
     int api_camera(lua_State *l);
     int api_circ(lua_State *l);
@@ -129,7 +125,6 @@ private:
     void setspixel(int16_t x, int16_t y, uint8_t color);
 
     void getaudio(int channel, void *buffer, int bytes);
-    void update_prng();
 
 private:
     lua_State *m_lua;
@@ -158,7 +153,6 @@ private:
     m_channels[4];
 
     lol::timer m_timer;
-    uint32_t m_seed1, m_seed2;
     int m_instructions;
 };
 
