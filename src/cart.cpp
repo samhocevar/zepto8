@@ -172,7 +172,11 @@ struct p8_reader
 
     struct r_header: pegtl::seq<TAOCPP_PEGTL_STRING("pico-8 cartridge"), pegtl::until<pegtl::eol>,
                                 TAOCPP_PEGTL_STRING("version "), r_version, pegtl::until<pegtl::eol>> {};
-    struct r_file : pegtl::seq<pegtl::opt<pegtl::utf8::bom>, r_header, pegtl::star<r_section>, pegtl::eof> {};
+    struct r_file : pegtl::seq<pegtl::opt<pegtl::utf8::bom>,
+                               r_header,
+                               r_data, /* data before the first section is ignored */
+                               pegtl::star<r_section>,
+                               pegtl::eof> {};
 
     //
     // Grammar actions
@@ -262,7 +266,7 @@ struct p8_reader::action<p8_reader::r_data>
         if (r.m_current_section == section::lua)
         {
             // Copy the code verbatim
-            r.m_code = in.string();
+            r.m_code += in.string();
         }
         else
         {
