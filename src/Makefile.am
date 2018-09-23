@@ -14,7 +14,7 @@ ___zepto8_SOURCES = \
 ___zepto8_CPPFLAGS = $(AM_CPPFLAGS)
 ___zepto8_LDFLAGS = libzepto8.a libz8lua.a $(AM_LDFLAGS)
 ___zepto8_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@
-___zepto8_DATA = data/zepto8.lua data/font.png
+___zepto8_DATA = bios.p8 data/zepto8.lua
 
 EXTRA_DIST += zepto8.vcxproj
 

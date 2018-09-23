@@ -265,7 +265,6 @@ int vm::api_print(lua_State *l)
     uint32_t color_bits = lua_to_color_bits(l, 4) & 0xf0000;
     fix32 initial_x = x;
 
-    auto pixels = m_font.lock<lol::PixelFormat::RGBA_8>();
     for (int n = 0; str[n]; ++n)
     {
         int ch = (int)(uint8_t)str[n];
@@ -277,27 +276,28 @@ int vm::api_print(lua_State *l)
         }
         else
         {
-            // PICO-8 characters end at 0x99, but we use characters
-            // 0x9a…0x9f for the ZEPTO-8 logo. Lol.
-            int index = ch > 0x20 && ch < 0xa0 ? ch - 0x20 : 0;
+            // PICO-8 characters end at 0x99.
+            int index = ch > 0x20 && ch < 0x9a ? ch - 0x20 : 0;
             int16_t w = index < 0x60 ? 4 : 8;
-            int h = 6;
+            int font_x = (index < 0x60 ? index % 32 : index % 16) * w;
+            int font_y = (index < 0x60 ? index / 32 : index / 16 - 3) * 6;
 
-            for (int16_t dy = 0; dy < h; ++dy)
+            for (int16_t dy = 0; dy < 5; ++dy)
                 for (int16_t dx = 0; dx < w; ++dx)
                 {
                     int16_t screen_x = (int16_t)x - ds.camera.x() + dx;
                     int16_t screen_y = (int16_t)y - ds.camera.y() + dy;
 
-                    if (pixels[(index / 16 * h + dy) * 128 + (index % 16 * w + dx)].r > 0)
+                    auto const &data = m_bios.get_rom().gfx;
+                    uint8_t const p = data[(font_y + dy) * 64 + (font_x + dx) / 2];
+
+                    if ((font_x + dx) & 1 ? p >> 4 : p & 0xf)
                         set_pixel(screen_x, screen_y, color_bits);
                 }
 
             x += fix32(w);
         }
     }
-
-    m_font.unlock(pixels);
 
     // In PICO-8 scrolling only happens _after_ the whole string was printed,
     // even if it contained carriage returns or if the cursor was already

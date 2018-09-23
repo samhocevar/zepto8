@@ -128,8 +128,7 @@ private:
 
 private:
     lua_State *m_lua;
-    lol::image m_font;
-    cart m_cart;
+    cart m_bios, m_cart;
     memory m_ram;
 
     // Files

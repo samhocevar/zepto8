@@ -115,8 +115,17 @@ vm::vm()
     // Automatically yield every 1000 instructions
     lua_sethook(m_lua, &vm::instruction_hook, LUA_MASKCOUNT, 1000);
 
-    // Load font
-    m_font.load("src/data/font.png");
+    // Initialize BIOS
+    for (auto const &file : lol::sys::get_path_list("src/bios.p8"))
+    {
+        lol::File f;
+        f.Open(file, lol::FileAccess::Read);
+        bool exists = f.IsValid();
+        f.Close();
+
+        if (exists && m_bios.load(file.c_str()))
+            break;
+    }
 
     // Clear memory
     ::memset(&m_ram, 0, sizeof(m_ram));
