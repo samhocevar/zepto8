@@ -150,6 +150,7 @@ struct p8_reader
     struct r_sfx : TAOCPP_PEGTL_STRING("__sfx__") {};
     struct r_mus : TAOCPP_PEGTL_STRING("__music__") {};
     struct r_lab : TAOCPP_PEGTL_STRING("__label__") {};
+    struct r_any : pegtl::seq<pegtl::two<'_'>, pegtl::plus<pegtl::alnum>, pegtl::two<'_'>> {};
 
     struct r_section_name : pegtl::sor<r_lua,
                                        r_gfx,
@@ -157,7 +158,8 @@ struct p8_reader
                                        r_map,
                                        r_sfx,
                                        r_mus,
-                                       r_lab> {};
+                                       r_lab,
+                                       r_any> {};
     struct r_section_line : pegtl::seq<r_section_name, pegtl::eolf> {};
 
     struct r_data_line : pegtl::until<pegtl::eolf> {};
