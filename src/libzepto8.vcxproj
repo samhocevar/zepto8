@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="LolMacros">
     <LolDir Condition="Exists('$(SolutionDir)\lol')">$(SolutionDir)\lol</LolDir>
@@ -71,8 +71,16 @@
     <ClInclude Include="analyzer.h" />
     <ClInclude Include="cart.h" />
     <ClInclude Include="lua53-parse.h" />
+    <ClInclude Include="vm\memory.h" />
     <ClInclude Include="vm\vm.h" />
     <ClInclude Include="zepto8.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="data\blank.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bios.p8" />
+    <None Include="data\zepto8.lua" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

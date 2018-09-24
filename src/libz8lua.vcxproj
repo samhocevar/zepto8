@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="LolMacros">
+    <LolDir Condition="Exists('$(SolutionDir)\lol')">$(SolutionDir)\lol</LolDir>
+    <LolDir Condition="!Exists('$(SolutionDir)\lol')">$(SolutionDir)\..</LolDir>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ORBIS">
+      <Configuration>Debug</Configuration>
+      <Platform>ORBIS</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ORBIS">
+      <Configuration>Release</Configuration>
+      <Platform>ORBIS</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{141365e7-f8f3-4d95-b8db-1a093f92f436}</ProjectGuid>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(LolDir)\build\msbuild\lol.config.props" />
+  <PropertyGroup Label="Configuration">
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(LolDir)\build\msbuild\lol.vars.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <Import Project="$(LolDir)\build\msbuild\lol.rules.props" />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_LIB;LUA_USE_STRTODHEX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="z8lua/lapi.c" />
+    <ClCompile Include="z8lua/lcode.c" />
+    <ClCompile Include="z8lua/ldebug.c" />
+    <ClCompile Include="z8lua/ldo.c" />
+    <ClCompile Include="z8lua/ldump.c" />
+    <ClCompile Include="z8lua/lfunc.c" />
+    <ClCompile Include="z8lua/lgc.c" />
+    <ClCompile Include="z8lua/llex.c" />
+    <ClCompile Include="z8lua/lmem.c" />
+    <ClCompile Include="z8lua/lobject.c" />
+    <ClCompile Include="z8lua/lopcodes.c" />
+    <ClCompile Include="z8lua/lparser.c" />
+    <ClCompile Include="z8lua/lstate.c" />
+    <ClCompile Include="z8lua/lstring.c" />
+    <ClCompile Include="z8lua/ltable.c" />
+    <ClCompile Include="z8lua/ltm.c" />
+    <ClCompile Include="z8lua/lundump.c" />
+    <ClCompile Include="z8lua/lvm.c" />
+    <ClCompile Include="z8lua/lzio.c" />
+    <ClCompile Include="z8lua/lctype.c" />
+    <ClCompile Include="z8lua/lauxlib.c" />
+    <ClCompile Include="z8lua/lbaselib.c" />
+    <ClCompile Include="z8lua/lcorolib.c" />
+    <ClCompile Include="z8lua/ltablib.c" />
+    <ClCompile Include="z8lua/lstrlib.c" />
+    <ClCompile Include="z8lua/lpico8lib.c" />
+    <ClCompile Include="z8lua/linit.c" />
+    <ClCompile Include="z8lua/ldblib.c" />
+    <ClInclude Include="z8lua/lua.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="z8lua/fix32.h" />
+    <ClInclude Include="z8lua/lapi.h" />
+    <ClInclude Include="z8lua/lauxlib.h" />
+    <ClInclude Include="z8lua/lcode.h" />
+    <ClInclude Include="z8lua/lctype.h" />
+    <ClInclude Include="z8lua/ldebug.h" />
+    <ClInclude Include="z8lua/ldo.h" />
+    <ClInclude Include="z8lua/lfunc.h" />
+    <ClInclude Include="z8lua/lgc.h" />
+    <ClInclude Include="z8lua/llex.h" />
+    <ClInclude Include="z8lua/llimits.h" />
+    <ClInclude Include="z8lua/lmem.h" />
+    <ClInclude Include="z8lua/lobject.h" />
+    <ClInclude Include="z8lua/lopcodes.h" />
+    <ClInclude Include="z8lua/lparser.h" />
+    <ClInclude Include="z8lua/lstate.h" />
+    <ClInclude Include="z8lua/lstring.h" />
+    <ClInclude Include="z8lua/ltable.h" />
+    <ClInclude Include="z8lua/ltests.h" />
+    <ClInclude Include="z8lua/ltm.h" />
+    <ClInclude Include="z8lua/luaconf.h" />
+    <ClInclude Include="z8lua/lua.h" />
+    <ClInclude Include="z8lua/lualib.h" />
+    <ClInclude Include="z8lua/lundump.h" />
+    <ClInclude Include="z8lua/lvm.h" />
+    <ClInclude Include="z8lua/lzio.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(LolDir)\build\msbuild\lolfx.targets" />
+  </ImportGroup>
+</Project>
