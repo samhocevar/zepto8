@@ -16,7 +16,7 @@ ___zepto8_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      $(AM_CPPFLAGS)
 ___zepto8_LDFLAGS = libzepto8.a libz8lua.a $(AM_LDFLAGS)
 ___zepto8_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@
-___zepto8_DATA = bios.p8 data/zepto8.lua
+___zepto8_DATA = bios.p8
 
 EXTRA_DIST += zepto8.vcxproj
 

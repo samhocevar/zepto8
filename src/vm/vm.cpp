@@ -131,35 +131,11 @@ vm::vm()
     ::memset(&m_ram, 0, sizeof(m_ram));
 
     // Initialize Zepto8 runtime
-    char const *filename = "data/zepto8.lua";
-    std::string s;
-    int status = LUA_ERRFILE;
-    for (auto const &candidate : lol::sys::get_path_list(filename))
-    {
-        lol::File f;
-        f.Open(candidate, lol::FileAccess::Read);
-        if (f.IsValid())
-        {
-            msg::debug("loading Lua file %s\n", candidate.c_str());
-            s = f.ReadString();
-            f.Close();
-            status = LUA_OK;
-            break;
-        }
-    }
-
-    if (status == LUA_ERRFILE)
-    {
-        msg::error("could not load %s\n", filename);
-        lol::Abort();
-    }
-
-    status = luaL_dostring(m_lua, s.c_str());
-
+    int status = luaL_dostring(m_lua, m_bios.get_code().c_str());
     if (status != LUA_OK)
     {
         char const *message = lua_tostring(m_lua, -1);
-        msg::error("error %d loading %s: %s\n", status, s.c_str(), message);
+        msg::error("error %d loading bios.p8: %s\n", status, message);
         lua_pop(m_lua, 1);
         lol::Abort();
     }

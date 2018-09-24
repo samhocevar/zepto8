@@ -46,13 +46,8 @@
     <Image Include="data\blank.png">
       <Filter>data</Filter>
     </Image>
-    <Image Include="data\font.png">
+    <Image Include="bios.p8">
       <Filter>data</Filter>
     </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="data\zepto8.lua">
-      <Filter>data</Filter>
-    </None>
   </ItemGroup>
 </Project>
