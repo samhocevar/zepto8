@@ -87,9 +87,60 @@ vm::channel::channel()
         "\x52\x49\x46\x46\xe4\xc1\x08\x00\x57\x41\x56\x45\x66\x6d\x74\x20"
         "\x10\x00\x00\x00\x01\x00\x02\x00\x22\x56\x00\x00\x44\xac\x00\x00"
         "\x02\x00\x10\x00\x64\x61\x74\x61\xc0\xc1\x08\x00";
-    m_fd = fopen(lol::String::format("/tmp/zepto8_%p.wav", this).C(), "w+");
+    m_fd = fopen(lol::format("/tmp/zepto8_%p.wav", this).c_str(), "w+");
     fwrite(header, 44, 1, m_fd);
 #endif
+}
+
+static float get_waveform(int instrument, float advance)
+{
+    float t = lol::fmod(advance, 1.f);
+    float ret = 0.f;
+
+    // Multipliers were measured from WAV exports. Waveforms are
+    // inferred from those exports by guessing what the original
+    // equations could be.
+    switch (instrument)
+    {
+        case 0: // Triangle signal
+            return 0.354f * (lol::abs(4.f * t - 2.0f) - 1.0f);
+        case 1: // Slanted triangle
+        {
+            static float const a = 0.9f;
+            ret = t < a ? 2.f * t / a - 1.f
+                        : 2.f * (1.f - t) / (1.f - a) - 1.f;
+            return ret * 0.406f;
+        }
+        case 2: // Sawtooth
+            return 0.653f * (t < 0.5f ? t : t - 1.f);
+        case 3: // Square signal
+            return t < 0.5f ? 0.25f : -0.25f;
+        case 4: // Asymmetric square signal
+            return t < 0.33333333f ? 0.25f : -0.25f;
+        case 5: // Some triangle stuff again
+            ret = t < 0.5f ? 3.f - lol::abs(24.f * t - 6.f)
+                           : 1.f - lol::abs(16.f * t - 12.f);
+            return ret * 0.111111111f;
+        case 6:
+            // Spectral analysis indicates this is some kind of
+            // brown noise, but losing almost 10dB per octave.
+            // This may help us create a correct filter:
+            // http://www.firstpr.com.au/dsp/pink-noise/
+            for (float mul = 1; mul <= 16; mul *= 2)
+                ret += noise.eval(lol::vec_t<float, 1>(t * 32.f * mul)) / mul;
+            return ret * 0.8f;
+        case 7:
+        {   // This one has a subfrequency of freq/128 that appears
+            // to modulate two signals using a triangle wave
+            // FIXME: amplitude seems to be affected, too
+            float k = lol::abs(2.f * lol::fmod(advance / 128.f, 1.f) - 1.f);
+            float u = lol::fmod(t + 0.5f * k, 1.0f);
+            ret = lol::abs(4.f * u - 2.f) - lol::abs(8.f * t - 4.f);
+            return ret * 0.166666666f;
+        }
+    }
+
+    return 0.0f;
 }
 
 void vm::getaudio(int chan, void *in_buffer, int in_bytes)
@@ -137,66 +188,8 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         }
         else
         {
-            float t = lol::fmod(freq * offset / offset_per_second + phi, 1.f);
-            float waveform = 0.f;
-
-            // Multipliers were measured from WAV exports. Waveforms are
-            // inferred from those exports by guessing what the original
-            // equations could be.
-            switch (sfx.instrument(note))
-            {
-            case 0:
-                // Triangle signal
-                waveform = 0.354f * (lol::abs(4.f * t - 2.0f) - 1.0f);
-                break;
-            case 1:
-                // Slanted triangle
-                {
-                    static float const a = 0.9f;
-                    waveform = t < a ? 2.f * t / a - 1.f
-                             : 2.f * (1.f - t) / (1.f - a) - 1.f;
-                    waveform *= 0.406f;
-                }
-                break;
-            case 2:
-                // Sawtooth
-                waveform = 0.653f * (t < 0.5f ? t : t - 1.f);
-                break;
-            case 3:
-                // Square signal
-                waveform = t < 0.5f ? 0.25f : -0.25f;
-                break;
-            case 4:
-                // Asymmetric square signal
-                waveform = t < 0.33333333f ? 0.25f : -0.25f;
-                break;
-            case 5:
-                // Some triangle stuff again
-                waveform = t < 0.5f ? 3.f - lol::abs(24.f * t - 6.f)
-                                    : 1.f - lol::abs(16.f * t - 12.f);
-                waveform *= 0.111111111f;
-                break;
-            case 6:
-                // Spectral analysis indicates this is some kind of
-                // brown noise, but losing almost 10dB per octave.
-                // This may help us create a correct filter:
-                // http://www.firstpr.com.au/dsp/pink-noise/
-                for (float mul = 1; mul <= 16; mul *= 2)
-                    waveform += noise.eval(lol::vec_t<float, 1>(t * 32.f * mul)) / mul;
-                waveform *= 0.8f;
-                break;
-            case 7:
-                // This one has a subfrequency of freq/128 that appears
-                // to modulate two signals using a triangle wave
-                // FIXME: amplitude seems to be affected, too
-                {
-                    float k = lol::abs(2.f * lol::fmod(freq / 128.f * offset / offset_per_second, 1.f) - 1.f);
-                    float u = lol::fmod(t + 0.5f * k, 1.0f);
-                    waveform = lol::abs(4.f * u - 2.f) - lol::abs(8.f * t - 4.f);
-                    waveform *= 0.166666666f;
-                }
-                break;
-            }
+            float advance = freq * offset / offset_per_second + phi;
+            float waveform = get_waveform(sfx.instrument(note), advance);
 
             buffer[2 * i] = buffer[2 * i + 1]
                   = (int16_t)(32767.99f * volume * waveform);
