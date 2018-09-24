@@ -279,8 +279,8 @@ int vm::api_print(lua_State *l)
             // PICO-8 characters end at 0x99.
             int index = ch > 0x20 && ch < 0x9a ? ch - 0x20 : 0;
             int16_t w = index < 0x60 ? 4 : 8;
-            int font_x = (index < 0x60 ? index % 32 : index % 16) * w;
-            int font_y = (index < 0x60 ? index / 32 : index / 16 - 3) * 6;
+            int font_x = index % (128 / w) * w;
+            int font_y = index / (128 / w) * 6 - (w / 8 * 18);
 
             for (int16_t dy = 0; dy < 5; ++dy)
                 for (int16_t dx = 0; dx < w; ++dx)
