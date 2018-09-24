@@ -19,6 +19,7 @@ namespace z8
 
 using lol::msg;
 
+// One-dimensional noise generator
 static lol::perlin_noise<1> noise;
 
 inline float sfx::frequency(int n) const
@@ -78,9 +79,6 @@ uint8_t song::sfx(int n) const
 }
 
 vm::channel::channel()
-  : m_sfx(-1),
-    m_offset(0),
-    m_phi(0)
 {
 #if DEBUG_EXPORT_WAV
     char const *header =
@@ -122,8 +120,10 @@ static float get_waveform(int instrument, float advance)
                            : 1.f - lol::abs(16.f * t - 12.f);
             return ret * 0.111111111f;
         case 6:
-            // Spectral analysis indicates this is some kind of
-            // brown noise, but losing almost 10dB per octave.
+            // Spectral analysis indicates this is some kind of brown noise,
+            // but losing almost 10dB per octave. I thought using Perlin noise
+            // would be fun, but it’s definitely not accurate.
+            //
             // This may help us create a correct filter:
             // http://www.firstpr.com.au/dsp/pink-noise/
             for (float m = 1.75f, d = 1.f; m <= 128; m *= 2.25f, d *= 0.75f)
@@ -143,6 +143,9 @@ static float get_waveform(int instrument, float advance)
     return 0.0f;
 }
 
+// FIXME: there is a problem with the per-channel approach; if a channel
+// advances the music, then all the other channels will reference the
+// new music chunk. Be careful when implementing music.
 void vm::getaudio(int chan, void *in_buffer, int in_bytes)
 {
     int const samples_per_second = 22050;
@@ -156,7 +159,6 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         if (m_channels[chan].m_sfx == -1)
         {
             buffer[2 * i] = buffer[2 * i + 1] = 0;
-            m_channels[chan].m_sfx = -1;
             continue;
         }
 
@@ -174,6 +176,15 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         // per speed unit per note, so this is how much we should advance
         float offset_per_second = 22050.f / (183.f * speed);
         float next_offset = offset + offset_per_second / samples_per_second;
+
+        // Handle SFX loops
+        float const loop_range = sfx.loop_end - sfx.loop_start;
+        if (m_channels[chan].m_can_loop &&
+            loop_range > 0.f && next_offset >= sfx.loop_end)
+        {
+            next_offset = std::fmod(next_offset - sfx.loop_start, loop_range)
+                        + sfx.loop_start;
+        }
 
         int note = (int)lol::floor(offset);
         int next_note = (int)lol::floor(next_offset);
@@ -195,7 +206,6 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
                   = (int16_t)(32767.99f * volume * waveform);
         }
 
-        // TODO: handle loops etc.
         m_channels[chan].m_offset = next_offset;
 
         if (next_offset >= 32.f)
@@ -245,11 +255,15 @@ int vm::api_sfx(lua_State *l)
 
     if (sfx == -1)
     {
-        // TODO: stop channel
+        // Stop playing the current channel
+        if (chan != -1)
+            m_channels[chan].m_sfx = -1;
     }
     else if (sfx == -2)
     {
-        // TODO: stop looping
+        // Stop looping the current channel
+        if (chan != -1)
+            m_channels[chan].m_can_loop = false;
     }
     else
     {
@@ -289,6 +303,7 @@ int vm::api_sfx(lua_State *l)
             m_channels[chan].m_sfx = sfx;
             m_channels[chan].m_offset = offset;
             m_channels[chan].m_phi = 0.f;
+            m_channels[chan].m_can_loop = true;
         }
     }
 

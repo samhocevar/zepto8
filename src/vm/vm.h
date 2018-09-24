@@ -143,8 +143,11 @@ private:
     {
         channel();
 
-        int16_t m_sfx;
-        float m_offset, m_phi;
+        int16_t m_sfx = -1;
+        float m_offset = 0;
+        float m_phi = 0;
+        bool m_can_loop = true;
+
 #if DEBUG_EXPORT_WAV
         FILE *m_fd;
 #endif
