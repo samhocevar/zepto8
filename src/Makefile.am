@@ -11,7 +11,9 @@ ___zepto8_SOURCES = \
     zepto8.cpp \
     player.cpp player.h \
     $(NULL)
-___zepto8_CPPFLAGS = $(AM_CPPFLAGS)
+___zepto8_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
+                     -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
+                     $(AM_CPPFLAGS)
 ___zepto8_LDFLAGS = libzepto8.a libz8lua.a $(AM_LDFLAGS)
 ___zepto8_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@
 ___zepto8_DATA = bios.p8 data/zepto8.lua
@@ -22,7 +24,9 @@ ___z8tool_SOURCES = \
     z8tool.cpp \
     splore.cpp splore.h \
     $(NULL)
-___z8tool_CPPFLAGS = $(AM_CPPFLAGS)
+___z8tool_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
+                     -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
+                     $(AM_CPPFLAGS)
 ___z8tool_LDFLAGS = libzepto8.a libz8lua.a $(AM_LDFLAGS)
 ___z8tool_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@
 

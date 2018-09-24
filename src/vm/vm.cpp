@@ -116,7 +116,7 @@ vm::vm()
     lua_sethook(m_lua, &vm::instruction_hook, LUA_MASKCOUNT, 1000);
 
     // Initialize BIOS
-    for (auto const &file : lol::sys::get_path_list("src/bios.p8"))
+    for (auto const &file : lol::sys::get_path_list("bios.p8"))
     {
         lol::File f;
         f.Open(file, lol::FileAccess::Read);
@@ -131,7 +131,7 @@ vm::vm()
     ::memset(&m_ram, 0, sizeof(m_ram));
 
     // Initialize Zepto8 runtime
-    char const *filename = "src/data/zepto8.lua";
+    char const *filename = "data/zepto8.lua";
     std::string s;
     int status = LUA_ERRFILE;
     for (auto const &candidate : lol::sys::get_path_list(filename))
