@@ -126,9 +126,9 @@ static float get_waveform(int instrument, float advance)
             // brown noise, but losing almost 10dB per octave.
             // This may help us create a correct filter:
             // http://www.firstpr.com.au/dsp/pink-noise/
-            for (float mul = 1; mul <= 16; mul *= 2)
-                ret += noise.eval(lol::vec_t<float, 1>(t * 32.f * mul)) / mul;
-            return ret * 0.8f;
+            for (float m = 1.75f, d = 1.f; m <= 128; m *= 2.25f, d *= 0.75f)
+                ret += d * noise.eval(lol::vec_t<float, 1>(m * advance));
+            return ret * 0.4f;
         case 7:
         {   // This one has a subfrequency of freq/128 that appears
             // to modulate two signals using a triangle wave
