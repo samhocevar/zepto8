@@ -127,6 +127,8 @@ bool cart::load_png(char const *filename)
     // Remove possible trailing zeroes
     m_code.resize(strlen(m_code.c_str()));
 
+    msg::debug("version: %d code: %d\n", version, (int)m_code.length());
+
     // Invalidate code cache
     m_lua.resize(0);
 
@@ -328,14 +330,15 @@ bool cart::load_p8(char const *filename)
     auto const &mus = reader.m_sections[(int8_t)p8_reader::section::mus];
     auto const &lab = reader.m_sections[(int8_t)p8_reader::section::lab];
 
-    msg::info("code: %d gfx: %d/%d gff: %d/%d map: %d/%d "
-              "sfx: %d/%d mus: %d/%d lab: %d/%d\n", (int)m_code.length(),
-              gfx.count(), (int)sizeof(m_rom.gfx),
-              gff.count(), (int)sizeof(m_rom.gfx_props),
-              map.count(), (int)(sizeof(m_rom.map) + sizeof(m_rom.map2)),
-              sfx.count() / (4 + 80) * (4 + 64), (int)sizeof(m_rom.sfx),
-              mus.count() / 5 * 4, (int)sizeof(m_rom.song),
-              lab.count(), LABEL_WIDTH * LABEL_HEIGHT / 2);
+    msg::debug("version: %d code: %d gfx: %d/%d gff: %d/%d map: %d/%d "
+               "sfx: %d/%d mus: %d/%d lab: %d/%d\n",
+               reader.m_version, (int)m_code.length(),
+               gfx.count(), (int)sizeof(m_rom.gfx),
+               gff.count(), (int)sizeof(m_rom.gfx_props),
+               map.count(), (int)(sizeof(m_rom.map) + sizeof(m_rom.map2)),
+               sfx.count() / (4 + 80) * (4 + 64), (int)sizeof(m_rom.sfx),
+               mus.count() / 5 * 4, (int)sizeof(m_rom.song),
+               lab.count(), LABEL_WIDTH * LABEL_HEIGHT / 2);
 
     // The optional second chunk of gfx is contiguous, we can copy it directly
     memcpy(&m_rom.gfx, gfx.data(), lol::min((int)sizeof(m_rom.gfx), gfx.count()));
@@ -516,8 +519,8 @@ lol::array<uint8_t> cart::get_compressed_code() const
         }
     }
 
-    msg::info("compressed code (%d bytes, max %d)\n",
-              ret.count(), (int)sizeof(m_rom.code) - 8);
+    msg::debug("compressed code (%d bytes, max %d)\n",
+               ret.count(), (int)sizeof(m_rom.code) - 8);
 
     return ret;
 }
@@ -539,7 +542,7 @@ lol::array<uint8_t> cart::get_bin() const
     ret += get_compressed_code();
 
     int max_len = (int)sizeof(m_rom.code);
-    msg::info("compressed code length: %d/%d\n", ret.count() - data_size, max_len);
+    msg::debug("compressed code length: %d/%d\n", ret.count() - data_size, max_len);
 
     ret << EXPORT_VERSION;
 
