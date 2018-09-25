@@ -178,9 +178,9 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         float next_offset = offset + offset_per_second / samples_per_second;
 
         // Handle SFX loops
-        float const loop_range = sfx.loop_end - sfx.loop_start;
-        if (m_channels[chan].m_can_loop &&
-            loop_range > 0.f && next_offset >= sfx.loop_end)
+        float const loop_range = float(sfx.loop_end - sfx.loop_start);
+        if (loop_range > 0.f && next_offset >= sfx.loop_end
+             && m_channels[chan].m_can_loop)
         {
             next_offset = std::fmod(next_offset - sfx.loop_start, loop_range)
                         + sfx.loop_start;
@@ -301,7 +301,7 @@ int vm::api_sfx(lua_State *l)
                     m_channels[i].m_sfx = -1;
 
             m_channels[chan].m_sfx = sfx;
-            m_channels[chan].m_offset = offset;
+            m_channels[chan].m_offset = (float)offset;
             m_channels[chan].m_phi = 0.f;
             m_channels[chan].m_can_loop = true;
         }

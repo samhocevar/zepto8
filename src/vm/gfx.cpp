@@ -521,7 +521,7 @@ int vm::api_line(lua_State *l)
     {
         for (int16_t x = std::min(x0, x1); x <= std::max(x0, x1); ++x)
         {
-            int16_t y = lol::round(lol::mix((double)y0, (double)y1, (double)(x - x0) / (x1 - x0)));
+            int16_t y = (int16_t)lol::round(lol::mix((double)y0, (double)y1, (double)(x - x0) / (x1 - x0)));
             set_pixel(x, y, color_bits);
         }
     }
@@ -529,7 +529,7 @@ int vm::api_line(lua_State *l)
     {
         for (int16_t y = std::min(y0, y1); y <= std::max(y0, y1); ++y)
         {
-            int16_t x = lol::round(lol::mix((double)x0, (double)x1, (double)(y - y0) / (y1 - y0)));
+            int16_t x = (int16_t)lol::round(lol::mix((double)x0, (double)x1, (double)(y - y0) / (y1 - y0)));
             set_pixel(x, y, color_bits);
         }
     }

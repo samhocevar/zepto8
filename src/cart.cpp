@@ -285,7 +285,7 @@ struct p8_reader::action<p8_reader::r_data>
                 {
                     char str[3] = { (char)parser[must_swap ? 1 : 0],
                                     (char)parser[must_swap ? 0 : 1], '\0' };
-                    section << strtoul(str, nullptr, 16);
+                    section << (uint8_t)strtoul(str, nullptr, 16);
                     ++parser;
                 }
             }
@@ -536,8 +536,8 @@ lol::array<uint8_t> cart::get_bin() const
     memcpy(ret.data(), &m_rom, data_size);
 
     ret << ':' << 'c' << ':' << '\0';
-    ret << (m_code.length() >> 8);
-    ret << (m_code.length() & 0xff);
+    ret << (uint8_t)(m_code.length() >> 8);
+	ret << (uint8_t)m_code.length();
     ret << 0 << 0; /* FIXME: what is this? */
     ret += get_compressed_code();
 
