@@ -15,8 +15,9 @@
 #include <lol/engine.h>
 
 #include "zepto8.h"
+#include "bios.h"
 #include "cart.h"
-#include "vm/memory.h"
+#include "memory.h"
 #include "z8lua/lua.h"
 #include "z8lua/lauxlib.h"
 
@@ -128,7 +129,8 @@ private:
 
 private:
     lua_State *m_lua;
-    cart m_bios, m_cart;
+    bios m_bios;
+    cart m_cart;
     memory m_ram;
 
     // Files

@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2017 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -288,10 +288,7 @@ int vm::api_print(lua_State *l)
                     int16_t screen_x = (int16_t)x - ds.camera.x() + dx;
                     int16_t screen_y = (int16_t)y - ds.camera.y() + dy;
 
-                    auto const &data = m_bios.get_rom().gfx;
-                    uint8_t const p = data[(font_y + dy) * 64 + (font_x + dx) / 2];
-
-                    if ((font_x + dx) & 1 ? p >> 4 : p & 0xf)
+                    if (m_bios.get_spixel(font_x + dx, font_y + dy))
                         set_pixel(screen_x, screen_y, color_bits);
                 }
 

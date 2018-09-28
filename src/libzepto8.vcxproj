@@ -60,6 +60,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="analyzer.cpp" />
+    <ClCompile Include="bios.cpp" />
     <ClCompile Include="cart.cpp" />
     <ClCompile Include="vm\gfx.cpp" />
     <ClCompile Include="vm\private.cpp" />
@@ -71,7 +72,7 @@
     <ClInclude Include="analyzer.h" />
     <ClInclude Include="cart.h" />
     <ClInclude Include="lua53-parse.h" />
-    <ClInclude Include="vm\memory.h" />
+    <ClInclude Include="memory.h" />
     <ClInclude Include="vm\vm.h" />
     <ClInclude Include="zepto8.h" />
   </ItemGroup>

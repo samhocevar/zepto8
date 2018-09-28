@@ -43,7 +43,7 @@ ___z8lua_DEPENDENCIES = libz8lua.a
 
 libzepto8_a_SOURCES = \
     zepto8.h \
-    cart.cpp cart.h \
+    bios.cpp bios.h cart.cpp cart.h \
     analyzer.cpp analyzer.h lua53-parse.h \
     vm/vm.cpp vm/vm.h \
     vm/private.cpp vm/gfx.cpp vm/render.cpp vm/sfx.cpp \
