@@ -22,7 +22,7 @@ using lol::msg;
 // One-dimensional noise generator
 static lol::perlin_noise<1> noise;
 
-inline float sfx::frequency(int n) const
+inline float note::frequency() const
 {
     static float const lut[] =
     {
@@ -42,28 +42,24 @@ inline float sfx::frequency(int n) const
         2217.4610f, 2349.3181f, 2489.0158f,
     };
 
-    ASSERT(n >= 0 && n <= 31);
-    return lut[notes[n][0] & 0x3f];
+    return lut[b[0] & 0x3f];
 }
 
-inline float sfx::volume(int n) const
+inline float note::volume() const
 {
-    ASSERT(n >= 0 && n <= 31);
-    return ((notes[n][1] >> 1) & 0x7) / 7.f;
+    return ((b[1] >> 1) & 0x7) / 7.f;
 }
 
-inline int sfx::effect(int n) const
+inline int note::effect() const
 {
     // FIXME: there is an actual extra bit for the effect but I don’t
     // know what it’s for: PICO-8 documentation says 0…7, not 0…15
-    ASSERT(n >= 0 && n <= 31);
-    return (notes[n][1] >> 4) & 0x7;
+    return (b[1] >> 4) & 0x7;
 }
 
-inline int sfx::instrument(int n) const
+inline int note::instrument() const
 {
-    ASSERT(n >= 0 && n <= 31);
-    return ((notes[n][1] << 2) & 0x4) | (notes[n][0] >> 6);
+    return ((b[1] << 2) & 0x4) | (b[0] >> 6);
 }
 
 uint8_t song::flags() const
@@ -189,8 +185,8 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         int note = (int)lol::floor(offset);
         int next_note = (int)lol::floor(next_offset);
 
-        float freq = sfx.frequency(note);
-        float volume = sfx.volume(note);
+        float freq = sfx.notes[note].frequency();
+        float volume = sfx.notes[note].volume();
 
         if (freq == 0.f || volume == 0.f)
         {
@@ -200,7 +196,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         else
         {
             float advance = freq * offset / offset_per_second + phi;
-            float waveform = get_waveform(sfx.instrument(note), advance);
+            float waveform = get_waveform(sfx.notes[note].instrument(), advance);
 
             buffer[2 * i] = buffer[2 * i + 1]
                   = (int16_t)(32767.99f * volume * waveform);
@@ -214,8 +210,8 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         }
         else if (note != next_note)
         {
-            float next_freq = sfx.frequency(next_note);
-            //float next_volume = sfx.volume(next_note);
+            float next_freq = sfx.notes[next_note].frequency();
+            //float next_volume = sfx.notes[next_note].volume();
 
             phi += (freq * offset - next_freq * next_offset) / offset_per_second;
             phi = lol::fmod(phi, 1.f) + (phi >= 0.f ? 0.f : 1.f);

@@ -16,14 +16,46 @@
 
 #include "zepto8.h"
 
+// The memory classes: sfx, song, draw_state, memory
+// —————————————————————————————————————————————————
+// These classes map 1-to-1 with the PICO-8 memory layout and provide
+// handful accessors for higher level information.
+// For instance:
+//  - "memory[x]" accesses the xth byte in memory
+//  - "memory.sfx[3].effect(6)" gets the effect of the 6th note of the 3rd SFX
+//  - "memory.gpio_pin[2] is the 2nd GPIO pin
+
 namespace z8
 {
 
+// Use uint8_t[2] instead of uint16_t so that 1-byte aligned storage
+// is still possible.
+struct note
+{
+    float frequency() const;
+    float volume() const;
+    int effect() const;
+    int instrument() const;
+
+    inline uint8_t &operator[](int n)
+    {
+        ASSERT(n >= 0 && n < 2);
+        return b[n];
+    }
+
+    inline uint8_t const &operator[](int n) const
+    {
+        ASSERT(n >= 0 && n < 2);
+        return b[n];
+    }
+
+private:
+    uint8_t b[2];
+};
+
 struct sfx
 {
-    // Use uint8_t[2] instead of uint16_t so that 1-byte aligned storage
-    // is still possible.
-    uint8_t notes[32][2];
+    note notes[32];
 
     // 0: editor mode
     // 1: speed (1-255)
@@ -33,12 +65,6 @@ struct sfx
     uint8_t speed;
     uint8_t loop_start;
     uint8_t loop_end;
-
-    // Accessors for data transformation
-    float frequency(int n) const;
-    float volume(int n) const;
-    int effect(int n) const;
-    int instrument(int n) const;
 };
 
 struct song
@@ -93,9 +119,9 @@ struct draw_state
     // Mouse flag
     uint8_t mouse_flag;
 
-    uint8_t undocumented4[3];
+    uint8_t undocumented2[3];
     uint8_t fillp[2], fillp_trans, fillp_flag;
-    uint8_t undocumented5[11];
+    uint8_t undocumented3[11];
 };
 
 struct memory
