@@ -17,6 +17,11 @@
 #include "analyzer.h"
 #include "memory.h"
 
+// The cart class
+// ——————————————
+// Represents a PICO-8 cartridge. Can load and unpack .p8 and .p8.png files,
+// so that the VM can then load their content into memory.
+
 namespace z8
 {
 

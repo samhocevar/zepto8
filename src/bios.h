@@ -16,6 +16,11 @@
 
 #include "cart.h"
 
+// The bios class
+// ——————————————
+// The actual ZEPTO-8 BIOS: contains the font and the startup code, loaded
+// from a regular .p8 cartridge file.
+
 namespace z8
 {
 
@@ -24,7 +29,10 @@ class bios
 public:
     bios();
 
-    std::string const &get_code() const { return m_cart.get_code(); }
+    std::string const &get_code() const
+    {
+        return m_cart.get_code();
+    }
 
     uint8_t get_spixel(int16_t x, int16_t y) const
     {

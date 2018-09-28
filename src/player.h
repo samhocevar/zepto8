@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -17,6 +17,10 @@
 #include "zepto8.h"
 #include "cart.h"
 #include "vm/vm.h"
+
+// The player class
+// ————————————————
+// This is a high-level Lol Engine entity that runs the ZEPTO-8 VM.
 
 namespace z8
 {

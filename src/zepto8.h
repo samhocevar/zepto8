@@ -17,6 +17,10 @@
 
 #define DEBUG_EXPORT_WAV 0
 
+// The ZEPTO-8 types
+// —————————————————
+// Various types and enums that describe ZEPTO-8.
+
 namespace z8
 {
 

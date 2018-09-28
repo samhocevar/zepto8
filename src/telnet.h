@@ -21,6 +21,10 @@
 #include "zepto8.h"
 #include "vm/vm.h"
 
+// The telnet class
+// ————————————————
+// This is a high-level telnet server that runs a ZEPTO-8 VM.
+
 namespace z8
 {
 
