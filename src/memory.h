@@ -32,10 +32,10 @@ namespace z8
 // is still possible.
 struct note
 {
-    float frequency() const;
+    uint8_t key() const;
     float volume() const;
-    int effect() const;
-    int instrument() const;
+    uint8_t effect() const;
+    uint8_t instrument() const;
 
     inline uint8_t &operator[](int n)
     {

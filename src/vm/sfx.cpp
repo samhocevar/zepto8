@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2017 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -22,27 +22,14 @@ using lol::msg;
 // One-dimensional noise generator
 static lol::perlin_noise<1> noise;
 
-inline float note::frequency() const
+static float key_to_freq(float key)
 {
-    static float const lut[] =
-    {
-        0.0f,
-        69.295658f, 73.416192f, 77.781746f, 82.406889f, 87.307058f,
-        92.498606f, 97.998859f, 103.82617f, 110.00000f, 116.54094f,
-        123.47082f, 130.81278f, 138.59131f, 146.83238f, 155.56349f,
-        164.81377f, 174.61411f, 184.99721f, 195.99771f, 207.65234f,
-        220.00000f, 233.08188f, 246.94165f, 261.62556f, 277.18263f,
-        293.66476f, 311.12698f, 329.62755f, 349.22823f, 369.99442f,
-        391.99543f, 415.30469f, 440.00000f, 466.16376f, 493.88330f,
-        523.25113f, 554.36526f, 587.32953f, 622.25396f, 659.25511f,
-        698.45646f, 739.98884f, 783.99087f, 830.60939f, 880.00000f,
-        932.32752f, 987.76660f, 1046.5022f, 1108.7305f, 1174.6590f,
-        1244.5079f, 1318.5102f, 1396.9129f, 1479.9776f, 1567.9817f,
-        1661.2187f, 1760.0000f, 1864.6550f, 1975.5332f, 2093.0045f,
-        2217.4610f, 2349.3181f, 2489.0158f,
-    };
+    return 440.f * std::exp2((key - 33.f) / 12.f);
+}
 
-    return lut[b[0] & 0x3f];
+inline uint8_t note::key() const
+{
+    return b[0] & 0x3f;
 }
 
 inline float note::volume() const
@@ -50,14 +37,14 @@ inline float note::volume() const
     return ((b[1] >> 1) & 0x7) / 7.f;
 }
 
-inline int note::effect() const
+inline uint8_t note::effect() const
 {
     // FIXME: there is an actual extra bit for the effect but I don’t
     // know what it’s for: PICO-8 documentation says 0…7, not 0…15
     return (b[1] >> 4) & 0x7;
 }
 
-inline int note::instrument() const
+inline uint8_t note::instrument() const
 {
     return ((b[1] << 2) & 0x4) | (b[0] >> 6);
 }
@@ -173,7 +160,8 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         float offset_per_second = 22050.f / (183.f * speed);
         float next_offset = offset + offset_per_second / samples_per_second;
 
-        // Handle SFX loops
+        // Handle SFX loops. From the documentation: “Looping is turned
+        // off when the start index >= end index”.
         float const loop_range = float(sfx.loop_end - sfx.loop_start);
         if (loop_range > 0.f && next_offset >= sfx.loop_end
              && m_channels[chan].m_can_loop)
@@ -182,13 +170,14 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
                         + sfx.loop_start;
         }
 
-        int note = (int)lol::floor(offset);
-        int next_note = (int)lol::floor(next_offset);
+        int note_id = (int)lol::floor(offset);
+        int next_note_id = (int)lol::floor(next_offset);
 
-        float freq = sfx.notes[note].frequency();
-        float volume = sfx.notes[note].volume();
+        uint8_t key = sfx.notes[note_id].key();
+        float volume = sfx.notes[note_id].volume();
+        float freq = key_to_freq(key);
 
-        if (freq == 0.f || volume == 0.f)
+        if (key == 0 || volume == 0.f)
         {
             // Play silence
             buffer[2 * i] = buffer[2 * i + 1] = 0;
@@ -196,7 +185,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         else
         {
             float advance = freq * offset / offset_per_second + phi;
-            float waveform = get_waveform(sfx.notes[note].instrument(), advance);
+            float waveform = get_waveform(sfx.notes[note_id].instrument(), advance);
 
             buffer[2 * i] = buffer[2 * i + 1]
                   = (int16_t)(32767.99f * volume * waveform);
@@ -208,10 +197,10 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         {
             m_channels[chan].m_sfx = -1;
         }
-        else if (note != next_note)
+        else if (note_id != next_note_id)
         {
-            float next_freq = sfx.notes[next_note].frequency();
-            //float next_volume = sfx.notes[next_note].volume();
+            float next_freq = key_to_freq(sfx.notes[next_note_id].key());
+            //float next_volume = sfx.notes[next_note_id].volume();
 
             phi += (freq * offset - next_freq * next_offset) / offset_per_second;
             phi = lol::fmod(phi, 1.f) + (phi >= 0.f ? 0.f : 1.f);
