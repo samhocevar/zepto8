@@ -13,9 +13,8 @@
 #pragma once
 
 #include <lol/engine.h>
-#include <cstddef>
 
-#define DEBUG_EXPORT_WAV 0
+#include <cstddef>
 
 // The ZEPTO-8 types
 // —————————————————

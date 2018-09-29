@@ -17,6 +17,8 @@
 namespace z8
 {
 
+#define DEBUG_EXPORT_WAV 0
+
 using lol::msg;
 
 enum
@@ -51,10 +53,11 @@ static float key_to_freq(float key)
 #if DEBUG_STUFF
 static std::string key_to_name(float key)
 {
-    static char const *lut = "C-C#D-D#E-F-F#G-G#A-A#B-";
-    int note = (int)key % 12;
-    int octave = (int)key / 12;
-    return lol::format("%c%c%d", lut[note * 2], lut[note * 2 + 1], octave);
+    static char const *lut = "C-\0C#\0D-\0D#\0E-\0F-\0F#\0G-\0G#\0A-\0A#\0B-";
+
+    char const *note = lut[(int)key % 12 * 3];
+    int const octave = (int)key / 12;
+    return lol::format("%s%d", note, octave);
 }
 #endif
 
@@ -93,15 +96,22 @@ uint8_t song::sfx(int n) const
     return data[n] & 0x7f;
 }
 
+#if DEBUG_EXPORT_WAV
+std::map<void const *, FILE *> exports;
+#endif
+
 vm::channel::channel()
 {
 #if DEBUG_EXPORT_WAV
-    char const *header =
-        "\x52\x49\x46\x46\xe4\xc1\x08\x00\x57\x41\x56\x45\x66\x6d\x74\x20"
-        "\x10\x00\x00\x00\x01\x00\x02\x00\x22\x56\x00\x00\x44\xac\x00\x00"
-        "\x02\x00\x10\x00\x64\x61\x74\x61\xc0\xc1\x08\x00";
-    m_fd = fopen(lol::format("/tmp/zepto8_%p.wav", this).c_str(), "w+");
-    fwrite(header, 44, 1, m_fd);
+    static int count = 0;
+    char const *header = "RIFF" "\xe4\xc1\x08\0" /* chunk size */ "WAVEfmt "
+        "\x10\0\0\0" /* subchunk size */ "\x01\0" /* format (PCM) */
+        "\x01\0" /* channels (1) */ "\x22\x56\0\0" /* sample rate (22050) */
+        "\x22\x56\0\0" /* byte rate */ "\x02\0" /* block align (2) */
+        "\x10\0" /* bits per sample (16) */ "data"
+        "\xc0\xc1\x08\00" /* bytes in data */;
+    exports[this] = fopen(lol::format("/tmp/zepto8_%d.wav", count++).c_str(), "w+");
+    fwrite(header, 44, 1, exports[this]);
 #endif
 }
 
@@ -170,7 +180,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
     int const bytes_per_sample = 4; // stereo S16 for now
 
     int16_t *buffer = (int16_t *)in_buffer;
-    int samples = in_bytes / bytes_per_sample;
+    int const samples = in_bytes / bytes_per_sample;
 
     for (int i = 0; i < samples; ++i)
     {
@@ -180,20 +190,21 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
             continue;
         }
 
-        int index = m_channels[chan].m_sfx;
+        int const index = m_channels[chan].m_sfx;
         ASSERT(index >= 0 && index < 64);
         struct sfx const &sfx = m_ram.sfx[index];
 
         // Speed must be 1—255 otherwise the SFX is invalid
-        int speed = lol::max(1, (int)sfx.speed);
+        int const speed = lol::max(1, (int)sfx.speed);
 
         float offset = m_channels[chan].m_offset;
         float phi = m_channels[chan].m_phi;
 
         // PICO-8 exports instruments as 22050 Hz WAV files with 183 samples
         // per speed unit per note, so this is how much we should advance
-        float offset_per_second = 22050.f / (183.f * speed);
-        float next_offset = offset + offset_per_second / samples_per_second;
+        float const offset_per_second = 22050.f / (183.f * speed);
+        float const offset_per_sample = offset_per_second / samples_per_second;
+        float next_offset = offset + offset_per_sample;
 
         // Handle SFX loops. From the documentation: “Looping is turned
         // off when the start index >= end index”.
@@ -205,8 +216,8 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
                         + sfx.loop_start;
         }
 
-        int note_id = (int)lol::floor(offset);
-        int next_note_id = (int)lol::floor(next_offset);
+        int const note_id = (int)lol::floor(offset);
+        int const next_note_id = (int)lol::floor(next_offset);
 
         uint8_t key = sfx.notes[note_id].key();
         float volume = sfx.notes[note_id].volume();
@@ -229,7 +240,12 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
                                     freq, lol::fmod(offset, 1.f));
                     break;
                 case FX_VIBRATO:
+                {
+                    float t = 2.f * lol::abs(lol::fmod(8 * offset / offset_per_second, 1.0f) - 0.5f);
+                    // Vibrato one semi-tone below, so divide by pow(2,1/24)
+                    freq = lol::mix(freq, freq * 0.9715319411536f, t);
                     break;
+                }
                 case FX_DROP:
                     freq *= 1.f - lol::fmod(offset, 1.f);
                     break;
@@ -263,7 +279,9 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
     }
 
 #if DEBUG_EXPORT_WAV
-    fwrite(in_buffer, in_bytes, 1, m_channels[chan].m_fd);
+    auto fd = exports[&m_channels[chan]];
+    for (int i = 0; i < samples; ++i)
+        fwrite(buffer + 2 * i, 2, 1, fd);
 #endif
 }
 

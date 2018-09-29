@@ -151,10 +151,6 @@ private:
         bool m_can_loop = true;
 
         int8_t m_prev_key = 0;
-
-#if DEBUG_EXPORT_WAV
-        FILE *m_fd;
-#endif
     }
     m_channels[4];
 
