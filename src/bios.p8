@@ -104,6 +104,18 @@ do
         return __cartdata(s)
     end
 
+    -- Stubs for unimplemented functions
+    local function stub(s) return function() __stub(s) end end
+    load = stub("load()")
+    save = stub("save()")
+    folder = stub("folder()")
+    dir = stub("dir()")
+    ls = dir
+    info = stub("info()")
+    stop = stub("stop()")
+    resume = stub("resume()")
+    reboot = stub("reboot()")
+
     -- All flip() does for now is yield so that the C++ VM gets a chance
     -- to draw something even if Lua is in an infinite loop
     flip = function()

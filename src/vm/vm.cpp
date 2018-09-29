@@ -105,6 +105,7 @@ vm::vm()
         { "time", &dispatch<&vm::api_time> },
 
         { "__cartdata", &dispatch<&vm::private_cartdata> },
+        { "__stub",     &dispatch<&vm::private_stub> },
 
         { nullptr, nullptr },
     };
@@ -196,6 +197,13 @@ void vm::mouse(lol::ivec2 coords, int buttons)
     m_mouse.x = (double)coords.x;
     m_mouse.y = (double)coords.y;
     m_mouse.b = (double)buttons;
+}
+
+int vm::private_stub(lua_State *l)
+{
+    char const *str = lua_tostring(l, 1);
+    msg::info("z8:stub:%s\n", str);
+    return 0;
 }
 
 //

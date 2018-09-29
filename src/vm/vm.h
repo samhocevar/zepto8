@@ -56,6 +56,7 @@ private:
 
     // Private methods (hidden from the user)
     int private_cartdata(lua_State *l);
+    int private_stub(lua_State *l);
 
     // System
     int api_run(lua_State *l);
