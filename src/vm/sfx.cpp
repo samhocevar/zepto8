@@ -19,13 +19,44 @@ namespace z8
 
 using lol::msg;
 
-// One-dimensional noise generator
-static lol::perlin_noise<1> noise;
+enum
+{
+    INST_TRIANGLE   = 0, // Triangle signal
+    INST_TILTED_SAW = 1, // Slanted triangle
+    INST_SAW        = 2, // Sawtooth
+    INST_SQUARE     = 3, // Square signal
+    INST_PULSE      = 4, // Asymmetric square signal
+    INST_ORGAN      = 5, // Some triangle stuff again
+    INST_NOISE      = 6,
+    INST_PHASER     = 7,
+};
+
+enum
+{
+    FX_NO_EFFECT = 0,
+    FX_SLIDE =     1,
+    FX_VIBRATO =   2,
+    FX_DROP =      3,
+    FX_FADE_IN =   4,
+    FX_FADE_OUT =  5,
+    FX_ARP_FAST =  6,
+    FX_ARP_SLOW =  7,
+};
 
 static float key_to_freq(float key)
 {
     return 440.f * std::exp2((key - 33.f) / 12.f);
 }
+
+#if DEBUG_STUFF
+static std::string key_to_name(float key)
+{
+    static char const *lut = "C-C#D-D#E-F-F#G-G#A-A#B-";
+    int note = (int)key % 12;
+    int octave = (int)key / 12;
+    return lol::format("%c%c%d", lut[note * 2], lut[note * 2 + 1], octave);
+}
+#endif
 
 inline uint8_t note::key() const
 {
@@ -41,6 +72,7 @@ inline uint8_t note::effect() const
 {
     // FIXME: there is an actual extra bit for the effect but I don’t
     // know what it’s for: PICO-8 documentation says 0…7, not 0…15
+    // Update: maybe this is used for the new SFX instrument feature?
     return (b[1] >> 4) & 0x7;
 }
 
@@ -83,36 +115,39 @@ static float get_waveform(int instrument, float advance)
     // equations could be.
     switch (instrument)
     {
-        case 0: // Triangle signal
+        case INST_TRIANGLE:
             return 0.354f * (lol::abs(4.f * t - 2.0f) - 1.0f);
-        case 1: // Slanted triangle
+        case INST_TILTED_SAW:
         {
             static float const a = 0.9f;
             ret = t < a ? 2.f * t / a - 1.f
                         : 2.f * (1.f - t) / (1.f - a) - 1.f;
             return ret * 0.406f;
         }
-        case 2: // Sawtooth
+        case INST_SAW:
             return 0.653f * (t < 0.5f ? t : t - 1.f);
-        case 3: // Square signal
+        case INST_SQUARE:
             return t < 0.5f ? 0.25f : -0.25f;
-        case 4: // Asymmetric square signal
+        case INST_PULSE:
             return t < 0.33333333f ? 0.25f : -0.25f;
-        case 5: // Some triangle stuff again
+        case INST_ORGAN:
             ret = t < 0.5f ? 3.f - lol::abs(24.f * t - 6.f)
                            : 1.f - lol::abs(16.f * t - 12.f);
             return ret * 0.111111111f;
-        case 6:
+        case INST_NOISE:
+        {
             // Spectral analysis indicates this is some kind of brown noise,
             // but losing almost 10dB per octave. I thought using Perlin noise
             // would be fun, but it’s definitely not accurate.
             //
             // This may help us create a correct filter:
             // http://www.firstpr.com.au/dsp/pink-noise/
+            static lol::perlin_noise<1> noise;
             for (float m = 1.75f, d = 1.f; m <= 128; m *= 2.25f, d *= 0.75f)
                 ret += d * noise.eval(lol::vec_t<float, 1>(m * advance));
             return ret * 0.4f;
-        case 7:
+        }
+        case INST_PHASER:
         {   // This one has a subfrequency of freq/128 that appears
             // to modulate two signals using a triangle wave
             // FIXME: amplitude seems to be affected, too
@@ -184,11 +219,35 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         }
         else
         {
-            float advance = freq * offset / offset_per_second + phi;
-            float waveform = get_waveform(sfx.notes[note_id].instrument(), advance);
+            // Apply effect, if any
+            switch (sfx.notes[note_id].effect())
+            {
+                case FX_NO_EFFECT:
+                    break;
+                case FX_SLIDE:
+                    freq = lol::mix(key_to_freq(m_channels[chan].m_prev_key),
+                                    freq, lol::fmod(offset, 1.f));
+                    break;
+                case FX_VIBRATO:
+                    break;
+                case FX_DROP:
+                    freq *= 1.f - lol::fmod(offset, 1.f);
+                    break;
+                case FX_FADE_IN:
+                    volume *= lol::fmod(offset, 1.f);
+                    break;
+                case FX_FADE_OUT:
+                    volume *= 1.f - lol::fmod(offset, 1.f);
+                    break;
+            }
+
+            // Play note
+            float waveform = get_waveform(sfx.notes[note_id].instrument(), phi);
 
             buffer[2 * i] = buffer[2 * i + 1]
                   = (int16_t)(32767.99f * volume * waveform);
+
+            m_channels[chan].m_phi = phi + freq / samples_per_second;
         }
 
         m_channels[chan].m_offset = next_offset;
@@ -199,12 +258,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         }
         else if (note_id != next_note_id)
         {
-            float next_freq = key_to_freq(sfx.notes[next_note_id].key());
-            //float next_volume = sfx.notes[next_note_id].volume();
-
-            phi += (freq * offset - next_freq * next_offset) / offset_per_second;
-            phi = lol::fmod(phi, 1.f) + (phi >= 0.f ? 0.f : 1.f);
-            m_channels[chan].m_phi = phi;
+            m_channels[chan].m_prev_key = key;
         }
     }
 
@@ -289,6 +343,10 @@ int vm::api_sfx(lua_State *l)
             m_channels[chan].m_offset = (float)offset;
             m_channels[chan].m_phi = 0.f;
             m_channels[chan].m_can_loop = true;
+            // Playing an instrument starting with the note C-2 and the
+            // slide effect causes no noticeable pitch variation in PICO-8,
+            // so I assume this is the default value for “previous key”.
+            m_channels[chan].m_prev_key = 24;
         }
     }
 
