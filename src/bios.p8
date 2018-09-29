@@ -142,7 +142,10 @@ coroutine = nil
 --
 -- Utility functions
 --
-_z8.reset_drawstate = function()
+_z8.reset_state = function()
+    -- These variables are global but can be overridden
+    ⬅️, ➡️, ⬆️, ⬇️, 🅾️, ❎, ◆ = 0, 1, 2, 3, 4, 5, 6
+
     -- From the PICO-8 documentation:
     -- “The draw state is reset each time a program is run. This is equivalent to calling:
     -- clip() camera() pal() color()”
@@ -163,7 +166,7 @@ _z8.run = function(cart_code)
         memset(0, 0, 0x8000)
         reload()
 
-        _z8.reset_drawstate()
+        _z8.reset_state()
         _z8.reset_cartdata()
 
         -- Load cart
@@ -201,7 +204,7 @@ end
 --
 _z8.splash = function()
     _z8.loop = cocreate(function()
-        _z8.reset_drawstate()
+        _z8.reset_state()
 
         local boot =
         {
