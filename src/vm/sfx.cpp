@@ -315,7 +315,29 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
 
 int vm::api_music(lua_State *l)
 {
-    UNUSED(l);
+    // Pattern: 0..63, -1 to stop music.
+    int pattern = (int)lua_tonumber(l, 1);
+    // Fade length in milliseconds (default 0)
+    int fade_len = (int)lua_tonumber(l, 2);
+    // Reserved channels
+    int channel_mask = (int)lua_tonumber(l, 3) & 0xf;
+
+    if (pattern < -1 || pattern > 63)
+        return 0;
+
+    if (pattern == -1 && m_music.m_pattern >= 0)
+    {
+        // Stop playing the current song
+        for (int i = 0; i < 4; ++i)
+            if (m_music.m_mask & (1 << i))
+                m_channels[i].m_sfx = -1;
+        m_music.m_pattern = -1;
+        return 0;
+    }
+
+    m_music.m_pattern = pattern;
+    m_music.m_mask = channel_mask;
+
     msg::info("z8:stub:music\n");
     return 0;
 }

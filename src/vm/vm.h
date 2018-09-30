@@ -142,6 +142,13 @@ private:
     struct { fix32 x, y, b; } m_mouse;
 
     // Audio
+    struct music
+    {
+        int m_pattern = -1;
+        uint8_t m_mask = -1;
+    }
+    m_music;
+
     struct channel
     {
         channel();

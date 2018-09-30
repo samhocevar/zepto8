@@ -405,6 +405,24 @@ int vm::api_stat(lua_State *l)
     int id = (int)lua_tonumber(l, 1);
     fix32 ret(0.0);
 
+    // Documented PICO-8 stat() arguments:
+    // “0  Memory usage (0..2048)
+    //  1  CPU used since last flip (1.0 == 100% CPU at 30fps)
+    //  4  Clipboard contents (after user has pressed CTRL-V)
+    //  6  Parameter string
+    //  7  Current framerate
+    //
+    //  16..19  Index of currently playing SFX on channels 0..3
+    //  20..23  Note number (0..31) on channel 0..3
+    //  24      Currently playing pattern index
+    //  25      Total patterns played
+    //  26      Ticks played on current pattern
+    //
+    //  80..85  UTC time: year, month, day, hour, minute, second
+    //  90..95  Local time
+    //
+    //  100     Current breadcrumb label, or nil”
+
     if (id == 0)
     {
         // Perform a GC to avoid accounting for short lifespan objects.
@@ -412,28 +430,32 @@ int vm::api_stat(lua_State *l)
         lua_gc(l, LUA_GCCOLLECT, 0);
 
         // From the PICO-8 documentation:
-        // x:0 returns current Lua memory useage (0..1024MB)
         int32_t bits = ((int)lua_gc(l, LUA_GCCOUNT, 0) << 16)
                      + ((int)lua_gc(l, LUA_GCCOUNTB, 0) << 6);
         ret = fix32::frombits(bits);
     }
     else if (id == 1)
     {
-        // From the PICO-8 documentation:
-        // x:1 returns cpu useage for last frame (1.0 means 100% at 30fps)
         // TODO
     }
     else if (id >= 16 && id <= 19)
     {
-        // undocumented parameters for stat(n):
-        // 16..19: the sfx currently playing on each channel or -1 for none
-        ret = fix32(m_channels[id - 16].m_sfx);
+        ret = fix32(m_channels[id & 3].m_sfx);
     }
     else if (id >= 20 && id <= 23)
     {
-        // undocumented parameters for stat(n):
-        // 20..23: the currently playing row number (0..31) or -1 for none
-        // TODO
+        ret = m_channels[id & 3].m_sfx == -1 ? fix32(-1)
+                : fix32((int)m_channels[id & 3].m_offset);
+    }
+    else if (id == 24)
+    {
+        ret = fix32(m_music.m_pattern);
+    }
+    else if (id == 25)
+    {
+    }
+    else if (id == 26)
+    {
     }
     else if (id >= 32 && id <= 34 && m_ram.draw_state.mouse_flag == 1)
     {
