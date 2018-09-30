@@ -434,7 +434,12 @@ int vm::api_cls(lua_State *l)
 {
     int c = (int)lua_tonumber(l, 1) & 0xf;
     ::memset(&m_ram.screen[0], c * 0x11, sizeof(m_ram.screen));
-    m_ram.draw_state.cursor.x = m_ram.draw_state.cursor.y = 0;
+
+    // Documentation: “Clear the screen and reset the clipping rectangle”.
+    auto &ds = m_ram.draw_state;
+    ds.cursor.x = ds.cursor.y = 0;
+    ds.clip.x1 = ds.clip.y1 = 0;
+    ds.clip.x2 = ds.clip.y2 = 128;
     return 0;
 }
 

@@ -160,9 +160,8 @@ _z8.reset_state = function()
 
     -- From the PICO-8 documentation:
     -- “The draw state is reset each time a program is run. This is equivalent to calling:
-    -- clip() camera() pal() color()”
-    --
-    -- Note from Sam: this should probably be color(6) instead.
+    -- clip() camera() pal() color(6)”
+    -- Note from Sam: also add fillp() here.
     clip() camera() pal() color(6) fillp()
 end
 
