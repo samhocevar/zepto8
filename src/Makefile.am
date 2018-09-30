@@ -46,6 +46,7 @@ libzepto8_a_SOURCES = \
     bios.cpp bios.h cart.cpp cart.h \
     analyzer.cpp analyzer.h lua53-parse.h \
     vm/vm.cpp vm/vm.h \
+    vm/z8lua.cpp vm/z8lua.h \
     vm/private.cpp vm/gfx.cpp vm/render.cpp vm/sfx.cpp \
     $(NULL)
 

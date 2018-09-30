@@ -13,7 +13,7 @@
 #include <lol/engine.h>
 
 #include "vm.h"
-#include "z8lua/lualib.h"
+#include "z8lua.h"
 
 // FIXME: activate this one day, when we use Lua 5.3
 #define HAVE_LUA_GETEXTRASPACE 0
@@ -471,15 +471,7 @@ int vm::api_stat(lua_State *l)
 
 int vm::api_printh(lua_State *l)
 {
-    char const *str;
-    if (lua_isnoneornil(l, 1))
-        str = "false";
-    else if (lua_isstring(l, 1))
-        str = lua_tostring(l, 1);
-    else
-        str = lua_toboolean(l, 1) ? "true" : "false";
-
-    fprintf(stdout, "%s\n", str);
+    fprintf(stdout, "%s\n", lua_tostringorboolean(l, 1));
     fflush(stdout);
 
     return 0;
@@ -487,13 +479,7 @@ int vm::api_printh(lua_State *l)
 
 int vm::api_extcmd(lua_State *l)
 {
-    char const *str;
-    if (lua_isnoneornil(l, 1))
-        str = "false";
-    else if (lua_isstring(l, 1))
-        str = lua_tostring(l, 1);
-    else
-        str = lua_toboolean(l, 1) ? "true" : "false";
+    char const *str = lua_tostringorboolean(l, 1);
 
     if (strcmp("label", str) == 0
          || strcmp("screen", str) == 0

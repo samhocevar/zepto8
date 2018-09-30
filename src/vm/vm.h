@@ -18,8 +18,7 @@
 #include "bios.h"
 #include "cart.h"
 #include "memory.h"
-#include "z8lua/lua.h"
-#include "z8lua/lauxlib.h"
+#include "vm/z8lua.h"
 
 namespace z8
 {
