@@ -105,16 +105,19 @@ do
     end
 
     -- Stubs for unimplemented functions
-    local function stub(s) return function() __stub(s) end end
-    load = stub("load()")
-    save = stub("save()")
-    folder = stub("folder()")
-    dir = stub("dir()")
+    local function stub(s)
+        return function(a) __stub(s.."("..(a and '"'..tostr(a)..'"' or "")..")") end
+    end
+    load = stub("load")
+    save = stub("save")
+    info = stub("info")
+    stop = stub("stop")
+    abort = stub("abort")
+    folder = stub("folder")
+    resume = stub("resume")
+    reboot = stub("reboot")
+    dir = stub("dir")
     ls = dir
-    info = stub("info()")
-    stop = stub("stop()")
-    resume = stub("resume()")
-    reboot = stub("reboot()")
 
     -- All flip() does for now is yield so that the C++ VM gets a chance
     -- to draw something even if Lua is in an infinite loop
