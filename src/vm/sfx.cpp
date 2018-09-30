@@ -230,8 +230,10 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         }
         else
         {
+            int const fx = sfx.notes[note_id].effect();
+
             // Apply effect, if any
-            switch (sfx.notes[note_id].effect())
+            switch (fx)
             {
                 case FX_NO_EFFECT:
                     break;
@@ -241,9 +243,11 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
                     break;
                 case FX_VIBRATO:
                 {
-                    float t = 2.f * lol::abs(lol::fmod(8 * offset / offset_per_second, 1.0f) - 0.5f);
-                    // Vibrato one semi-tone below, so divide by pow(2,1/24)
-                    freq = lol::mix(freq, freq * 0.9715319411536f, t);
+                    // 7.5f and 0.25f were found empirically by matching
+                    // frequency graphs of PICO-8 instruments.
+                    float t = lol::abs(lol::fmod(7.5f * offset / offset_per_second, 1.0f) - 0.5f) - 0.25f;
+                    // Vibrato half a semi-tone, so multiply by pow(2,1/12)
+                    freq = lol::mix(freq, freq * 1.059463094359f, t);
                     break;
                 }
                 case FX_DROP:
@@ -255,6 +259,19 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
                 case FX_FADE_OUT:
                     volume *= 1.f - lol::fmod(offset, 1.f);
                     break;
+                case FX_ARP_FAST:
+                case FX_ARP_SLOW:
+                {
+                    // From the documentation:
+                    // “6 arpeggio fast  //  Iterate over groups of 4 notes at speed of 4
+                    //  7 arpeggio slow  //  Iterate over groups of 4 notes at speed of 8”
+                    // “If the SFX speed is <= 8, arpeggio speeds are halved to 2, 4”
+                    int const m = (speed <= 8 ? 32 : 16) / (fx == FX_ARP_FAST ? 4 : 8);
+                    int const n = (int)(m * 7.5f * offset / offset_per_second);
+                    int const arp_note = (note_id & ~3) | (n & 3);
+                    freq = key_to_freq(sfx.notes[arp_note].key());
+                    break;
+                }
             }
 
             // Play note
