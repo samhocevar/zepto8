@@ -238,9 +238,15 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
                 case FX_NO_EFFECT:
                     break;
                 case FX_SLIDE:
-                    freq = lol::mix(key_to_freq(m_channels[chan].m_prev_key),
-                                    freq, lol::fmod(offset, 1.f));
+                {
+                    float t = lol::fmod(offset, 1.f);
+                    // From the documentation: “Slide to the next note and volume”,
+                    // but it’s actually _from_ the _prev_ note and volume.
+                    freq = lol::mix(key_to_freq(m_channels[chan].m_prev_key), freq, t);
+                    if (m_channels[chan].m_prev_vol > 0.f)
+                        volume = lol::mix(m_channels[chan].m_prev_vol, volume, t);
                     break;
+                }
                 case FX_VIBRATO:
                 {
                     // 7.5f and 0.25f were found empirically by matching
@@ -289,9 +295,10 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         {
             m_channels[chan].m_sfx = -1;
         }
-        else if (note_id != next_note_id)
+        else if (next_note_id != note_id)
         {
-            m_channels[chan].m_prev_key = key;
+            m_channels[chan].m_prev_key = sfx.notes[note_id].key();
+            m_channels[chan].m_prev_vol = sfx.notes[note_id].volume();
         }
     }
 
@@ -382,6 +389,8 @@ int vm::api_sfx(lua_State *l)
             // slide effect causes no noticeable pitch variation in PICO-8,
             // so I assume this is the default value for “previous key”.
             m_channels[chan].m_prev_key = 24;
+            // There is no default value for “previous volume”.
+            m_channels[chan].m_prev_vol = 0.f;
         }
     }
 

@@ -152,6 +152,7 @@ private:
         bool m_can_loop = true;
 
         int8_t m_prev_key = 0;
+        float m_prev_vol = 0;
     }
     m_channels[4];
 
