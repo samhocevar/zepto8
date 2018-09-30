@@ -223,7 +223,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         float volume = sfx.notes[note_id].volume();
         float freq = key_to_freq(key);
 
-        if (key == 0 || volume == 0.f)
+        if (volume == 0.f)
         {
             // Play silence
             buffer[2 * i] = buffer[2 * i + 1] = 0;
