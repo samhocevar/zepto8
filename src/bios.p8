@@ -226,7 +226,10 @@ _z8.splash = function()
             [17] = function() for i=1,127,2 do for j=0,127 do pset(i,j,pget(i+1,j)) end end end,
             [22] = function() for j=0,31 do memset(0x6040+j*256,0,192) end end,
             [27] = cls,
-            [36] = function() local logo = "######  ####  ###  ######  ####       ### "
+            [36] = function() local notes = { 0x.5dde, 0x5deb.5be3, 0x.5fef, 0x.57ef, 0x.53ef }
+                              for j=0,#notes-1 do poke4(0x3200+j*4,notes[j+1]) end poke(0x3241, 0x0a)
+                              sfx(0)
+                              local logo = "######  ####  ###  ######  ####       ### "
                                         .. "    ## ##    ## ##   ##   ##  ##     ## ##"
                                         .. "  ###  ##### #####   ##   ##  ## ###  ### "
                                         .. " ###   ##    ####    ##   ### ##     ## ##"
