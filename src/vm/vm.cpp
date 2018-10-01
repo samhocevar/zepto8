@@ -470,13 +470,14 @@ int vm::api_stat(lua_State *l)
         // Undocumented (see http://pico-8.wikia.com/wiki/Stat)
         switch (id)
         {
-            case 30: lua_pushboolean(l, false; return 1; // FIXME
-            case 31: lua_pushstring(l, ""; return 1; // FIXME
-            case 32: ret = devkit_mode ? m_mouse.x : 0; break;
-            case 33: ret = devkit_mode ? m_mouse.y : 0; break;
-            case 34: ret = devkit_mode ? m_mouse.b : 0; break;
+            case 30: lua_pushboolean(l, false); return 1; // FIXME
+            case 31: lua_pushstring(l, ""); return 1; // FIXME
+            case 32: ret = devkit_mode ? m_mouse.x : fix32(0); break;
+            case 33: ret = devkit_mode ? m_mouse.y : fix32(0); break;
+            case 34: ret = devkit_mode ? m_mouse.b : fix32(0); break;
             case 35: ret = 0; break; // FIXME
             case 36: ret = 0; break; // FIXME
+        }
     }
 
     lua_pushnumber(l, ret);
