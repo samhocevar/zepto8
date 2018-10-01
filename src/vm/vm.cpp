@@ -200,6 +200,12 @@ void vm::mouse(lol::ivec2 coords, int buttons)
     m_mouse.b = (double)buttons;
 }
 
+void vm::keyboard(char ch)
+{
+    m_keyboard.chars[m_keyboard.stop] = ch;
+    m_keyboard.stop = (m_keyboard.stop + 1) % (int)sizeof(m_keyboard.chars);
+}
+
 int vm::private_stub(lua_State *l)
 {
     char const *str = lua_tostring(l, 1);
@@ -466,12 +472,28 @@ int vm::api_stat(lua_State *l)
     else if (id >= 30 && id <= 36)
     {
         bool devkit_mode = m_ram.draw_state.mouse_flag == 1;
+        bool has_text = devkit_mode && m_keyboard.start != m_keyboard.stop;
 
         // Undocumented (see http://pico-8.wikia.com/wiki/Stat)
         switch (id)
         {
-            case 30: lua_pushboolean(l, false); return 1; // FIXME
-            case 31: lua_pushstring(l, ""); return 1; // FIXME
+            case 30: lua_pushboolean(l, has_text); return 1;
+            case 31:
+                if (!has_text)
+                {
+                    lua_pushstring(l, "");
+                }
+                else if (m_keyboard.stop > m_keyboard.start)
+                {
+                    lua_pushlstring(l, &m_keyboard.chars[m_keyboard.start], m_keyboard.stop - m_keyboard.start);
+                    m_keyboard.start = m_keyboard.stop = 0;
+                }
+                else /* if (m_keyboard.stop < m_keyboard.start) */
+                {
+                    lua_pushlstring(l, &m_keyboard.chars[m_keyboard.start], (int)sizeof(m_keyboard.chars) - m_keyboard.start);
+                    m_keyboard.start = 0;
+                }
+                return 1;
             case 32: ret = devkit_mode ? m_mouse.x : fix32(0); break;
             case 33: ret = devkit_mode ? m_mouse.y : fix32(0); break;
             case 34: ret = devkit_mode ? m_mouse.b : fix32(0); break;

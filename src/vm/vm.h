@@ -48,6 +48,7 @@ public:
 
     void button(int index, int state);
     void mouse(lol::ivec2 coords, int buttons);
+    void keyboard(char ch);
 
 private:
     static int panic_hook(lua_State *l);
@@ -139,6 +140,7 @@ private:
     // Input
     int m_buttons[2][64];
     struct { fix32 x, y, b; } m_mouse;
+    struct { int start = 0, stop = 0; char chars[256]; } m_keyboard;
 
     // Audio
     struct music

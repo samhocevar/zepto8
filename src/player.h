@@ -49,7 +49,7 @@ private:
     lol::TileSet *m_tile;
     lol::Controller *m_controller;
     lol::InputProfile m_input;
-    lol::InputDevice *m_mouse;
+    lol::InputDevice *m_mouse, *m_keyboard;
 };
 
 } // namespace z8

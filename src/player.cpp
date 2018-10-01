@@ -60,6 +60,9 @@ player::player()
     // 64 keyboard / joystick buttons + 3 mouse buttons
     m_controller->SetInputCount(67 /* keys */, 0 /* axes */);
 
+    // Allow text input
+    m_keyboard = lol::InputDevice::GetKeyboard();
+
     // Create an ortho camera
     m_scenecam = new lol::Camera();
     m_scenecam->SetView(lol::mat4(1.f));
@@ -126,6 +129,19 @@ void player::TickGame(float seconds)
         m_vm.mouse(lol::ivec2(mousepos.x - (WINDOW_WIDTH - SCREEN_WIDTH) / 2,
                               WINDOW_HEIGHT - 1 - mousepos.y - (WINDOW_HEIGHT - SCREEN_HEIGHT) / 2) / 4,
                    buttons);
+    }
+
+    if (m_keyboard)
+    {
+        m_keyboard->SetTextInputActive(true);
+        auto text = m_keyboard->GetText();
+        for (auto ch : text)
+        {
+            // Convert uppercase characters to special glyphs
+            if (ch >= 'A' && ch <= 'Z')
+                ch = ch - 'A' + '\x80';
+            m_vm.keyboard(ch);
+        }
     }
 
     // Step the VM
