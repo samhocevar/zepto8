@@ -579,7 +579,7 @@ lol::array<uint8_t> cart::get_bin() const
     int max_len = (int)sizeof(m_rom.code);
     msg::debug("compressed code length: %d/%d\n", ret.count() - data_size, max_len);
 
-    ret << EXPORT_VERSION;
+    ret << PICO8_VERSION;
 
     return ret;
 }
@@ -587,7 +587,7 @@ lol::array<uint8_t> cart::get_bin() const
 std::string cart::get_p8() const
 {
     std::string ret = "pico-8 cartridge // http://www.pico-8.com\n";
-    ret += lol::format("version %d\n", EXPORT_VERSION);
+    ret += lol::format("version %d\n", PICO8_VERSION);
 
     ret += "__lua__\n";
     ret += get_code();

@@ -132,6 +132,7 @@ vm::vm()
 
 vm::~vm()
 {
+    lua_close(m_lua);
 }
 
 int vm::panic_hook(lua_State* l)
@@ -438,6 +439,11 @@ int vm::api_stat(lua_State *l)
     {
         // TODO
     }
+    else if (id == 5)
+    {
+        // Undocumented (see http://pico-8.wikia.com/wiki/Stat)
+        ret = PICO8_VERSION;
+    }
     else if (id >= 16 && id <= 19)
     {
         ret = fix32(m_channels[id & 3].m_sfx);
@@ -457,12 +463,20 @@ int vm::api_stat(lua_State *l)
     else if (id == 26)
     {
     }
-    else if (id >= 32 && id <= 34 && m_ram.draw_state.mouse_flag == 1)
+    else if (id >= 30 && id <= 36)
     {
-        // undocumented mouse support
-        ret = id == 32 ? m_mouse.x
-            : id == 33 ? m_mouse.y
-            : m_mouse.b;
+        bool devkit_mode = m_ram.draw_state.mouse_flag == 1;
+
+        // Undocumented (see http://pico-8.wikia.com/wiki/Stat)
+        switch (id)
+        {
+            case 30: lua_pushboolean(l, false; return 1; // FIXME
+            case 31: lua_pushstring(l, ""; return 1; // FIXME
+            case 32: ret = devkit_mode ? m_mouse.x : 0; break;
+            case 33: ret = devkit_mode ? m_mouse.y : 0; break;
+            case 34: ret = devkit_mode ? m_mouse.b : 0; break;
+            case 35: ret = 0; break; // FIXME
+            case 36: ret = 0; break; // FIXME
     }
 
     lua_pushnumber(l, ret);

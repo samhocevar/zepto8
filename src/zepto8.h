@@ -25,7 +25,7 @@ namespace z8
 
 enum
 {
-    EXPORT_VERSION = 15,
+    PICO8_VERSION = 16,
 };
 
 enum
