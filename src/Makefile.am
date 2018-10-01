@@ -1,7 +1,7 @@
 
 include $(top_srcdir)/lol/build/autotools/common.am
 
-bin_PROGRAMS = ../zepto8 ../z8tool ../z8lua
+bin_PROGRAMS = ../zepto8 ../z8player ../z8tool ../z8lua
 noinst_PROGRAMS = dither
 noinst_LIBRARIES = libzepto8.a libz8lua.a
 
@@ -9,7 +9,6 @@ ___zepto8dir = $(datarootdir)/zepto8
 
 ___zepto8_SOURCES = \
     zepto8.cpp \
-    player.cpp player.h \
     $(NULL)
 ___zepto8_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
@@ -19,6 +18,18 @@ ___zepto8_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@
 ___zepto8_DATA = bios.p8
 
 EXTRA_DIST += zepto8.vcxproj
+
+___z8player_SOURCES = \
+    z8player.cpp \
+    player.cpp player.h \
+    $(NULL)
+___z8player_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
+                     -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
+                     $(AM_CPPFLAGS)
+___z8player_LDFLAGS = libzepto8.a libz8lua.a $(AM_LDFLAGS)
+___z8player_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@
+
+EXTRA_DIST += z8player.vcxproj
 
 ___z8tool_SOURCES = \
     z8tool.cpp \

@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -20,6 +20,7 @@
 #include <sstream>
 
 #include "zepto8.h"
+#include "player.h"
 
 int main(int argc, char **argv)
 {
@@ -41,6 +42,14 @@ int main(int argc, char **argv)
     }
 
     lol::Application app("zepto-8", lol::ivec2(z8::WINDOW_WIDTH, z8::WINDOW_HEIGHT), 60.0f);
+
+    z8::player *player = new z8::player();
+
+    if (argc >= 2)
+    {
+        player->load(argv[1]);
+        player->run();
+    }
 
     app.Run();
 

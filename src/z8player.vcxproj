@@ -36,10 +36,11 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="zepto8.cpp" />
+    <ClCompile Include="player.cpp" />
+    <ClCompile Include="z8player.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="zepto8.h" /><!-- TODO: remove -->
+    <ClInclude Include="player.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(LolDir)\src\lol-core.vcxproj">
@@ -56,7 +57,7 @@
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{28F5DE0F-B162-4833-8F61-A1AF782850A2}</ProjectGuid>
+    <ProjectGuid>{948C0C9A-2C25-41D9-BF1B-92B14A8C061B}</ProjectGuid>
     <ConfigurationType>Application</ConfigurationType>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
