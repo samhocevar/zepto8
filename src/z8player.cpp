@@ -41,9 +41,10 @@ int main(int argc, char **argv)
         }
     }
 
-    lol::Application app("zepto-8", lol::ivec2(z8::WINDOW_WIDTH, z8::WINDOW_HEIGHT), 60.0f);
+    lol::ivec2 win_size(z8::WINDOW_WIDTH, z8::WINDOW_HEIGHT);
+    lol::Application app("zepto-8", win_size, 60.0f);
 
-    z8::player *player = new z8::player();
+    z8::player *player = new z8::player(win_size);
 
     if (argc >= 2)
     {

@@ -20,7 +20,7 @@ namespace z8
 
 using lol::msg;
 
-player::player()
+player::player(lol::ivec2 window_size)
 {
     // Bind controls
     m_controller = new lol::Controller("default controller");
@@ -66,7 +66,7 @@ player::player()
     // Create an ortho camera
     m_scenecam = new lol::Camera();
     m_scenecam->SetView(lol::mat4(1.f));
-    m_scenecam->SetProjection(lol::mat4::ortho(0.f, WINDOW_WIDTH, 0.f, WINDOW_HEIGHT, -100.f, 100.f));
+    m_scenecam->SetProjection(lol::mat4::ortho(0.f, window_size.x, 0.f, window_size.y, -100.f, 100.f));
     lol::Scene& scene = lol::Scene::GetScene();
     scene.PushCamera(m_scenecam);
     lol::Ticker::Ref(m_scenecam);

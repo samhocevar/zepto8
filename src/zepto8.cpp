@@ -20,6 +20,8 @@
 #include <sstream>
 
 #include "zepto8.h"
+#include "player.h"
+#include "ide/ide.h"
 
 int main(int argc, char **argv)
 {
@@ -40,7 +42,17 @@ int main(int argc, char **argv)
         }
     }
 
-    lol::Application app("zepto-8", lol::ivec2(z8::WINDOW_WIDTH, z8::WINDOW_HEIGHT), 60.0f);
+    lol::ivec2 win_size(800, 600);
+    lol::Application app("zepto-8", win_size, 60.0f);
+
+    auto player = new z8::player(win_size);
+    auto ide = new z8::ide();
+
+    if (argc >= 2)
+    {
+        player->load(argv[1]);
+        player->run();
+    }
 
     app.Run();
 

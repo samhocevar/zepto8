@@ -7,8 +7,11 @@ noinst_LIBRARIES = libzepto8.a libz8lua.a
 
 ___zepto8dir = $(datarootdir)/zepto8
 
+# FIXME: move player.cpp / player.h into a separate library?
 ___zepto8_SOURCES = \
     zepto8.cpp \
+    ide/ide.cpp ide/ide.h \
+    player.cpp player.h \
     $(NULL)
 ___zepto8_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \

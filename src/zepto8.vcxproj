@@ -37,9 +37,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="zepto8.cpp" />
+    <ClCompile Include="player.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="zepto8.h" /><!-- TODO: remove -->
+    <ClInclude Include="zepto8.h" />
+    <ClInclude Include="player.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(LolDir)\src\lol-core.vcxproj">
