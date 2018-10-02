@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2017 Dr. Colin Hirsch and Daniel Frey
+// Copyright (c) 2015-2018 Dr. Colin Hirsch and Daniel Frey
 // Please see LICENSE for license or visit https://github.com/taocpp/PEGTL/
 
 #include <tao/pegtl.hpp>
@@ -89,7 +89,7 @@ namespace lua53
    // comments). In some places, where it is more efficient,
    // right padding is used.
 
-   namespace pegtl = tao::TAOCPP_PEGTL_NAMESPACE;
+   namespace pegtl = tao::TAO_PEGTL_NAMESPACE;
 
 #if WITH_PICO8
    // Use this helper class to ensure we parse rule R with no risk
@@ -153,28 +153,28 @@ namespace lua53
 #endif
    struct seps : pegtl::star< sep > {};
 
-   struct str_and : TAOCPP_PEGTL_STRING( "and" ) {};
-   struct str_break : TAOCPP_PEGTL_STRING( "break" ) {};
-   struct str_do : TAOCPP_PEGTL_STRING( "do" ) {};
-   struct str_else : TAOCPP_PEGTL_STRING( "else" ) {};
-   struct str_elseif : TAOCPP_PEGTL_STRING( "elseif" ) {};
-   struct str_end : TAOCPP_PEGTL_STRING( "end" ) {};
-   struct str_false : TAOCPP_PEGTL_STRING( "false" ) {};
-   struct str_for : TAOCPP_PEGTL_STRING( "for" ) {};
-   struct str_function : TAOCPP_PEGTL_STRING( "function" ) {};
-   struct str_goto : TAOCPP_PEGTL_STRING( "goto" ) {};
-   struct str_if : TAOCPP_PEGTL_STRING( "if" ) {};
-   struct str_in : TAOCPP_PEGTL_STRING( "in" ) {};
-   struct str_local : TAOCPP_PEGTL_STRING( "local" ) {};
-   struct str_nil : TAOCPP_PEGTL_STRING( "nil" ) {};
-   struct str_not : TAOCPP_PEGTL_STRING( "not" ) {};
-   struct str_or : TAOCPP_PEGTL_STRING( "or" ) {};
-   struct str_repeat : TAOCPP_PEGTL_STRING( "repeat" ) {};
-   struct str_return : TAOCPP_PEGTL_STRING( "return" ) {};
-   struct str_then : TAOCPP_PEGTL_STRING( "then" ) {};
-   struct str_true : TAOCPP_PEGTL_STRING( "true" ) {};
-   struct str_until : TAOCPP_PEGTL_STRING( "until" ) {};
-   struct str_while : TAOCPP_PEGTL_STRING( "while" ) {};
+   struct str_and : TAO_PEGTL_STRING( "and" ) {};
+   struct str_break : TAO_PEGTL_STRING( "break" ) {};
+   struct str_do : TAO_PEGTL_STRING( "do" ) {};
+   struct str_else : TAO_PEGTL_STRING( "else" ) {};
+   struct str_elseif : TAO_PEGTL_STRING( "elseif" ) {};
+   struct str_end : TAO_PEGTL_STRING( "end" ) {};
+   struct str_false : TAO_PEGTL_STRING( "false" ) {};
+   struct str_for : TAO_PEGTL_STRING( "for" ) {};
+   struct str_function : TAO_PEGTL_STRING( "function" ) {};
+   struct str_goto : TAO_PEGTL_STRING( "goto" ) {};
+   struct str_if : TAO_PEGTL_STRING( "if" ) {};
+   struct str_in : TAO_PEGTL_STRING( "in" ) {};
+   struct str_local : TAO_PEGTL_STRING( "local" ) {};
+   struct str_nil : TAO_PEGTL_STRING( "nil" ) {};
+   struct str_not : TAO_PEGTL_STRING( "not" ) {};
+   struct str_or : TAO_PEGTL_STRING( "or" ) {};
+   struct str_repeat : TAO_PEGTL_STRING( "repeat" ) {};
+   struct str_return : TAO_PEGTL_STRING( "return" ) {};
+   struct str_then : TAO_PEGTL_STRING( "then" ) {};
+   struct str_true : TAO_PEGTL_STRING( "true" ) {};
+   struct str_until : TAO_PEGTL_STRING( "until" ) {};
+   struct str_while : TAO_PEGTL_STRING( "while" ) {};
 
    // Note that 'elseif' precedes 'else' in order to prevent only matching
    // the "else" part of an "elseif" and running into an error in the
@@ -213,7 +213,7 @@ namespace lua53
    template< typename R >
    struct pad : pegtl::pad< R, sep > {};
 
-   struct three_dots : pegtl::string< '.', '.', '.' > {};
+   struct three_dots : pegtl::three< '.' > {};
 
    struct name : pegtl::seq< pegtl::not_at< keyword >, pegtl::identifier > {};
 
@@ -231,7 +231,7 @@ namespace lua53
    struct literal_string : pegtl::sor< short_string< '"' >, short_string< '\'' >, long_string > {};
 
    template< typename E >
-   struct exponent : pegtl::opt< pegtl::if_must< E, pegtl::opt< pegtl::one< '+', '-' > >, pegtl::plus< pegtl::digit > > > {};
+   struct exponent : pegtl::opt_must< E, pegtl::opt< pegtl::one< '+', '-' > >, pegtl::plus< pegtl::digit > > {};
 
    template< typename D, typename E >
    struct numeral_three : pegtl::seq< pegtl::if_must< pegtl::one< '.' >, pegtl::plus< D > >, exponent< E > > {};
@@ -281,7 +281,7 @@ namespace lua53
    struct table_field_list : pegtl::list_tail< table_field, pegtl::one< ',', ';' >, sep > {};
    struct table_constructor : pegtl::if_must< pegtl::one< '{' >, pegtl::pad_opt< table_field_list, sep >, pegtl::one< '}' > > {};
 
-   struct parameter_list_one : pegtl::seq< name_list, pegtl::opt< pegtl::if_must< pad< pegtl::one< ',' > >, three_dots > > > {};
+   struct parameter_list_one : pegtl::seq< name_list, pegtl::opt_must< pad< pegtl::one< ',' > >, three_dots > > {};
    struct parameter_list : pegtl::sor< three_dots, parameter_list_one > {};
 
    struct function_body : pegtl::seq< pegtl::one< '(' >, pegtl::pad_opt< parameter_list, sep >, pegtl::one< ')' >, seps, statement_list< key_end > > {};
@@ -308,9 +308,9 @@ namespace lua53
    struct function_call : pegtl::seq< function_call_head, pegtl::plus< pegtl::until< pegtl::seq< seps, function_call_tail >, seps, variable_tail > > > {};
 
    template< typename S, typename O >
-   struct left_assoc : pegtl::seq< S, seps, pegtl::star< pegtl::if_must< O, seps, S, seps > > > {};
+   struct left_assoc : pegtl::seq< S, seps, pegtl::star_must< O, seps, S, seps > > {};
    template< typename S, typename O >
-   struct right_assoc : pegtl::seq< S, seps, pegtl::opt< pegtl::if_must< O, seps, right_assoc< S, O > > > > {};
+   struct right_assoc : pegtl::seq< S, seps, pegtl::opt_must< O, seps, right_assoc< S, O > > > {};
 
 #if WITH_PICO8
    // Prevent “--” from matching two consecutive “-” when comments
@@ -460,7 +460,7 @@ namespace lua53
 #endif
 
    struct for_statement_one : pegtl::seq< pegtl::one< '=' >, seps, expression, seps, pegtl::one< ',' >, seps, expression, pegtl::pad_opt< pegtl::if_must< pegtl::one< ',' >, seps, expression >, sep > > {};
-   struct for_statement_two : pegtl::seq< pegtl::opt< pegtl::one< ',' >, seps, name_list_must, seps >, key_in, seps, expr_list_must, seps > {};
+   struct for_statement_two : pegtl::seq< pegtl::opt_must< pegtl::one< ',' >, seps, name_list_must, seps >, key_in, seps, expr_list_must, seps > {};
    struct for_statement : pegtl::if_must< key_for, seps, name, seps, pegtl::sor< for_statement_one, for_statement_two >, key_do, statement_list< key_end > > {};
 
 #if WITH_PICO8
@@ -508,7 +508,7 @@ namespace lua53
    struct assignment_variable_list : pegtl::list_must< variable, pegtl::one< ',' >, sep > {};
    struct assignments_one : pegtl::if_must< pegtl::one< '=' >, seps, expr_list_must > {};
    struct assignments : pegtl::seq< assignment_variable_list, seps, assignments_one > {};
-   struct function_name : pegtl::seq< pegtl::list< name, pegtl::one< '.' >, sep >, seps, pegtl::opt< pegtl::if_must< pegtl::one< ':' >, seps, name, seps > > > {};
+   struct function_name : pegtl::seq< pegtl::list< name, pegtl::one< '.' >, sep >, seps, pegtl::opt_must< pegtl::one< ':' >, seps, name, seps > > {};
    struct function_definition : pegtl::if_must< key_function, seps, function_name, function_body > {};
 
    struct local_function : pegtl::if_must< key_function, seps, name, seps, function_body > {};
@@ -556,11 +556,11 @@ namespace lua53
 #if !WITH_PICO8
 int main( int argc, char** argv )
 {
-   tao::TAOCPP_PEGTL_NAMESPACE::analyze< lua53::grammar >();
+   tao::TAO_PEGTL_NAMESPACE::analyze< lua53::grammar >();
 
    for( int i = 1; i < argc; ++i ) {
-      tao::TAOCPP_PEGTL_NAMESPACE::file_input<> in( argv[ i ] );
-      tao::TAOCPP_PEGTL_NAMESPACE::parse< lua53::grammar >( in );
+      tao::TAO_PEGTL_NAMESPACE::file_input<> in( argv[ i ] );
+      tao::TAO_PEGTL_NAMESPACE::parse< lua53::grammar >( in );
    }
    return 0;
 }

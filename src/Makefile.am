@@ -11,6 +11,7 @@ ___zepto8dir = $(datarootdir)/zepto8
 ___zepto8_SOURCES = \
     zepto8.cpp \
     ide/ide.cpp ide/ide.h \
+    imgui-color-text-edit/TextEditor.cpp imgui-color-text-edit/TextEditor.h \
     player.cpp player.h \
     $(NULL)
 ___zepto8_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \

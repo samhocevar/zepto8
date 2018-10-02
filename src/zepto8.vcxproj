@@ -36,12 +36,16 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="zepto8.cpp" />
+    <ClCompile Include="imgui-color-text-edit/TextEditor.cpp" />
+    <ClCompile Include="ide/ide.cpp" />
     <ClCompile Include="player.cpp" />
+    <ClCompile Include="zepto8.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="zepto8.h" />
+    <ClInclude Include="imgui-color-text-edit/TextEditor.h" />
+    <ClInclude Include="ide/ide.h" />
     <ClInclude Include="player.h" />
+    <ClInclude Include="zepto8.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(LolDir)\src\lol-core.vcxproj">

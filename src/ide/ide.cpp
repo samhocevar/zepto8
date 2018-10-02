@@ -25,6 +25,9 @@ namespace z8
 ide::ide()
 {
     lol::LolImGui::Init();
+
+    m_editor.SetLanguageDefinition(TextEditor::LanguageDefinition::Lua());
+    m_editor.SetText("-- test\nprint(\"hello world!\")\n\n");
 }
 
 ide::~ide()
@@ -36,8 +39,9 @@ void ide::TickGame(float seconds)
 {
     WorldEntity::TickGame(seconds);
 
-    ImGui::ShowDemoWindow();
-    ImGui::SetNextWindowFocus();
+    //ImGui::ShowDemoWindow();
+    m_editor.Render("TextEditor");
+
     ImGui::Begin("Palette");
     {
         for (int i = 0; i < 16; i++)
@@ -50,18 +54,6 @@ void ide::TickGame(float seconds)
             ImGui::PopStyleColor(1);
             ImGui::PopID();
         }
-    }
-    ImGui::End();
-    ImGui::Begin("Let's go on an adventure");
-    {
-        if (ImGui::IsWindowHovered())
-            ImGui::Text("Hovered: true");
-        else
-            ImGui::Text("Hovered: false");
-        if (ImGui::IsWindowFocused())
-            ImGui::Text("Focused: true");
-        else
-            ImGui::Text("Focused: false");
     }
     ImGui::End();
 }

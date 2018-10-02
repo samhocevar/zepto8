@@ -17,6 +17,7 @@
 #include <lol/engine.h>
 
 #include "zepto8.h"
+#include "imgui-color-text-edit/TextEditor.h"
 
 namespace z8
 {
@@ -29,6 +30,9 @@ public:
 
     virtual void TickGame(float seconds);
     virtual void TickDraw(float seconds, lol::Scene &scene);
+
+private:
+    TextEditor m_editor;
 };
 
 } // namespace z8
