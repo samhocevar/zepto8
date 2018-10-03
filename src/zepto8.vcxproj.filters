@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="player.cpp" />
+    <ClCompile Include="zepto8.cpp" />
+    <ClCompile Include="ide/ide.cpp">
+      <Filter>ide</Filter>
+    </ClCompile>
+    <ClCompile Include="ide/editor.cpp">
+      <Filter>ide</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui-color-text-edit/TextEditor.cpp">
+      <Filter>3rdparty</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="player.h" />
+    <ClInclude Include="zepto8.h" />
+    <ClInclude Include="ide/ide.h">
+      <Filter>ide</Filter>
+    </ClInclude>
+    <ClInclude Include="ide/editor.h">
+      <Filter>ide</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui-color-text-edit/TextEditor.h">
+      <Filter>3rdparty</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="ide">
+      <UniqueIdentifier>{9e4de7d6-5216-42d1-8eb0-b3366f2d6fc9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rdparty">
+      <UniqueIdentifier>{037d872f-425f-470f-b3c3-916ce672d365}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -16,26 +16,21 @@
 
 #include <lol/engine.h>
 
-#include "zepto8.h"
-#include "ide/editor.h"
+#include "imgui-color-text-edit/TextEditor.h"
 
 namespace z8
 {
 
-class ide : public lol::WorldEntity
+class editor
 {
 public:
-    ide();
-    virtual ~ide();
+    editor();
+    ~editor();
 
-    virtual void TickGame(float seconds);
-    virtual void TickDraw(float seconds, lol::Scene &scene);
+    void render();
 
 private:
-    void render_dock();
-    void render_editor();
-
-    editor m_editor;
+    TextEditor m_widget;
 };
 
 } // namespace z8

@@ -37,12 +37,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="imgui-color-text-edit/TextEditor.cpp" />
+    <ClCompile Include="ide/editor.cpp" />
     <ClCompile Include="ide/ide.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="zepto8.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui-color-text-edit/TextEditor.h" />
+    <ClInclude Include="ide/editor.h" />
     <ClInclude Include="ide/ide.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="zepto8.h" />

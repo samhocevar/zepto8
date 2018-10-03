@@ -11,6 +11,7 @@ ___zepto8dir = $(datarootdir)/zepto8
 ___zepto8_SOURCES = \
     zepto8.cpp \
     ide/ide.cpp ide/ide.h \
+    ide/editor.cpp ide/editor.h \
     imgui-color-text-edit/TextEditor.cpp imgui-color-text-edit/TextEditor.h \
     player.cpp player.h \
     $(NULL)

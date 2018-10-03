@@ -26,8 +26,9 @@ ide::ide()
 {
     lol::LolImGui::Init();
 
-    m_editor.SetLanguageDefinition(TextEditor::LanguageDefinition::Lua());
-    m_editor.SetText("-- test\nprint(\"hello world!\")\n\n");
+    // Enable docking
+    auto &io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 }
 
 ide::~ide()
@@ -39,8 +40,10 @@ void ide::TickGame(float seconds)
 {
     WorldEntity::TickGame(seconds);
 
-    //ImGui::ShowDemoWindow();
-    m_editor.Render("TextEditor");
+    render_dock();
+//    ImGui::ShowDemoWindow();
+
+    m_editor.render();
 
     ImGui::Begin("Palette");
     {
@@ -49,13 +52,73 @@ void ide::TickGame(float seconds)
             if (i % 4 > 0)
                 ImGui::SameLine();
             ImGui::PushID(i);
-            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)((lol::vec4)z8::palette::get(i) / 255.f));
+            ImGui::PushStyleColor(ImGuiCol_Button, (lol::vec4)z8::palette::get(i) / 255.f);
             ImGui::Button(lol::format("%2d", i).c_str());
             ImGui::PopStyleColor(1);
             ImGui::PopID();
         }
     }
     ImGui::End();
+
+    ImGui::Begin("Music");
+    {
+        ImGui::TextColored((lol::vec4)z8::palette::get(13) / 255.f, "Stuff");
+    }
+    ImGui::End();
+}
+
+void ide::render_dock()
+{
+    // Create a fullscreen window for the docking space
+    ImGuiWindowFlags flags = ImGuiWindowFlags_MenuBar
+                           | ImGuiWindowFlags_NoDocking
+                           | ImGuiWindowFlags_NoTitleBar
+                           | ImGuiWindowFlags_NoCollapse
+                           | ImGuiWindowFlags_NoResize
+                           | ImGuiWindowFlags_NoMove
+                           | ImGuiWindowFlags_NoBringToFrontOnFocus
+                           | ImGuiWindowFlags_NoNavFocus;
+
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(viewport->Pos);
+    ImGui::SetNextWindowSize(viewport->Size);
+    ImGui::SetNextWindowViewport(viewport->ID);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, lol::vec2(0));
+    ImGui::Begin("ZEPTO-8 IDE", nullptr, flags);
+    ImGui::PopStyleVar();
+
+    // Create the actual dock space
+    ImGuiID dockspace_id = ImGui::GetID("MyDockspace");
+    ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
+    ImGui::DockSpace(dockspace_id, lol::vec2(0), dockspace_flags);
+
+    // The main menu bar
+    if (ImGui::BeginMenuBar())
+    {
+        if (ImGui::BeginMenu("File"))
+        {
+            ImGui::MenuItem("New", nullptr, false, false);
+            ImGui::MenuItem("Open", nullptr, false, false);
+            ImGui::Separator();
+            ImGui::MenuItem("Exit", nullptr, false, false);
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Edit"))
+            ImGui::EndMenu();
+
+        if (ImGui::BeginMenu("View"))
+            ImGui::EndMenu();
+
+        if (ImGui::BeginMenu("Help"))
+            ImGui::EndMenu();
+
+        ImGui::EndMenuBar();
+    }
+
+    ImGui::End();
+    ImGui::PopStyleVar();
 }
 
 void ide::TickDraw(float seconds, lol::Scene &scene)
