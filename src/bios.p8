@@ -111,7 +111,6 @@ do
     load = stub("load")
     save = stub("save")
     info = stub("info")
-    stop = stub("stop")
     abort = stub("abort")
     folder = stub("folder")
     resume = stub("resume")
