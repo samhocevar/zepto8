@@ -158,7 +158,7 @@ struct telnet
                 m_term_size.x = (uint8_t)seq[3] * 256 + (uint8_t)seq[4];
                 m_term_size.y = (uint8_t)seq[5] * 256 + (uint8_t)seq[6];
                 printf("\x1b[2J"); // clear screen
-                m_screen.empty();
+                m_screen.clear();
                 goto reset;
             }
             else if (seq.length() >= 3)

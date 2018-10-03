@@ -152,17 +152,30 @@ void player::TickDraw(float seconds, lol::Scene &scene)
 {
     lol::WorldEntity::TickDraw(seconds, scene);
 
-    lol::Renderer::Get()->SetClearColor(lol::Color::black);
-
+    // Render the VM screen to our buffer
     m_vm.render(m_screen.data());
 
+    // Blit buffer to the texture
+    // FIXME: move this to some kind of memory viewer class?
     m_tile->GetTexture()->Bind();
     m_tile->GetTexture()->SetData(m_screen.data());
 
-    int delta_x = (WINDOW_WIDTH - SCREEN_WIDTH) / 2;
-    int delta_y = (WINDOW_HEIGHT - SCREEN_HEIGHT) / 2;
-    float scale = (float)SCREEN_WIDTH / 128;
-    scene.AddTile(m_tile, 0, lol::vec3(delta_x, delta_y, 10.f), lol::vec2(scale), 0.f);
+    // Special mode where we render ourselves
+    if (m_render)
+    {
+        lol::Renderer::Get()->SetClearColor(lol::Color::black);
+
+        int delta_x = (WINDOW_WIDTH - SCREEN_WIDTH) / 2;
+        int delta_y = (WINDOW_HEIGHT - SCREEN_HEIGHT) / 2;
+        float scale = (float)SCREEN_WIDTH / 128;
+        scene.AddTile(m_tile, 0, lol::vec3(delta_x, delta_y, 10.f), lol::vec2(scale), 0.f);
+    }
+}
+
+lol::Texture *player::get_texture()
+{
+    m_render = false; // Someone else wants to render us
+    return m_tile ? m_tile->GetTexture() : nullptr;
 }
 
 } // namespace z8

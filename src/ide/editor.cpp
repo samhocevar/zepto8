@@ -143,7 +143,7 @@ static TextEditor::Palette const &get_palette()
         0x80a06020, // Selection
         0x800020ff, // ErrorMarker
         0x40f08000, // Breakpoint
-        0xff707000, // Line number
+        0xff00a3ff, // Line number (PICO-8 orange)
         0x40000000, // Current line fill
         0x40808080, // Current line fill (inactive)
         0x40a0a0a0, // Current line edge

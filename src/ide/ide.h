@@ -17,6 +17,7 @@
 #include <lol/engine.h>
 
 #include "zepto8.h"
+#include "player.h"
 #include "ide/editor.h"
 
 namespace z8
@@ -25,7 +26,7 @@ namespace z8
 class ide : public lol::WorldEntity
 {
 public:
-    ide();
+    ide(player *player);
     virtual ~ide();
 
     virtual void TickGame(float seconds);
@@ -36,6 +37,7 @@ private:
     void render_editor();
 
     editor m_editor;
+    player *m_player;
 };
 
 } // namespace z8

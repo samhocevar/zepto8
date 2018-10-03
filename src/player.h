@@ -41,9 +41,13 @@ public:
     void load(char const *name);
     void run();
 
+    // HACK: if get_texture() is called, rendering is disabled
+    lol::Texture *get_texture();
+
 private:
     vm m_vm;
     array<u8vec4> m_screen;
+    bool m_render = true;
     int m_streams[4];
 
     lol::Camera *m_scenecam;

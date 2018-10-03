@@ -22,13 +22,15 @@
 namespace z8
 {
 
-ide::ide()
+ide::ide(player *player)
 {
     lol::LolImGui::Init();
 
     // Enable docking
     auto &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+    m_player = player;
 }
 
 ide::~ide()
@@ -53,10 +55,18 @@ void ide::TickGame(float seconds)
                 ImGui::SameLine();
             ImGui::PushID(i);
             ImGui::PushStyleColor(ImGuiCol_Button, (lol::vec4)z8::palette::get(i) / 255.f);
+            ImGui::PushStyleColor(ImGuiCol_Text, (lol::vec4)z8::palette::get(i < 6 ? 7 : 0) / 255.f);
             ImGui::Button(lol::format("%2d", i).c_str());
-            ImGui::PopStyleColor(1);
+            ImGui::PopStyleColor(2);
             ImGui::PopID();
         }
+    }
+    ImGui::End();
+
+    ImGui::Begin("Console");
+    {
+        ImGui::Image(m_player->get_texture(), 3.f * lol::vec2(128.f),
+                     lol::vec2(0.f), lol::vec2(1.f));
     }
     ImGui::End();
 
