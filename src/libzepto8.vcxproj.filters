@@ -7,9 +7,6 @@
     <ClCompile Include="vm\gfx.cpp">
       <Filter>vm</Filter>
     </ClCompile>
-    <ClCompile Include="vm\maths.cpp">
-      <Filter>vm</Filter>
-    </ClCompile>
     <ClCompile Include="vm\private.cpp">
       <Filter>vm</Filter>
     </ClCompile>
@@ -45,8 +42,8 @@
     <Image Include="data\blank.png">
       <Filter>data</Filter>
     </Image>
-    <Image Include="bios.p8">
-      <Filter>data</Filter>
-    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bios.p8" />
   </ItemGroup>
 </Project>
