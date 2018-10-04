@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     }
 
     lol::ivec2 win_size(1280, 640);
-    lol::Application app("zepto-8", win_size, 60.0f);
+    lol::Application app("zepto-8", lol::ivec2(0), 60.0f);
 
     auto player = new z8::player(win_size);
     auto ide = new z8::ide(player);
