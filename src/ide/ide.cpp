@@ -38,9 +38,9 @@ ide::~ide()
     lol::LolImGui::Shutdown();
 }
 
-void ide::TickGame(float seconds)
+void ide::tick_game(float seconds)
 {
-    WorldEntity::TickGame(seconds);
+    WorldEntity::tick_game(seconds);
 
     render_dock();
 //    ImGui::ShowDemoWindow();
@@ -131,9 +131,9 @@ void ide::render_dock()
     ImGui::PopStyleVar();
 }
 
-void ide::TickDraw(float seconds, lol::Scene &scene)
+void ide::tick_draw(float seconds, lol::Scene &scene)
 {
-    WorldEntity::TickDraw(seconds, scene);
+    WorldEntity::tick_draw(seconds, scene);
 }
 
 } // namespace z8

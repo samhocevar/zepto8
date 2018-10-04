@@ -29,8 +29,8 @@ public:
     ide(player *player);
     virtual ~ide();
 
-    virtual void TickGame(float seconds);
-    virtual void TickDraw(float seconds, lol::Scene &scene);
+    virtual void tick_game(float seconds) override;
+    virtual void tick_draw(float seconds, lol::Scene &scene) override;
 
 private:
     void render_dock();

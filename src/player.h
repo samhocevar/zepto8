@@ -35,8 +35,8 @@ public:
     player(ivec2 window_size);
     virtual ~player();
 
-    virtual void TickGame(float seconds);
-    virtual void TickDraw(float seconds, lol::Scene &scene);
+    virtual void tick_game(float seconds) override;
+    virtual void tick_draw(float seconds, lol::Scene &scene) override;
 
     void load(char const *name);
     void run();

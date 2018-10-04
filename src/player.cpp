@@ -112,9 +112,9 @@ void player::run()
     m_vm.run();
 }
 
-void player::TickGame(float seconds)
+void player::tick_game(float seconds)
 {
-    lol::WorldEntity::TickGame(seconds);
+    lol::WorldEntity::tick_game(seconds);
 
     // Update button states
     for (int i = 0; i < 64; ++i)
@@ -148,9 +148,9 @@ void player::TickGame(float seconds)
     m_vm.step(seconds);
 }
 
-void player::TickDraw(float seconds, lol::Scene &scene)
+void player::tick_draw(float seconds, lol::Scene &scene)
 {
-    lol::WorldEntity::TickDraw(seconds, scene);
+    lol::WorldEntity::tick_draw(seconds, scene);
 
     // Render the VM screen to our buffer
     m_vm.render(m_screen.data());

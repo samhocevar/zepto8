@@ -126,7 +126,7 @@ vm::vm()
         char const *message = lua_tostring(m_lua, -1);
         msg::error("error %d loading bios.p8: %s\n", status, message);
         lua_pop(m_lua, 1);
-        lol::Abort();
+        lol::abort();
     }
 }
 
@@ -139,7 +139,7 @@ int vm::panic_hook(lua_State* l)
 {
     char const *message = lua_tostring(l, -1);
     msg::error("%s\n", message);
-    lol::Abort();
+    lol::abort();
     return 0;
 }
 
