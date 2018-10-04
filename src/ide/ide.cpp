@@ -29,17 +29,12 @@ ide::ide(player *player)
     // Enable docking
     auto &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.Fonts->AddFontFromFileTTF("pico8.ttf", 5 * EDITOR_SCALE);
 
-    io.Fonts->AddFontFromFileTTF("pico8.ttf", 15);
     auto &style = ImGui::GetStyle();
-    style.WindowBorderSize = 3.0f;
-    style.ChildBorderSize = 3.0f;
-    style.FrameBorderSize = 3.0f;
-    style.TabBorderSize = 3.0f;
-    style.WindowRounding = 0.0f;
-    style.ChildRounding = 0.0f;
-    style.FrameRounding = 0.0f;
-    style.ScrollbarRounding = 0.0f;
+    style.WindowBorderSize = style.ChildBorderSize = style.PopupBorderSize = style.FrameBorderSize = style.TabBorderSize = EDITOR_SCALE;
+    style.FramePadding = lol::vec2(2 * EDITOR_SCALE);
+    style.WindowRounding = style.ChildRounding = style.FrameRounding = style.ScrollbarRounding = style.TabRounding = 0.0f;
 
     m_player = player;
 }
@@ -54,6 +49,7 @@ void ide::tick_game(float seconds)
     WorldEntity::tick_game(seconds);
 
     auto &io = ImGui::GetIO();
+    io.Fonts->Fonts[0]->FontSize = 6 * EDITOR_SCALE;
     ImGui::PushFont(io.Fonts->Fonts[0]);
 
     render_dock();
@@ -61,7 +57,7 @@ void ide::tick_game(float seconds)
 
     m_editor.render();
 
-    ImGui::Begin("Palette");
+    ImGui::Begin("pALETTE", nullptr);
     {
         for (int i = 0; i < 16; i++)
         {
@@ -77,18 +73,30 @@ void ide::tick_game(float seconds)
     }
     ImGui::End();
 
-    ImGui::Begin("Console");
+    ImGui::Begin("cONSOLE", nullptr);
     {
         ImGui::Image(m_player->get_texture(), 3.f * lol::vec2(128.f),
                      lol::vec2(0.f), lol::vec2(1.f));
     }
     ImGui::End();
 
-    ImGui::Begin("Music");
+    ImGui::Begin("mUSIC", nullptr);
     {
         ImGui::TextColored((lol::vec4)z8::palette::get(10) / 255.f, "stuff");
         ImGui::TextColored((lol::vec4)z8::palette::get(5) / 255.f, "more stuff\nlol!!!");
     }
+    ImGui::End();
+
+    ImGui::Begin("sPRITES", nullptr);
+    ImGui::End();
+
+    ImGui::Begin("mAPS", nullptr);
+    ImGui::End();
+
+    ImGui::Begin("ram", nullptr);
+    ImGui::End();
+
+    ImGui::Begin("rom", nullptr);
     ImGui::End();
 
     ImGui::PopFont();
@@ -123,22 +131,22 @@ void ide::render_dock()
     // The main menu bar
     if (ImGui::BeginMenuBar())
     {
-        if (ImGui::BeginMenu("File"))
+        if (ImGui::BeginMenu("fILE"))
         {
-            ImGui::MenuItem("New", nullptr, false, false);
-            ImGui::MenuItem("Open", nullptr, false, false);
+            ImGui::MenuItem("nEW", nullptr, false, false);
+            ImGui::MenuItem("oPEN", nullptr, false, false);
             ImGui::Separator();
-            ImGui::MenuItem("Exit", nullptr, false, false);
+            ImGui::MenuItem("eXIT", nullptr, false, false);
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Edit"))
+        if (ImGui::BeginMenu("eDIT"))
             ImGui::EndMenu();
 
-        if (ImGui::BeginMenu("View"))
+        if (ImGui::BeginMenu("vIEW"))
             ImGui::EndMenu();
 
-        if (ImGui::BeginMenu("Help"))
+        if (ImGui::BeginMenu("hELP"))
             ImGui::EndMenu();
 
         ImGui::EndMenuBar();

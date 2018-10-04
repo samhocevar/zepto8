@@ -43,7 +43,7 @@ editor::~editor()
 
 void editor::render()
 {
-    ImGui::Begin("Code");
+    ImGui::Begin("cODE", nullptr);
     m_widget.Render("Text Editor");
     ImGui::End();
 }

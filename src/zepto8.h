@@ -32,6 +32,7 @@ enum
 {
     // FIXME: this should be a runtime setting
     DISPLAY_SCALE = 3,
+    EDITOR_SCALE = 2,
 };
 
 enum
