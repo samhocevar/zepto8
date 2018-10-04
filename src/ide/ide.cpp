@@ -29,6 +29,7 @@ ide::ide(player *player)
     // Enable docking
     auto &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.Fonts->AddFontFromFileTTF("pico8.ttf", 15);
 
     m_player = player;
 }
@@ -41,6 +42,9 @@ ide::~ide()
 void ide::tick_game(float seconds)
 {
     WorldEntity::tick_game(seconds);
+
+    auto &io = ImGui::GetIO();
+    ImGui::PushFont(io.Fonts->Fonts[0]);
 
     render_dock();
 //    ImGui::ShowDemoWindow();
@@ -72,9 +76,12 @@ void ide::tick_game(float seconds)
 
     ImGui::Begin("Music");
     {
-        ImGui::TextColored((lol::vec4)z8::palette::get(13) / 255.f, "Stuff");
+        ImGui::TextColored((lol::vec4)z8::palette::get(10) / 255.f, "stuff");
+        ImGui::TextColored((lol::vec4)z8::palette::get(5) / 255.f, "more stuff\nlol!!!");
     }
     ImGui::End();
+
+    ImGui::PopFont();
 }
 
 void ide::render_dock()
