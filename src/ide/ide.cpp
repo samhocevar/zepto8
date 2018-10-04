@@ -29,7 +29,17 @@ ide::ide(player *player)
     // Enable docking
     auto &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
     io.Fonts->AddFontFromFileTTF("pico8.ttf", 15);
+    auto &style = ImGui::GetStyle();
+    style.WindowBorderSize = 3.0f;
+    style.ChildBorderSize = 3.0f;
+    style.FrameBorderSize = 3.0f;
+    style.TabBorderSize = 3.0f;
+    style.WindowRounding = 0.0f;
+    style.ChildRounding = 0.0f;
+    style.FrameRounding = 0.0f;
+    style.ScrollbarRounding = 0.0f;
 
     m_player = player;
 }
