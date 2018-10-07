@@ -146,7 +146,8 @@ static TextEditor::Palette const &get_palette()
         0xffc040a0, // Preproc identifier
         0xff9c7683, // Comment (single line) (PICO-8 indigo)
         0xff9c7683, // Comment (multi line) (PICO-8 indigo)
-        0xff000000, // Background (PICO-8 black)
+        //0xff000000, // Background (PICO-8 black)
+        0xff4f575f, // Background (PICO-8 dark gray)
         0xff4d00ff, // Cursor (PICO-8 red)
         0x80a06020, // Selection
         0x800020ff, // ErrorMarker

@@ -35,7 +35,22 @@ ide::ide(player *player)
     style.FramePadding = lol::vec2(2 * EDITOR_SCALE);
     style.WindowRounding = style.ChildRounding = style.FrameRounding = style.ScrollbarRounding = style.TabRounding = 0.0f;
 
+    // Useless
+    style.Colors[ImGuiCol_ChildBg] = (lol::vec4)z8::palette::get(5) / 255.f;
+
+    style.Colors[ImGuiCol_Tab]          = (lol::vec4)z8::palette::get(0) / 255.f;
+    style.Colors[ImGuiCol_TabHovered]   = (lol::vec4)z8::palette::get(8) / 255.f;
+    style.Colors[ImGuiCol_TabActive]    = (lol::vec4)z8::palette::get(8) / 255.f;
+    style.Colors[ImGuiCol_TabUnfocused] = (lol::vec4)z8::palette::get(0) / 255.f;
+    style.Colors[ImGuiCol_TabUnfocusedActive] = (lol::vec4)z8::palette::get(0) / 255.f;
+
+    style.Colors[ImGuiCol_TitleBg]          = (lol::vec4)z8::palette::get(5) / 255.f;
+    style.Colors[ImGuiCol_TitleBgActive]    = (lol::vec4)z8::palette::get(5) / 255.f;
+
     m_player = player;
+
+    m_ram_edit.OptShowAscii = false;
+    m_rom_edit.OptShowAscii = false;
 }
 
 ide::~ide()
@@ -99,7 +114,9 @@ void ide::tick_game(float seconds)
     render_dock();
 //    ImGui::ShowDemoWindow();
 
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, (lol::vec4)z8::palette::get(5) / 255.f);
     m_editor.render();
+    ImGui::PopStyleColor(1);
 
     ImGui::Begin("pALETTE", nullptr);
     {
@@ -138,9 +155,11 @@ void ide::tick_game(float seconds)
     ImGui::End();
 
     ImGui::Begin("ram", nullptr);
+        m_ram_edit.DrawWindow("ram", m_player->get_ram(), 0x8000);
     ImGui::End();
 
     ImGui::Begin("rom", nullptr);
+        m_ram_edit.DrawWindow("rom", m_player->get_rom(), 0x5e00);
     ImGui::End();
 
     ImGui::PopFont();

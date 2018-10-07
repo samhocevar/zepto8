@@ -45,6 +45,9 @@ public:
     lol::Texture *get_texture();
     lol::Texture *get_font_texture();
 
+    uint8_t *get_ram() { return (uint8_t *)&m_vm.get_ram(); }
+    uint8_t *get_rom() { return (uint8_t *)&m_vm.m_cart.get_rom(); }
+
 private:
     vm m_vm;
     array<u8vec4> m_screen;

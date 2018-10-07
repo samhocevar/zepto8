@@ -42,6 +42,9 @@ public:
     inline memory &get_ram() { return m_ram; }
     inline memory const &get_ram() const { return m_ram; }
 
+    inline memory &get_rom() { return m_cart.get_rom(); }
+    inline memory const &get_rom() const { return m_cart.get_rom(); }
+
     void render(lol::u8vec4 *screen) const;
     void print_ansi(lol::ivec2 term_size = lol::ivec2(128, 128),
                     uint8_t const *prev_screen = nullptr) const;

@@ -19,6 +19,7 @@
 #include "zepto8.h"
 #include "player.h"
 #include "ide/editor.h"
+#include "imgui-club/imgui_memory_editor/imgui_memory_editor.h"
 
 namespace z8
 {
@@ -37,8 +38,9 @@ private:
     void render_editor();
 
     editor m_editor;
-    player *m_player = nullptr;
+    MemoryEditor m_ram_edit, m_rom_edit;
 
+    player *m_player = nullptr;
     ImFont *m_font = nullptr;
 };
 

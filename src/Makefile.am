@@ -13,6 +13,7 @@ ___zepto8_SOURCES = \
     ide/ide.cpp ide/ide.h \
     ide/editor.cpp ide/editor.h \
     imgui-color-text-edit/TextEditor.cpp imgui-color-text-edit/TextEditor.h \
+    imgui-club/imgui_memory_editor/imgui_memory_editor.h \
     player.cpp player.h \
     $(NULL)
 ___zepto8_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
