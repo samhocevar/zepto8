@@ -84,7 +84,11 @@ player::player(lol::ivec2 window_size)
     // does not seem right to me.
     auto img = new lol::image(lol::ivec2(128, 128));
     img->unlock(img->lock<lol::PixelFormat::RGBA_8>()); // ensure RGBA_8 is present
-    m_tile = lol::Tiler::Register("fuck", new lol::image(*img), lol::ivec2(128, 128), lol::ivec2(1, 1));
+    m_tile = lol::Tiler::Register("tile", new lol::image(*img), lol::ivec2(128, 128), lol::ivec2(1, 1));
+
+    img = new lol::image(lol::ivec2(128, 32));
+    img->unlock(img->lock<lol::PixelFormat::RGBA_8>()); // ensure RGBA_8 is present
+    m_font_tile = lol::Tiler::Register("font", new lol::image(*img), lol::ivec2(128, 32), lol::ivec2(1, 1));
 
     /* Allocate memory */
     m_screen.resize(128 * 128);
@@ -155,6 +159,19 @@ void player::tick_draw(float seconds, lol::Scene &scene)
     // Render the VM screen to our buffer
     m_vm.render(m_screen.data());
 
+    {
+        // Render the font
+        u8vec4 data[128 * 32];
+        for (int j = 0; j < 32; ++j)
+        for (int i = 0; i < 128; ++i)
+        {
+            auto p = m_vm.m_bios.get_spixel(i, j);
+            data[j * 128 + i] = p ? palette::get(p) : u8vec4(0);
+        }
+        m_font_tile->GetTexture()->Bind();
+        m_font_tile->GetTexture()->SetData(data);
+    }
+
     // Blit buffer to the texture
     // FIXME: move this to some kind of memory viewer class?
     m_tile->GetTexture()->Bind();
@@ -176,6 +193,11 @@ lol::Texture *player::get_texture()
 {
     m_render = false; // Someone else wants to render us
     return m_tile ? m_tile->GetTexture() : nullptr;
+}
+
+lol::Texture *player::get_font_texture()
+{
+    return m_font_tile ? m_font_tile->GetTexture() : nullptr;
 }
 
 } // namespace z8

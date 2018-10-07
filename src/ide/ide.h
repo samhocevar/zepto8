@@ -37,7 +37,9 @@ private:
     void render_editor();
 
     editor m_editor;
-    player *m_player;
+    player *m_player = nullptr;
+
+    ImFont *m_font = nullptr;
 };
 
 } // namespace z8

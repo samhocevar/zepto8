@@ -43,6 +43,7 @@ public:
 
     // HACK: if get_texture() is called, rendering is disabled
     lol::Texture *get_texture();
+    lol::Texture *get_font_texture();
 
 private:
     vm m_vm;
@@ -51,7 +52,7 @@ private:
     int m_streams[4];
 
     lol::Camera *m_scenecam;
-    lol::TileSet *m_tile;
+    lol::TileSet *m_tile, *m_font_tile;
     lol::Controller *m_controller;
     lol::InputProfile m_input;
     lol::InputDevice *m_mouse, *m_keyboard;

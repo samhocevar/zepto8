@@ -29,7 +29,6 @@ ide::ide(player *player)
     // Enable docking
     auto &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    io.Fonts->AddFontFromFileTTF("pico8.ttf", 5 * EDITOR_SCALE);
 
     auto &style = ImGui::GetStyle();
     style.WindowBorderSize = style.ChildBorderSize = style.PopupBorderSize = style.FrameBorderSize = style.TabBorderSize = EDITOR_SCALE;
@@ -47,10 +46,55 @@ ide::~ide()
 void ide::tick_game(float seconds)
 {
     WorldEntity::tick_game(seconds);
+    if (!m_font)
+    {
+        auto atlas = IM_NEW(ImFontAtlas)();
+        atlas->TexWidth = 128;
+        atlas->TexHeight = 32;
+        atlas->TexUvScale = lol::vec2(1 / 128.f, 1 / 32.f);
+        atlas->TexUvWhitePixel = lol::vec2(5 / 128.f, 0 / 32.f);
 
-    auto &io = ImGui::GetIO();
-    io.Fonts->Fonts[0]->FontSize = 6 * EDITOR_SCALE;
-    ImGui::PushFont(io.Fonts->Fonts[0]);
+        static ImWchar const char_ranges[] = { 0x20, 0x9a, 0 };
+        ImFontConfig config;
+        config.FontData = ImGui::MemAlloc(1);
+        config.FontDataSize = 1;
+        config.SizePixels = 6 * EDITOR_SCALE; // Not really needed it seems
+        config.GlyphRanges = char_ranges;
+
+        m_font = atlas->AddFont(&config);
+        // Initialisation from ImFontAtlasBuildSetupFont()
+        m_font->FontSize = config.SizePixels;
+        m_font->ConfigData = &atlas->ConfigData[0];
+        m_font->ContainerAtlas = atlas;
+        m_font->Ascent = 0;
+        m_font->Descent = 6 * EDITOR_SCALE;
+        m_font->ConfigDataCount++;
+
+        int const delta = EDITOR_SCALE / 2;
+
+        // Printable ASCII chars
+        for (int ch = 0x20; ch < 0x80; ++ch)
+        {
+            int x = ch % 0x20 * 4, y = ch / 0x20 * 6 - 6;
+            m_font->AddGlyph(ch, delta, delta, 3 * EDITOR_SCALE + delta, 5 * EDITOR_SCALE + delta,
+                           x / 128.f, y / 32.f, (x + 3) / 128.f, (y + 5) / 32.f, 4.f * EDITOR_SCALE);
+        }
+
+        // Double-width chars
+        for (int ch = 0x80; ch < 0x9a; ++ch)
+        {
+            int x = ch % 0x10 * 8, y = ch / 0x10 * 6 + 2;
+            m_font->AddGlyph(ch, delta, delta, 7 * EDITOR_SCALE + delta, 5 * EDITOR_SCALE + delta,
+                           x / 128.f, y / 32.f, (x + 7) / 128.f, (y + 5) / 32.f, 8.f * EDITOR_SCALE);
+        }
+
+        m_font->BuildLookupTable();
+    }
+
+    if (m_font->ContainerAtlas->TexID == nullptr)
+        m_font->ContainerAtlas->TexID = m_player->get_font_texture();
+
+    ImGui::PushFont(m_font);
 
     render_dock();
 //    ImGui::ShowDemoWindow();
