@@ -49,8 +49,7 @@ ide::ide(player *player)
 
     m_player = player;
 
-    m_ram_edit.OptShowAscii = false;
-    m_rom_edit.OptShowAscii = false;
+    m_ram_edit.OptShowAscii = m_rom_edit.OptShowAscii = false;
 }
 
 ide::~ide()
@@ -155,11 +154,11 @@ void ide::tick_game(float seconds)
     ImGui::End();
 
     ImGui::Begin("ram", nullptr);
-        m_ram_edit.DrawWindow("ram", m_player->get_ram(), 0x8000);
+        m_ram_edit.DrawContents(m_player->get_ram(), 0x8000);
     ImGui::End();
 
     ImGui::Begin("rom", nullptr);
-        m_ram_edit.DrawWindow("rom", m_player->get_rom(), 0x5e00);
+        m_rom_edit.DrawContents(m_player->get_rom(), 0x5e00);
     ImGui::End();
 
     ImGui::PopFont();
