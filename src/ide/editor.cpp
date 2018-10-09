@@ -32,17 +32,14 @@ editor::editor()
     // Debug text
     m_widget.SetText("-- pico-8 syntax test\n-- by sam\n\n"
         "function _init()\n cls()\n step = 1\n tmp = rnd(17)\n lst = {\"lol\"}\nend\n\n"
-        "function _update()\n if (btnp(\xc2\x97) or btnp(\xc2\x8e)) step = 0\n\n"
+        "function _update()\n if (btnp(\x97) or btnp(\x8e)) step = 0\n\n"
         " if step < #lst then\n  step += 1\n end\nend\n\n"
         "function _draw()\n local x = 28\n local y = 120\n\n map(0, 0, 0, 0, 16, 16)\nend\n\n"
         "--  !\"#$%&'()*+,-./0123456789:;<=>?\n"
         "-- @ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_\n"
         "-- `abcdefghijklmnopqrstuvwxyz{|}~\x7f\n"
-        // ImGui does not like invalid UTF-8, so we use \xc2\x80 instead of \x80
-        "-- \xc2\x80\xc2\x81\xc2\x82\xc2\x83\xc2\x84\xc2\x85\xc2\x86\xc2\x87"
-           "\xc2\x88\xc2\x89\xc2\x8a\xc2\x8b\xc2\x8c\xc2\x8d\xc2\x8e\xc2\x8f\n"
-        "-- \xc2\x90\xc2\x91\xc2\x92\xc2\x93\xc2\x94\xc2\x95\xc2\x96\xc2\x97"
-           "\xc2\x98\xc2\x99\n");
+        "-- \x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d\x8e\x8f\n"
+        "-- \x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\n");
 }
 
 editor::~editor()
