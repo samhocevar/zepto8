@@ -11,3 +11,6 @@
 [submodule "src/imgui-color-text-edit"]
 	path = src/imgui-color-text-edit
 	url = ../fork-imgui-color-text-edit.git
+[submodule "src/imgui-club"]
+	path = src/imgui-club
+	url = ../../ocornut/imgui_club.git
