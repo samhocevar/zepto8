@@ -19,7 +19,7 @@
 #include "zepto8.h"
 #include "player.h"
 #include "ide/editor.h"
-#include "imgui-club/imgui_memory_editor/imgui_memory_editor.h"
+#include "3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h"
 
 namespace z8
 {
@@ -36,6 +36,8 @@ public:
 private:
     void render_dock();
     void render_editor();
+
+    bool m_commands[5];
 
     editor m_editor;
     MemoryEditor m_ram_edit, m_rom_edit;

@@ -12,9 +12,8 @@ ___zepto8_SOURCES = \
     zepto8.cpp \
     ide/ide.cpp ide/ide.h \
     ide/editor.cpp ide/editor.h \
-    imgui-color-text-edit/TextEditor.cpp imgui-color-text-edit/TextEditor.h \
-    imgui-club/imgui_memory_editor/imgui_memory_editor.h \
     player.cpp player.h \
+    $(3rdparty_sources) \
     $(NULL)
 ___zepto8_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
@@ -23,6 +22,14 @@ ___zepto8_LDFLAGS = libzepto8.a libz8lua.a $(AM_LDFLAGS)
 ___zepto8_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@
 ___zepto8_DATA = bios.p8
 
+3rdparty_sources = \
+    3rdparty/imgui-color-text-edit/TextEditor.cpp \
+    3rdparty/imgui-color-text-edit/TextEditor.h \
+    3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h \
+    3rdparty/tinyfiledialogs/tinyfiledialogs.c \
+    3rdparty/tinyfiledialogs/tinyfiledialogs.h \
+    $(NULL)
+
 EXTRA_DIST += zepto8.vcxproj
 
 ___z8player_SOURCES = \
@@ -30,8 +37,8 @@ ___z8player_SOURCES = \
     player.cpp player.h \
     $(NULL)
 ___z8player_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
-                     -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
-                     $(AM_CPPFLAGS)
+                       -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
+                       $(AM_CPPFLAGS)
 ___z8player_LDFLAGS = libzepto8.a libz8lua.a $(AM_LDFLAGS)
 ___z8player_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@
 
@@ -93,7 +100,7 @@ lua_cflags += -DLUA_USE_READLINE
 lua_ldflags += -lreadline
 endif
 
-#EXTRA_DIST += libz8lua.vcxproj
+EXTRA_DIST += libz8lua.vcxproj
 
 dither_SOURCES = dither.cpp
 dither_CPPFLAGS = $(AM_CPPFLAGS)

@@ -16,7 +16,7 @@
 
 #include <lol/engine.h>
 
-#include "imgui-color-text-edit/TextEditor.h"
+#include "3rdparty/imgui-color-text-edit/TextEditor.h"
 
 namespace z8
 {

@@ -18,6 +18,7 @@
 
 #include "zepto8.h"
 #include "ide/ide.h"
+#include "3rdparty/tinyfiledialogs/tinyfiledialogs.h"
 
 namespace z8
 {
@@ -50,6 +51,8 @@ ide::ide(player *player)
     m_player = player;
 
     m_ram_edit.OptShowAscii = m_rom_edit.OptShowAscii = false;
+    m_ram_edit.OptUpperCaseHex = m_rom_edit.OptUpperCaseHex = false;
+    m_ram_edit.OptShowOptions = m_rom_edit.OptShowOptions = false;
 }
 
 ide::~ide()
@@ -195,10 +198,10 @@ void ide::render_dock()
     {
         if (ImGui::BeginMenu("fILE"))
         {
-            ImGui::MenuItem("nEW", nullptr, false, false);
-            ImGui::MenuItem("oPEN", nullptr, false, false);
+            ImGui::MenuItem("nEW", nullptr, &m_commands[0], false);
+            ImGui::MenuItem("oPEN", nullptr, &m_commands[1], true);
             ImGui::Separator();
-            ImGui::MenuItem("eXIT", nullptr, false, false);
+            ImGui::MenuItem("eXIT", nullptr, &m_commands[2], false);
             ImGui::EndMenu();
         }
 
@@ -221,6 +224,14 @@ void ide::render_dock()
 void ide::tick_draw(float seconds, lol::Scene &scene)
 {
     WorldEntity::tick_draw(seconds, scene);
+
+    if (m_commands[1])
+    {
+        static char const * patterns[2] = { "*.p8", "*.p8.png" };
+        tinyfd_winUtf8 = 1;
+        auto ret = tinyfd_openFileDialog("Open File", "C:\\", 2, patterns, nullptr, 0);
+        m_commands[1] = false;
+    }
 }
 
 } // namespace z8

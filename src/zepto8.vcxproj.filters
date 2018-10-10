@@ -9,8 +9,11 @@
     <ClCompile Include="ide/editor.cpp">
       <Filter>ide</Filter>
     </ClCompile>
-    <ClCompile Include="imgui-color-text-edit/TextEditor.cpp">
-      <Filter>3rdparty</Filter>
+    <ClCompile Include="3rdparty/imgui-color-text-edit/TextEditor.cpp">
+      <Filter>3rdparty\imgui-color-text-editor</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/tinyfiledialogs/tinyfiledialogs.c">
+      <Filter>3rdparty\tinyfiledialogs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -22,8 +25,14 @@
     <ClInclude Include="ide/editor.h">
       <Filter>ide</Filter>
     </ClInclude>
-    <ClInclude Include="imgui-color-text-edit/TextEditor.h">
-      <Filter>3rdparty</Filter>
+    <ClInclude Include="3rdparty/imgui-color-text-edit/TextEditor.h">
+      <Filter>3rdparty\imgui-color-text-editor</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h">
+      <Filter>3rdparty\imgui-club</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/tinyfiledialogs/tinyfiledialogs.h">
+      <Filter>3rdparty\tinyfiledialogs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -32,6 +41,15 @@
     </Filter>
     <Filter Include="3rdparty">
       <UniqueIdentifier>{037d872f-425f-470f-b3c3-916ce672d365}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rdparty\imgui-color-text-editor">
+      <UniqueIdentifier>{a6bdddb6-83cf-4f3b-965b-04d149376929}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rdparty\imgui-club">
+      <UniqueIdentifier>{58dd1412-ec0c-4e8b-9180-8c61e6c40987}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rdparty\tinyfiledialogs">
+      <UniqueIdentifier>{e8e642c5-a93d-4179-9b1d-4a5a748fe12a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
