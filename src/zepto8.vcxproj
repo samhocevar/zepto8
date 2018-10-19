@@ -37,7 +37,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="3rdparty/imgui-color-text-edit/TextEditor.cpp" />
-    <ClCompile Include="3rdparty/tinyfiledialogs/tinyfiledialogs.c" />
     <ClCompile Include="ide/editor.cpp" />
     <ClCompile Include="ide/ide.cpp" />
     <ClCompile Include="player.cpp" />
@@ -46,7 +45,7 @@
   <ItemGroup>
     <ClInclude Include="3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h" />
     <ClInclude Include="3rdparty/imgui-color-text-edit/TextEditor.h" />
-    <ClInclude Include="3rdparty/tinyfiledialogs/tinyfiledialogs.h" />
+    <ClInclude Include="3rdparty/portable-file-dialogs/portable-file-dialogs.h" />
     <ClInclude Include="ide/editor.h" />
     <ClInclude Include="ide/ide.h" />
     <ClInclude Include="player.h" />

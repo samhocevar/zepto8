@@ -18,7 +18,7 @@
 
 #include "zepto8.h"
 #include "ide/ide.h"
-#include "3rdparty/tinyfiledialogs/tinyfiledialogs.h"
+#include "3rdparty/portable-file-dialogs/portable-file-dialogs.h"
 
 namespace z8
 {
@@ -227,9 +227,7 @@ void ide::tick_draw(float seconds, lol::Scene &scene)
 
     if (m_commands[1])
     {
-        static char const * patterns[2] = { "*.p8", "*.p8.png" };
-        tinyfd_winUtf8 = 1;
-        auto ret = tinyfd_openFileDialog("Open File", "C:\\", 2, patterns, nullptr, 0);
+        pfd::open_file("Open File", ".", { "PICO-8 cartridges", "*.p8 *.p8.png", "All Files", "*" });
         m_commands[1] = false;
     }
 }

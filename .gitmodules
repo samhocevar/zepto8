@@ -14,6 +14,6 @@
 [submodule "src/3rdparty/imgui-club"]
 	path = src/3rdparty/imgui-club
 	url = ../fork-imgui-club.git
-[submodule "src/3rdparty/tinyfiledialogs"]
-	path = src/3rdparty/tinyfiledialogs
-	url = git://git.code.sf.net/p/tinyfiledialogs/code
+[submodule "src/3rdparty/portable-file-dialogs"]
+	path = src/3rdparty/portable-file-dialogs
+	url = ../portable-file-dialogs.git

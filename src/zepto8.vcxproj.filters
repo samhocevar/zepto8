@@ -12,9 +12,6 @@
     <ClCompile Include="3rdparty/imgui-color-text-edit/TextEditor.cpp">
       <Filter>3rdparty\imgui-color-text-editor</Filter>
     </ClCompile>
-    <ClCompile Include="3rdparty/tinyfiledialogs/tinyfiledialogs.c">
-      <Filter>3rdparty\tinyfiledialogs</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="player.h" />
@@ -31,8 +28,8 @@
     <ClInclude Include="3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h">
       <Filter>3rdparty\imgui-club</Filter>
     </ClInclude>
-    <ClInclude Include="3rdparty/tinyfiledialogs/tinyfiledialogs.h">
-      <Filter>3rdparty\tinyfiledialogs</Filter>
+    <ClInclude Include="3rdparty/portable-file-dialogs/portable-file-dialogs.h">
+      <Filter>3rdparty\portable-file-dialogs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -48,7 +45,7 @@
     <Filter Include="3rdparty\imgui-club">
       <UniqueIdentifier>{58dd1412-ec0c-4e8b-9180-8c61e6c40987}</UniqueIdentifier>
     </Filter>
-    <Filter Include="3rdparty\tinyfiledialogs">
+    <Filter Include="3rdparty\portable-file-dialogs">
       <UniqueIdentifier>{e8e642c5-a93d-4179-9b1d-4a5a748fe12a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>

@@ -26,8 +26,7 @@ ___zepto8_DATA = bios.p8
     3rdparty/imgui-color-text-edit/TextEditor.cpp \
     3rdparty/imgui-color-text-edit/TextEditor.h \
     3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h \
-    3rdparty/tinyfiledialogs/tinyfiledialogs.c \
-    3rdparty/tinyfiledialogs/tinyfiledialogs.h \
+    3rdparty/portable-file-dialogs/portable-file-dialogs.h \
     $(NULL)
 
 EXTRA_DIST += zepto8.vcxproj
