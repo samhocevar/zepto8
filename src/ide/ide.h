@@ -37,7 +37,7 @@ private:
     void render_dock();
     void render_editor();
 
-    bool m_commands[5];
+    bool m_commands[5] = { 0 };
 
     editor m_editor;
     MemoryEditor m_ram_edit, m_rom_edit;
