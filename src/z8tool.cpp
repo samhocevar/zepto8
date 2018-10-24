@@ -28,9 +28,10 @@ enum class mode
 {
     none,
     run      = 130,
-    headless = 131,
-    telnet   = 132,
-    splore   = 133,
+    inspect  = 131,
+    headless = 132,
+    telnet   = 133,
+    splore   = 134,
 
     tolua  = 140,
     topng  = 141,
@@ -46,6 +47,7 @@ static void usage()
 {
     printf("Usage: z8tool [--tolua|--topng|--top8|--tobin|--todata] [--data <file>] <cart> [-o <file>]\n");
     printf("       z8tool --run <cart>\n");
+    printf("       z8tool --inspect <cart>\n");
     printf("       z8tool --headless <cart>\n");
 #if HAVE_UNISTD_H
     printf("       z8tool --telnet <cart>\n");
@@ -60,6 +62,7 @@ int main(int argc, char **argv)
     lol::getopt opt(argc, argv);
     opt.add_opt('h',                 "help",     false);
     opt.add_opt(int(mode::run),      "run",      false);
+    opt.add_opt(int(mode::inspect),  "inspect",  false);
     opt.add_opt(int(mode::headless), "headless", false);
     opt.add_opt(int(mode::tolua),    "tolua",    false);
     opt.add_opt(int(mode::topng),    "topng",    false);
@@ -94,6 +97,7 @@ int main(int argc, char **argv)
         case (int)mode::tobin:
         case (int)mode::todata:
         case (int)mode::run:
+        case (int)mode::inspect:
         case (int)mode::headless:
         case (int)mode::telnet:
         case (int)mode::splore:
@@ -114,7 +118,7 @@ int main(int argc, char **argv)
 
     if (run_mode == mode::tolua || run_mode == mode::top8 ||
         run_mode == mode::tobin || run_mode == mode::topng ||
-        run_mode == mode::todata)
+        run_mode == mode::todata || run_mode == mode::inspect)
     {
         z8::cart cart;
         cart.load(cart_name);
@@ -161,6 +165,11 @@ int main(int argc, char **argv)
         else if (run_mode == mode::todata)
         {
             fwrite(&cart.get_rom(), 1, 0x4300, stdout);
+        }
+        else if (run_mode == mode::inspect)
+        {
+            printf("Code size: %d\n", (int)cart.get_p8().size());
+            printf("Compressed code size: %d\n", (int)cart.get_compressed_code().count());
         }
     }
     else if (run_mode == mode::run || run_mode == mode::headless)
