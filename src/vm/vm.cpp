@@ -176,16 +176,20 @@ void vm::run()
     }
 }
 
-void vm::step(float seconds)
+bool vm::step(float seconds)
 {
     UNUSED(seconds);
 
     lua_getglobal(m_lua, "_z8");
     lua_getfield(m_lua, -1, "tick");
-    lua_pcall(m_lua, 0, 0, 0);
+    lua_pcall(m_lua, 0, 1, 0);
+
+    bool ret = (int)lua_tonumber(m_lua, -1) >= 0;
+    lua_pop(m_lua, 1);
     lua_remove(m_lua, -1);
 
     m_instructions = 0;
+    return ret;
 }
 
 void vm::button(int index, int state)

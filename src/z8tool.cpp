@@ -177,10 +177,10 @@ int main(int argc, char **argv)
         z8::vm vm;
         vm.load(cart_name);
         vm.run();
-        while (true)
+        for (bool running = true; running; )
         {
             lol::timer t;
-            vm.step(1.f / 60.f);
+            running = vm.step(1.f / 60.f);
             if (run_mode == mode::run)
             {
                 vm.print_ansi();

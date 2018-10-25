@@ -37,7 +37,7 @@ public:
 
     void load(char const *name);
     void run();
-    void step(float seconds);
+    bool step(float seconds);
 
     inline memory &get_ram() { return m_ram; }
     inline memory const &get_ram() const { return m_ram; }

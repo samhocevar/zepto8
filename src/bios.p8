@@ -188,6 +188,9 @@ _z8.run = function(cart_code)
         -- Initialise if available
         if (_init != nil) _init()
 
+        -- Finish if no user function is available
+        if (not (_update60 and _update and _draw)) return
+
         -- Execute the user functions
         while true do
             if _update60 != nil then
@@ -204,11 +207,12 @@ _z8.run = function(cart_code)
 end
 
 _z8.tick = function()
-    if (costatus(_z8.loop) == "dead") return
+    if (costatus(_z8.loop) == "dead") return -1
     ret, err = coresume(_z8.loop)
     if _z8.stopped then _z8.stopped = false -- FIXME: what now?
     elseif not ret then printh(tostr(err))
     end
+    return 0
 end
 
 
