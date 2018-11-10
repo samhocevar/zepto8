@@ -1,5 +1,3 @@
-# Our binaries
-dither
 # Autotools cruft
 z8lua/.deps
 z8lua/.dirstamp

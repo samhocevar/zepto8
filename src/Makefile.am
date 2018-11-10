@@ -2,7 +2,6 @@
 include $(top_srcdir)/lol/build/autotools/common.am
 
 bin_PROGRAMS = ../zepto8 ../z8player ../z8tool ../z8lua
-noinst_PROGRAMS = dither
 noinst_LIBRARIES = libzepto8.a libz8lua.a
 
 ___zepto8dir = $(datarootdir)/zepto8
@@ -46,6 +45,7 @@ EXTRA_DIST += z8player.vcxproj
 ___z8tool_SOURCES = \
     z8tool.cpp \
     splore.cpp splore.h \
+    dither.cpp dither.h \
     $(NULL)
 ___z8tool_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
@@ -100,11 +100,4 @@ lua_ldflags += -lreadline
 endif
 
 EXTRA_DIST += libz8lua.vcxproj
-
-dither_SOURCES = dither.cpp
-dither_CPPFLAGS = $(AM_CPPFLAGS)
-dither_LDFLAGS = $(AM_LDFLAGS)
-dither_DEPENDENCIES = @LOL_DEPS@
-
-#EXTRA_DIST += dither.vcxproj
 

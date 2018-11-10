@@ -23,6 +23,7 @@
 #include "vm/vm.h"
 #include "telnet.h"
 #include "splore.h"
+#include "dither.h"
 
 enum class mode
 {
@@ -32,6 +33,7 @@ enum class mode
     headless = 132,
     telnet   = 133,
     splore   = 134,
+    dither   = 135,
 
     tolua  = 140,
     topng  = 141,
@@ -46,6 +48,7 @@ enum class mode
 static void usage()
 {
     printf("Usage: z8tool [--tolua|--topng|--top8|--tobin|--todata] [--data <file>] <cart> [-o <file>]\n");
+    printf("       z8tool --dither <image> [-o <file>]\n");
     printf("       z8tool --run <cart>\n");
     printf("       z8tool --inspect <cart>\n");
     printf("       z8tool --headless <cart>\n");
@@ -62,6 +65,7 @@ int main(int argc, char **argv)
     lol::getopt opt(argc, argv);
     opt.add_opt('h',                 "help",     false);
     opt.add_opt(int(mode::run),      "run",      false);
+    opt.add_opt(int(mode::dither),   "dither",   false);
     opt.add_opt(int(mode::inspect),  "inspect",  false);
     opt.add_opt(int(mode::headless), "headless", false);
     opt.add_opt(int(mode::tolua),    "tolua",    false);
@@ -97,6 +101,7 @@ int main(int argc, char **argv)
         case (int)mode::tobin:
         case (int)mode::todata:
         case (int)mode::run:
+        case (int)mode::dither:
         case (int)mode::inspect:
         case (int)mode::headless:
         case (int)mode::telnet:
@@ -187,6 +192,10 @@ int main(int argc, char **argv)
                 t.wait(1.f / 60.f);
             }
         }
+    }
+    else if (run_mode == mode::dither)
+    {
+        z8::dither(cart_name, out);
     }
     else if (run_mode == mode::splore)
     {
