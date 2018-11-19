@@ -121,6 +121,7 @@ do
     -- All flip() does for now is yield so that the C++ VM gets a chance
     -- to draw something even if Lua is in an infinite loop
     flip = function()
+        _update_buttons()
         yield()
     end
 
@@ -189,7 +190,7 @@ _z8.run = function(cart_code)
         if (_init != nil) _init()
 
         -- Finish if no user function is available
-        if (not (_update60 and _update and _draw)) return
+        if (not (_update60 or _update or _draw)) return
 
         -- Execute the user functions
         while true do
