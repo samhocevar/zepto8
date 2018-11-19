@@ -21,12 +21,13 @@ using lol::msg;
 
 void vm::render(lol::u8vec4 *screen) const
 {
+    /* FIXME performance: a 256-value LUT would be better. */
     auto &ds = m_ram.draw_state;
 
     /* Precompute the current palette */
     u8vec4 lut[16];
     for (int n = 0; n < 16; ++n)
-        lut[n] = palette::get(ds.pal[1][n]);
+        lut[n] = palette::get8(ds.pal[1][n]);
 
     /* Render actual screen */
     for (int y = 0; y < 128; ++y)

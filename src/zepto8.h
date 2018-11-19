@@ -54,7 +54,14 @@ enum
 
 struct palette
 {
-    static lol::u8vec4 get(int n)
+    /* Get the nth palette element as a vector of floats in 0…1 */
+    static lol::vec4 get(int n)
+    {
+        return lol::vec4(get8(n)) / 255.f;
+    }
+
+    /* Get the nth palette element as a vector of uint8_ts in 0…255 */
+    static lol::u8vec4 get8(int n)
     {
         static lol::u8vec4 const pal[] =
         {
@@ -79,14 +86,15 @@ struct palette
         return pal[n];
     }
 
-    static int best(lol::u8vec4 c)
+    /* Find the closest palette element to c (a vector of floats in 0…1) */
+    static int best(lol::vec4 c)
     {
-        lol::ivec3 icol = lol::ivec3(c.rgb);
-        int ret = 0, dist = lol::dot(icol, icol);
+        int ret = 0;
+        float dist = FLT_MAX;
         for (int i = 1; i < 16; ++i)
         {
-            lol::ivec3 delta = icol - lol::ivec3(get(i).rgb);
-            int newdist = lol::dot(delta, delta);
+            lol::vec3 delta = c.rgb - get(i).rgb;
+            float newdist = lol::sqlength(delta);
             if (newdist < dist)
             {
                 dist = newdist;
@@ -94,6 +102,12 @@ struct palette
             }
         }
         return ret;
+    }
+
+    /* Find the closest palette element to c (a vector of uint8_ts in 0…255) */
+    static int best(lol::u8vec4 c)
+    {
+        return best(lol::vec4(c) / 255.f);
     }
 };
 

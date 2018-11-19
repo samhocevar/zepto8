@@ -460,7 +460,7 @@ lol::image cart::get_png() const
         for (int x = 0; x < LABEL_WIDTH; ++x)
         {
             uint8_t col = (m_label[(y * LABEL_WIDTH + x) / 2] >> (4 * (x & 1))) & 0xf;
-            pixels[(y + LABEL_Y) * size.x + (x + LABEL_X)] = palette::get(col);
+            pixels[(y + LABEL_Y) * size.x + (x + LABEL_X)] = palette::get8(col);
         }
     }
 

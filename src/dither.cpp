@@ -20,26 +20,19 @@
 namespace z8
 {
 
-#define PRESERVATION 0.7f//0.9f
+#define PRESERVATION 0.5f//0.9f
 
 void dither(char const *src, char const *out)
 {
-    /* Fill palette with PICO-8 colours */
-    lol::array<lol::vec4> palette;
-    for (int i = 0; i < 16; ++i)
-        palette << lol::vec4(z8::palette::get(i)) * (1.0f / 255);
-
 #if 0
     /* Add colour combinations that aren’t too awful */
     for (int i = 0; i < 16; ++i)
         for (int j = i + 1; j < 16; ++j)
         {
-            if (distance(palette[i], palette[j]) < 0.8f)
-                palette << mix(palette[i], palette[j], 0.5f);
+            if (distance(palette::get(i), palette::get(j)) < 0.8f)
+                thing << mix(palette::get(i), palette::get(j), 0.5f);
         }
 #endif
-
-    lol::msg::info("palette has %d colours\n", palette.count());
 
     /* Load images */
     lol::image im;
@@ -75,18 +68,7 @@ void dither(char const *src, char const *out)
             lol::vec4 pixel = curdata[i][j];
 
             // Find nearest colour
-            int nearest = -1;
-            float best_dist = 1e8f;
-
-            for (int n = 0; n < palette.count(); ++n)
-            {
-                float new_dist = distance(palette[n].rgb, pixel.rgb);
-                if (new_dist < best_dist)
-                {
-                    best_dist = new_dist;
-                    nearest = n;
-                }
-            }
+            int nearest = palette::best(pixel);
 
             // Append raw data
             if (i & 1)
@@ -95,8 +77,9 @@ void dither(char const *src, char const *out)
                 rawdata.push(nearest & 0x0f);
 
             // Store colour
-            dstdata[i][j] = palette[nearest];
-            lol::vec4 error = PRESERVATION * (pixel - palette[nearest]) / 16.0f;
+            lol::vec4 newpixel = lol::vec4(palette::get(nearest));
+            dstdata[i][j] = newpixel;
+            lol::vec4 error = PRESERVATION / 16.f * (pixel - newpixel);
 
             //float diff[] = { 7.0f, 1.0f, 5.0f, 3.0f }; // Floyd-Steinberg
             float diff[] = { 6.0f, 3.0f, 5.0f, 2.0f }; // Hocevar-Niger

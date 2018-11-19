@@ -166,7 +166,7 @@ void player::tick_draw(float seconds, lol::Scene &scene)
         for (int i = 0; i < 128; ++i)
         {
             auto p = m_vm.m_bios.get_spixel(i, j);
-            data[j * 128 + i] = p ? palette::get(p) : u8vec4(0);
+            data[j * 128 + i] = p ? palette::get8(p) : u8vec4(0);
         }
         m_font_tile->GetTexture()->Bind();
         m_font_tile->GetTexture()->SetData(data);
