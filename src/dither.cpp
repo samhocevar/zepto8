@@ -18,6 +18,8 @@
 #include "zepto8.h"
 #include "splore.h"
 
+#define DEPTH 512
+
 namespace z8
 {
 
@@ -57,7 +59,9 @@ void dither(char const *src, char const *out)
     lol::image dst(size);
     lol::array<uint8_t> rawdata;
 
-    auto kernel = lol::image::kernel::bayer(lol::ivec2(16));
+    //auto kernel = lol::image::kernel::halftone(lol::ivec2(6));
+    //auto kernel = lol::image::kernel::blue_noise(lol::ivec2(64));
+    auto kernel = lol::image::kernel::bayer(lol::ivec2(32));
 
     /* Dither image for first destination */
     lol::array2d<lol::vec4> &curdata = im.lock2d<lol::PixelFormat::RGBA_F32>();
@@ -68,18 +72,21 @@ void dither(char const *src, char const *out)
         {
             lol::vec4 pixel = curdata[i][j];
 
-            // Dither pixel 256 times with error diffusion
-            int found[256];
+            // Dither pixel DEPTH times with error diffusion
+            int found[DEPTH];
             auto candidate = pixel;
-            for (int n = 0; n < 256; ++n)
+            for (int n = 0; n < DEPTH; ++n)
             {
                 found[n] = palette::best(candidate);
-                candidate = pixel + 7 / 16 * (candidate - palette::get(found[n]));
+                candidate = pixel + 7.f / 16 * (candidate - palette::get(found[n]));
             }
 
-            // Sort results and pick the final color using a dithering kernel
-            std::sort(found, found + 256);
-            int nearest = found[(int)(kernel[i % kernel.size().x][j % kernel.size().y] * 256)];
+            // Sort results by luminance and pick the final color using a dithering kernel
+            std::sort(found, found + DEPTH, [](int a, int b)
+            {
+                return lol::dot(palette::get(a).rgb - palette::get(b).rgb, lol::vec3(1)) > 0;
+            });
+            int nearest = found[(int)(kernel[i % kernel.size().x][j % kernel.size().y] * DEPTH)];
 
             // Append raw data
             if (i & 1)

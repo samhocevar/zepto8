@@ -91,7 +91,7 @@ struct palette
     {
         int ret = 0;
         float dist = FLT_MAX;
-        for (int i = 1; i < 16; ++i)
+        for (int i = 0; i < 16; ++i)
         {
             lol::vec3 delta = c.rgb - get(i).rgb;
             float newdist = lol::sqlength(delta);
