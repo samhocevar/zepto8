@@ -64,10 +64,10 @@ int main(int argc, char **argv)
 
     lol::getopt opt(argc, argv);
     opt.add_opt('h',                 "help",     false);
-    opt.add_opt(int(mode::run),      "run",      false);
-    opt.add_opt(int(mode::dither),   "dither",   false);
-    opt.add_opt(int(mode::inspect),  "inspect",  false);
-    opt.add_opt(int(mode::headless), "headless", false);
+    opt.add_opt(int(mode::run),      "run",      true);
+    opt.add_opt(int(mode::dither),   "dither",   true);
+    opt.add_opt(int(mode::inspect),  "inspect",  true);
+    opt.add_opt(int(mode::headless), "headless", true);
     opt.add_opt(int(mode::tolua),    "tolua",    false);
     opt.add_opt(int(mode::topng),    "topng",    false);
     opt.add_opt(int(mode::top8),     "top8",     false);
@@ -76,12 +76,13 @@ int main(int argc, char **argv)
     opt.add_opt(int(mode::out),      "out",      true);
     opt.add_opt(int(mode::data),     "data",     true);
 #if HAVE_UNISTD_H
-    opt.add_opt(int(mode::telnet),   "telnet",   false);
+    opt.add_opt(int(mode::telnet),   "telnet",   true);
 #endif
-    opt.add_opt(int(mode::splore),   "splore",   false);
+    opt.add_opt(int(mode::splore),   "splore",   true);
 
     mode run_mode = mode::none;
     char const *data = nullptr;
+    char const *in = nullptr;
     char const *out = nullptr;
 
     for (;;)
@@ -95,17 +96,20 @@ int main(int argc, char **argv)
         case 'h':
             usage();
             return EXIT_SUCCESS;
+        case (int)mode::run:
+        case (int)mode::headless:
+        case (int)mode::inspect:
+        case (int)mode::dither:
+        case (int)mode::telnet:
+        case (int)mode::splore:
+            run_mode = mode(c);
+            in = opt.arg;
+            break;
         case (int)mode::tolua:
         case (int)mode::topng:
         case (int)mode::top8:
         case (int)mode::tobin:
         case (int)mode::todata:
-        case (int)mode::run:
-        case (int)mode::dither:
-        case (int)mode::inspect:
-        case (int)mode::headless:
-        case (int)mode::telnet:
-        case (int)mode::splore:
             run_mode = mode(c);
             break;
         case (int)mode::data:
@@ -119,14 +123,12 @@ int main(int argc, char **argv)
         }
     }
 
-    char const *cart_name = argv[opt.index];
-
     if (run_mode == mode::tolua || run_mode == mode::top8 ||
         run_mode == mode::tobin || run_mode == mode::topng ||
         run_mode == mode::todata || run_mode == mode::inspect)
     {
         z8::cart cart;
-        cart.load(cart_name);
+        cart.load(in);
 
         if (data)
         {
@@ -180,7 +182,7 @@ int main(int argc, char **argv)
     else if (run_mode == mode::run || run_mode == mode::headless)
     {
         z8::vm vm;
-        vm.load(cart_name);
+        vm.load(in);
         vm.run();
         for (bool running = true; running; )
         {
@@ -195,18 +197,18 @@ int main(int argc, char **argv)
     }
     else if (run_mode == mode::dither)
     {
-        z8::dither(cart_name, out);
+        z8::dither(in, out);
     }
     else if (run_mode == mode::splore)
     {
         z8::splore splore;
-        splore.dump(cart_name);
+        splore.dump(in);
     }
 #if HAVE_UNISTD_H
     else if (run_mode == mode::telnet)
     {
         z8::telnet telnet;
-        telnet.run(cart_name);
+        telnet.run(in);
     }
 #endif
     else
