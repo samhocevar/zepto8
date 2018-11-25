@@ -13,14 +13,13 @@
 #include <lol/engine.h>
 
 #include <string>
+#include <algorithm>
 
 #include "zepto8.h"
 #include "splore.h"
 
 namespace z8
 {
-
-#define PRESERVATION 0.5f//0.9f
 
 void dither(char const *src, char const *out)
 {
@@ -58,6 +57,8 @@ void dither(char const *src, char const *out)
     lol::image dst(size);
     lol::array<uint8_t> rawdata;
 
+    auto kernel = lol::image::kernel::bayer(lol::ivec2(16));
+
     /* Dither image for first destination */
     lol::array2d<lol::vec4> &curdata = im.lock2d<lol::PixelFormat::RGBA_F32>();
     lol::array2d<lol::vec4> &dstdata = dst.lock2d<lol::PixelFormat::RGBA_F32>();
@@ -67,34 +68,24 @@ void dither(char const *src, char const *out)
         {
             lol::vec4 pixel = curdata[i][j];
 
-            // Find nearest colour
-            int nearest = palette::best(pixel);
+            // Dither pixel 256 times with error diffusion
+            int found[256];
+            auto candidate = pixel;
+            for (int n = 0; n < 256; ++n)
+            {
+                found[n] = palette::best(candidate);
+                candidate = pixel + 7 / 16 * (candidate - palette::get(found[n]));
+            }
+
+            // Sort results and pick the final color using a dithering kernel
+            std::sort(found, found + 256);
+            int nearest = found[(int)(kernel[i % kernel.size().x][j % kernel.size().y] * 256)];
 
             // Append raw data
             if (i & 1)
                 rawdata.last() |= (nearest << 4) & 0xf0;
             else
                 rawdata.push(nearest & 0x0f);
-
-            // Store colour
-            lol::vec4 newpixel = lol::vec4(palette::get(nearest));
-            dstdata[i][j] = newpixel;
-            lol::vec4 error = PRESERVATION / 16.f * (pixel - newpixel);
-
-            //float diff[] = { 7.0f, 1.0f, 5.0f, 3.0f }; // Floyd-Steinberg
-            float diff[] = { 6.0f, 3.0f, 5.0f, 2.0f }; // Hocevar-Niger
-            //float diff[] = { 0.0f, 5.0f, 7.0f, 4.0f }; // Horizontal stripes
-            //float diff[] = { 9.0f, 3.0f, 0.0f, 4.0f }; // Vertical stripes
-
-            // Propagate error to current image
-            if (i + 1 < size.x)
-                curdata[i + 1][j] += diff[0] * error;
-            if (i - 1 >= 0 && j + 1 < size.y)
-                curdata[i - 1][j + 1] += diff[1] * error;
-            if (j + 1 < size.y)
-                curdata[i][j + 1] += diff[2] * error;
-            if (i + 1 < size.x && j + 1 < size.y)
-                curdata[i + 1][j + 1] += diff[3] * error;
         }
     }
 
