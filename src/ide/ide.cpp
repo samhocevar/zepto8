@@ -20,6 +20,8 @@
 #include "ide/ide.h"
 #include "3rdparty/portable-file-dialogs/portable-file-dialogs.h"
 
+#define CUSTOM_FONT 0
+
 namespace z8
 {
 
@@ -37,16 +39,16 @@ ide::ide(player *player)
     style.WindowRounding = style.ChildRounding = style.FrameRounding = style.ScrollbarRounding = style.TabRounding = 0.0f;
 
     // Useless
-    style.Colors[ImGuiCol_ChildBg] = (lol::vec4)z8::palette::get(5) / 255.f;
+    style.Colors[ImGuiCol_ChildBg] = z8::palette::get(5);
 
-    style.Colors[ImGuiCol_Tab]          = (lol::vec4)z8::palette::get(0) / 255.f;
-    style.Colors[ImGuiCol_TabHovered]   = (lol::vec4)z8::palette::get(8) / 255.f;
-    style.Colors[ImGuiCol_TabActive]    = (lol::vec4)z8::palette::get(8) / 255.f;
-    style.Colors[ImGuiCol_TabUnfocused] = (lol::vec4)z8::palette::get(0) / 255.f;
-    style.Colors[ImGuiCol_TabUnfocusedActive] = (lol::vec4)z8::palette::get(0) / 255.f;
+    style.Colors[ImGuiCol_Tab]          = z8::palette::get(0);
+    style.Colors[ImGuiCol_TabHovered]   = z8::palette::get(8);
+    style.Colors[ImGuiCol_TabActive]    = z8::palette::get(8);
+    style.Colors[ImGuiCol_TabUnfocused] = z8::palette::get(0);
+    style.Colors[ImGuiCol_TabUnfocusedActive] = z8::palette::get(0);
 
-    style.Colors[ImGuiCol_TitleBg]          = (lol::vec4)z8::palette::get(5) / 255.f;
-    style.Colors[ImGuiCol_TitleBgActive]    = (lol::vec4)z8::palette::get(5) / 255.f;
+    style.Colors[ImGuiCol_TitleBg]       = z8::palette::get(5);
+    style.Colors[ImGuiCol_TitleBgActive] = z8::palette::get(5);
 
     m_player = player;
 
@@ -63,6 +65,7 @@ ide::~ide()
 void ide::tick_game(float seconds)
 {
     WorldEntity::tick_game(seconds);
+#if CUSTOM_FONT
     if (!m_font)
     {
         auto atlas = IM_NEW(ImFontAtlas)();
@@ -112,11 +115,12 @@ void ide::tick_game(float seconds)
         m_font->ContainerAtlas->TexID = m_player->get_font_texture();
 
     ImGui::PushFont(m_font);
+#endif
 
     render_dock();
 //    ImGui::ShowDemoWindow();
 
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, (lol::vec4)z8::palette::get(5) / 255.f);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, z8::palette::get(5));
     m_editor.render();
     ImGui::PopStyleColor(1);
 
@@ -127,8 +131,8 @@ void ide::tick_game(float seconds)
             if (i % 4 > 0)
                 ImGui::SameLine();
             ImGui::PushID(i);
-            ImGui::PushStyleColor(ImGuiCol_Button, (lol::vec4)z8::palette::get(i) / 255.f);
-            ImGui::PushStyleColor(ImGuiCol_Text, (lol::vec4)z8::palette::get(i < 6 ? 7 : 0) / 255.f);
+            ImGui::PushStyleColor(ImGuiCol_Button, z8::palette::get(i));
+            ImGui::PushStyleColor(ImGuiCol_Text, z8::palette::get(i < 6 ? 7 : 0));
             ImGui::Button(lol::format("%2d", i).c_str());
             ImGui::PopStyleColor(2);
             ImGui::PopID();
@@ -145,8 +149,8 @@ void ide::tick_game(float seconds)
 
     ImGui::Begin("mUSIC", nullptr);
     {
-        ImGui::TextColored((lol::vec4)z8::palette::get(10) / 255.f, "stuff");
-        ImGui::TextColored((lol::vec4)z8::palette::get(5) / 255.f, "more stuff\nlol!!!");
+        ImGui::TextColored(z8::palette::get(10), "stuff");
+        ImGui::TextColored(z8::palette::get(5), "more stuff\nlol!!!");
     }
     ImGui::End();
 
@@ -164,7 +168,9 @@ void ide::tick_game(float seconds)
         m_rom_edit.DrawContents(m_player->get_rom(), 0x5e00);
     ImGui::End();
 
+#if CUSTOM_FONT
     ImGui::PopFont();
+#endif
 }
 
 void ide::render_dock()
