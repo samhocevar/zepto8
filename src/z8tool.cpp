@@ -41,14 +41,16 @@ enum class mode
     tobin  = 144,
     todata = 145,
 
-    out    = 'o',
-    data   = 150,
+    out     = 'o',
+    data    = 150,
+    hicolor = 151,
+    error_diffusion = 152,
 };
 
 static void usage()
 {
     printf("Usage: z8tool [--tolua|--topng|--top8|--tobin|--todata] [--data <file>] <cart> [-o <file>]\n");
-    printf("       z8tool --dither <image> [-o <file>]\n");
+    printf("       z8tool --dither [--hicolor] [--error-diffusion] <image> [-o <file>]\n");
     printf("       z8tool --run <cart>\n");
     printf("       z8tool --inspect <cart>\n");
     printf("       z8tool --headless <cart>\n");
@@ -75,6 +77,8 @@ int main(int argc, char **argv)
     opt.add_opt(int(mode::todata),   "todata",   false);
     opt.add_opt(int(mode::out),      "out",      true);
     opt.add_opt(int(mode::data),     "data",     true);
+    opt.add_opt(int(mode::hicolor),  "hicolor",  false);
+    opt.add_opt(int(mode::error_diffusion), "error-diffusion", false);
 #if HAVE_UNISTD_H
     opt.add_opt(int(mode::telnet),   "telnet",   true);
 #endif
@@ -84,6 +88,8 @@ int main(int argc, char **argv)
     char const *data = nullptr;
     char const *in = nullptr;
     char const *out = nullptr;
+    bool hicolor = false;
+    bool error_diffusion = false;
 
     for (;;)
     {
@@ -117,6 +123,12 @@ int main(int argc, char **argv)
             break;
         case (int)mode::out:
             out = opt.arg;
+            break;
+        case (int)mode::hicolor:
+            hicolor = true;
+            break;
+        case (int)mode::error_diffusion:
+            error_diffusion = true;
             break;
         default:
             return EXIT_FAILURE;
@@ -200,7 +212,7 @@ int main(int argc, char **argv)
     }
     else if (run_mode == mode::dither)
     {
-        z8::dither(in, out, true, false);
+        z8::dither(in, out, hicolor, error_diffusion);
     }
     else if (run_mode == mode::splore)
     {
