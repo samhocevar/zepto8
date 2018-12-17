@@ -23,7 +23,7 @@
 namespace z8
 {
 
-void dither(char const *src, char const *out, bool hicolor, bool /* error_diffusion */)
+void dither(char const *src, char const *out, bool hicolor, bool error_diffusion)
 {
 
     std::vector<lol::vec3> colors;
@@ -86,8 +86,8 @@ void dither(char const *src, char const *out, bool hicolor, bool /* error_diffus
     std::vector<uint8_t> pixels;
 
     //auto kernel = lol::image::kernel::halftone(lol::ivec2(6));
-    //auto kernel = lol::image::kernel::blue_noise(lol::ivec2(64));
-    auto kernel = lol::image::kernel::bayer(lol::ivec2(32));
+    auto kernel = lol::image::kernel::blue_noise(lol::ivec2(64));
+    //auto kernel = lol::image::kernel::bayer(lol::ivec2(32));
 
     auto closest = [& colors](lol::vec3 color) -> int
     {
@@ -114,22 +114,41 @@ void dither(char const *src, char const *out, bool hicolor, bool /* error_diffus
         for (int i = 0; i < size.x; ++i)
         {
             lol::vec3 pixel = curdata[i][j].rgb;
+            uint8_t nearest = 0;
 
-            // Dither pixel DEPTH times with error diffusion
-            int found[DEPTH];
-            auto candidate = pixel;
-            for (int n = 0; n < DEPTH; ++n)
+            if (error_diffusion)
             {
-                found[n] = closest(candidate);
-                candidate = pixel + 7.f / 16 * (candidate - colors[found[n]]);
+                nearest = closest(pixel);
+                auto error = lol::vec4(pixel - colors[nearest], 0.f) / 18.f;
+                if (i < size.x - 1)
+                    curdata[i + 1][j] += 7.f * error;
+                if (j < size.y - 1)
+                {
+                    if (i > 0)
+                        curdata[i - 1][j + 1] += 1.f * error;
+                    curdata[i][j + 1] += 5.f * error;
+                    if (i < size.x - 1)
+                        curdata[i + 1][j + 1] += 3.f * error;
+                }
             }
-
-            // Sort results by luminance and pick the final color using a dithering kernel
-            std::sort(found, found + DEPTH, [& colors](int a, int b)
+            else
             {
-                return lol::dot(colors[a] - colors[b], lol::vec3(1)) > 0;
-            });
-            int nearest = found[(int)(kernel[i % kernel.size().x][j % kernel.size().y] * DEPTH)];
+                // Dither pixel DEPTH times with error diffusion
+                int found[DEPTH];
+                auto candidate = pixel;
+                for (int n = 0; n < DEPTH; ++n)
+                {
+                    found[n] = closest(candidate);
+                    candidate = pixel + 7.f / 16 * (candidate - colors[found[n]]);
+                }
+
+                // Sort results by luminance and pick the final color using a dithering kernel
+                std::sort(found, found + DEPTH, [& colors](int a, int b)
+                {
+                    return lol::dot(colors[a] - colors[b], lol::vec3(1)) > 0;
+                });
+                nearest = found[(int)(kernel[i % kernel.size().x][j % kernel.size().y] * DEPTH)];
+            }
 
             pixels.push_back(nearest);
         }
