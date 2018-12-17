@@ -87,14 +87,14 @@ void dither(char const *src, char const *out, bool hicolor, bool error_diffusion
     std::vector<uint8_t> pixels;
 
     //auto kernel = lol::image::kernel::halftone(lol::ivec2(6));
-    auto kernel = lol::image::kernel::blue_noise(lol::ivec2(64));
-    //auto kernel = lol::image::kernel::bayer(lol::ivec2(32));
+    //auto kernel = lol::image::kernel::blue_noise(lol::ivec2(64));
+    auto kernel = lol::image::kernel::bayer(lol::ivec2(32));
 
     auto closest = [& colors](lol::vec3 color) -> int
     {
         float best_dist = FLT_MAX;
         int best = -1;
-        for (int i = 0; i < colors.size(); ++i)
+        for (int i = 0; i < (int)colors.size(); ++i)
         {
             float dist = lol::distance(colors[i], color);
             if (dist < best_dist)
@@ -107,7 +107,7 @@ void dither(char const *src, char const *out, bool hicolor, bool error_diffusion
         return best;
     };
 
-    std::map<lol::vec3, int[DEPTH]> luts;
+    std::map<uint32_t, int[DEPTH]> luts;
 
     /* Dither image for first destination */
     lol::array2d<lol::vec4> &curdata = im.lock2d<lol::PixelFormat::RGBA_F32>();
@@ -136,7 +136,9 @@ void dither(char const *src, char const *out, bool hicolor, bool error_diffusion
             }
             else
             {
-                if (luts.find(pixel) == luts.end())
+                uint32_t key = lol::dot(lol::ivec3(pixel * 255.99f), lol::ivec3(0x1, 0x100, 0x10000));
+
+                if (luts.find(key) == luts.end())
                 {
                     // Dither pixel DEPTH times with error diffusion
                     int buffer[DEPTH];
@@ -152,11 +154,11 @@ void dither(char const *src, char const *out, bool hicolor, bool error_diffusion
                     {
                         return lol::dot(colors[a] - colors[b], lol::vec3(1)) > 0;
                     });
-                    memcpy(luts[pixel], buffer, sizeof(buffer));
+                    memcpy(luts[key], buffer, sizeof(buffer));
                 }
 
                 // Pick the final color using a dithering kernel
-                int *found = luts[pixel];
+                int *found = luts[key];
                 nearest = found[(int)(kernel[i % kernel.size().x][j % kernel.size().y] * DEPTH)];
             }
 
