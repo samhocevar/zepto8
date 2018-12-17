@@ -106,6 +106,8 @@ void dither(char const *src, char const *out, bool hicolor, bool error_diffusion
         return best;
     };
 
+    std::map<lol::vec3, int[DEPTH]> luts;
+
     /* Dither image for first destination */
     lol::array2d<lol::vec4> &curdata = im.lock2d<lol::PixelFormat::RGBA_F32>();
     lol::array2d<lol::vec4> &dstdata = dst.lock2d<lol::PixelFormat::RGBA_F32>();
@@ -133,20 +135,27 @@ void dither(char const *src, char const *out, bool hicolor, bool error_diffusion
             }
             else
             {
-                // Dither pixel DEPTH times with error diffusion
-                int found[DEPTH];
-                auto candidate = pixel;
-                for (int n = 0; n < DEPTH; ++n)
+                if (luts.find(pixel) == luts.end())
                 {
-                    found[n] = closest(candidate);
-                    candidate = pixel + 7.f / 16 * (candidate - colors[found[n]]);
+                    // Dither pixel DEPTH times with error diffusion
+                    int buffer[DEPTH];
+                    auto candidate = pixel;
+                    for (int n = 0; n < DEPTH; ++n)
+                    {
+                        buffer[n] = closest(candidate);
+                        candidate = pixel + 7.f / 16 * (candidate - colors[buffer[n]]);
+                    }
+
+                    // Sort results by luminance
+                    std::sort(buffer, buffer + DEPTH, [& colors](int a, int b)
+                    {
+                        return lol::dot(colors[a] - colors[b], lol::vec3(1)) > 0;
+                    });
+                    memcpy(luts[pixel], buffer, sizeof(buffer));
                 }
 
-                // Sort results by luminance and pick the final color using a dithering kernel
-                std::sort(found, found + DEPTH, [& colors](int a, int b)
-                {
-                    return lol::dot(colors[a] - colors[b], lol::vec3(1)) > 0;
-                });
+                // Pick the final color using a dithering kernel
+                int *found = luts[pixel];
                 nearest = found[(int)(kernel[i % kernel.size().x][j % kernel.size().y] * DEPTH)];
             }
 
