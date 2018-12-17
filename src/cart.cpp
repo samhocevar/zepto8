@@ -22,7 +22,6 @@
 namespace z8
 {
 
-using lol::array;
 using lol::ivec2;
 using lol::msg;
 using lol::u8vec4;
@@ -209,7 +208,7 @@ struct p8_reader
     };
 
     section m_current_section;
-    std::map<int8_t, lol::array<uint8_t>> m_sections;
+    std::map<int8_t, std::vector<uint8_t>> m_sections;
     std::string m_code;
 
     //
@@ -287,7 +286,7 @@ struct p8_reader::action<p8_reader::r_data>
                 {
                     char str[3] = { (char)parser[must_swap ? 1 : 0],
                                     (char)parser[must_swap ? 0 : 1], '\0' };
-                    section << (uint8_t)strtoul(str, nullptr, 16);
+                    section.push_back((uint8_t)strtoul(str, nullptr, 16));
                     ++parser;
                 }
             }
@@ -368,35 +367,35 @@ bool cart::load_p8(char const *filename)
     msg::debug("version: %d code: %d gfx: %d/%d gff: %d/%d map: %d/%d "
                "sfx: %d/%d mus: %d/%d lab: %d/%d\n",
                reader.m_version, (int)m_code.length(),
-               gfx.count(), (int)sizeof(m_rom.gfx),
-               gff.count(), (int)sizeof(m_rom.gfx_props),
-               map.count(), (int)(sizeof(m_rom.map) + sizeof(m_rom.map2)),
-               sfx.count() / (4 + 80) * (4 + 64), (int)sizeof(m_rom.sfx),
-               mus.count() / 5 * 4, (int)sizeof(m_rom.song),
-               lab.count(), LABEL_WIDTH * LABEL_HEIGHT / 2);
+               (int)gfx.size(), (int)sizeof(m_rom.gfx),
+               (int)gff.size(), (int)sizeof(m_rom.gfx_props),
+               (int)map.size(), (int)(sizeof(m_rom.map) + sizeof(m_rom.map2)),
+               (int)sfx.size() / (4 + 80) * (4 + 64), (int)sizeof(m_rom.sfx),
+               (int)mus.size() / 5 * 4, (int)sizeof(m_rom.song),
+               (int)lab.size(), LABEL_WIDTH * LABEL_HEIGHT / 2);
 
     // The optional second chunk of gfx is contiguous, we can copy it directly
-    memcpy(&m_rom.gfx, gfx.data(), lol::min((int)sizeof(m_rom.gfx), gfx.count()));
+    memcpy(&m_rom.gfx, gfx.data(), lol::min(sizeof(m_rom.gfx), gfx.size()));
 
-    memcpy(&m_rom.gfx_props, gff.data(), lol::min((int)sizeof(m_rom.gfx_props), gff.count()));
+    memcpy(&m_rom.gfx_props, gff.data(), lol::min(sizeof(m_rom.gfx_props), gff.size()));
 
     // Map data + optional second chunk
-    memcpy(&m_rom.map, map.data(), lol::min((int)sizeof(m_rom.map), map.count()));
-    if (map.count() > (int)sizeof(m_rom.map))
+    memcpy(&m_rom.map, map.data(), lol::min(sizeof(m_rom.map), map.size()));
+    if (map.size() > sizeof(m_rom.map))
     {
-        int map2_count = lol::min((int)sizeof(m_rom.map2),
-                                  map.count() - (int)sizeof(m_rom.map));
+        int map2_count = lol::min(sizeof(m_rom.map2),
+                                  map.size() - sizeof(m_rom.map));
         // Use binary OR because some old versions of PICO-8 would store
         // a full gfx+gfx2 section AND a full map+map2 section, so we cannot
         // really decide which one is relevant.
         for (int i = 0; i < map2_count; ++i)
-            m_rom.map2[i] |= map[(int)sizeof(m_rom.map) + i];
+            m_rom.map2[i] |= map[sizeof(m_rom.map) + i];
     }
 
     // Song data is encoded slightly differently
-    int song_count = lol::min((int)sizeof(m_rom.song) / 4,
-                              mus.count() / 5);
-    for (int i = 0; i < song_count; ++i)
+    size_t song_count = lol::min(sizeof(m_rom.song) / 4,
+                                 mus.size() / 5);
+    for (size_t i = 0; i < song_count; ++i)
     {
         m_rom.song[i].data[0] = mus[i * 5 + 1] | ((mus[i * 5] << 7) & 0x80);
         m_rom.song[i].data[1] = mus[i * 5 + 2] | ((mus[i * 5] << 6) & 0x80);
@@ -405,9 +404,9 @@ bool cart::load_p8(char const *filename)
     }
 
     // SFX data is packed
-    int sfx_count = lol::min((int)sizeof(m_rom.sfx) / (4 + 32 * 2),
-                             sfx.count() / (4 + 32 * 5 / 2));
-    for (int i = 0; i < sfx_count; ++i)
+    size_t sfx_count = lol::min(sizeof(m_rom.sfx) / (4 + 32 * 2),
+                                sfx.size() / (4 + 32 * 5 / 2));
+    for (size_t i = 0; i < sfx_count; ++i)
     {
         // FIXME move this to the parser maybe?
         for (int j = 0; j < 32; ++j)
@@ -435,8 +434,8 @@ bool cart::load_p8(char const *filename)
     }
 
     // Optional cartridge label
-    m_label.resize(lol::min(lab.count(), LABEL_WIDTH * LABEL_HEIGHT / 2));
-    memcpy(m_label.data(), lab.data(), m_label.count());
+    m_label.resize(lol::min(lab.size(), size_t(LABEL_WIDTH * LABEL_HEIGHT / 2)));
+    memcpy(m_label.data(), lab.data(), m_label.size());
 
     // Invalidate code cache
     m_lua.resize(0);
@@ -454,7 +453,7 @@ lol::image cart::get_png() const
     u8vec4 *pixels = ret.lock<PixelFormat::RGBA_8>();
 
     /* Apply label */
-    if (m_label.count() >= LABEL_WIDTH * LABEL_HEIGHT / 2)
+    if (m_label.size() >= LABEL_WIDTH * LABEL_HEIGHT / 2)
     {
         for (int y = 0; y < LABEL_HEIGHT; ++y)
         for (int x = 0; x < LABEL_WIDTH; ++x)
@@ -465,10 +464,10 @@ lol::image cart::get_png() const
     }
 
     /* Create ROM data */
-    lol::array<uint8_t> const &rom = get_bin();
+    std::vector<uint8_t> const &rom = get_bin();
 
     /* Write ROM to lower image bits */
-    for (int n = 0; n < rom.count(); ++n)
+    for (size_t n = 0; n < rom.size(); ++n)
     {
         u8vec4 p(rom[n] & 0x30, rom[n] & 0x0c, rom[n] & 0x03, rom[n] & 0xc0);
         pixels[n] = pixels[n] / 4 * 4 + p / u8vec4(16, 4, 1, 64);
@@ -479,9 +478,9 @@ lol::image cart::get_png() const
     return ret;
 }
 
-lol::array<uint8_t> cart::get_compressed_code() const
+std::vector<uint8_t> cart::get_compressed_code() const
 {
-    lol::array<uint8_t> ret;
+    std::vector<uint8_t> ret;
 
     /* Ensure the compression LUT is initialised */
     if (!compress_lut)
@@ -539,47 +538,52 @@ lol::array<uint8_t> cart::get_compressed_code() const
          * If it can be a relief, PICO-8 is a lot less good than us at this. */
         if (compress_lut[byte] && best_len <= 2)
         {
-            ret << compress_lut[byte];
+            ret.push_back(compress_lut[byte]);
         }
         else if (best_len >= 2)
         {
-            int a = 0x3c + (i - best_j) / 16;
-            int b = ((i - best_j) & 0xf) + (best_len - 2) * 16;
-            ret << a << b;
+            uint8_t a = 0x3c + (i - best_j) / 16;
+            uint8_t b = ((i - best_j) & 0xf) + (best_len - 2) * 16;
+			ret.insert(ret.end(), { a, b });
             i += best_len - 1;
         }
         else
         {
-            ret << '\0' << byte;
+			ret.insert(ret.end(), { '\0', byte });
         }
     }
 
     msg::debug("compressed code (%d bytes, max %d)\n",
-               ret.count(), (int)sizeof(m_rom.code) - 8);
+               (int)ret.size(), (int)sizeof(m_rom.code) - 8);
 
     return ret;
 }
 
-lol::array<uint8_t> cart::get_bin() const
+std::vector<uint8_t> cart::get_bin() const
 {
     int const data_size = offsetof(memory, code);
 
     /* Create ROM data */
-    lol::array<uint8_t> ret;
+    std::vector<uint8_t> ret;
 
     ret.resize(data_size);
     memcpy(ret.data(), &m_rom, data_size);
 
-    ret << ':' << 'c' << ':' << '\0';
-    ret << (uint8_t)(m_code.length() >> 8);
-	ret << (uint8_t)m_code.length();
-    ret << 0 << 0; /* FIXME: what is this? */
-    ret += get_compressed_code();
+    ret.insert(ret.end(),
+    {
+        ':', 'c', ':', '\0',
+        (uint8_t)(m_code.length() >> 8),
+        (uint8_t)m_code.length(),
+        0, 0 /* FIXME: what is this? */
+    });
+
+	auto const &code = get_compressed_code();
+	ret.insert(ret.end(), code.begin(), code.end());
 
     int max_len = (int)sizeof(m_rom.code);
-    msg::debug("compressed code length: %d/%d\n", ret.count() - data_size, max_len);
+    msg::debug("compressed code length: %d/%d\n", (int)ret.size() - data_size, max_len);
 
-    ret << PICO8_VERSION;
+    ret.push_back(PICO8_VERSION);
 
     return ret;
 }
@@ -612,7 +616,7 @@ std::string cart::get_p8() const
     }
 
     // Export label
-    if (m_label.count() >= LABEL_WIDTH * LABEL_HEIGHT / 2)
+    if (m_label.size() >= LABEL_WIDTH * LABEL_HEIGHT / 2)
     {
         ret += "__label__\n";
         for (int i = 0; i < LABEL_WIDTH * LABEL_HEIGHT / 2; ++i)

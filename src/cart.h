@@ -14,6 +14,8 @@
 
 #include <lol/engine.h>
 
+#include <vector>
+
 #include "analyzer.h"
 #include "memory.h"
 
@@ -43,7 +45,7 @@ public:
         return m_rom;
     }
 
-    lol::array<uint8_t> &get_label()
+    std::vector<uint8_t> &get_label()
     {
         return m_label;
     }
@@ -60,8 +62,8 @@ public:
         return m_lua;
     }
 
-    lol::array<uint8_t> get_compressed_code() const;
-    lol::array<uint8_t> get_bin() const;
+    std::vector<uint8_t> get_compressed_code() const;
+    std::vector<uint8_t> get_bin() const;
     std::string get_p8() const;
     lol::image get_png() const;
 
@@ -70,7 +72,7 @@ private:
     bool load_p8(char const *filename);
 
     memory m_rom;
-    lol::array<uint8_t> m_label;
+    std::vector<uint8_t> m_label;
     std::string m_code, m_lua;
     int m_version;
 };

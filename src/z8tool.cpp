@@ -191,7 +191,7 @@ int main(int argc, char **argv)
         else if (run_mode == mode::inspect)
         {
             printf("Code size: %d\n", (int)cart.get_p8().size());
-            printf("Compressed code size: %d\n", (int)cart.get_compressed_code().count());
+            printf("Compressed code size: %d\n", (int)cart.get_compressed_code().size());
         }
     }
     else if (run_mode == mode::run || run_mode == mode::headless)
