@@ -17,7 +17,7 @@
 namespace z8
 {
 
-void dither(char const *src, char const *out);
+void dither(char const *src, char const *out, bool hicolor, bool error_diffusion);
 
 } // namespace z8
 

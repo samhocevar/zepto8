@@ -93,7 +93,7 @@ struct draw_state
 
     // Pen colors:
     //  0x0f — default colour
-    //  0xf0 — alternate collor for fillp
+    //  0xf0 — alternate color for fillp
     uint8_t pen;
 
     // Text cursor coordinates

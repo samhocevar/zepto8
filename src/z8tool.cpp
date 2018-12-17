@@ -123,6 +123,9 @@ int main(int argc, char **argv)
         }
     }
 
+    if (!in)
+        in = argv[opt.index];
+
     if (run_mode == mode::tolua || run_mode == mode::top8 ||
         run_mode == mode::tobin || run_mode == mode::topng ||
         run_mode == mode::todata || run_mode == mode::inspect)
@@ -197,7 +200,7 @@ int main(int argc, char **argv)
     }
     else if (run_mode == mode::dither)
     {
-        z8::dither(in, out);
+        z8::dither(in, out, true, false);
     }
     else if (run_mode == mode::splore)
     {
