@@ -169,9 +169,10 @@ void vm::run()
 {
     // Start the cartridge!
     int status = luaL_dostring(m_lua, "run()");
-    if (status == 1)
+    if (status != LUA_OK)
     {
-        msg::error("Lua error %s\n", lua_tostring(m_lua, -1));
+        char const *message = lua_tostring(m_lua, -1);
+        msg::error("error %d running cartridge: %s\n", status, message);
         lua_pop(m_lua, 1);
     }
 }

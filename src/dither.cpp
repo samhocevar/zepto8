@@ -13,6 +13,7 @@
 #include <lol/engine.h>
 
 #include <string>
+#include <vector>
 #include <algorithm>
 
 #include "zepto8.h"

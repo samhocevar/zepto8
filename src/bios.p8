@@ -184,6 +184,7 @@ _z8.run = function(cart_code)
         _z8.reset_cartdata()
 
         -- Load cart
+printh("cart_code is "..tostr(cart_code))
         cart_code()
 
         -- Initialise if available
