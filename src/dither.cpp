@@ -10,11 +10,15 @@
 //  See http://www.wtfpl.net/ for more details.
 //
 
-#include <lol/engine.h>
+#if HAVE_CONFIG_H
+#   include "config.h"
+#endif
 
 #include <string>
 #include <vector>
 #include <algorithm>
+
+#include <lol/engine.h>
 
 #include "zepto8.h"
 #include "splore.h"
