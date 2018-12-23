@@ -46,6 +46,7 @@ ___z8tool_SOURCES = \
     z8tool.cpp \
     splore.cpp splore.h \
     dither.cpp dither.h \
+    minify.cpp minify.h \
     $(NULL)
 ___z8tool_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \

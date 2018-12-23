@@ -38,10 +38,12 @@
   <ItemGroup>
     <ClCompile Include="z8tool.cpp" />
     <ClCompile Include="dither.cpp" />
+    <ClCompile Include="minify.cpp" />
     <ClCompile Include="splore.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dither.h" />
+    <ClInclude Include="minify.h" />
     <ClInclude Include="splore.h" />
   </ItemGroup>
   <ItemGroup>

@@ -18,12 +18,15 @@
 
 #include <fstream>
 #include <sstream>
+#include <iostream>
+#include <streambuf>
 
 #include "zepto8.h"
 #include "vm/vm.h"
 #include "telnet.h"
 #include "splore.h"
 #include "dither.h"
+#include "minify.h"
 
 enum class mode
 {
@@ -34,6 +37,7 @@ enum class mode
     telnet   = 133,
     splore   = 134,
     dither   = 135,
+    minify   = 136,
 
     tolua  = 140,
     topng  = 141,
@@ -51,6 +55,7 @@ static void usage()
 {
     printf("Usage: z8tool [--tolua|--topng|--top8|--tobin|--todata] [--data <file>] <cart> [-o <file>]\n");
     printf("       z8tool --dither [--hicolor] [--error-diffusion] <image> [-o <file>]\n");
+    printf("       z8tool --minify\n");
     printf("       z8tool --run <cart>\n");
     printf("       z8tool --inspect <cart>\n");
     printf("       z8tool --headless <cart>\n");
@@ -68,6 +73,7 @@ int main(int argc, char **argv)
     opt.add_opt('h',                 "help",     false);
     opt.add_opt(int(mode::run),      "run",      true);
     opt.add_opt(int(mode::dither),   "dither",   true);
+    opt.add_opt(int(mode::minify),   "minify",   false);
     opt.add_opt(int(mode::inspect),  "inspect",  true);
     opt.add_opt(int(mode::headless), "headless", true);
     opt.add_opt(int(mode::tolua),    "tolua",    false);
@@ -111,6 +117,7 @@ int main(int argc, char **argv)
             run_mode = mode(c);
             in = opt.arg;
             break;
+        case (int)mode::minify:
         case (int)mode::tolua:
         case (int)mode::topng:
         case (int)mode::top8:
@@ -213,6 +220,12 @@ int main(int argc, char **argv)
     else if (run_mode == mode::dither)
     {
         z8::dither(in, out, hicolor, error_diffusion);
+    }
+    else if (run_mode == mode::minify)
+    {
+        auto input = std::string{ std::istreambuf_iterator<char>(std::cin),
+                                  std::istreambuf_iterator<char>() };
+        std::cout << z8::minify(input) << '\n';
     }
     else if (run_mode == mode::splore)
     {
