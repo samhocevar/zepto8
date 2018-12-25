@@ -544,12 +544,12 @@ std::vector<uint8_t> cart::get_compressed_code() const
         {
             uint8_t a = 0x3c + (i - best_j) / 16;
             uint8_t b = ((i - best_j) & 0xf) + (best_len - 2) * 16;
-			ret.insert(ret.end(), { a, b });
+            ret.insert(ret.end(), { a, b });
             i += best_len - 1;
         }
         else
         {
-			ret.insert(ret.end(), { '\0', byte });
+            ret.insert(ret.end(), { '\0', byte });
         }
     }
 
@@ -577,8 +577,8 @@ std::vector<uint8_t> cart::get_bin() const
         0, 0 /* FIXME: what is this? */
     });
 
-	auto const &code = get_compressed_code();
-	ret.insert(ret.end(), code.begin(), code.end());
+    auto const &code = get_compressed_code();
+    ret.insert(ret.end(), code.begin(), code.end());
 
     int max_len = (int)sizeof(m_rom.code);
     msg::debug("compressed code length: %d/%d\n", (int)ret.size() - data_size, max_len);
