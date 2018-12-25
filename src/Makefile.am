@@ -46,10 +46,14 @@ ___z8tool_SOURCES = \
     z8tool.cpp \
     splore.cpp splore.h \
     dither.cpp dither.h \
+    compress.cpp compress.h \
+    zlib/deflate.c zlib/deflate.h zlib/trees.c \
+    zlib/trees.h zlib/zconf.h zlib/zlib.h zlib/zutil.h \
     minify.cpp minify.h \
     $(NULL)
 ___z8tool_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
+                     -Izlib -DGZ8 -DZ_SOLO -DNO_GZIP -DHAVE_MEMCPY -Dlocal= \
                      $(AM_CPPFLAGS)
 ___z8tool_LDFLAGS = libzepto8.a libz8lua.a $(AM_LDFLAGS)
 ___z8tool_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@

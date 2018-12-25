@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="dither.cpp" />
+    <ClCompile Include="z8tool.cpp" />
+    <ClCompile Include="compress.cpp" />
+    <ClCompile Include="minify.cpp" />
+    <ClCompile Include="splore.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="compress.h" />
+    <ClInclude Include="dither.h" />
+    <ClInclude Include="minify.h" />
+    <ClInclude Include="splore.h" />
+    <ClInclude Include="zlib/deflate.c">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib/deflate.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib/trees.c">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib/trees.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib/zconf.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib/zlib.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib/zutil.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="zlib">
+      <UniqueIdentifier>{4072514c-b5f4-4201-a799-31c2812abc3b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

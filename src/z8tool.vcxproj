@@ -32,19 +32,29 @@
   </ItemGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>GZ8;Z_SOLO;NO_GZIP;HAVE_MEMCPY;local=;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="z8tool.cpp" />
+    <ClCompile Include="compress.cpp" />
     <ClCompile Include="dither.cpp" />
     <ClCompile Include="minify.cpp" />
     <ClCompile Include="splore.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="compress.h" />
     <ClInclude Include="dither.h" />
     <ClInclude Include="minify.h" />
     <ClInclude Include="splore.h" />
+    <ClInclude Include="zlib/deflate.c" />
+    <ClInclude Include="zlib/deflate.h" />
+    <ClInclude Include="zlib/trees.c" />
+    <ClInclude Include="zlib/trees.h" />
+    <ClInclude Include="zlib/zconf.h" />
+    <ClInclude Include="zlib/zlib.h" />
+    <ClInclude Include="zlib/zutil.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(LolDir)\src\lol-core.vcxproj">

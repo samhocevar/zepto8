@@ -27,6 +27,7 @@
 #include "splore.h"
 #include "dither.h"
 #include "minify.h"
+#include "compress.h"
 
 enum class mode
 {
@@ -38,6 +39,7 @@ enum class mode
     splore   = 134,
     dither   = 135,
     minify   = 136,
+    compress = 137,
 
     tolua  = 140,
     topng  = 141,
@@ -49,6 +51,8 @@ enum class mode
     data    = 150,
     hicolor = 151,
     error_diffusion = 152,
+    raw     = 153,
+    skip    = 154,
 };
 
 static void usage()
@@ -56,6 +60,7 @@ static void usage()
     printf("Usage: z8tool [--tolua|--topng|--top8|--tobin|--todata] [--data <file>] <cart> [-o <file>]\n");
     printf("       z8tool --dither [--hicolor] [--error-diffusion] <image> [-o <file>]\n");
     printf("       z8tool --minify\n");
+    printf("       z8tool --compress [--raw <num>] [--skip <num>]\n");
     printf("       z8tool --run <cart>\n");
     printf("       z8tool --inspect <cart>\n");
     printf("       z8tool --headless <cart>\n");
@@ -74,6 +79,7 @@ int main(int argc, char **argv)
     opt.add_opt(int(mode::run),      "run",      true);
     opt.add_opt(int(mode::dither),   "dither",   true);
     opt.add_opt(int(mode::minify),   "minify",   false);
+    opt.add_opt(int(mode::compress), "compress", false);
     opt.add_opt(int(mode::inspect),  "inspect",  true);
     opt.add_opt(int(mode::headless), "headless", true);
     opt.add_opt(int(mode::tolua),    "tolua",    false);
@@ -84,6 +90,8 @@ int main(int argc, char **argv)
     opt.add_opt(int(mode::out),      "out",      true);
     opt.add_opt(int(mode::data),     "data",     true);
     opt.add_opt(int(mode::hicolor),  "hicolor",  false);
+    opt.add_opt(int(mode::raw),      "raw",      true);
+    opt.add_opt(int(mode::skip),     "skip",     true);
     opt.add_opt(int(mode::error_diffusion), "error-diffusion", false);
 #if HAVE_UNISTD_H
     opt.add_opt(int(mode::telnet),   "telnet",   true);
@@ -94,6 +102,7 @@ int main(int argc, char **argv)
     char const *data = nullptr;
     char const *in = nullptr;
     char const *out = nullptr;
+    size_t raw = 0, skip = 0;
     bool hicolor = false;
     bool error_diffusion = false;
 
@@ -118,6 +127,7 @@ int main(int argc, char **argv)
             in = opt.arg;
             break;
         case (int)mode::minify:
+        case (int)mode::compress:
         case (int)mode::tolua:
         case (int)mode::topng:
         case (int)mode::top8:
@@ -133,6 +143,12 @@ int main(int argc, char **argv)
             break;
         case (int)mode::hicolor:
             hicolor = true;
+            break;
+        case (int)mode::raw:
+            raw = atoi(opt.arg);
+            break;
+        case (int)mode::skip:
+            skip = atoi(opt.arg);
             break;
         case (int)mode::error_diffusion:
             error_diffusion = true;
@@ -226,6 +242,28 @@ int main(int argc, char **argv)
         auto input = std::string{ std::istreambuf_iterator<char>(std::cin),
                                   std::istreambuf_iterator<char>() };
         std::cout << z8::minify(input) << '\n';
+    }
+    else if (run_mode == mode::compress)
+    {
+        std::vector<uint8_t> input;
+        for (uint8_t ch : std::vector<char>{ std::istreambuf_iterator<char>(std::cin),
+                                             std::istreambuf_iterator<char>() })
+        input.push_back(ch);
+
+        // Compress input buffer
+        std::vector<uint8_t> output = z8::compress(input);
+
+        // Output result, encoded according to user-provided flags
+        if (raw > 0)
+        {
+            fwrite(output.data(), 1, std::min(raw, output.size()), stdout);
+        }
+        else
+        {
+            if (skip > 0)
+                output.erase(output.begin(), output.begin() + std::min(skip, output.size()));
+            std::cout << z8::encode59(output) << '\n';
+        }
     }
     else if (run_mode == mode::splore)
     {
