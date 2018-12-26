@@ -45,5 +45,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="bios.p8" />
+    <None Include="unz8.p8" />
   </ItemGroup>
 </Project>

@@ -19,7 +19,7 @@ ___zepto8_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      $(AM_CPPFLAGS)
 ___zepto8_LDFLAGS = libzepto8.a libz8lua.a $(AM_LDFLAGS)
 ___zepto8_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@
-___zepto8_DATA = bios.p8
+___zepto8_DATA = bios.p8 unz8.p8
 
 3rdparty_sources = \
     3rdparty/imgui-color-text-edit/TextEditor.cpp \
