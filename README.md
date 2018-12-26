@@ -3,17 +3,17 @@ Fantasy fantasy console emulator emulator
 
 This is all experimental.
 
-### z8player
+## z8player
 
     # z8player cart.p8
 
 Plays a PICO-8 cartridge.
 
-### z8tool
+## z8tool
 
 This tool does a lot of things.
 
-## Z8 compression
+### Z8 compression
 
 Compress any file:
 
@@ -23,7 +23,7 @@ This will output a base59 string that can be decompressed by
 [unz8](https://github.com/samhocevar/zepto8/blob/master/src/unz8). The
 decompressed data is an 1-indexed array of 32-bit numbers.
 
-## Image dithering
+### Image dithering
 
 Dither a 128×128 image to the PICO-8 palette:
 
