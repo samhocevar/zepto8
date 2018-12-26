@@ -10,6 +10,10 @@
 //  See http://www.wtfpl.net/ for more details.
 //
 
+#if HAVE_CONFIG_H
+#   include "config.h"
+#endif
+
 #include "z8lua.h"
 
 #include <cctype>
