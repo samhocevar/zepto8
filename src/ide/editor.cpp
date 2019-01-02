@@ -115,6 +115,7 @@ static TextEditor::LanguageDefinition const& get_lang_def()
 
         ret.mCommentStart = "--\\[\\[";
         ret.mCommentEnd = "\\]\\]";
+        ret.mSingleLineComment = "--";
 
         ret.mCaseSensitive = true;
         ret.mAutoIndentation = false;
