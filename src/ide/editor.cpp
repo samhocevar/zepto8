@@ -102,18 +102,18 @@ static TextEditor::LanguageDefinition const& get_lang_def()
         }
 
         #define ADD_COLOR(regex, index) \
-            ret.mTokenRegexStrings.push_back(std::make_pair<std::string, TextEditor::PaletteIndex>(regex, TextEditor::PaletteIndex::index))
-        ADD_COLOR("(\\-\\-|//).*", Comment);
+            ret.mTokenRegexStrings.push_back(std::make_pair(std::string(regex), TextEditor::PaletteIndex::index))
+        ADD_COLOR("(--|//).*", Comment);
         ADD_COLOR("L?\\\"(\\\\.|[^\\\"])*\\\"", String);
-        ADD_COLOR("\\\'[^\\\']*\\\'", String);
+        ADD_COLOR("'[^']*'", String);
         ADD_COLOR("[+-]?0[xX]([0-9a-fA-F]+([.][0-9a-fA-F]*)?|[.][0-9a-fA-F]+)", Number);
         ADD_COLOR("[+-]?0[bB]([01]+([.][01]*)?|[.][0-1]+)", Number);
         ADD_COLOR("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)", Number);
         ADD_COLOR("[a-zA-Z_][a-zA-Z0-9_]*", Identifier);
-        ADD_COLOR("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", Punctuation);
+        ADD_COLOR("[-\\[\\]{}!%^&*()+=~|<>?/;,.]", Punctuation);
         #undef ADD_COLOR
 
-        ret.mCommentStart = "\\-\\-\\[\\[";
+        ret.mCommentStart = "--\\[\\[";
         ret.mCommentEnd = "\\]\\]";
 
         ret.mCaseSensitive = true;
@@ -127,32 +127,38 @@ static TextEditor::LanguageDefinition const& get_lang_def()
     return ret;
 }
 
+static uint32_t z8tou32(int n)
+{
+    return lol::dot(lol::uvec4(1, 1 << 8, 1 << 16, 1 << 24),
+                    lol::uvec4(z8::palette::get8(n)));
+}
+
 static TextEditor::Palette const &get_palette()
 {
     static TextEditor::Palette p =
     { {
-        0xffffffff, // None
-        0xffa877ff, // Keyword (PICO-8 pink)
-        0xffffad29, // Number (PICO-8 blue)
-        0xffffad29, // String (PICO-8 blue)
-        0xff70a0e0, // Char literal
-        0xffe8f1ff, // Punctuation (PICO-8 white)
-        0xff409090, // Preprocessor
-        0xffc7c3c2, // Identifier (PICO-8 light gray)
-        0xff36e400, // Known identifier (PICO-8 green)
-        0xffc040a0, // Preproc identifier
-        0xff9c7683, // Comment (single line) (PICO-8 indigo)
-        0xff9c7683, // Comment (multi line) (PICO-8 indigo)
-        //0xff000000, // Background (PICO-8 black)
-        0xff4f575f, // Background (PICO-8 dark gray)
-        0xff4d00ff, // Cursor (PICO-8 red)
-        0x80a06020, // Selection
-        0x800020ff, // ErrorMarker
-        0x40f08000, // Breakpoint
-        0xff00a3ff, // Line number (PICO-8 orange)
-        0x40000000, // Current line fill
-        0x40808080, // Current line fill (inactive)
-        0x40a0a0a0, // Current line edge
+        0xffffffff,                   // None
+        z8tou32(z8::palette::pink),   // Keyword
+        z8tou32(z8::palette::blue),   // Number
+        z8tou32(z8::palette::blue),   // String
+        z8tou32(z8::palette::blue),   // Char literal
+        z8tou32(z8::palette::white),  // Punctuation
+        0xff409090,                   // Preprocessor
+        z8tou32(z8::palette::light_gray), // Identifier
+        z8tou32(z8::palette::green),  // Known identifier
+        0xffc040a0,                   // Preproc identifier
+        z8tou32(z8::palette::indigo), // Comment (single line)
+        z8tou32(z8::palette::indigo), // Comment (multi line)
+        //z8tou32(z8::palette::black),  // Background
+        z8tou32(z8::palette::dark_gray), // Background
+        z8tou32(z8::palette::red),    // Cursor
+        z8tou32(z8::palette::yellow), // Selection
+        0x800020ff,                   // ErrorMarker
+        0x40f08000,                   // Breakpoint
+        z8tou32(z8::palette::orange), // Line number
+        0x40000000,                   // Current line fill
+        0x40808080,                   // Current line fill (inactive)
+        0x40a0a0a0,                   // Current line edge
     } };
     return p;
 }
