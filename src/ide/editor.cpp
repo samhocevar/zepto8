@@ -16,6 +16,7 @@
 
 #include <lol/engine.h>
 
+#include "zepto8.h"
 #include "editor.h"
 
 namespace z8

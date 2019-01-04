@@ -4,7 +4,7 @@ __lua__
 --
 --  ZEPTO-8 — Fantasy console emulator
 --
---  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
+--  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
 --
 --  This program is free software. It comes without any warranty, to
 --  the extent permitted by applicable law. You can redistribute it
@@ -104,6 +104,8 @@ do
         return __cartdata(s)
     end
 
+    _z8.load = load
+
     -- Stubs for unimplemented functions
     local function stub(s)
         return function(a) __stub(s.."("..(a and '"'..tostr(a)..'"' or "")..")") end
@@ -142,6 +144,7 @@ _G = nil
 --
 error = nil
 pcall = nil
+dofile = nil
 
 
 --
@@ -172,7 +175,7 @@ _z8.reset_cartdata = function()
     __cartdata(nil)
 end
 
-_z8.run = function(cart_code)
+_z8.run_cart = function(cart_code)
     _z8.loop = cocreate(function()
         local do_frame = true
 
@@ -183,25 +186,41 @@ _z8.run = function(cart_code)
         _z8.reset_state()
         _z8.reset_cartdata()
 
-        -- Load cart
-        cart_code()
+        -- Load cart and save the engine functions. Note that if the
+        -- cart code returns before the end, our added code will not be
+        -- executed, and nothing will work. This is also PICO-8’s behaviour
+        local code, ex = _z8.load(cart_code..[[--
+            if (_init) _z8._init = _init
+            if (_update) _z8._update = _update
+            if (_update60) _z8._update60 = _update60
+            if (_draw) _z8._draw = _draw
+        ]])
+        if not code then
+          color(14) print('syntax error')
+          color(6) print(ex)
+          yield()
+          return
+        end
+
+        -- Run cart code
+        code()
 
         -- Initialise if available
-        if (_init != nil) _init()
+        if (_z8._init) _z8._init()
 
         -- Finish if no user function is available
-        if (not (_update60 or _update or _draw)) return
+        if (not (_z8._update60 or _z8._update or _z8._draw)) return
 
         -- Execute the user functions
         while true do
-            if _update60 != nil then
+            if _z8._update60 then
                 _update_buttons()
-                _update60()
-            elseif _update != nil then
-                if (do_frame) _update_buttons() _update()
+                _z8._update60()
+            elseif _z8._update then
+                if (do_frame) _update_buttons() _z8._update()
                 do_frame = not do_frame
             end
-            if (_draw != nil and do_frame) _draw()
+            if (_z8._draw and do_frame) _z8._draw()
             yield()
         end
     end)
@@ -245,7 +264,7 @@ _z8.splash = function()
                               local a = {0,0,12,0,0,0,13,7,11,0,14,7,7,7,10,0,15,7,9,0,0,0,8,0,0}
                               for j=0,#a-1 do pset(41+j%5,2+j/5,a[j+1]) end end,
             [45] = function() color(6) print("\n\n\nzepto-8 0.0.0 beta") end,
-            [50] = function() print("(c) 2016-18 sam hocevar et al.\n\n") end,
+            [50] = function() print("(c) 2016-19 sam hocevar et al.\n\n") end,
         }
 
         for step=0,60 do if boot[step] then boot[step]() end flip() end

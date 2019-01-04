@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -231,10 +231,10 @@ int vm::api_run(lua_State *l)
     // Initialise VM state (TODO: check what else to init)
     ::memset(m_buttons, 0, sizeof(m_buttons));
 
-    // Load cartridge code and call _z8.run() on it
+    // Load cartridge code and call _z8.run_cart() on it
     lua_getglobal(l, "_z8");
-    lua_getfield(l, -1, "run");
-    luaL_loadstring(l, m_cart.get_lua().c_str());
+    lua_getfield(l, -1, "run_cart");
+    lua_pushstring(l, m_cart.get_lua().c_str());
     lua_pcall(l, 1, 0, 0);
 
     return 0;
