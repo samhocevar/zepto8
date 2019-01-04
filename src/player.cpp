@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -88,11 +88,11 @@ player::player(lol::ivec2 window_size)
     // does not seem right to me.
     auto img = new lol::image(lol::ivec2(128, 128));
     img->unlock(img->lock<lol::PixelFormat::RGBA_8>()); // ensure RGBA_8 is present
-    m_tile = lol::Tiler::Register("tile", new lol::image(*img), lol::ivec2(128, 128), lol::ivec2(1, 1));
+    m_tile = lol::TileSet::create("tile", new lol::image(*img), lol::ivec2(128, 128), lol::ivec2(1, 1));
 
     img = new lol::image(lol::ivec2(128, 32));
     img->unlock(img->lock<lol::PixelFormat::RGBA_8>()); // ensure RGBA_8 is present
-    m_font_tile = lol::Tiler::Register("font", new lol::image(*img), lol::ivec2(128, 32), lol::ivec2(1, 1));
+    m_font_tile = lol::TileSet::create("font", new lol::image(*img), lol::ivec2(128, 32), lol::ivec2(1, 1));
 
     /* Allocate memory */
     m_screen.resize(128 * 128);
@@ -100,7 +100,8 @@ player::player(lol::ivec2 window_size)
 
 player::~player()
 {
-    lol::Tiler::Deregister(m_tile);
+    lol::TileSet::destroy(m_tile);
+    lol::TileSet::destroy(m_font_tile);
 
     for (int i = 0; i < 4; ++i)
         lol::audio::stop_streaming(i);
