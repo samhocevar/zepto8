@@ -176,8 +176,25 @@ _z8.reset_cartdata = function()
 end
 
 _z8.run_cart = function(cart_code)
+    local glue_code = [[--
+        if (_init) _init()
+        if _update or _update60 or _draw then
+            local do_frame = true
+            while true do
+                if _update60 then
+                    _update_buttons()
+                    _update60()
+                elseif _update then
+                    if (do_frame) _update_buttons() _update()
+                    do_frame = not do_frame
+                end
+                if (_draw and do_frame) _draw()
+                yield()
+            end
+        end
+    ]]
+
     _z8.loop = cocreate(function()
-        local do_frame = true
 
         -- First reload cart into memory
         memset(0, 0, 0x8000)
@@ -186,15 +203,12 @@ _z8.run_cart = function(cart_code)
         _z8.reset_state()
         _z8.reset_cartdata()
 
-        -- Load cart and save the engine functions. Note that if the
+        -- Load cart and run the user-provided functions. Note that if the
         -- cart code returns before the end, our added code will not be
-        -- executed, and nothing will work. This is also PICO-8’s behaviour
-        local code, ex = _z8.load(cart_code..[[--
-            if (_init) _z8._init = _init
-            if (_update) _z8._update = _update
-            if (_update60) _z8._update60 = _update60
-            if (_draw) _z8._draw = _draw
-        ]])
+        -- executed, and nothing will work. This is also PICO-8’s behaviour.
+        -- The code has to be appended as a string because the functions
+        -- may be stored in local variables.
+        local code, ex = _z8.load(cart_code..glue_code)
         if not code then
           color(14) print('syntax error')
           color(6) print(ex)
@@ -204,25 +218,6 @@ _z8.run_cart = function(cart_code)
 
         -- Run cart code
         code()
-
-        -- Initialise if available
-        if (_z8._init) _z8._init()
-
-        -- Finish if no user function is available
-        if (not (_z8._update60 or _z8._update or _z8._draw)) return
-
-        -- Execute the user functions
-        while true do
-            if _z8._update60 then
-                _update_buttons()
-                _z8._update60()
-            elseif _z8._update then
-                if (do_frame) _update_buttons() _z8._update()
-                do_frame = not do_frame
-            end
-            if (_z8._draw and do_frame) _z8._draw()
-            yield()
-        end
     end)
 end
 
