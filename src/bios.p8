@@ -41,6 +41,14 @@ do
     local error = error
     stop = function() _z8.stopped = true error() end
 
+    assert = function(cond, msg)
+        if not cond then
+            color(14) print("assertion failed:")
+            color(6) print(msg or "assert()")
+            stop()
+        end
+    end
+
     -- use closure so that we don’t need “table” later
     local insert = table.insert
     local remove = table.remove
@@ -142,19 +150,13 @@ _G = nil
 --
 -- Hide these functions
 --
-error = nil
-pcall = nil
-dofile = nil
+error, pcall, dofile = nil
 
 
 --
 -- Hide these modules, they should not be accessible
 --
-table = nil
-debug = nil
-string = nil
-io = nil
-coroutine = nil
+table, debug, string, io, coroutine = nil
 
 
 --
@@ -212,8 +214,7 @@ _z8.run_cart = function(cart_code)
         if not code then
           color(14) print('syntax error')
           color(6) print(ex)
-          yield()
-          return
+          error()
         end
 
         -- Run cart code
