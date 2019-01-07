@@ -25,18 +25,22 @@ using lol::msg;
 
 void vm::render(lol::u8vec4 *screen) const
 {
-    /* FIXME performance: a 256-value LUT would be better. */
     auto &ds = m_ram.draw_state;
 
-    /* Precompute the current palette */
-    u8vec4 lut[16];
-    for (int n = 0; n < 16; ++n)
-        lut[n] = palette::get8(ds.pal[1][n]);
+    /* Precompute the current palette for pairs of pixels */
+    struct { u8vec4 a, b; } lut[256];
+    for (int n = 0; n < 256; ++n)
+    {
+        lut[n].a = palette::get8(ds.pal[1][n % 16]);
+        lut[n].b = palette::get8(ds.pal[1][n / 16]);
+    }
 
     /* Render actual screen */
-    for (int y = 0; y < 128; ++y)
-    for (int x = 0; x < 128; ++x)
-        screen[y * 128 + x] = lut[m_ram.pixel(x, y)];
+    for (uint8_t p : m_ram.screen)
+    {
+        *screen++ = lut[p].a;
+        *screen++ = lut[p].b;
+    }
 }
 
 void vm::print_ansi(lol::ivec2 term_size,
