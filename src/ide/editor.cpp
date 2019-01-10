@@ -129,40 +129,47 @@ static TextEditor::LanguageDefinition const& get_lang_def()
     return ret;
 }
 
-static uint32_t z8tou32(int n)
-{
-    return lol::dot(lol::uvec4(1, 1 << 8, 1 << 16, 1 << 24),
-                    lol::uvec4(z8::palette::get8(n)));
-}
-
 static TextEditor::Palette const &get_palette()
 {
-    static TextEditor::Palette p =
-    { {
-        0xffffffff,                   // None
-        z8tou32(z8::palette::pink),   // Keyword
-        z8tou32(z8::palette::blue),   // Number
-        z8tou32(z8::palette::blue),   // String
-        z8tou32(z8::palette::blue),   // Char literal
-        z8tou32(z8::palette::white),  // Punctuation
-        0xff409090,                   // Preprocessor
-        z8tou32(z8::palette::light_gray), // Identifier
-        z8tou32(z8::palette::green),  // Known identifier
-        0xffc040a0,                   // Preproc identifier
-        z8tou32(z8::palette::indigo), // Comment (single line)
-        z8tou32(z8::palette::indigo), // Comment (multi line)
-        //z8tou32(z8::palette::black),  // Background
-        z8tou32(z8::palette::dark_gray), // Background
-        z8tou32(z8::palette::red),    // Cursor
-        z8tou32(z8::palette::yellow), // Selection
-        0x800020ff,                   // ErrorMarker
-        0x40f08000,                   // Breakpoint
-        z8tou32(z8::palette::orange), // Line number
-        0x40000000,                   // Current line fill
-        0x40808080,                   // Current line fill (inactive)
-        0x40a0a0a0,                   // Current line edge
-    } };
-    return p;
+    static bool inited = false;
+    static TextEditor::Palette ret;
+
+    if (!inited)
+    {
+        static int desc[] =
+        {
+            z8::palette::white,      // None [UNUSED]
+            z8::palette::pink,       // Keyword
+            z8::palette::blue,       // Number
+            z8::palette::blue,       // String
+            z8::palette::blue,       // Char literal
+            z8::palette::white,      // Punctuation
+            z8::palette::indigo,     // Preprocessor [UNUSED]
+            z8::palette::light_gray, // Identifier
+            z8::palette::green,      // Known identifier
+            z8::palette::indigo,     // Preproc identifier [UNUSED]
+            z8::palette::indigo,     // Comment (single line)
+            z8::palette::indigo,     // Comment (multi line)
+            //z8::palette::dark_gray,  // Background
+            z8::palette::dark_blue,  // Background
+            z8::palette::red,        // Cursor
+            z8::palette::yellow,     // Selection
+            z8::palette::red,        // ErrorMarker [UNUSED]
+            z8::palette::red,        // Breakpoint [UNUSED]
+            z8::palette::orange,     // Line number
+            z8::palette::dark_blue,  // Current line fill
+            z8::palette::light_gray, // Current line fill (inactive)
+            z8::palette::light_gray, // Current line edge
+        };
+
+        for (size_t i = 0; i < sizeof(desc) / sizeof(*desc); ++i)
+        {
+            ret[i] = lol::dot(lol::uvec4(1, 1 << 8, 1 << 16, 1 << 24),
+                              lol::uvec4(z8::palette::get8(desc[i])));
+        }
+    }
+
+    return ret;
 }
 
 } // namespace z8
