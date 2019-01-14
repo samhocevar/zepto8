@@ -150,13 +150,13 @@ struct p8_reader
     // Grammar rules
     //
 
-    struct r_lua : TAOCPP_PEGTL_STRING("__lua__") {};
-    struct r_gfx : TAOCPP_PEGTL_STRING("__gfx__") {};
-    struct r_gff : TAOCPP_PEGTL_STRING("__gff__") {};
-    struct r_map : TAOCPP_PEGTL_STRING("__map__") {};
-    struct r_sfx : TAOCPP_PEGTL_STRING("__sfx__") {};
-    struct r_mus : TAOCPP_PEGTL_STRING("__music__") {};
-    struct r_lab : TAOCPP_PEGTL_STRING("__label__") {};
+    struct r_lua : TAO_PEGTL_STRING("__lua__") {};
+    struct r_gfx : TAO_PEGTL_STRING("__gfx__") {};
+    struct r_gff : TAO_PEGTL_STRING("__gff__") {};
+    struct r_map : TAO_PEGTL_STRING("__map__") {};
+    struct r_sfx : TAO_PEGTL_STRING("__sfx__") {};
+    struct r_mus : TAO_PEGTL_STRING("__music__") {};
+    struct r_lab : TAO_PEGTL_STRING("__label__") {};
     struct r_any : pegtl::seq<pegtl::two<'_'>, pegtl::plus<pegtl::alnum>, pegtl::two<'_'>> {};
 
     struct r_section_name : pegtl::sor<r_lua,
@@ -177,8 +177,8 @@ struct p8_reader
     struct r_section : pegtl::seq<r_section_line, r_data> {};
     struct r_version : pegtl::star<pegtl::digit> {};
 
-    struct r_header: pegtl::seq<TAOCPP_PEGTL_STRING("pico-8 cartridge"), pegtl::until<pegtl::eol>,
-                                TAOCPP_PEGTL_STRING("version "), r_version, pegtl::until<pegtl::eol>> {};
+    struct r_header: pegtl::seq<TAO_PEGTL_STRING("pico-8 cartridge"), pegtl::until<pegtl::eol>,
+                                TAO_PEGTL_STRING("version "), r_version, pegtl::until<pegtl::eol>> {};
     struct r_file : pegtl::seq<pegtl::opt<pegtl::utf8::bom>,
                                r_header,
                                r_data, /* data before the first section is ignored */
