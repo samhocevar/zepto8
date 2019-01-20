@@ -107,7 +107,7 @@ void vm::print_ansi(lol::ivec2 term_size,
                     printf("\x1b[38;5;%d;48;5;%dm", ansi_palette[ds.pal[1][fg]], ansi_palette[ds.pal[1][bg]]);
             }
 
-            printf(glyph);
+            puts(glyph);
 
             oldfg = fg;
             oldbg = bg;
