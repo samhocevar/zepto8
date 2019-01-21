@@ -17,6 +17,9 @@
 #if HAVE_UNISTD_H
 #   include <unistd.h>
 #endif
+#if HAVE_SYS_SELECT_H
+#   include <sys/select.h>
+#endif
 
 #include "zepto8.h"
 #include "vm/vm.h"

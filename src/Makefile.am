@@ -63,7 +63,7 @@ EXTRA_DIST += z8tool.vcxproj
 ___z8lua_SOURCES = \
     z8lua/lua.c dummy.cpp \
     $(NULL)
-___z8lua_CPPFLAGS = -xc++ -Iz8lua $(lua_cflags)
+___z8lua_CPPFLAGS = -xc++ -Iz8lua $(lua_cflags) $(AM_CPPFLAGS) $(AM_CXXFLAGS)
 ___z8lua_LDFLAGS = libz8lua.a $(lua_ldflags)
 ___z8lua_DEPENDENCIES = libz8lua.a
 
@@ -95,7 +95,7 @@ libz8lua_a_SOURCES = \
     z8lua/lparser.h z8lua/lstate.h z8lua/lstring.h z8lua/ltable.h \
     z8lua/ltests.h z8lua/ltm.h z8lua/luaconf.h z8lua/lua.h z8lua/lualib.h \
     z8lua/lundump.h z8lua/lvm.h z8lua/lzio.h
-libz8lua_a_CPPFLAGS = -xc++ -Iz8lua $(lua_cflags) $(AM_CPPFLAGS)
+libz8lua_a_CPPFLAGS = -xc++ -Iz8lua $(lua_cflags) $(AM_CPPFLAGS) $(AM_CXXFLAGS)
 
 lua_cflags = -xc++ -Iz8lua -DLUA_USE_POSIX -DLUA_USE_STRTODHEX
 lua_ldflags =

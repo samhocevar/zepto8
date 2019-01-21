@@ -27,13 +27,15 @@ AC_CONFIG_FILES(
   carts/Makefile
 ])
 
-dnl
-dnl  Inherit all Lol Engine checks
-dnl
+AC_CHECK_HEADERS(sys/select.h)
 
 ac_cv_have_readline=no
 AC_CHECK_LIB(readline, rl_callback_handler_install, [ac_cv_have_readline=yes])
 AM_CONDITIONAL(HAVE_READLINE, test "${ac_cv_have_readline}" != "no")
+
+dnl
+dnl  Inherit all Lol Engine checks
+dnl
 
 LOL_AC_SUBPROJECT()
 

@@ -150,13 +150,13 @@ struct p8_reader
     // Grammar rules
     //
 
-    struct r_lua : TAOCPP_PEGTL_STRING("__lua__") {};
-    struct r_gfx : TAOCPP_PEGTL_STRING("__gfx__") {};
-    struct r_gff : TAOCPP_PEGTL_STRING("__gff__") {};
-    struct r_map : TAOCPP_PEGTL_STRING("__map__") {};
-    struct r_sfx : TAOCPP_PEGTL_STRING("__sfx__") {};
-    struct r_mus : TAOCPP_PEGTL_STRING("__music__") {};
-    struct r_lab : TAOCPP_PEGTL_STRING("__label__") {};
+    struct r_lua : TAO_PEGTL_STRING("__lua__") {};
+    struct r_gfx : TAO_PEGTL_STRING("__gfx__") {};
+    struct r_gff : TAO_PEGTL_STRING("__gff__") {};
+    struct r_map : TAO_PEGTL_STRING("__map__") {};
+    struct r_sfx : TAO_PEGTL_STRING("__sfx__") {};
+    struct r_mus : TAO_PEGTL_STRING("__music__") {};
+    struct r_lab : TAO_PEGTL_STRING("__label__") {};
     struct r_any : pegtl::seq<pegtl::two<'_'>, pegtl::plus<pegtl::alnum>, pegtl::two<'_'>> {};
 
     struct r_section_name : pegtl::sor<r_lua,
@@ -177,8 +177,8 @@ struct p8_reader
     struct r_section : pegtl::seq<r_section_line, r_data> {};
     struct r_version : pegtl::star<pegtl::digit> {};
 
-    struct r_header: pegtl::seq<TAOCPP_PEGTL_STRING("pico-8 cartridge"), pegtl::until<pegtl::eol>,
-                                TAOCPP_PEGTL_STRING("version "), r_version, pegtl::until<pegtl::eol>> {};
+    struct r_header: pegtl::seq<TAO_PEGTL_STRING("pico-8 cartridge"), pegtl::until<pegtl::eol>,
+                                TAO_PEGTL_STRING("version "), r_version, pegtl::until<pegtl::eol>> {};
     struct r_file : pegtl::seq<pegtl::opt<pegtl::utf8::bom>,
                                r_header,
                                r_data, /* data before the first section is ignored */
@@ -379,15 +379,15 @@ bool cart::load_p8(char const *filename)
                (int)lab.size(), LABEL_WIDTH * LABEL_HEIGHT / 2);
 
     // The optional second chunk of gfx is contiguous, we can copy it directly
-    memcpy(&m_rom.gfx, gfx.data(), lol::min(sizeof(m_rom.gfx), gfx.size()));
+    memcpy(&m_rom.gfx, gfx.data(), std::min(sizeof(m_rom.gfx), gfx.size()));
 
-    memcpy(&m_rom.gfx_props, gff.data(), lol::min(sizeof(m_rom.gfx_props), gff.size()));
+    memcpy(&m_rom.gfx_props, gff.data(), std::min(sizeof(m_rom.gfx_props), gff.size()));
 
     // Map data + optional second chunk
-    memcpy(&m_rom.map, map.data(), lol::min(sizeof(m_rom.map), map.size()));
+    memcpy(&m_rom.map, map.data(), std::min(sizeof(m_rom.map), map.size()));
     if (map.size() > sizeof(m_rom.map))
     {
-        int map2_count = lol::min(sizeof(m_rom.map2),
+        int map2_count = std::min(sizeof(m_rom.map2),
                                   map.size() - sizeof(m_rom.map));
         // Use binary OR because some old versions of PICO-8 would store
         // a full gfx+gfx2 section AND a full map+map2 section, so we cannot
@@ -397,7 +397,7 @@ bool cart::load_p8(char const *filename)
     }
 
     // Song data is encoded slightly differently
-    size_t song_count = lol::min(sizeof(m_rom.song) / 4,
+    size_t song_count = std::min(sizeof(m_rom.song) / 4,
                                  mus.size() / 5);
     for (size_t i = 0; i < song_count; ++i)
     {
@@ -408,7 +408,7 @@ bool cart::load_p8(char const *filename)
     }
 
     // SFX data is packed
-    size_t sfx_count = lol::min(sizeof(m_rom.sfx) / (4 + 32 * 2),
+    size_t sfx_count = std::min(sizeof(m_rom.sfx) / (4 + 32 * 2),
                                 sfx.size() / (4 + 32 * 5 / 2));
     for (size_t i = 0; i < sfx_count; ++i)
     {
@@ -438,7 +438,7 @@ bool cart::load_p8(char const *filename)
     }
 
     // Optional cartridge label
-    m_label.resize(lol::min(lab.size(), size_t(LABEL_WIDTH * LABEL_HEIGHT / 2)));
+    m_label.resize(std::min(lab.size(), size_t(LABEL_WIDTH * LABEL_HEIGHT / 2)));
     memcpy(m_label.data(), lab.data(), m_label.size());
 
     // Invalidate code cache
@@ -505,11 +505,11 @@ std::vector<uint8_t> cart::get_compressed_code() const
         int best_j = 0, best_len = 0;
         for (int j = lol::max(i - 3135, 0); j < i; ++j)
         {
-            int end = lol::min((int)m_code.length() - j, 17);
+            int end = std::min((int)m_code.length() - j, 17);
 
             /* XXX: official PICO-8 stops at i - j, despite being able
              * to support m_code.length() - j, it seems. */
-            end = lol::min(end, i - j);
+            end = std::min(end, i - j);
 
             for (int k = 0; ; ++k)
             {
