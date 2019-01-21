@@ -142,7 +142,7 @@ vm::~vm()
 int vm::panic_hook(lua_State* l)
 {
     char const *message = lua_tostring(l, -1);
-    msg::error("%s\n", message);
+    msg::error("Lua panic: %s\n", message);
     lol::abort();
     return 0;
 }

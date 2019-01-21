@@ -55,6 +55,8 @@ ide::ide(player *player)
     m_ram_edit.OptShowAscii = m_rom_edit.OptShowAscii = false;
     m_ram_edit.OptUpperCaseHex = m_rom_edit.OptUpperCaseHex = false;
     m_ram_edit.OptShowOptions = m_rom_edit.OptShowOptions = false;
+
+    io.Fonts->AddFontDefault();
 }
 
 ide::~ide()
@@ -65,9 +67,11 @@ ide::~ide()
 void ide::tick_game(float seconds)
 {
     WorldEntity::tick_game(seconds);
+
 #if CUSTOM_FONT
     if (!m_font)
     {
+        //ImGui::EndFrame();
         auto atlas = IM_NEW(ImFontAtlas)();
         atlas->TexWidth = 128;
         atlas->TexHeight = 32;
@@ -97,7 +101,7 @@ void ide::tick_game(float seconds)
         {
             int x = ch % 0x20 * 4, y = ch / 0x20 * 6 - 6;
             m_font->AddGlyph(ch, delta, delta, 3 * EDITOR_SCALE + delta, 5 * EDITOR_SCALE + delta,
-                           x / 128.f, y / 32.f, (x + 3) / 128.f, (y + 5) / 32.f, 4.f * EDITOR_SCALE);
+                             x / 128.f, y / 32.f, (x + 3) / 128.f, (y + 5) / 32.f, 4.f * EDITOR_SCALE);
         }
 
         // Double-width chars
@@ -105,10 +109,11 @@ void ide::tick_game(float seconds)
         {
             int x = ch % 0x10 * 8, y = ch / 0x10 * 6 + 2;
             m_font->AddGlyph(ch, delta, delta, 7 * EDITOR_SCALE + delta, 5 * EDITOR_SCALE + delta,
-                           x / 128.f, y / 32.f, (x + 7) / 128.f, (y + 5) / 32.f, 8.f * EDITOR_SCALE);
+                             x / 128.f, y / 32.f, (x + 7) / 128.f, (y + 5) / 32.f, 8.f * EDITOR_SCALE);
         }
 
         m_font->BuildLookupTable();
+        //ImGui::NewFrame();
     }
 
     if (m_font->ContainerAtlas->TexID == nullptr)

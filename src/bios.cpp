@@ -23,8 +23,10 @@ namespace z8
 
 bios::bios()
 {
+    char const *filename = "bios.p8";
+
     // Initialize BIOS
-    for (auto const &file : lol::sys::get_path_list("bios.p8"))
+    for (auto const &file : lol::sys::get_path_list(filename))
     {
         lol::File f;
         f.Open(file, lol::FileAccess::Read);
@@ -32,8 +34,10 @@ bios::bios()
         f.Close();
 
         if (exists && m_cart.load(file.c_str()))
-            break;
+            return;
     }
+
+    lol::msg::error("unable to load BIOS file %s\n", filename);
 }
 
 } // namespace z8
