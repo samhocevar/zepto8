@@ -125,7 +125,8 @@ void ide::tick_game(float seconds)
     render_dock();
 //    ImGui::ShowDemoWindow();
 
-    ImGui::SetNextWindowSize(lol::ivec2(512, 512));
+    ImGui::SetNextWindowDockID(m_dockspace_id);
+    ImGui::SetNextWindowSize(lol::ivec2(480, 480));
     ImGui::PushStyleColor(ImGuiCol_ChildBg, z8::palette::get(5));
     m_editor.render();
     ImGui::PopStyleColor(1);
@@ -146,7 +147,7 @@ void ide::tick_game(float seconds)
     }
     ImGui::End();
 
-    ImGui::SetNextWindowSize(lol::ivec2(64, 32));
+    ImGui::SetNextWindowSize(lol::ivec2(512, 512));
     ImGui::Begin("cONSOLE", nullptr);
     {
         ImGui::Image(m_player->get_texture(), 3.f * lol::vec2(128.f),
@@ -154,6 +155,7 @@ void ide::tick_game(float seconds)
     }
     ImGui::End();
 
+    ImGui::SetNextWindowDockID(m_dockspace_id);
     ImGui::SetNextWindowSize(lol::ivec2(64, 32));
     ImGui::Begin("mUSIC", nullptr);
     {
@@ -162,10 +164,12 @@ void ide::tick_game(float seconds)
     }
     ImGui::End();
 
+    ImGui::SetNextWindowDockID(m_dockspace_id);
     ImGui::SetNextWindowSize(lol::ivec2(64, 32));
     ImGui::Begin("sPRITES", nullptr);
     ImGui::End();
 
+    ImGui::SetNextWindowDockID(m_dockspace_id);
     ImGui::SetNextWindowSize(lol::ivec2(64, 32));
     ImGui::Begin("mAPS", nullptr);
     ImGui::End();
@@ -207,9 +211,9 @@ void ide::render_dock()
     ImGui::PopStyleVar();
 
     // Create the actual dock space
-    ImGuiID dockspace_id = ImGui::GetID("MyDockspace");
+    m_dockspace_id = ImGui::GetID("MyDockspace");
     ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
-    ImGui::DockSpace(dockspace_id, lol::vec2(0), dockspace_flags);
+    ImGui::DockSpace(m_dockspace_id, lol::vec2(0), dockspace_flags);
 
     // The main menu bar
     if (ImGui::BeginMenuBar())

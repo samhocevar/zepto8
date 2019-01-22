@@ -37,6 +37,8 @@ private:
 
     bool m_commands[5] = { 0 };
 
+    ImGuiID m_dockspace_id;
+
     editor m_editor;
     MemoryEditor m_ram_edit, m_rom_edit;
 
