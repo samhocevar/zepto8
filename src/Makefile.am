@@ -21,7 +21,8 @@ ___zepto8_LDFLAGS = libzepto8.a libz8lua.a $(AM_LDFLAGS)
 ___zepto8_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@
 ___zepto8_DATA = bios.p8 unz8.p8
 if LOL_USE_EMSCRIPTEN
-___zepto8_LDFLAGS += --preload-file bios.p8
+___zepto8_LDFLAGS += --preload-file bios.p8 \
+                     --shell-file template.html
 endif
 
 3rdparty_sources = \
@@ -43,7 +44,8 @@ ___z8player_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
 ___z8player_LDFLAGS = libzepto8.a libz8lua.a $(AM_LDFLAGS)
 ___z8player_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@
 if LOL_USE_EMSCRIPTEN
-___z8player_LDFLAGS += --preload-file bios.p8
+___z8player_LDFLAGS += --preload-file bios.p8 \
+                       --shell-file template.html
 endif
 
 EXTRA_DIST += z8player.vcxproj
@@ -62,9 +64,6 @@ ___z8tool_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      $(AM_CPPFLAGS)
 ___z8tool_LDFLAGS = libzepto8.a libz8lua.a $(AM_LDFLAGS)
 ___z8tool_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@
-if LOL_USE_EMSCRIPTEN
-___z8tool_LDFLAGS += --preload-file bios.p8
-endif
 
 EXTRA_DIST += zlib/deflate.c zlib/trees.c
 EXTRA_DIST += z8tool.vcxproj
