@@ -125,6 +125,7 @@ void ide::tick_game(float seconds)
     render_dock();
 //    ImGui::ShowDemoWindow();
 
+    ImGui::SetNextWindowSize(lol::ivec2(512, 512));
     ImGui::PushStyleColor(ImGuiCol_ChildBg, z8::palette::get(5));
     m_editor.render();
     ImGui::PopStyleColor(1);
@@ -145,6 +146,7 @@ void ide::tick_game(float seconds)
     }
     ImGui::End();
 
+    ImGui::SetNextWindowSize(lol::ivec2(64, 32));
     ImGui::Begin("cONSOLE", nullptr);
     {
         ImGui::Image(m_player->get_texture(), 3.f * lol::vec2(128.f),
@@ -152,6 +154,7 @@ void ide::tick_game(float seconds)
     }
     ImGui::End();
 
+    ImGui::SetNextWindowSize(lol::ivec2(64, 32));
     ImGui::Begin("mUSIC", nullptr);
     {
         ImGui::TextColored(z8::palette::get(10), "stuff");
@@ -159,16 +162,20 @@ void ide::tick_game(float seconds)
     }
     ImGui::End();
 
+    ImGui::SetNextWindowSize(lol::ivec2(64, 32));
     ImGui::Begin("sPRITES", nullptr);
     ImGui::End();
 
+    ImGui::SetNextWindowSize(lol::ivec2(64, 32));
     ImGui::Begin("mAPS", nullptr);
     ImGui::End();
 
+    ImGui::SetNextWindowSize(lol::ivec2(512, 256));
     ImGui::Begin("ram", nullptr);
         m_ram_edit.DrawContents(m_player->get_ram(), 0x8000);
     ImGui::End();
 
+    ImGui::SetNextWindowSize(lol::ivec2(512, 256));
     ImGui::Begin("rom", nullptr);
         m_rom_edit.DrawContents(m_player->get_rom(), 0x5e00);
     ImGui::End();
