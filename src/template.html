@@ -56,16 +56,20 @@
     </div>
     <hr/>
     <div class="emscripten">
-      <input type="checkbox" id="resize">Resize canvas
+      <!-- resize and pointer lock on by default -->
+      <!--<input type="checkbox" id="resize" checked>Resize canvas
       <input type="checkbox" id="pointerLock" checked>Lock/hide mouse pointer
       &nbsp;&nbsp;&nbsp;
       <input type="button" value="Fullscreen" onclick="Module.requestFullscreen(document.getElementById('pointerLock').checked, 
-                                                                                document.getElementById('resize').checked)">
+                                                                                document.getElementById('resize').checked)">-->
+      <input type="button" value="Fullscreen" onclick="Module.requestFullscreen(true, true)">
     </div>
     
-    <hr/>
+    <!-- console output (hidden) -->
+    <!--<hr/>
     <textarea class="emscripten" id="output" rows="8"></textarea>
-    <hr>
+    <hr>-->
+
     <script type='text/javascript'>
       var statusElement = document.getElementById('status');
       var progressElement = document.getElementById('progress');
