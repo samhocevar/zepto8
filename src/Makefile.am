@@ -21,7 +21,7 @@ ___zepto8_LDFLAGS = libzepto8.a libz8lua.a $(AM_LDFLAGS)
 ___zepto8_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@
 ___zepto8_DATA = bios.p8 unz8.p8
 if LOL_USE_EMSCRIPTEN
-___zepto8_LDFLAGS += --preload-file bios.p8 \
+___zepto8_LDFLAGS += --preload-file bios.p8 --preload-file data/zepto8.ttf \
                      --shell-file template.html
 endif
 

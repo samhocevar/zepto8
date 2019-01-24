@@ -85,7 +85,7 @@ void ide::tick_game(float seconds)
             if (exists)
             {
                 auto &io = ImGui::GetIO();
-                m_font = io.Fonts->AddFontFromFileTTF(file.c_str(), 10.0f);
+                m_font = io.Fonts->AddFontFromFileTTF(file.c_str(), 18.0f);
                 lol::LolImGui::refresh_fonts();
                 break;
             }

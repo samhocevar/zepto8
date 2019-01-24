@@ -42,7 +42,7 @@ int main(int argc, char **argv)
         }
     }
 
-    lol::ivec2 win_size(1280, 768);
+    lol::ivec2 win_size(1680, 1024);
     lol::Application app("zepto-8", win_size, 60.0f);
 
     auto player = new z8::player(win_size);
