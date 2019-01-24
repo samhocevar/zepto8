@@ -68,10 +68,30 @@ void ide::tick_game(float seconds)
 {
     WorldEntity::tick_game(seconds);
 
-#if CUSTOM_FONT
     if (!m_font)
     {
-        //ImGui::EndFrame();
+        ImGui::EndFrame();
+
+        char const *filename = "data/zepto8.ttf";
+
+        // Initialize BIOS
+        for (auto const &file : lol::sys::get_path_list(filename))
+        {
+            lol::File f;
+            f.Open(file, lol::FileAccess::Read);
+            bool exists = f.IsValid();
+            f.Close();
+
+            if (exists)
+            {
+                auto &io = ImGui::GetIO();
+                m_font = io.Fonts->AddFontFromFileTTF(file.c_str(), 10.0f);
+                lol::LolImGui::refresh_fonts();
+                break;
+            }
+        }
+
+#if CUSTOM_FONT
         auto atlas = IM_NEW(ImFontAtlas)();
         atlas->TexWidth = 128;
         atlas->TexHeight = 32;
@@ -113,84 +133,21 @@ void ide::tick_game(float seconds)
         }
 
         m_font->BuildLookupTable();
-        //ImGui::NewFrame();
-    }
-
-    if (m_font->ContainerAtlas->TexID == nullptr)
-        m_font->ContainerAtlas->TexID = m_player->get_font_texture();
-
-    ImGui::PushFont(m_font);
 #endif
-
-    render_dock();
-//    ImGui::ShowDemoWindow();
-
-    ImGui::SetNextWindowPos(lol::ivec2(1050, 550), ImGuiCond_FirstUseEver);
-    ImGui::Begin("pALETTE", nullptr);
-    {
-        for (int i = 0; i < 16; i++)
-        {
-            if (i % 4 > 0)
-                ImGui::SameLine();
-            ImGui::PushID(i);
-            ImGui::PushStyleColor(ImGuiCol_Button, z8::palette::get(i));
-            ImGui::PushStyleColor(ImGuiCol_Text, z8::palette::get(i < 6 ? 7 : 0));
-            ImGui::Button(lol::format("%2d", i).c_str());
-            ImGui::PopStyleColor(2);
-            ImGui::PopID();
-        }
+        ImGui::NewFrame();
     }
-    ImGui::End();
-
-    ImGui::SetNextWindowDockID(m_dockspace_id, ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(lol::ivec2(64, 32), ImGuiCond_FirstUseEver);
-    ImGui::Begin("mUSIC", nullptr);
-    {
-        ImGui::TextColored(z8::palette::get(10), "stuff");
-        ImGui::TextColored(z8::palette::get(5), "more stuff\nlol!!!");
-    }
-    ImGui::End();
-
-    ImGui::SetNextWindowDockID(m_dockspace_id, ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(lol::ivec2(64, 32), ImGuiCond_FirstUseEver);
-    ImGui::Begin("sPRITES", nullptr);
-    ImGui::End();
-
-    ImGui::SetNextWindowDockID(m_dockspace_id, ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(lol::ivec2(64, 32), ImGuiCond_FirstUseEver);
-    ImGui::Begin("mAPS", nullptr);
-    ImGui::End();
-
-    ImGui::SetNextWindowDockID(m_dockspace_id, ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(lol::ivec2(480, 480), ImGuiCond_FirstUseEver);
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, z8::palette::get(5));
-    m_editor.render();
-    ImGui::PopStyleColor(1);
-
-    ImGui::SetNextWindowPos(lol::ivec2(60, 480), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(lol::ivec2(512, 246), ImGuiCond_FirstUseEver);
-    ImGui::Begin("ram", nullptr);
-        m_ram_edit.DrawContents(m_player->get_ram(), 0x8000);
-    ImGui::End();
-
-    ImGui::SetNextWindowPos(lol::ivec2(400, 450), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(lol::ivec2(512, 256), ImGuiCond_FirstUseEver);
-    ImGui::Begin("rom", nullptr);
-        m_rom_edit.DrawContents(m_player->get_rom(), 0x5e00);
-    ImGui::End();
-
-    ImGui::SetNextWindowPos(lol::ivec2(800, 100), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(lol::ivec2(400, 420), ImGuiCond_FirstUseEver);
-    ImGui::Begin("cONSOLE", nullptr);
-    {
-        ImGui::Image(m_player->get_texture(), 3.f * lol::vec2(128.f),
-                     lol::vec2(0.f), lol::vec2(1.f));
-    }
-    ImGui::End();
 
 #if CUSTOM_FONT
-    ImGui::PopFont();
+    if (m_font->ContainerAtlas->TexID == nullptr)
+        m_font->ContainerAtlas->TexID = m_player->get_font_texture();
 #endif
+
+    ImGui::PushFont(m_font);
+
+    render_dock();
+    render_windows();
+
+    ImGui::PopFont();
 }
 
 void ide::render_dock()
@@ -222,29 +179,101 @@ void ide::render_dock()
     // The main menu bar
     if (ImGui::BeginMenuBar())
     {
-        if (ImGui::BeginMenu("fILE"))
+        if (ImGui::BeginMenu("File"))
         {
-            ImGui::MenuItem("nEW", nullptr, &m_commands[0], false);
-            ImGui::MenuItem("oPEN", nullptr, &m_commands[1], true);
+            ImGui::MenuItem("New", nullptr, &m_commands[0], false);
+            ImGui::MenuItem("Open", nullptr, &m_commands[1], true);
             ImGui::Separator();
-            ImGui::MenuItem("eXIT", nullptr, &m_commands[2], false);
+            ImGui::MenuItem("Exit", nullptr, &m_commands[2], false);
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("eDIT"))
+        if (ImGui::BeginMenu("Edit"))
+        {
             ImGui::EndMenu();
+        }
 
-        if (ImGui::BeginMenu("vIEW"))
+        if (ImGui::BeginMenu("View"))
+        {
             ImGui::EndMenu();
+        }
 
-        if (ImGui::BeginMenu("hELP"))
+        if (ImGui::BeginMenu("Help"))
+        {
             ImGui::EndMenu();
+        }
 
         ImGui::EndMenuBar();
     }
 
     ImGui::End();
     ImGui::PopStyleVar();
+}
+
+void ide::render_windows()
+{
+    ImGui::SetNextWindowPos(lol::ivec2(1050, 550), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Palette", nullptr);
+    {
+        for (int i = 0; i < 16; i++)
+        {
+            if (i % 4 > 0)
+                ImGui::SameLine();
+            ImGui::PushID(i);
+            ImGui::PushStyleColor(ImGuiCol_Button, z8::palette::get(i));
+            ImGui::PushStyleColor(ImGuiCol_Text, z8::palette::get(i < 6 ? 7 : 0));
+            ImGui::Button(lol::format("%2d", i).c_str());
+            ImGui::PopStyleColor(2);
+            ImGui::PopID();
+        }
+    }
+    ImGui::End();
+
+    ImGui::SetNextWindowDockID(m_dockspace_id, ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(lol::ivec2(64, 32), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Music", nullptr);
+    {
+        ImGui::TextColored(z8::palette::get(10), "stuff");
+        ImGui::TextColored(z8::palette::get(5), "more stuff\nlol!!!");
+    }
+    ImGui::End();
+
+    ImGui::SetNextWindowDockID(m_dockspace_id, ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(lol::ivec2(64, 32), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Sprites", nullptr);
+    ImGui::End();
+
+    ImGui::SetNextWindowDockID(m_dockspace_id, ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(lol::ivec2(64, 32), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Maps", nullptr);
+    ImGui::End();
+
+    ImGui::SetNextWindowDockID(m_dockspace_id, ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(lol::ivec2(480, 480), ImGuiCond_FirstUseEver);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, z8::palette::get(5));
+    m_editor.render();
+    ImGui::PopStyleColor(1);
+
+    ImGui::SetNextWindowPos(lol::ivec2(60, 480), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(lol::ivec2(512, 246), ImGuiCond_FirstUseEver);
+    ImGui::Begin("RAM", nullptr);
+        m_ram_edit.DrawContents(m_player->get_ram(), 0x8000);
+    ImGui::End();
+
+    ImGui::SetNextWindowPos(lol::ivec2(400, 450), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(lol::ivec2(512, 256), ImGuiCond_FirstUseEver);
+    ImGui::Begin("ROM", nullptr);
+        m_rom_edit.DrawContents(m_player->get_rom(), 0x5e00);
+    ImGui::End();
+
+    ImGui::SetNextWindowPos(lol::ivec2(800, 100), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(lol::ivec2(400, 420), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Player", nullptr);
+    {
+        ImGui::Image(m_player->get_texture(), 3.f * lol::vec2(128.f),
+                     lol::vec2(0.f), lol::vec2(1.f));
+    }
+    ImGui::End();
 }
 
 void ide::tick_draw(float seconds, lol::Scene &scene)

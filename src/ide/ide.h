@@ -33,7 +33,7 @@ public:
 
 private:
     void render_dock();
-    void render_editor();
+    void render_windows();
 
     bool m_commands[5] = { 0 };
 
