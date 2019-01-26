@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -32,12 +32,32 @@ public:
     virtual void tick_draw(float seconds, lol::Scene &scene) override;
 
 private:
-    void render_dock();
+    void render_app();
+    void render_menu();
     void render_windows();
 
-    bool m_commands[5] = { 0 };
+    bool m_commands[5] = { false };
 
-    ImGuiID m_dockspace_id;
+    struct
+    {
+        bool player = true;
+        bool code = true;
+        bool maps = false;
+        bool music = false;
+        bool sprites = false;
+        bool ram = true;
+        bool rom = true;
+        bool palette = true;
+    }
+    m_show;
+
+    struct
+    {
+        ImGuiID root;
+        ImGuiID main;
+        ImGuiID bottom, bottom_left, bottom_right;
+    }
+    m_dock;
 
     editor m_editor;
     MemoryEditor m_ram_edit, m_rom_edit;

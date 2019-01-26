@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -15,6 +15,8 @@
 #endif
 
 #include <lol/engine.h>
+
+#include "imgui_internal.h" // for the docking API
 
 #include "zepto8.h"
 #include "ide/ide.h"
@@ -48,7 +50,7 @@ ide::ide(player *player)
     style.Colors[ImGuiCol_TabUnfocusedActive] = z8::palette::get(0);
 
     style.Colors[ImGuiCol_TitleBg]       = z8::palette::get(5);
-    style.Colors[ImGuiCol_TitleBgActive] = z8::palette::get(5);
+    style.Colors[ImGuiCol_TitleBgActive] = z8::palette::get(8);
 
     m_player = player;
 
@@ -144,13 +146,12 @@ void ide::tick_game(float seconds)
 
     ImGui::PushFont(m_font);
 
-    render_dock();
-    render_windows();
+    render_app();
 
     ImGui::PopFont();
 }
 
-void ide::render_dock()
+void ide::render_app()
 {
     // Create a fullscreen window for the docking space
     ImGuiWindowFlags flags = ImGuiWindowFlags_MenuBar
@@ -167,17 +168,53 @@ void ide::render_dock()
     ImGui::SetNextWindowSize(viewport->Size);
     ImGui::SetNextWindowViewport(viewport->ID);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, lol::vec2(0));
     ImGui::Begin("ZEPTO-8 IDE", nullptr, flags);
-    ImGui::PopStyleVar();
+    ImGui::PopStyleVar(3);
+
+    render_menu();
+
+#if 0
+    if (ImGui::Begin("ToolBar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking))
+    //if (ImGui::Begin("ToolBar", nullptr, lol::vec2(0), -1.f, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking)
+    {
+        for (int i = 0; i < 16; i++)
+        {
+            if (i > 0)
+                ImGui::SameLine();
+            ImGui::PushID(i);
+            ImGui::PushStyleColor(ImGuiCol_Button, z8::palette::get(i));
+            ImGui::PushStyleColor(ImGuiCol_Text, z8::palette::get(i < 6 ? 7 : 0));
+            ImGui::Button(lol::format("%2d", i).c_str());
+            ImGui::MenuItem(lol::format("%2d", i).c_str());
+            ImGui::PopStyleColor(2);
+            ImGui::PopID();
+        }
+
+    }
+    ImGui::End();
+#endif
 
     // Create the actual dock space
-    m_dockspace_id = ImGui::GetID("MyDockspace");
-    ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
-    ImGui::DockSpace(m_dockspace_id, lol::vec2(0), dockspace_flags);
+    m_dock.root = ImGui::GetID("MyDockspace");
+    bool first_frame = ImGui::DockBuilderGetNode(m_dock.root) == nullptr;
 
+    ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
+    ImGui::DockSpace(m_dock.root, lol::vec2(0), dockspace_flags);
+
+    // Temporary hack because I can’t get the layout stuff to work
+    m_dock.bottom_left = m_dock.bottom_right = m_dock.main = m_dock.root;
+
+    ImGui::End();
+
+    render_windows();
+}
+
+void ide::render_menu()
+{
     // The main menu bar
-    if (ImGui::BeginMenuBar())
+    if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
         {
@@ -190,28 +227,42 @@ void ide::render_dock()
 
         if (ImGui::BeginMenu("Edit"))
         {
+            ImGui::MenuItem("Cut", nullptr, nullptr, false);
+            ImGui::MenuItem("Copy", nullptr, nullptr, false);
+            ImGui::MenuItem("Paste", nullptr, nullptr, false);
             ImGui::EndMenu();
         }
 
         if (ImGui::BeginMenu("View"))
         {
+            ImGui::MenuItem("Player", nullptr, &m_show.player, true);
+            ImGui::Separator();
+            ImGui::MenuItem("Code", nullptr, &m_show.code, true);
+#if 0
+            ImGui::MenuItem("Palette", nullptr, &m_show.palette, true);
+#endif
+            ImGui::MenuItem("Maps", nullptr, &m_show.maps, true);
+            ImGui::MenuItem("Sprites", nullptr, &m_show.sprites, true);
+            ImGui::MenuItem("Music", nullptr, &m_show.music, true);
+            ImGui::Separator();
+            ImGui::MenuItem("ROM", nullptr, &m_show.rom, true);
+            ImGui::MenuItem("RAM", nullptr, &m_show.ram, true);
             ImGui::EndMenu();
         }
 
         if (ImGui::BeginMenu("Help"))
         {
+            ImGui::MenuItem("No help yet", nullptr, nullptr, false);
             ImGui::EndMenu();
         }
 
-        ImGui::EndMenuBar();
+        ImGui::EndMainMenuBar();
     }
-
-    ImGui::End();
-    ImGui::PopStyleVar();
 }
 
 void ide::render_windows()
 {
+#if 0
     ImGui::SetNextWindowPos(lol::ivec2(1050, 550), ImGuiCond_FirstUseEver);
     ImGui::Begin("Palette", nullptr);
     {
@@ -228,52 +279,88 @@ void ide::render_windows()
         }
     }
     ImGui::End();
+#endif
 
-    ImGui::SetNextWindowDockID(m_dockspace_id, ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(lol::ivec2(64, 32), ImGuiCond_FirstUseEver);
-    ImGui::Begin("Music", nullptr);
+    if (m_show.music)
     {
-        ImGui::TextColored(z8::palette::get(10), "stuff");
-        ImGui::TextColored(z8::palette::get(5), "more stuff\nlol!!!");
+        ImGui::SetNextWindowDockID(m_dock.main, ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(lol::ivec2(64, 32), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Music", &m_show.music);
+        {
+            ImGui::TextColored(z8::palette::get(10), "stuff");
+            ImGui::TextColored(z8::palette::get(5), "more stuff\nlol!!!");
+        }
+        ImGui::End();
     }
-    ImGui::End();
 
-    ImGui::SetNextWindowDockID(m_dockspace_id, ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(lol::ivec2(64, 32), ImGuiCond_FirstUseEver);
-    ImGui::Begin("Sprites", nullptr);
-    ImGui::End();
-
-    ImGui::SetNextWindowDockID(m_dockspace_id, ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(lol::ivec2(64, 32), ImGuiCond_FirstUseEver);
-    ImGui::Begin("Maps", nullptr);
-    ImGui::End();
-
-    ImGui::SetNextWindowDockID(m_dockspace_id, ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(lol::ivec2(480, 480), ImGuiCond_FirstUseEver);
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, z8::palette::get(5));
-    m_editor.render();
-    ImGui::PopStyleColor(1);
-
-    ImGui::SetNextWindowPos(lol::ivec2(60, 480), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(lol::ivec2(512, 246), ImGuiCond_FirstUseEver);
-    ImGui::Begin("RAM", nullptr);
-        m_ram_edit.DrawContents(m_player->get_ram(), 0x8000);
-    ImGui::End();
-
-    ImGui::SetNextWindowPos(lol::ivec2(400, 450), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(lol::ivec2(512, 256), ImGuiCond_FirstUseEver);
-    ImGui::Begin("ROM", nullptr);
-        m_rom_edit.DrawContents(m_player->get_rom(), 0x5e00);
-    ImGui::End();
-
-    ImGui::SetNextWindowPos(lol::ivec2(800, 100), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(lol::ivec2(400, 420), ImGuiCond_FirstUseEver);
-    ImGui::Begin("Player", nullptr);
+    if (m_show.sprites)
     {
-        ImGui::Image(m_player->get_texture(), 3.f * lol::vec2(128.f),
-                     lol::vec2(0.f), lol::vec2(1.f));
+        ImGui::SetNextWindowDockID(m_dock.main, ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(lol::ivec2(64, 32), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("Sprites", &m_show.sprites))
+        {
+        }
+        ImGui::End();
     }
-    ImGui::End();
+
+    if (m_show.maps)
+    {
+        ImGui::SetNextWindowDockID(m_dock.main, ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(lol::ivec2(64, 32), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("Maps", &m_show.maps))
+        {
+        }
+        ImGui::End();
+    }
+
+    if (m_show.code)
+    {
+        ImGui::SetNextWindowDockID(m_dock.main, ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(lol::ivec2(480, 480), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("Code", &m_show.code))
+        {
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, z8::palette::get(5));
+            m_editor.render();
+            ImGui::PopStyleColor(1);
+        }
+        ImGui::End();
+    }
+
+    if (m_show.rom)
+    {
+        ImGui::SetNextWindowDockID(m_dock.bottom_left, ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowPos(lol::ivec2(400, 450), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(lol::ivec2(512, 256), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("ROM", &m_show.rom))
+        {
+            m_rom_edit.DrawContents(m_player->get_rom(), 0x5e00);
+        }
+        ImGui::End();
+    }
+
+    if (m_show.ram)
+    {
+        ImGui::SetNextWindowDockID(m_dock.bottom, ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowPos(lol::ivec2(60, 480), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(lol::ivec2(512, 246), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("RAM", &m_show.ram))
+        {
+            m_ram_edit.DrawContents(m_player->get_ram(), 0x8000);
+        }
+        ImGui::End();
+    }
+
+    if (m_show.player)
+    {
+        ImGui::SetNextWindowPos(lol::ivec2(800, 100), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(lol::ivec2(400, 420), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("Player", &m_show.player))
+        {
+            ImGui::Image(m_player->get_texture(), 3.f * lol::vec2(128.f),
+                         lol::vec2(0.f), lol::vec2(1.f));
+        }
+        ImGui::End();
+    }
 }
 
 void ide::tick_draw(float seconds, lol::Scene &scene)
