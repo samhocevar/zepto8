@@ -17,3 +17,6 @@
 [submodule "src/3rdparty/portable-file-dialogs"]
 	path = src/3rdparty/portable-file-dialogs
 	url = ../portable-file-dialogs.git
+[submodule "src/3rdparty/zep"]
+	path = src/3rdparty/zep
+	url = ../fork-zep.git
