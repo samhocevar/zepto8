@@ -105,7 +105,8 @@ public:
         m_palette[Zep::ThemeColor::Comment] = z8::palette::indigo;
         m_palette[Zep::ThemeColor::Keyword] = z8::palette::pink;
         m_palette[Zep::ThemeColor::Identifier] = z8::palette::green;
-        m_palette[Zep::ThemeColor::Integer] = z8::palette::blue;
+        m_palette[Zep::ThemeColor::Number] = z8::palette::blue;
+        m_palette[Zep::ThemeColor::String] = z8::palette::blue;
     }
 
     virtual Zep::NVec4f GetColor(Zep::ThemeColor themeColor) const
