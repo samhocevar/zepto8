@@ -87,7 +87,7 @@ void ide::tick_game(float seconds)
             if (exists)
             {
                 auto &io = ImGui::GetIO();
-                m_font = io.Fonts->AddFontFromFileTTF(file.c_str(), 18.0f);
+                m_font = io.Fonts->AddFontFromFileTTF(file.c_str(), 6.0f * EDITOR_SCALE);
                 lol::LolImGui::refresh_fonts();
                 break;
             }
@@ -154,8 +154,7 @@ void ide::tick_game(float seconds)
 void ide::render_app()
 {
     // Create a fullscreen window for the docking space
-    ImGuiWindowFlags flags = ImGuiWindowFlags_MenuBar
-                           | ImGuiWindowFlags_NoDocking
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoDocking
                            | ImGuiWindowFlags_NoTitleBar
                            | ImGuiWindowFlags_NoCollapse
                            | ImGuiWindowFlags_NoResize
@@ -164,49 +163,38 @@ void ide::render_app()
                            | ImGuiWindowFlags_NoNavFocus;
 
     ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowPos(viewport->Pos);
-    ImGui::SetNextWindowSize(viewport->Size);
-    ImGui::SetNextWindowViewport(viewport->ID);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, lol::vec2(3.f * EDITOR_SCALE));
+	ImGui::PushStyleColor(ImGuiCol_WindowBg, z8::palette::get(5));
+
+    ImGui::SetNextWindowPos(viewport->Pos);
+    ImGui::SetNextWindowSize(lol::vec2(viewport->Size.x, 0.f));
+    ImGui::SetNextWindowViewport(viewport->ID);
+    ImGui::Begin("menu window", nullptr, flags | ImGuiWindowFlags_MenuBar);
+        render_menu();
+    	render_toolbar();
+		// Store window size so that we can place the rest of the app
+        lol::vec2 menu_size = ImGui::GetWindowSize();
+	ImGui::End();
+
+	ImGui::PopStyleColor();
+    ImGui::PopStyleVar();
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, lol::vec2(0));
-    ImGui::Begin("ZEPTO-8 IDE", nullptr, flags);
+
+    ImGui::SetNextWindowPos(lol::vec2(viewport->Pos.x, viewport->Pos.y + menu_size.y));
+    ImGui::SetNextWindowSize(lol::vec2(viewport->Size.x, viewport->Size.y - menu_size.y));
+    ImGui::Begin("dock", nullptr, flags);
+        // Create the actual dock space
+        m_dock.root = ImGui::GetID("MyDockspace");
+        bool first_frame = ImGui::DockBuilderGetNode(m_dock.root) == nullptr;
+        ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
+        ImGui::DockSpace(m_dock.root, lol::vec2(0), dockspace_flags);
+        // Temporary hack because I can’t get the layout stuff to work
+        m_dock.bottom_left = m_dock.bottom_right = m_dock.main = m_dock.root;
+    ImGui::End();
+
     ImGui::PopStyleVar(3);
-
-    render_menu();
-
-#if 0
-    if (ImGui::Begin("ToolBar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking))
-    //if (ImGui::Begin("ToolBar", nullptr, lol::vec2(0), -1.f, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking)
-    {
-        for (int i = 0; i < 16; i++)
-        {
-            if (i > 0)
-                ImGui::SameLine();
-            ImGui::PushID(i);
-            ImGui::PushStyleColor(ImGuiCol_Button, z8::palette::get(i));
-            ImGui::PushStyleColor(ImGuiCol_Text, z8::palette::get(i < 6 ? 7 : 0));
-            ImGui::Button(lol::format("%2d", i).c_str());
-            ImGui::MenuItem(lol::format("%2d", i).c_str());
-            ImGui::PopStyleColor(2);
-            ImGui::PopID();
-        }
-
-    }
-    ImGui::End();
-#endif
-
-    // Create the actual dock space
-    m_dock.root = ImGui::GetID("MyDockspace");
-    bool first_frame = ImGui::DockBuilderGetNode(m_dock.root) == nullptr;
-
-    ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
-    ImGui::DockSpace(m_dock.root, lol::vec2(0), dockspace_flags);
-
-    // Temporary hack because I can’t get the layout stuff to work
-    m_dock.bottom_left = m_dock.bottom_right = m_dock.main = m_dock.root;
-
-    ImGui::End();
 
     render_windows();
 }
@@ -257,6 +245,22 @@ void ide::render_menu()
         }
 
         ImGui::EndMainMenuBar();
+    }
+}
+
+void ide::render_toolbar()
+{
+    for (int i = 0; i < 16; i++)
+    {
+        if (i > 0)
+            ImGui::SameLine();
+        ImGui::PushID(i);
+        ImGui::PushStyleColor(ImGuiCol_Button, z8::palette::get(i));
+        ImGui::PushStyleColor(ImGuiCol_Text, z8::palette::get(i < 6 ? 7 : 0));
+        ImGui::Button(lol::format("%2d", i).c_str());
+//            ImGui::MenuItem(lol::format("%2d", i).c_str());
+        ImGui::PopStyleColor(2);
+        ImGui::PopID();
     }
 }
 

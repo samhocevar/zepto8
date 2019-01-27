@@ -34,6 +34,7 @@ public:
 private:
     void render_app();
     void render_menu();
+    void render_toolbar();
     void render_windows();
 
     bool m_commands[5] = { false };
