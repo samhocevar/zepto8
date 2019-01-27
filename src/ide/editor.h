@@ -14,12 +14,7 @@
 
 #include <lol/engine.h>
 
-#if USE_LEGACY_EDITOR
-#   include "3rdparty/imgui-color-text-edit/TextEditor.h"
-#else
-#   include "3rdparty/zep/src/zep.h"
-#   include "3rdparty/zep/src/imgui/editor_imgui.h"
-#endif
+#include <memory>
 
 namespace z8
 {
@@ -33,11 +28,7 @@ public:
     void render();
 
 private:
-#if USE_LEGACY_EDITOR
-    TextEditor m_widget;
-#else
-    std::unique_ptr<Zep::ZepEditor_ImGui> m_zep;
-#endif
+    std::unique_ptr<class editor_impl> m_impl;
 };
 
 } // namespace z8
