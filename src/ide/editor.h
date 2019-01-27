@@ -14,7 +14,12 @@
 
 #include <lol/engine.h>
 
-#include "3rdparty/imgui-color-text-edit/TextEditor.h"
+#if USE_LEGACY_EDITOR
+#   include "3rdparty/imgui-color-text-edit/TextEditor.h"
+#else
+#   include "3rdparty/zep/src/zep.h"
+#   include "3rdparty/zep/src/imgui/editor_imgui.h"
+#endif
 
 namespace z8
 {
@@ -28,7 +33,11 @@ public:
     void render();
 
 private:
+#if USE_LEGACY_EDITOR
     TextEditor m_widget;
+#else
+    std::unique_ptr<Zep::ZepEditor_ImGui> m_zep;
+#endif
 };
 
 } // namespace z8

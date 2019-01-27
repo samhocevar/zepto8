@@ -16,8 +16,11 @@ ___zepto8_SOURCES = \
     $(NULL)
 ___zepto8_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
+                     -I3rdparty/zep/src \
+                     -I3rdparty/zep/m3rdparty \
+                     -I3rdparty/zep/src/mcommon \
                      $(AM_CPPFLAGS)
-___zepto8_LDFLAGS = libzepto8.a libz8lua.a $(AM_LDFLAGS)
+___zepto8_LDFLAGS = libzepto8.a libz8lua.a -lstdc++fs $(AM_LDFLAGS)
 ___zepto8_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@
 ___zepto8_DATA = bios.p8 unz8.p8
 if LOL_USE_EMSCRIPTEN
@@ -30,6 +33,32 @@ endif
     3rdparty/imgui-color-text-edit/TextEditor.h \
     3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h \
     3rdparty/portable-file-dialogs/portable-file-dialogs.h \
+    3rdparty/zep/src/buffer.cpp \
+    3rdparty/zep/src/commands.cpp \
+    3rdparty/zep/src/editor.cpp \
+    3rdparty/zep/src/imgui/display_imgui.cpp \
+    3rdparty/zep/src/imgui/editor_imgui.cpp \
+    3rdparty/zep/src/mcommon/animation/timer.cpp \
+    3rdparty/zep/src/mcommon/file/archive.cpp \
+    3rdparty/zep/src/mcommon/file/file.cpp \
+    3rdparty/zep/src/mcommon/file/mfilesystem.cpp \
+    3rdparty/zep/src/mcommon/FileWatcher/FileWatcher.cpp \
+    3rdparty/zep/src/mcommon/FileWatcher/FileWatcherLinux.cpp \
+    3rdparty/zep/src/mcommon/FileWatcher/FileWatcherOSX.cpp \
+    3rdparty/zep/src/mcommon/FileWatcher/FileWatcherWin32.cpp \
+    3rdparty/zep/src/mcommon/string/stringutils.cpp \
+    3rdparty/zep/src/mode.cpp \
+    3rdparty/zep/src/mode_standard.cpp \
+    3rdparty/zep/src/mode_vim.cpp \
+    3rdparty/zep/src/scroller.cpp \
+    3rdparty/zep/src/splits.cpp \
+    3rdparty/zep/src/syntax.cpp \
+    3rdparty/zep/src/syntax_providers.cpp \
+    3rdparty/zep/src/syntax_rainbow_brackets.cpp \
+    3rdparty/zep/src/tab_window.cpp \
+    3rdparty/zep/src/theme.cpp \
+    3rdparty/zep/src/window_base.cpp \
+    3rdparty/zep/src/window.cpp \
     $(NULL)
 
 EXTRA_DIST += zepto8.vcxproj

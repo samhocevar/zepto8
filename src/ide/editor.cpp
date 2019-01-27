@@ -68,16 +68,66 @@ static std::set<std::string> pico8_identifiers =
     "-- \x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d\x8e\x8f\n" \
     "-- \x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\n"
 
+#if USE_LEGACY_EDITOR
 static TextEditor::LanguageDefinition const& get_lang_def();
 static TextEditor::Palette const &get_palette();
+#else
+class zep_theme : public Zep::ZepTheme
+{
+public:
+    zep_theme()
+    {
+        m_palette[Zep::ThemeColor::Text] = z8::palette::light_gray;
+        m_palette[Zep::ThemeColor::Normal] = z8::palette::light_gray;
+        m_palette[Zep::ThemeColor::Parenthesis] = z8::palette::light_gray;
+        m_palette[Zep::ThemeColor::Background] = z8::palette::dark_blue;
+        m_palette[Zep::ThemeColor::LineNumber] = z8::palette::orange;
+        m_palette[Zep::ThemeColor::CursorNormal] = z8::palette::red;
+        m_palette[Zep::ThemeColor::Comment] = z8::palette::indigo;
+        m_palette[Zep::ThemeColor::Keyword] = z8::palette::pink;
+        m_palette[Zep::ThemeColor::Identifier] = z8::palette::green;
+        m_palette[Zep::ThemeColor::Integer] = z8::palette::blue;
+    }
+
+    virtual Zep::NVec4f GetColor(Zep::ThemeColor themeColor) const
+    {
+        auto it = m_palette.find(themeColor);
+        if (it != m_palette.end())
+        {
+            auto col = z8::palette::get(it->second);
+            return Zep::NVec4f(col.r, col.g, col.b, col.a);
+        }
+        return Zep::ZepTheme::GetColor(themeColor);
+    }
+
+    //virtual Zep::NVec4f GetComplement(const Zep::NVec4f& col) const
+    //virtual Zep::NVec4f GetUniqueColor(uint32_t id) const
+
+private:
+    std::map<Zep::ThemeColor, int> m_palette;
+};
+#endif
 
 editor::editor()
 {
+#if USE_LEGACY_EDITOR
     m_widget.SetLanguageDefinition(get_lang_def());
     m_widget.SetPalette(get_palette());
 
     // Debug text
     m_widget.SetText(TEST_TEXT);
+#else
+    m_zep = std::make_unique<Zep::ZepEditor_ImGui>("");
+
+    m_zep->RegisterSyntaxFactory({".p8"}, Zep::tSyntaxFactory([](Zep::ZepBuffer* pBuffer)
+    {
+        return std::make_shared<Zep::ZepSyntax>(*pBuffer, pico8_keywords, pico8_identifiers);
+    }));
+
+    Zep::ZepBuffer* buffer = m_zep->GetEmptyBuffer("code.p8");
+    buffer->SetTheme(std::static_pointer_cast<Zep::ZepTheme, zep_theme>(std::make_shared<zep_theme>()));
+    buffer->SetText(TEST_TEXT);
+#endif
 }
 
 editor::~editor()
@@ -86,9 +136,17 @@ editor::~editor()
 
 void editor::render()
 {
+#if USE_LEGACY_EDITOR
     m_widget.Render("Text Editor");
+#else
+    m_zep->SetDisplayRegion(Zep::toNVec2f(ImGui::GetCursorScreenPos()),
+                            Zep::toNVec2f(ImGui::GetContentRegionAvail()) + Zep::toNVec2f(ImGui::GetCursorScreenPos()));
+    m_zep->Display();
+    m_zep->HandleInput();
+#endif
 }
 
+#if USE_LEGACY_EDITOR
 static TextEditor::LanguageDefinition const& get_lang_def()
 {
     static bool inited = false;
@@ -175,6 +233,7 @@ static TextEditor::Palette const &get_palette()
 
     return ret;
 }
+#endif
 
 } // namespace z8
 
