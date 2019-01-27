@@ -16,11 +16,57 @@
 
 #include <lol/engine.h>
 
+#include <set>
+#include <string>
+
 #include "zepto8.h"
 #include "editor.h"
 
 namespace z8
 {
+
+// This is the list from Lua’s luaX_tokens
+static std::set<std::string> pico8_keywords =
+{
+    "and", "break", "do", "else", "elseif",
+    "end", "false", "for", "function", "goto", "if",
+    "in", "local", "nil", "not", "or", "repeat",
+    "return", "then", "true", "until", "while",
+};
+
+static std::set<std::string> pico8_identifiers =
+{
+    // Implemented in pico8lib (from z8lua)
+    "max", "min", "mid", "ceil", "flr", "cos", "sin", "atan2", "sqrt",
+    "abs", "sgn", "band", "bor", "bxor", "bnot", "shl", "shr", "lshr",
+    "rotl", "rotr", "tostr", "tonum", "srand", "rnd",
+    // Implemented in the ZEPTO-8 VM
+    "run", "menuitem", "reload", "peek", "peek4", "poke", "poke4",
+    "memcpy", "memset", "stat", "printh", "extcmd", "_update_buttons",
+    "btn", "btnp", "cursor", "print", "camera", "circ", "circfill",
+    "clip", "cls", "color", "fillp", "fget", "fset", "line", "map",
+    "mget", "mset", "pal", "palt", "pget", "pset", "rect", "rectfill",
+    "sget", "sset", "spr", "sspr", "music", "sfx", "time",
+    // Implemented in the ZEPTO-8 BIOS
+    "cocreate", "coresume", "costatus", "yield", "trace", "stop",
+    "count", "add", "sub", "foreach", "all", "del", "t", "dget",
+    "dset", "cartdata", "load", "save", "info", "abort", "folder",
+    "resume", "reboot", "dir", "ls", "flip", "mapdraw",
+    // Not implemented but we should!
+    "assert", "getmetatable", "setmetatable",
+};
+
+#define TEST_TEXT \
+    "-- pico-8 syntax test\n-- by sam\n\n" \
+    "function _init()\n cls()\n step = 1\n tmp = rnd(17)\n lst = {\"lol\"}\nend\n\n" \
+    "function _update()\n if (btnp(\x97) or btnp(\x8e)) step = 0\n\n" \
+    " if step < #lst then\n  step += 1\n end\nend\n\n" \
+    "function _draw()\n local x = 28\n local y = 120\n\n map(0, 0, 0, 0, 16, 16)\nend\n\n" \
+    "--  !\"#$%&'()*+,-./0123456789:;<=>?\n" \
+    "-- @ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_\n" \
+    "-- `abcdefghijklmnopqrstuvwxyz{|}~\x7f\n" \
+    "-- \x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d\x8e\x8f\n" \
+    "-- \x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\n"
 
 static TextEditor::LanguageDefinition const& get_lang_def();
 static TextEditor::Palette const &get_palette();
@@ -31,16 +77,7 @@ editor::editor()
     m_widget.SetPalette(get_palette());
 
     // Debug text
-    m_widget.SetText("-- pico-8 syntax test\n-- by sam\n\n"
-        "function _init()\n cls()\n step = 1\n tmp = rnd(17)\n lst = {\"lol\"}\nend\n\n"
-        "function _update()\n if (btnp(\x97) or btnp(\x8e)) step = 0\n\n"
-        " if step < #lst then\n  step += 1\n end\nend\n\n"
-        "function _draw()\n local x = 28\n local y = 120\n\n map(0, 0, 0, 0, 16, 16)\nend\n\n"
-        "--  !\"#$%&'()*+,-./0123456789:;<=>?\n"
-        "-- @ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_\n"
-        "-- `abcdefghijklmnopqrstuvwxyz{|}~\x7f\n"
-        "-- \x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d\x8e\x8f\n"
-        "-- \x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\n");
+    m_widget.SetText(TEST_TEXT);
 }
 
 editor::~editor()
@@ -59,45 +96,14 @@ static TextEditor::LanguageDefinition const& get_lang_def()
 
     if (!inited)
     {
-        // This is the list from Lua’s luaX_tokens
-        static char const* const keywords[] =
-        {
-            "and", "break", "do", "else", "elseif",
-            "end", "false", "for", "function", "goto", "if",
-            "in", "local", "nil", "not", "or", "repeat",
-            "return", "then", "true", "until", "while",
-        };
-
-        for (auto& k : keywords)
+        for (auto& k : pico8_keywords)
             ret.mKeywords.insert(k);
 
-        static const char* const identifiers[] =
-        {
-            // Implemented in pico8lib (from z8lua)
-            "max", "min", "mid", "ceil", "flr", "cos", "sin", "atan2", "sqrt",
-            "abs", "sgn", "band", "bor", "bxor", "bnot", "shl", "shr", "lshr",
-            "rotl", "rotr", "tostr", "tonum", "srand", "rnd",
-            // Implemented in the ZEPTO-8 VM
-            "run", "menuitem", "reload", "peek", "peek4", "poke", "poke4",
-            "memcpy", "memset", "stat", "printh", "extcmd", "_update_buttons",
-            "btn", "btnp", "cursor", "print", "camera", "circ", "circfill",
-            "clip", "cls", "color", "fillp", "fget", "fset", "line", "map",
-            "mget", "mset", "pal", "palt", "pget", "pset", "rect", "rectfill",
-            "sget", "sset", "spr", "sspr", "music", "sfx", "time",
-            // Implemented in the ZEPTO-8 BIOS
-            "cocreate", "coresume", "costatus", "yield", "trace", "stop",
-            "count", "add", "sub", "foreach", "all", "del", "t", "dget",
-            "dset", "cartdata", "load", "save", "info", "abort", "folder",
-            "resume", "reboot", "dir", "ls", "flip", "mapdraw",
-            // Not implemented but we should!
-            "assert", "getmetatable", "setmetatable",
-        };
-
-        for (auto& k : identifiers)
+        for (auto& k : pico8_identifiers)
         {
             TextEditor::Identifier id;
             id.mDeclaration = "Built-in function";
-            ret.mIdentifiers.insert(std::make_pair(std::string(k), id));
+            ret.mIdentifiers.insert(std::make_pair(k, id));
         }
 
         #define ADD_COLOR(regex, index) \
