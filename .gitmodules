@@ -1,6 +1,6 @@
 [submodule "lol"]
 	path = lol
-	url = git@github.com:lolengine/lol.git
+	url = ../../lolengine/lol.git
 [submodule "wiki"]
 	path = wiki
 	url = ../zepto8.wiki.git
