@@ -12,6 +12,84 @@
     <ClCompile Include="3rdparty/imgui-color-text-edit/TextEditor.cpp">
       <Filter>3rdparty\imgui-color-text-editor</Filter>
     </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/mcommon/file/archive.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/buffer.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/commands.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/imgui/display_imgui.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/editor.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/imgui/editor_imgui.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/mcommon/file/file.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/mcommon/FileWatcher/FileWatcher.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/mcommon/FileWatcher/FileWatcherLinux.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/mcommon/FileWatcher/FileWatcherOSX.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/mcommon/FileWatcher/FileWatcherWin32.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/mcommon/file/mfilesystem.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/mode.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/mode_standard.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/mode_vim.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/scroller.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/splits.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/mcommon/string/stringutils.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/syntax.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/syntax_providers.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/syntax_rainbow_brackets.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/tab_window.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/theme.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/mcommon/animation/timer.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/window.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/window_base.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="player.h" />
@@ -47,6 +125,9 @@
     </Filter>
     <Filter Include="3rdparty\portable-file-dialogs">
       <UniqueIdentifier>{e8e642c5-a93d-4179-9b1d-4a5a748fe12a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rdparty\zep">
+      <UniqueIdentifier>{8aa5accd-0ff8-4c72-8992-157f2d1f0bc0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

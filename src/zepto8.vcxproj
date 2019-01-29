@@ -32,11 +32,37 @@
   </ItemGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;3rdparty/zep/src;3rdparty/zep/m3rdparty;3rdparty/zep/src/mcommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="3rdparty/imgui-color-text-edit/TextEditor.cpp" />
+    <ClCompile Include="3rdparty/zep/src/buffer.cpp" />
+    <ClCompile Include="3rdparty/zep/src/commands.cpp" />
+    <ClCompile Include="3rdparty/zep/src/editor.cpp" />
+    <ClCompile Include="3rdparty/zep/src/imgui/display_imgui.cpp" />
+    <ClCompile Include="3rdparty/zep/src/imgui/editor_imgui.cpp" />
+    <ClCompile Include="3rdparty/zep/src/mcommon/animation/timer.cpp" />
+    <ClCompile Include="3rdparty/zep/src/mcommon/file/archive.cpp" />
+    <ClCompile Include="3rdparty/zep/src/mcommon/file/file.cpp" />
+    <ClCompile Include="3rdparty/zep/src/mcommon/file/mfilesystem.cpp" />
+    <ClCompile Include="3rdparty/zep/src/mcommon/FileWatcher/FileWatcher.cpp" />
+    <ClCompile Include="3rdparty/zep/src/mcommon/FileWatcher/FileWatcherLinux.cpp" />
+    <ClCompile Include="3rdparty/zep/src/mcommon/FileWatcher/FileWatcherOSX.cpp" />
+    <ClCompile Include="3rdparty/zep/src/mcommon/FileWatcher/FileWatcherWin32.cpp" />
+    <ClCompile Include="3rdparty/zep/src/mcommon/string/stringutils.cpp" />
+    <ClCompile Include="3rdparty/zep/src/mode.cpp" />
+    <ClCompile Include="3rdparty/zep/src/mode_standard.cpp" />
+    <ClCompile Include="3rdparty/zep/src/mode_vim.cpp" />
+    <ClCompile Include="3rdparty/zep/src/scroller.cpp" />
+    <ClCompile Include="3rdparty/zep/src/splits.cpp" />
+    <ClCompile Include="3rdparty/zep/src/syntax.cpp" />
+    <ClCompile Include="3rdparty/zep/src/syntax_providers.cpp" />
+    <ClCompile Include="3rdparty/zep/src/syntax_rainbow_brackets.cpp" />
+    <ClCompile Include="3rdparty/zep/src/tab_window.cpp" />
+    <ClCompile Include="3rdparty/zep/src/theme.cpp" />
+    <ClCompile Include="3rdparty/zep/src/window_base.cpp" />
+    <ClCompile Include="3rdparty/zep/src/window.cpp" />
     <ClCompile Include="ide/editor.cpp" />
     <ClCompile Include="ide/ide.cpp" />
     <ClCompile Include="player.cpp" />

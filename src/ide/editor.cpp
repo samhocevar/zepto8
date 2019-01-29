@@ -28,6 +28,8 @@
 #   include "3rdparty/imgui-color-text-edit/TextEditor.h"
 #else
 #   include "3rdparty/zep/src/zep.h"
+#   include "3rdparty/zep/src/mode_vim.h"
+#   include "3rdparty/zep/src/mode_standard.h"
 #   include "3rdparty/zep/src/imgui/editor_imgui.h"
 #endif
 
@@ -138,6 +140,7 @@ editor::editor()
     // Debug text
     m_impl->SetText(TEST_TEXT);
 #else
+    //m_impl->SetMode(Zep::ZepMode_Standard::StaticName());
     m_impl->RegisterSyntaxFactory({".p8"}, Zep::tSyntaxFactory([](Zep::ZepBuffer* pBuffer)
     {
         return std::make_shared<Zep::ZepSyntax>(*pBuffer, pico8_keywords, pico8_identifiers);

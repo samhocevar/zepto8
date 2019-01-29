@@ -166,19 +166,19 @@ void ide::render_app()
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, lol::vec2(3.f * EDITOR_SCALE));
-	ImGui::PushStyleColor(ImGuiCol_WindowBg, z8::palette::get(5));
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, z8::palette::get(5));
 
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(lol::vec2(viewport->Size.x, 0.f));
     ImGui::SetNextWindowViewport(viewport->ID);
     ImGui::Begin("menu window", nullptr, flags | ImGuiWindowFlags_MenuBar);
         render_menu();
-    	render_toolbar();
-		// Store window size so that we can place the rest of the app
+        render_toolbar();
+        // Store window size so that we can place the rest of the app
         lol::vec2 menu_size = ImGui::GetWindowSize();
-	ImGui::End();
+    ImGui::End();
 
-	ImGui::PopStyleColor();
+    ImGui::PopStyleColor();
     ImGui::PopStyleVar();
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, lol::vec2(0));
 
@@ -250,15 +250,27 @@ void ide::render_menu()
 
 void ide::render_toolbar()
 {
+    // Play / Pause / Restart
+    ImGui::PushStyleColor(ImGuiCol_Button, z8::palette::get(z8::palette::red));
+    ImGui::Button("|>");
+    ImGui::SameLine();
+    ImGui::Button("||");
+    ImGui::SameLine();
+    ImGui::Button("()");
+    ImGui::SameLine();
+    ImGui::PopStyleColor();
+
+    // Some spacing
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5 * EDITOR_SCALE);
+
+    // Palette buttons
     for (int i = 0; i < 16; i++)
     {
-        if (i > 0)
-            ImGui::SameLine();
         ImGui::PushID(i);
         ImGui::PushStyleColor(ImGuiCol_Button, z8::palette::get(i));
         ImGui::PushStyleColor(ImGuiCol_Text, z8::palette::get(i < 6 ? 7 : 0));
         ImGui::Button(lol::format("%2d", i).c_str());
-//            ImGui::MenuItem(lol::format("%2d", i).c_str());
+        ImGui::SameLine();
         ImGui::PopStyleColor(2);
         ImGui::PopID();
     }
@@ -266,25 +278,6 @@ void ide::render_toolbar()
 
 void ide::render_windows()
 {
-#if 0
-    ImGui::SetNextWindowPos(lol::ivec2(1050, 550), ImGuiCond_FirstUseEver);
-    ImGui::Begin("Palette", nullptr);
-    {
-        for (int i = 0; i < 16; i++)
-        {
-            if (i % 4 > 0)
-                ImGui::SameLine();
-            ImGui::PushID(i);
-            ImGui::PushStyleColor(ImGuiCol_Button, z8::palette::get(i));
-            ImGui::PushStyleColor(ImGuiCol_Text, z8::palette::get(i < 6 ? 7 : 0));
-            ImGui::Button(lol::format("%2d", i).c_str());
-            ImGui::PopStyleColor(2);
-            ImGui::PopID();
-        }
-    }
-    ImGui::End();
-#endif
-
     if (m_show.music)
     {
         ImGui::SetNextWindowDockID(m_dock.main, ImGuiCond_FirstUseEver);
@@ -362,6 +355,19 @@ void ide::render_windows()
         {
             ImGui::Image(m_player->get_texture(), 3.f * lol::vec2(128.f),
                          lol::vec2(0.f), lol::vec2(1.f));
+            ImGui::PushStyleColor(ImGuiCol_Button, z8::palette::get(z8::palette::black));
+            ImGui::Button(u8"\u008b");
+            ImGui::SameLine();
+            ImGui::Button(u8"\u0091");
+            ImGui::SameLine();
+            ImGui::Button(u8"\u0094");
+            ImGui::SameLine();
+            ImGui::Button(u8"\u0083");
+            ImGui::SameLine();
+            ImGui::Button(u8"\u008e");
+            ImGui::SameLine();
+            ImGui::Button(u8"\u0097");
+            ImGui::PopStyleColor();
         }
         ImGui::End();
     }
