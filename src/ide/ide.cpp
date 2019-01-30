@@ -29,7 +29,7 @@ namespace z8
 
 ide::ide(player *player)
 {
-    lol::LolImGui::Init();
+    lol::gui::init();
 
     // Enable docking
     auto &io = ImGui::GetIO();
@@ -63,7 +63,7 @@ ide::ide(player *player)
 
 ide::~ide()
 {
-    lol::LolImGui::Shutdown();
+    lol::gui::shutdown();
 }
 
 void ide::tick_game(float seconds)
@@ -88,7 +88,7 @@ void ide::tick_game(float seconds)
             {
                 auto &io = ImGui::GetIO();
                 m_font = io.Fonts->AddFontFromFileTTF(file.c_str(), 6.0f * EDITOR_SCALE);
-                lol::LolImGui::refresh_fonts();
+                lol::gui::refresh_fonts();
                 break;
             }
         }
@@ -353,7 +353,9 @@ void ide::render_windows()
         ImGui::SetNextWindowSize(lol::ivec2(400, 420), ImGuiCond_FirstUseEver);
         if (ImGui::Begin("Player", &m_show.player))
         {
-            ImGui::Image(m_player->get_texture(), 3.f * lol::vec2(128.f),
+            lol::vec2 avail_size = ImGui::GetContentRegionAvail();
+            float ratio = std::floor(std::max(1.f, std::min(avail_size.x / 128.f, avail_size.y / 128.f)));
+            ImGui::Image(m_player->get_texture(), ratio * lol::vec2(128.f),
                          lol::vec2(0.f), lol::vec2(1.f));
             ImGui::PushStyleColor(ImGuiCol_Button, z8::palette::get(z8::palette::black));
             ImGui::Button(u8"\u008b");
