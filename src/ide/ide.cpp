@@ -34,10 +34,27 @@ ide::ide(player *player)
     // Enable docking
     auto &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.Fonts->AddFontDefault();
 
+    m_player = player;
+
+    m_ram_edit.OptShowAscii = m_rom_edit.OptShowAscii = false;
+    m_ram_edit.OptUpperCaseHex = m_rom_edit.OptUpperCaseHex = false;
+    m_ram_edit.OptShowOptions = m_rom_edit.OptShowOptions = false;
+
+    apply_scale();
+}
+
+ide::~ide()
+{
+    lol::gui::shutdown();
+}
+
+void ide::apply_scale()
+{
     auto &style = ImGui::GetStyle();
-    style.WindowBorderSize = style.ChildBorderSize = style.PopupBorderSize = style.FrameBorderSize = style.TabBorderSize = EDITOR_SCALE;
-    style.FramePadding = lol::vec2(2 * EDITOR_SCALE);
+    style.WindowBorderSize = style.ChildBorderSize = style.PopupBorderSize = style.FrameBorderSize = style.TabBorderSize = m_scale;
+    style.FramePadding = lol::vec2(2 * m_scale);
     style.WindowRounding = style.ChildRounding = style.FrameRounding = style.ScrollbarRounding = style.TabRounding = 0.0f;
 
     // Useless
@@ -51,26 +68,13 @@ ide::ide(player *player)
 
     style.Colors[ImGuiCol_TitleBg]       = z8::palette::get(5);
     style.Colors[ImGuiCol_TitleBgActive] = z8::palette::get(8);
-
-    m_player = player;
-
-    m_ram_edit.OptShowAscii = m_rom_edit.OptShowAscii = false;
-    m_ram_edit.OptUpperCaseHex = m_rom_edit.OptUpperCaseHex = false;
-    m_ram_edit.OptShowOptions = m_rom_edit.OptShowOptions = false;
-
-    io.Fonts->AddFontDefault();
-}
-
-ide::~ide()
-{
-    lol::gui::shutdown();
 }
 
 void ide::tick_game(float seconds)
 {
     WorldEntity::tick_game(seconds);
 
-    if (!m_font)
+    if (!m_fonts[m_scale])
     {
         ImGui::EndFrame();
 
@@ -87,7 +91,7 @@ void ide::tick_game(float seconds)
             if (exists)
             {
                 auto &io = ImGui::GetIO();
-                m_font = io.Fonts->AddFontFromFileTTF(file.c_str(), 6.0f * EDITOR_SCALE);
+                m_fonts[m_scale] = io.Fonts->AddFontFromFileTTF(file.c_str(), 6.0f * m_scale);
                 lol::gui::refresh_fonts();
                 break;
             }
@@ -104,7 +108,7 @@ void ide::tick_game(float seconds)
         ImFontConfig config;
         config.FontData = ImGui::MemAlloc(1);
         config.FontDataSize = 1;
-        config.SizePixels = 6 * EDITOR_SCALE; // Not really needed it seems
+        config.SizePixels = 6 * m_scale; // Not really needed it seems
         config.GlyphRanges = char_ranges;
 
         m_font = atlas->AddFont(&config);
@@ -113,25 +117,25 @@ void ide::tick_game(float seconds)
         m_font->ConfigData = &atlas->ConfigData[0];
         m_font->ContainerAtlas = atlas;
         m_font->Ascent = 0;
-        m_font->Descent = 6 * EDITOR_SCALE;
+        m_font->Descent = 6 * m_scale;
         m_font->ConfigDataCount++;
 
-        int const delta = EDITOR_SCALE / 2;
+        int const delta = m_scale / 2;
 
         // Printable ASCII chars
         for (int ch = 0x20; ch < 0x80; ++ch)
         {
             int x = ch % 0x20 * 4, y = ch / 0x20 * 6 - 6;
-            m_font->AddGlyph(ch, delta, delta, 3 * EDITOR_SCALE + delta, 5 * EDITOR_SCALE + delta,
-                             x / 128.f, y / 32.f, (x + 3) / 128.f, (y + 5) / 32.f, 4.f * EDITOR_SCALE);
+            m_font->AddGlyph(ch, delta, delta, 3 * m_scale + delta, 5 * m_scale + delta,
+                             x / 128.f, y / 32.f, (x + 3) / 128.f, (y + 5) / 32.f, 4.f * m_scale);
         }
 
         // Double-width chars
         for (int ch = 0x80; ch < 0x9a; ++ch)
         {
             int x = ch % 0x10 * 8, y = ch / 0x10 * 6 + 2;
-            m_font->AddGlyph(ch, delta, delta, 7 * EDITOR_SCALE + delta, 5 * EDITOR_SCALE + delta,
-                             x / 128.f, y / 32.f, (x + 7) / 128.f, (y + 5) / 32.f, 8.f * EDITOR_SCALE);
+            m_font->AddGlyph(ch, delta, delta, 7 * m_scale + delta, 5 * m_scale + delta,
+                             x / 128.f, y / 32.f, (x + 7) / 128.f, (y + 5) / 32.f, 8.f * m_scale);
         }
 
         m_font->BuildLookupTable();
@@ -144,7 +148,7 @@ void ide::tick_game(float seconds)
         m_font->ContainerAtlas->TexID = m_player->get_font_texture();
 #endif
 
-    ImGui::PushFont(m_font);
+    ImGui::PushFont(m_fonts[m_scale]);
 
     render_app();
 
@@ -165,7 +169,7 @@ void ide::render_app()
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, lol::vec2(3.f * EDITOR_SCALE));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, lol::vec2(3.f * m_scale));
     ImGui::PushStyleColor(ImGuiCol_WindowBg, z8::palette::get(5));
 
     ImGui::SetNextWindowPos(viewport->Pos);
@@ -224,17 +228,36 @@ void ide::render_menu()
         if (ImGui::BeginMenu("View"))
         {
             ImGui::MenuItem("Player", nullptr, &m_show.player, true);
-            ImGui::Separator();
             ImGui::MenuItem("Code", nullptr, &m_show.code, true);
-#if 0
-            ImGui::MenuItem("Palette", nullptr, &m_show.palette, true);
-#endif
-            ImGui::MenuItem("Maps", nullptr, &m_show.maps, true);
-            ImGui::MenuItem("Sprites", nullptr, &m_show.sprites, true);
-            ImGui::MenuItem("Music", nullptr, &m_show.music, true);
             ImGui::Separator();
-            ImGui::MenuItem("ROM", nullptr, &m_show.rom, true);
-            ImGui::MenuItem("RAM", nullptr, &m_show.ram, true);
+
+            if (ImGui::BeginMenu("Windows"))
+            {
+#if 0
+                ImGui::MenuItem("Palette", nullptr, &m_show.palette, true);
+#endif
+                ImGui::MenuItem("Maps", nullptr, &m_show.maps, true);
+                ImGui::MenuItem("Sprites", nullptr, &m_show.sprites, true);
+                ImGui::MenuItem("Music", nullptr, &m_show.music, true);
+                ImGui::Separator();
+                ImGui::MenuItem("ROM", nullptr, &m_show.rom, true);
+                ImGui::MenuItem("RAM", nullptr, &m_show.ram, true);
+                ImGui::EndMenu();
+            }
+            ImGui::Separator();
+
+            if (ImGui::BeginMenu("Zoom"))
+            {
+                bool z1 = m_scale == 1, z2 = m_scale == 2, z3 = m_scale == 3;
+                ImGui::MenuItem("x1", nullptr, &z1, true);
+                ImGui::MenuItem("x2", nullptr, &z2, true);
+                ImGui::MenuItem("x3", nullptr, &z3, true);
+                m_scale = (z1 && m_scale != 1) ? 1
+                        : (z2 && m_scale != 2) ? 2
+                        : (z3 && m_scale != 3) ? 3
+                        : m_scale;
+                ImGui::EndMenu();
+            }
             ImGui::EndMenu();
         }
 
@@ -261,7 +284,7 @@ void ide::render_toolbar()
     ImGui::PopStyleColor();
 
     // Some spacing
-    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5 * EDITOR_SCALE);
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5 * m_scale);
 
     // Palette buttons
     for (int i = 0; i < 16; i++)

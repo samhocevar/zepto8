@@ -32,6 +32,8 @@ public:
     virtual void tick_draw(float seconds, lol::Scene &scene) override;
 
 private:
+    void apply_scale();
+
     void render_app();
     void render_menu();
     void render_toolbar();
@@ -60,11 +62,12 @@ private:
     }
     m_dock;
 
+    int m_scale = 2;
     editor m_editor;
     MemoryEditor m_ram_edit, m_rom_edit;
 
     player *m_player = nullptr;
-    ImFont *m_font = nullptr;
+    std::map<int, ImFont *> m_fonts;
 };
 
 } // namespace z8
