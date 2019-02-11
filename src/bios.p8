@@ -89,6 +89,7 @@ do
     end
 
     local match = string.match
+    local gsub = string.gsub
     local __cartdata = __cartdata
 
     cartdata = function(s)
@@ -110,6 +111,10 @@ do
             return false
         end
         return __cartdata(s)
+    end
+
+    _z8.strlen = function(s)
+        return #gsub(s, '[\128-\255]', 'XX')
     end
 
     _z8.load = load
@@ -235,7 +240,7 @@ end
 --
 -- Splash sequence
 --
-_z8.splash = function()
+_z8.boot_sequence = function()
     _z8.loop = cocreate(function()
         _z8.reset_state()
 
@@ -260,10 +265,59 @@ _z8.splash = function()
                               local a = {0,0,12,0,0,0,13,7,11,0,14,7,7,7,10,0,15,7,9,0,0,0,8,0,0}
                               for j=0,#a-1 do pset(41+j%5,2+j/5,a[j+1]) end end,
             [45] = function() color(6) print("\n\n\nzepto-8 0.0.0 beta") end,
-            [50] = function() print("(c) 2016-19 sam hocevar et al.\n\n") end,
+            [50] = function() print("(c) 2016-19 sam hocevar et al.\n") end,
+            [52] = function() print("type help for help\n") end,
         }
 
-        for step=0,60 do if boot[step] then boot[step]() end flip() end
+        for step=0,54 do if boot[step] then boot[step]() end flip() end
+
+        _z8.prompt()
+    end)
+end
+
+_z8.prompt = function()
+    _z8.loop = cocreate(function()
+        -- activate project
+        poke(0x5f2d, 1)
+        local cmd = ""
+        local line = peek(0x5f27)
+        local cursor_x, cursor_y = 8, line
+        while true do
+            if stat(30) then
+                local c = stat(31)
+                if c == "\8" then
+                    cmd = sub(cmd, 1, #cmd - 1)
+--[[
+                elseif c == "\r" then
+                    add(d, {7, "> "..s})
+                    local r, e = tokenize(s)
+                    if r then
+                        if #r > 0 then
+                            r, e = parse(r)
+                            if r then
+                                r, e = eval(r)
+                            end
+                        else
+                            r = nil
+                        end
+                    end
+]]--
+                elseif #c < 255 then
+                    cmd = cmd..c
+                end
+            end
+            local pen = band(peek(0x5f25), 0xf)
+            rectfill(0, line, (_z8.strlen(cmd) + 3) * 4, line + 5, 0)
+            print('> ', 0, line, 7)
+            print(cmd, 8, line, 7)
+            cursor_x = 8 + _z8.strlen(cmd) * 4
+            -- display cursor and immediately hide it after we flip() so that it
+            -- does not remain in later frames
+            rectfill(cursor_x, cursor_y, cursor_x + 3, cursor_y + 4, flr(t() * 5 % 2) * 8)
+            flip()
+            rectfill(cursor_x, cursor_y, cursor_x + 3, cursor_y + 4, 0)
+            color(pen)
+        end
     end)
 end
 
@@ -272,7 +326,7 @@ end
 -- Initialise the VM
 --
 srand(0)
-_z8.splash()
+_z8.boot_sequence()
 
 
 __gfx__
