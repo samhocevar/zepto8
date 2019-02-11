@@ -79,31 +79,32 @@ struct song
 
 struct draw_state
 {
-    // Palette information (draw palette, screen palette)
+    // 0x5f00—0x5f20: palette information (draw palette, screen palette)
     uint8_t pal[2][16];
 
-    // Clipping information
+    // 0x5f20—0x5f24: clipping information
     struct
     {
         uint8_t x1, y1, x2, y2;
     }
     clip;
 
+    // 0x5f24: undocumented
     uint8_t undocumented1[1];
 
-    // Pen colors:
+    // 0x5f25: pen colors
     //  0x0f — default colour
     //  0xf0 — alternate color for fillp
     uint8_t pen;
 
-    // Text cursor coordinates
+    // 0x5f26—0x5f28: text cursor coordinates
     struct
     {
         uint8_t x, y;
     }
     cursor;
 
-    // Camera coordinates
+    // 0x5f28—0x5f2c: camera coordinates
     struct
     {
         uint8_t lo_x, hi_x, lo_y, hi_y;
@@ -113,14 +114,25 @@ struct draw_state
     }
     camera;
 
-    // Screen mode (double width, etc.)
+    // 0x5f2c: screen mode (double width, etc.)
     uint8_t screen_mode;
 
-    // Mouse flag
+    // 0x5f2d: mouse flag
     uint8_t mouse_flag;
 
-    uint8_t undocumented2[3];
+    // 0x5f2e: preserve palette at reboot
+    uint8_t palette_flag;
+
+    // 0x5f2f: undocumented
+    uint8_t undocumented2[1];
+
+    // 0x5f30: block pause menu flag
+    uint8_t pause_flag;
+
+    // 0x5f31—0x5f35: fill pattern
     uint8_t fillp[2], fillp_trans, fillp_flag;
+
+    // 0x5f35—0x5f40: undocumented
     uint8_t undocumented3[11];
 };
 
