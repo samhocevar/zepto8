@@ -280,43 +280,51 @@ _z8.prompt = function()
         -- activate project
         poke(0x5f2d, 1)
         local cmd = ""
-        local line = peek(0x5f27)
-        local cursor_x, cursor_y = 8, line
+        local start_y = peek(0x5f27)
+        local cursor_x, cursor_y = 8, start_y
         while true do
+            local exec = false
+            -- read next character and act on it
             if stat(30) then
                 local c = stat(31)
                 if c == "\8" then
                     cmd = sub(cmd, 1, #cmd - 1)
---[[
                 elseif c == "\r" then
-                    add(d, {7, "> "..s})
-                    local r, e = tokenize(s)
-                    if r then
-                        if #r > 0 then
-                            r, e = parse(r)
-                            if r then
-                                r, e = eval(r)
-                            end
-                        else
-                            r = nil
-                        end
-                    end
-]]--
+                    exec = true
                 elseif #c < 255 then
                     cmd = cmd..c
                 end
             end
-            local pen = band(peek(0x5f25), 0xf)
-            rectfill(0, line, (_z8.strlen(cmd) + 3) * 4, line + 5, 0)
-            print('> ', 0, line, 7)
-            print(cmd, 8, line, 7)
-            cursor_x = 8 + _z8.strlen(cmd) * 4
-            -- display cursor and immediately hide it after we flip() so that it
-            -- does not remain in later frames
-            rectfill(cursor_x, cursor_y, cursor_x + 3, cursor_y + 4, flr(t() * 5 % 2) * 8)
-            flip()
-            rectfill(cursor_x, cursor_y, cursor_x + 3, cursor_y + 4, 0)
-            color(pen)
+            -- fixme: print() behaves slightly differently when
+            -- scrolling in the command prompt
+            if exec then
+                start_y = cursor_y + 6
+                cursor(0, start_y)
+                rectfill(0, start_y, 127, start_y + 5, 0)
+                color(14)
+                if cmd == 'help' then
+                    print('no help yet lol')
+                else
+                    print('syntax error')
+                end
+                start_y = peek(0x5f27)
+                cursor_x, cursor_y = 8, start_y
+                flip()
+                cmd = ""
+            else
+                local pen = peek(0x5f25)
+                rectfill(0, start_y, (_z8.strlen(cmd) + 3) * 4, start_y + 5, 0)
+                color(7)
+                print('> ', 0, start_y, 7)
+                print(cmd, 8, start_y, 7)
+                cursor_x = 8 + _z8.strlen(cmd) * 4
+                -- display cursor and immediately hide it after we flip() so that it
+                -- does not remain in later frames
+                rectfill(cursor_x, cursor_y, cursor_x + 3, cursor_y + 4, flr(t() * 5 % 2) * 8)
+                flip()
+                rectfill(cursor_x, cursor_y, cursor_x + 3, cursor_y + 4, 0)
+            end
+            poke(0x5f25, pen)
         end
     end)
 end
