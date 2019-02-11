@@ -403,6 +403,9 @@ int vm::api_cls(lua_State *l)
     ds.cursor.x = ds.cursor.y = 0;
     ds.clip.x1 = ds.clip.y1 = 0;
     ds.clip.x2 = ds.clip.y2 = 128;
+    // Undocumented: set cursor to 0,0
+    m_ram.draw_state.cursor.x = 0;
+    m_ram.draw_state.cursor.y = 0;
     return 0;
 }
 
