@@ -46,8 +46,8 @@ player::player(lol::ivec2 window_size)
     m_input << lol::InputProfile::Keyboard(8, "M");
     m_input << lol::InputProfile::Keyboard(8, "Delete");
 
-    m_input << lol::InputProfile::Keyboard(9, "Return");
     m_input << lol::InputProfile::Keyboard(9, "P");
+    m_input << lol::InputProfile::Keyboard(9, "Return");
 
     m_input << lol::InputProfile::Keyboard(11, "S");
     m_input << lol::InputProfile::Keyboard(12, "F");
@@ -55,22 +55,22 @@ player::player(lol::ivec2 window_size)
     m_input << lol::InputProfile::Keyboard(14, "D");
     m_input << lol::InputProfile::Keyboard(15, "LShift");
     m_input << lol::InputProfile::Keyboard(15, "A");
-    m_input << lol::InputProfile::Keyboard(16, "Tab");
     m_input << lol::InputProfile::Keyboard(16, "Q");
+    m_input << lol::InputProfile::Keyboard(16, "Tab");
 
     m_mouse = lol::InputDevice::GetMouse();
 
     m_controller->Init(m_input);
-    // 64 keyboard / joystick buttons + 3 mouse buttons
-    m_controller->SetInputCount(67 /* keys */, 0 /* axes */);
 
     // Allow text input
     m_keyboard = lol::InputDevice::GetKeyboard();
+    if (m_keyboard)
+        m_keyboard->SetTextInputActive(true);
 
     // Create an ortho camera
     m_scenecam = new lol::Camera();
     m_scenecam->SetView(lol::mat4(1.f));
-    m_scenecam->SetProjection(lol::mat4::ortho(0.f, window_size.x, 0.f, window_size.y, -100.f, 100.f));
+    m_scenecam->SetProjection(lol::mat4::ortho(0.f, (float)window_size.x, 0.f, (float)window_size.y, -100.f, 100.f));
     lol::Scene& scene = lol::Scene::GetScene();
     scene.PushCamera(m_scenecam);
     lol::Ticker::Ref(m_scenecam);
@@ -142,13 +142,15 @@ void player::tick_game(float seconds)
 
     if (m_keyboard)
     {
-        m_keyboard->SetTextInputActive(true);
         auto text = m_keyboard->GetText();
         for (auto ch : text)
         {
             // Convert uppercase characters to special glyphs
             if (ch >= 'A' && ch <= 'Z')
                 ch = ch - 'A' + '\x80';
+            // PICO-8 compatibility
+            if (ch == '\n')
+                ch = '\r';
             m_vm.keyboard(ch);
         }
     }
@@ -187,8 +189,8 @@ void player::tick_draw(float seconds, lol::Scene &scene)
     {
         scene.get_renderer()->SetClearColor(lol::Color::black);
 
-        int delta_x = (WINDOW_WIDTH - SCREEN_WIDTH) / 2;
-        int delta_y = (WINDOW_HEIGHT - SCREEN_HEIGHT) / 2;
+        float delta_x = 0.5f * (WINDOW_WIDTH - SCREEN_WIDTH);
+        float delta_y = 0.5f * (WINDOW_HEIGHT - SCREEN_HEIGHT);
         float scale = (float)SCREEN_WIDTH / 128;
         scene.AddTile(m_tile, 0, lol::vec3(delta_x, delta_y, 10.f), lol::vec2(scale), 0.f);
     }
