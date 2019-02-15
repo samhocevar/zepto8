@@ -39,9 +39,9 @@ do
     trace = debug.traceback
 
     local error = error
-    stop = function() _z8.stopped = true error() end
+    function stop() _z8.stopped = true error() end
 
-    assert = function(cond, msg)
+    function assert(cond, msg)
         if not cond then
             color(14) print("assertion failed:")
             color(6) print(msg or "assert()")
@@ -53,20 +53,20 @@ do
     local insert = table.insert
     local remove = table.remove
 
-    count = function(a) return a != nil and #a or 0 end
-    add = function(a, x) if a != nil then insert(a, x) end return x end
+    function count(a) return a != nil and #a or 0 end
+    function add(a, x) if a != nil then insert(a, x) end return x end
     sub = string.sub
 
-    foreach = function(a, f)
+    function foreach(a, f)
         if a != nil then for k, v in ipairs(a) do f(v) end end
     end
 
-    all = function(a)
+    function all(a)
         local i, n = 0, a != nil and #a or 0
         return function() i = i + 1 if i <= n then return a[i] end end
     end
 
-    del = function(a, v)
+    function del(a, v)
         if a != nil then
             for k, v2 in ipairs(a) do
                 if v == v2 then remove(a, k) return end
@@ -78,12 +78,12 @@ do
     t = time
 
     -- Use the new peek4() and poke4() functions
-    dget = function(n)
+    function dget(n)
         n = tonumber(n)
         return n >= 0 and n < 64 and peek4(0x5e00 + 4 * n) or 0
     end
 
-    dset = function(n, x)
+    function dset(n, x)
         n = tonumber(n)
         if n >= 0 and n < 64 then poke4(0x5e00 + 4 * n, x) end
     end
@@ -92,7 +92,7 @@ do
     local gsub = string.gsub
     local __cartdata = __cartdata
 
-    cartdata = function(s)
+    function cartdata(s)
         if __cartdata() then
             print('cartdata() can only be called once')
             abort()
@@ -113,7 +113,7 @@ do
         return __cartdata(s)
     end
 
-    _z8.strlen = function(s)
+    function _z8.strlen(s)
         return #gsub(s, '[\128-\255]', 'XX')
     end
 
@@ -135,7 +135,7 @@ do
 
     -- All flip() does for now is yield so that the C++ VM gets a chance
     -- to draw something even if Lua is in an infinite loop
-    flip = function()
+    function flip()
         _update_buttons()
         yield()
     end
@@ -167,7 +167,7 @@ table, debug, string, io, coroutine = nil
 --
 -- Utility functions
 --
-_z8.reset_state = function()
+function _z8.reset_state()
     -- These variables are global but can be overridden
     ⬅️, ➡️, ⬆️, ⬇️, 🅾️, ❎, ◆ = 0, 1, 2, 3, 4, 5, 6
 
@@ -178,11 +178,11 @@ _z8.reset_state = function()
     clip() camera() pal() color(6) fillp()
 end
 
-_z8.reset_cartdata = function()
+function _z8.reset_cartdata()
     __cartdata(nil)
 end
 
-_z8.run_cart = function(cart_code)
+function _z8.run_cart(cart_code)
     local glue_code = [[--
         if (_init) _init()
         if _update or _update60 or _draw then
@@ -227,7 +227,7 @@ _z8.run_cart = function(cart_code)
     end)
 end
 
-_z8.tick = function()
+function _z8.tick()
     if (costatus(_z8.loop) == "dead") return -1
     ret, err = coresume(_z8.loop)
     if _z8.stopped then _z8.stopped = false -- FIXME: what now?
@@ -240,93 +240,89 @@ end
 --
 -- Splash sequence
 --
-_z8.boot_sequence = function()
-    _z8.loop = cocreate(function()
-        _z8.reset_state()
+function _z8.boot_sequence()
+    _z8.reset_state()
 
-        local boot =
-        {
-            [1] =  function() for i=2,127,8 do for j=0,127 do pset(i,j,rnd()*4+j/40) end end end,
-            [7] =  function() for i=0,127,4 do for j=0,127,2 do pset(i,j,(i+j)/8%8+6) end end end,
-            [12] = function() for i=2,127,4 do for j=0,127,3 do pset(i,j,rnd()*4+10) end end end,
-            [17] = function() for i=1,127,2 do for j=0,127 do pset(i,j,pget(i+1,j)) end end end,
-            [22] = function() for j=0,31 do memset(0x6040+j*256,0,192) end end,
-            [27] = cls,
-            [36] = function() local notes = { 0x.5dde, 0x5deb.5be3, 0x.5fef, 0x.57ef, 0x.53ef }
-                              for j=0,#notes-1 do poke4(0x3200+j*4,notes[j+1]) end poke(0x3241, 0x0a)
-                              sfx(0)
-                              local logo = "######  ####  ###  ######  ####       ### "
-                                        .. "    ## ##    ## ##   ##   ##  ##     ## ##"
-                                        .. "  ###  ##### #####   ##   ##  ## ###  ### "
-                                        .. " ###   ##    ####    ##   ### ##     ## ##"
-                                        .. "###### ##### ##      ##   ######     #####"
-                                        .. "###### ##### ##      ##    ####       ### "
-                              for j=0,#logo-1 do pset(j%42,6+j/42,sub(logo,j+1,j+1)=='#'and 7) end
-                              local a = {0,0,12,0,0,0,13,7,11,0,14,7,7,7,10,0,15,7,9,0,0,0,8,0,0}
-                              for j=0,#a-1 do pset(41+j%5,2+j/5,a[j+1]) end end,
-            [45] = function() color(6) print("\n\n\nzepto-8 0.0.0 beta") end,
-            [50] = function() print("(c) 2016-19 sam hocevar et al.\n") end,
-            [52] = function() print("type help for help\n") end,
-        }
+    local boot =
+    {
+        [1]  = function() for i=2,127,8 do for j=0,127 do pset(i,j,rnd()*4+j/40) end end end,
+        [7]  = function() for i=0,127,4 do for j=0,127,2 do pset(i,j,(i+j)/8%8+6) end end end,
+        [12] = function() for i=2,127,4 do for j=0,127,3 do pset(i,j,rnd()*4+10) end end end,
+        [17] = function() for i=1,127,2 do for j=0,127 do pset(i,j,pget(i+1,j)) end end end,
+        [22] = function() for j=0,31 do memset(0x6040+j*256,0,192) end end,
+        [27] = cls,
+        [36] = function() local notes = { 0x.5dde, 0x5deb.5be3, 0x.5fef, 0x.57ef, 0x.53ef }
+                          for j=0,#notes-1 do poke4(0x3200+j*4,notes[j+1]) end poke(0x3241, 0x0a)
+                          sfx(0)
+                          local logo = "######  ####  ###  ######  ####       ### "
+                                    .. "    ## ##    ## ##   ##   ##  ##     ## ##"
+                                    .. "  ###  ##### #####   ##   ##  ## ###  ### "
+                                    .. " ###   ##    ####    ##   ### ##     ## ##"
+                                    .. "###### ##### ##      ##   ######     #####"
+                                    .. "###### ##### ##      ##    ####       ### "
+                          for j=0,#logo-1 do pset(j%42,6+j/42,sub(logo,j+1,j+1)=='#'and 7) end
+                          local a = {0,0,12,0,0,0,13,7,11,0,14,7,7,7,10,0,15,7,9,0,0,0,8,0,0}
+                          for j=0,#a-1 do pset(41+j%5,2+j/5,a[j+1]) end end,
+        [45] = function() color(6) print("\n\n\nzepto-8 0.0.0 beta") end,
+        [50] = function() print("(c) 2016-19 sam hocevar et al.\n") end,
+        [52] = function() print("type help for help\n") end,
+    }
 
-        for step=0,54 do if boot[step] then boot[step]() end flip() end
+    for step=0,54 do if boot[step] then boot[step]() end flip() end
 
-        _z8.prompt()
-    end)
+    _z8.loop = cocreate(_z8.prompt)
 end
 
-_z8.prompt = function()
-    _z8.loop = cocreate(function()
-        -- activate project
-        poke(0x5f2d, 1)
-        local cmd = ""
-        local start_y = peek(0x5f27)
-        local cursor_x, cursor_y = 8, start_y
-        while true do
-            local exec = false
-            -- read next character and act on it
-            if stat(30) then
-                local c = stat(31)
-                if c == "\8" then
-                    cmd = sub(cmd, 1, #cmd - 1)
-                elseif c == "\r" then
-                    exec = true
-                elseif #c < 255 then
-                    cmd = cmd..c
-                end
+function _z8.prompt()
+    -- activate project
+    poke(0x5f2d, 1)
+    local cmd = ""
+    local start_y = peek(0x5f27)
+    local cursor_x, cursor_y = 8, start_y
+    while true do
+        local exec = false
+        -- read next character and act on it
+        if stat(30) then
+            local c = stat(31)
+            if c == "\8" then
+                cmd = sub(cmd, 1, #cmd - 1)
+            elseif c == "\r" then
+                exec = true
+            elseif #c < 255 then
+                cmd = cmd..c
             end
-            -- fixme: print() behaves slightly differently when
-            -- scrolling in the command prompt
-            if exec then
-                start_y = cursor_y + 6
-                cursor(0, start_y)
-                rectfill(0, start_y, 127, start_y + 5, 0)
-                color(14)
-                if cmd == 'help' then
-                    print('no help yet lol')
-                else
-                    print('syntax error')
-                end
-                start_y = peek(0x5f27)
-                cursor_x, cursor_y = 8, start_y
-                flip()
-                cmd = ""
-            else
-                local pen = peek(0x5f25)
-                rectfill(0, start_y, (_z8.strlen(cmd) + 3) * 4, start_y + 5, 0)
-                color(7)
-                print('> ', 0, start_y, 7)
-                print(cmd, 8, start_y, 7)
-                cursor_x = 8 + _z8.strlen(cmd) * 4
-                -- display cursor and immediately hide it after we flip() so that it
-                -- does not remain in later frames
-                rectfill(cursor_x, cursor_y, cursor_x + 3, cursor_y + 4, flr(t() * 5 % 2) * 8)
-                flip()
-                rectfill(cursor_x, cursor_y, cursor_x + 3, cursor_y + 4, 0)
-            end
-            poke(0x5f25, pen)
         end
-    end)
+        -- fixme: print() behaves slightly differently when
+        -- scrolling in the command prompt
+        if exec then
+            start_y = cursor_y + 6
+            cursor(0, start_y)
+            rectfill(0, start_y, 127, start_y + 5, 0)
+            color(14)
+            if cmd == 'help' then
+                print('no help yet lol')
+            else
+                print('syntax error')
+            end
+            start_y = peek(0x5f27)
+            cursor_x, cursor_y = 8, start_y
+            flip()
+            cmd = ""
+        else
+            local pen = peek(0x5f25)
+            rectfill(0, start_y, (_z8.strlen(cmd) + 3) * 4, start_y + 5, 0)
+            color(7)
+            print('> ', 0, start_y, 7)
+            print(cmd, 8, start_y, 7)
+            cursor_x = 8 + _z8.strlen(cmd) * 4
+            -- display cursor and immediately hide it after we flip() so that it
+            -- does not remain in later frames
+            rectfill(cursor_x, cursor_y, cursor_x + 3, cursor_y + 4, flr(t() * 5 % 2) * 8)
+            flip()
+            rectfill(cursor_x, cursor_y, cursor_x + 3, cursor_y + 4, 0)
+        end
+        poke(0x5f25, pen)
+    end
 end
 
 
@@ -334,7 +330,7 @@ end
 -- Initialise the VM
 --
 srand(0)
-_z8.boot_sequence()
+_z8.loop = cocreate(_z8.boot_sequence)
 
 
 __gfx__
