@@ -276,26 +276,39 @@ end
 function _z8.prompt()
     -- activate project
     poke(0x5f2d, 1)
+    local caret = 0
     local cmd = ""
     local start_y = peek(0x5f27)
-    local cursor_x, cursor_y = 8, start_y
     while true do
         local exec = false
         -- read next character and act on it
         if stat(30) then
             local c = stat(31)
             if c == "\8" then
-                cmd = sub(cmd, 1, #cmd - 1)
+                if caret > 0 then
+                    caret -= 1
+                    cmd = sub(cmd, 0, caret)..sub(cmd, caret + 2, #cmd)
+                end
+            elseif c == "\x7f" then
+                if caret < #cmd then
+                    cmd = sub(cmd, 0, caret)..sub(cmd, caret + 2, #cmd)
+                end
             elseif c == "\r" then
                 exec = true
-            elseif #c < 255 then
-                cmd = cmd..c
+            elseif #cmd < 255 then
+                cmd = sub(cmd, 0, caret)..c..sub(cmd, caret + 1, #cmd)
+                caret += 1
             end
+        end
+        if btnp(0) then
+            caret = max(caret - 1, 0)
+        elseif btnp(1) then
+            caret = min(caret + 1, #cmd)
         end
         -- fixme: print() behaves slightly differently when
         -- scrolling in the command prompt
         if exec then
-            start_y = cursor_y + 6
+            start_y = start_y + 6
             cursor(0, start_y)
             rectfill(0, start_y, 127, start_y + 5, 0)
             color(14)
@@ -305,7 +318,7 @@ function _z8.prompt()
                 print('syntax error')
             end
             start_y = peek(0x5f27)
-            cursor_x, cursor_y = 8, start_y
+            caret = 0
             flip()
             cmd = ""
         else
@@ -314,12 +327,12 @@ function _z8.prompt()
             color(7)
             print('> ', 0, start_y, 7)
             print(cmd, 8, start_y, 7)
-            cursor_x = 8 + _z8.strlen(cmd) * 4
             -- display cursor and immediately hide it after we flip() so that it
             -- does not remain in later frames
-            rectfill(cursor_x, cursor_y, cursor_x + 3, cursor_y + 4, flr(t() * 5 % 2) * 8)
+            local on = t() * 5 % 2 > 1
+            if (on) rectfill(caret * 4 + 8, start_y, caret * 4 + 11, start_y + 4, 8)
             flip()
-            rectfill(cursor_x, cursor_y, cursor_x + 3, cursor_y + 4, 0)
+            if (on) rectfill(caret * 4 + 8, start_y, caret * 4 + 11, start_y + 4, 0)
         end
         poke(0x5f25, pen)
     end
