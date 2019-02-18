@@ -29,34 +29,34 @@ player::player(lol::ivec2 window_size)
     // Bind controls
     m_controller = new lol::Controller("default controller");
 
-    m_input << lol::InputProfile::MouseKey(0, "Left");
-    m_input << lol::InputProfile::MouseKey(1, "Right");
-    m_input << lol::InputProfile::MouseKey(2, "Middle");
+    m_input << lol::InputProfile::MouseKey(100, "Left");
+    m_input << lol::InputProfile::MouseKey(101, "Right");
+    m_input << lol::InputProfile::MouseKey(102, "Middle");
 
-    m_input << lol::InputProfile::Keyboard(3, "Left");
-    m_input << lol::InputProfile::Keyboard(4, "Right");
-    m_input << lol::InputProfile::Keyboard(5, "Up");
-    m_input << lol::InputProfile::Keyboard(6, "Down");
-    m_input << lol::InputProfile::Keyboard(7, "Z");
-    m_input << lol::InputProfile::Keyboard(7, "C");
-    m_input << lol::InputProfile::Keyboard(7, "N");
-    m_input << lol::InputProfile::Keyboard(7, "Insert");
-    m_input << lol::InputProfile::Keyboard(8, "X");
-    m_input << lol::InputProfile::Keyboard(8, "V");
-    m_input << lol::InputProfile::Keyboard(8, "M");
-    m_input << lol::InputProfile::Keyboard(8, "Delete");
+    m_input << lol::InputProfile::Keyboard(0, "Left");
+    m_input << lol::InputProfile::Keyboard(1, "Right");
+    m_input << lol::InputProfile::Keyboard(2, "Up");
+    m_input << lol::InputProfile::Keyboard(3, "Down");
+    m_input << lol::InputProfile::Keyboard(4, "Z");
+    m_input << lol::InputProfile::Keyboard(4, "C");
+    m_input << lol::InputProfile::Keyboard(4, "N");
+    m_input << lol::InputProfile::Keyboard(4, "Insert");
+    m_input << lol::InputProfile::Keyboard(5, "X");
+    m_input << lol::InputProfile::Keyboard(5, "V");
+    m_input << lol::InputProfile::Keyboard(5, "M");
+    m_input << lol::InputProfile::Keyboard(5, "Delete");
 
-    m_input << lol::InputProfile::Keyboard(9, "P");
-    m_input << lol::InputProfile::Keyboard(9, "Return");
+    m_input << lol::InputProfile::Keyboard(6, "P");
+    m_input << lol::InputProfile::Keyboard(6, "Return");
 
-    m_input << lol::InputProfile::Keyboard(11, "S");
-    m_input << lol::InputProfile::Keyboard(12, "F");
-    m_input << lol::InputProfile::Keyboard(13, "E");
-    m_input << lol::InputProfile::Keyboard(14, "D");
-    m_input << lol::InputProfile::Keyboard(15, "LShift");
-    m_input << lol::InputProfile::Keyboard(15, "A");
-    m_input << lol::InputProfile::Keyboard(16, "Q");
-    m_input << lol::InputProfile::Keyboard(16, "Tab");
+    m_input << lol::InputProfile::Keyboard(8, "S");
+    m_input << lol::InputProfile::Keyboard(9, "F");
+    m_input << lol::InputProfile::Keyboard(10, "E");
+    m_input << lol::InputProfile::Keyboard(11, "D");
+    m_input << lol::InputProfile::Keyboard(12, "LShift");
+    m_input << lol::InputProfile::Keyboard(12, "A");
+    m_input << lol::InputProfile::Keyboard(13, "Q");
+    m_input << lol::InputProfile::Keyboard(13, "Tab");
 
     m_mouse = lol::InputDevice::GetMouse();
 
@@ -127,14 +127,14 @@ void player::tick_game(float seconds)
 
     // Update button states
     for (int i = 0; i < 64; ++i)
-        m_vm.button(i, m_controller->IsKeyPressed(3 + i));
+        m_vm.button(i, m_controller->IsKeyPressed(i));
 
     if (m_mouse)
     {
         lol::ivec2 mousepos = m_mouse->GetCursorPixel(0);
-        int buttons = (m_controller->IsKeyPressed(0) ? 1 : 0)
-                    + (m_controller->IsKeyPressed(1) ? 2 : 0)
-                    + (m_controller->IsKeyPressed(2) ? 4 : 0);
+        int buttons = (m_controller->IsKeyPressed(100) ? 1 : 0)
+                    + (m_controller->IsKeyPressed(101) ? 2 : 0)
+                    + (m_controller->IsKeyPressed(102) ? 4 : 0);
         m_vm.mouse(lol::ivec2(mousepos.x - (WINDOW_WIDTH - SCREEN_WIDTH) / 2,
                               WINDOW_HEIGHT - 1 - mousepos.y - (WINDOW_HEIGHT - SCREEN_HEIGHT) / 2) / 4,
                    buttons);
