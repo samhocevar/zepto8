@@ -129,6 +129,12 @@ void player::tick_game(float seconds)
     for (int i = 0; i < 64; ++i)
         m_vm.button(i, m_controller->IsKeyPressed(i));
 
+    // Debug the keyboard input
+    auto const &keys = m_keyboard->keys();
+    for (size_t i = 0; i < keys.size(); ++i)
+        if (keys[i])
+            msg::info("input: %s\n", m_keyboard->key_names()[i].c_str());
+
     if (m_mouse)
     {
         lol::ivec2 mousepos = m_mouse->GetCursorPixel(0);
