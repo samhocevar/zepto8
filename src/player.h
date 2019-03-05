@@ -56,9 +56,6 @@ private:
 
     lol::Camera *m_scenecam;
     lol::TileSet *m_tile, *m_font_tile;
-    lol::Controller *m_controller;
-    lol::InputProfile m_input;
-    lol::InputDevice *m_mouse, *m_keyboard;
 };
 
 } // namespace z8

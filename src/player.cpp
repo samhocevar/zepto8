@@ -26,9 +26,8 @@ using lol::msg;
 
 player::player(lol::ivec2 window_size)
 {
+#if 0 // TODO
     // Bind controls
-    m_controller = new lol::Controller("default controller");
-
     m_input << lol::InputProfile::MouseKey(100, "Left");
     m_input << lol::InputProfile::MouseKey(101, "Right");
     m_input << lol::InputProfile::MouseKey(102, "Middle");
@@ -57,15 +56,10 @@ player::player(lol::ivec2 window_size)
     m_input << lol::InputProfile::Keyboard(12, "A");
     m_input << lol::InputProfile::Keyboard(13, "Q");
     m_input << lol::InputProfile::Keyboard(13, "Tab");
-
-    m_mouse = lol::InputDevice::GetMouse();
-
-    m_controller->Init(m_input);
+#endif
 
     // Allow text input
-    m_keyboard = lol::InputDevice::GetKeyboard();
-    if (m_keyboard)
-        m_keyboard->SetTextInputActive(true);
+	lol::input::keyboard()->capture_text(true);
 
     // Create an ortho camera
     m_scenecam = new lol::Camera();
@@ -125,40 +119,41 @@ void player::tick_game(float seconds)
 {
     lol::WorldEntity::tick_game(seconds);
 
+    auto mouse = lol::input::mouse();
+    auto keyboard = lol::input::keyboard();
+
+#if 0 // TODO
     // Update button states
     for (int i = 0; i < 64; ++i)
         m_vm.button(i, m_controller->IsKeyPressed(i));
+#endif
 
     // Debug the keyboard input
-    auto const &keys = m_keyboard->keys();
+    auto const& keys = keyboard->keys();
     for (size_t i = 0; i < keys.size(); ++i)
         if (keys[i])
-            msg::info("input: %s\n", m_keyboard->key_names()[i].c_str());
+            msg::info("input: %s\n", lol::input::key_to_name((lol::input::key)i).c_str());
 
-    if (m_mouse)
-    {
-        lol::ivec2 mousepos = m_mouse->GetCursorPixel(0);
-        int buttons = (m_controller->IsKeyPressed(100) ? 1 : 0)
-                    + (m_controller->IsKeyPressed(101) ? 2 : 0)
-                    + (m_controller->IsKeyPressed(102) ? 4 : 0);
-        m_vm.mouse(lol::ivec2(mousepos.x - (WINDOW_WIDTH - SCREEN_WIDTH) / 2,
-                              WINDOW_HEIGHT - 1 - mousepos.y - (WINDOW_HEIGHT - SCREEN_HEIGHT) / 2) / 4,
-                   buttons);
-    }
+	// Mouse events
+    lol::ivec2 mousepos((int)mouse->axis(lol::input::axis::ScreenX),
+                        (int)mouse->axis(lol::input::axis::ScreenY));
+    int buttons = (mouse->button(lol::input::button::BTN_Left) ? 1 : 0)
+                + (mouse->button(lol::input::button::BTN_Right) ? 2 : 0)
+                + (mouse->button(lol::input::button::BTN_Middle) ? 2 : 0);
+    m_vm.mouse(lol::ivec2(mousepos.x - (WINDOW_WIDTH - SCREEN_WIDTH) / 2,
+                          WINDOW_HEIGHT - 1 - mousepos.y - (WINDOW_HEIGHT - SCREEN_HEIGHT) / 2) / 4,
+               buttons);
 
-    if (m_keyboard)
+	// Keyboard events
+    for (auto ch : keyboard->text())
     {
-        auto text = m_keyboard->GetText();
-        for (auto ch : text)
-        {
-            // Convert uppercase characters to special glyphs
-            if (ch >= 'A' && ch <= 'Z')
-                ch = ch - 'A' + '\x80';
-            // PICO-8 compatibility
-            if (ch == '\n')
-                ch = '\r';
-            m_vm.keyboard(ch);
-        }
+        // Convert uppercase characters to special glyphs
+        if (ch >= 'A' && ch <= 'Z')
+            ch = ch - 'A' + '\x80';
+        // PICO-8 compatibility
+        if (ch == '\n')
+            ch = '\r';
+        m_vm.keyboard(ch);
     }
 
     // Step the VM
