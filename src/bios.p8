@@ -281,9 +281,10 @@ function _z8.prompt()
     local start_y = peek(0x5f27)
     while true do
         local exec = false
-        -- read next character and act on it
-        if stat(30) then
-            local c = stat(31)
+        -- read next characters and act on them
+        local chars = stat(30) and stat(31) or ""
+        for n = 1, #chars do
+            local c = sub(chars, n, n)
             if c == "\8" then
                 if caret > 0 then
                     caret -= 1

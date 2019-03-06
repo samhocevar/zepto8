@@ -25,41 +25,36 @@ namespace z8
 using lol::msg;
 
 player::player(lol::ivec2 window_size)
+  : m_input_map
+    {
+        { lol::input::key::SC_Left, 0 },
+        { lol::input::key::SC_Right, 1 },
+        { lol::input::key::SC_Up, 2 },
+        { lol::input::key::SC_Down, 3 },
+        { lol::input::key::SC_Z, 4 },
+        { lol::input::key::SC_C, 4 },
+        { lol::input::key::SC_N, 4 },
+        { lol::input::key::SC_Insert, 4 },
+        { lol::input::key::SC_X, 5 },
+        { lol::input::key::SC_V, 5 },
+        { lol::input::key::SC_M, 5 },
+        { lol::input::key::SC_Delete, 5 },
+
+        { lol::input::key::SC_P, 6 },
+        { lol::input::key::SC_Return, 6 },
+
+        { lol::input::key::SC_S, 8 },
+        { lol::input::key::SC_F, 9 },
+        { lol::input::key::SC_E, 10 },
+        { lol::input::key::SC_D, 11 },
+        { lol::input::key::SC_LShift, 12 },
+        { lol::input::key::SC_A, 12 },
+        { lol::input::key::SC_Q, 13 },
+        { lol::input::key::SC_Tab, 13 },
+    }
 {
-#if 0 // TODO
-    // Bind controls
-    m_input << lol::InputProfile::MouseKey(100, "Left");
-    m_input << lol::InputProfile::MouseKey(101, "Right");
-    m_input << lol::InputProfile::MouseKey(102, "Middle");
-
-    m_input << lol::InputProfile::Keyboard(0, "Left");
-    m_input << lol::InputProfile::Keyboard(1, "Right");
-    m_input << lol::InputProfile::Keyboard(2, "Up");
-    m_input << lol::InputProfile::Keyboard(3, "Down");
-    m_input << lol::InputProfile::Keyboard(4, "Z");
-    m_input << lol::InputProfile::Keyboard(4, "C");
-    m_input << lol::InputProfile::Keyboard(4, "N");
-    m_input << lol::InputProfile::Keyboard(4, "Insert");
-    m_input << lol::InputProfile::Keyboard(5, "X");
-    m_input << lol::InputProfile::Keyboard(5, "V");
-    m_input << lol::InputProfile::Keyboard(5, "M");
-    m_input << lol::InputProfile::Keyboard(5, "Delete");
-
-    m_input << lol::InputProfile::Keyboard(6, "P");
-    m_input << lol::InputProfile::Keyboard(6, "Return");
-
-    m_input << lol::InputProfile::Keyboard(8, "S");
-    m_input << lol::InputProfile::Keyboard(9, "F");
-    m_input << lol::InputProfile::Keyboard(10, "E");
-    m_input << lol::InputProfile::Keyboard(11, "D");
-    m_input << lol::InputProfile::Keyboard(12, "LShift");
-    m_input << lol::InputProfile::Keyboard(12, "A");
-    m_input << lol::InputProfile::Keyboard(13, "Q");
-    m_input << lol::InputProfile::Keyboard(13, "Tab");
-#endif
-
     // Allow text input
-	lol::input::keyboard()->capture_text(true);
+    lol::input::keyboard()->capture_text(true);
 
     // Create an ortho camera
     m_scenecam = new lol::Camera();
@@ -122,37 +117,33 @@ void player::tick_game(float seconds)
     auto mouse = lol::input::mouse();
     auto keyboard = lol::input::keyboard();
 
-#if 0 // TODO
     // Update button states
-    for (int i = 0; i < 64; ++i)
-        m_vm.button(i, m_controller->IsKeyPressed(i));
-#endif
+    for (auto const &k : m_input_map)
+        m_vm.button(k.second, keyboard->key(k.first));
 
-    // Debug the keyboard input
-    auto const& keys = keyboard->keys();
-    for (size_t i = 0; i < keys.size(); ++i)
-        if (keys[i])
-            msg::info("input: %s\n", lol::input::key_to_name((lol::input::key)i).c_str());
+    if (keyboard->key_pressed(lol::input::key::SC_Return))
+        m_vm.keyboard('\r');
+    if (keyboard->key_pressed(lol::input::key::SC_Backspace))
+        m_vm.keyboard('\x08');
+    if (keyboard->key_pressed(lol::input::key::SC_Delete))
+        m_vm.keyboard('\x7f');
 
-	// Mouse events
+    // Mouse events
     lol::ivec2 mousepos((int)mouse->axis(lol::input::axis::ScreenX),
                         (int)mouse->axis(lol::input::axis::ScreenY));
     int buttons = (mouse->button(lol::input::button::BTN_Left) ? 1 : 0)
                 + (mouse->button(lol::input::button::BTN_Right) ? 2 : 0)
-                + (mouse->button(lol::input::button::BTN_Middle) ? 2 : 0);
+                + (mouse->button(lol::input::button::BTN_Middle) ? 4 : 0);
     m_vm.mouse(lol::ivec2(mousepos.x - (WINDOW_WIDTH - SCREEN_WIDTH) / 2,
                           WINDOW_HEIGHT - 1 - mousepos.y - (WINDOW_HEIGHT - SCREEN_HEIGHT) / 2) / 4,
                buttons);
 
-	// Keyboard events
+    // Keyboard events
     for (auto ch : keyboard->text())
     {
         // Convert uppercase characters to special glyphs
         if (ch >= 'A' && ch <= 'Z')
-            ch = ch - 'A' + '\x80';
-        // PICO-8 compatibility
-        if (ch == '\n')
-            ch = '\r';
+            ch = '\x80' + (ch - 'A');
         m_vm.keyboard(ch);
     }
 

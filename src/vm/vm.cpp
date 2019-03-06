@@ -199,7 +199,7 @@ bool vm::step(float seconds)
 
 void vm::button(int index, int state)
 {
-    m_buttons[1][index] = state;
+    m_buttons[1][index] += state;
 }
 
 void vm::mouse(lol::ivec2 coords, int buttons)
@@ -551,6 +551,7 @@ int vm::api_update_buttons(lua_State *l)
             ++m_buttons[0][i];
         else
             m_buttons[0][i] = 0;
+        m_buttons[1][i] = 0;
     }
 
     return 0;

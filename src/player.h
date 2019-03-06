@@ -50,6 +50,7 @@ public:
 
 private:
     vm m_vm;
+    std::map<lol::input::key, int> m_input_map;
     array<u8vec4> m_screen;
     bool m_render = true;
     int m_streams[4];
