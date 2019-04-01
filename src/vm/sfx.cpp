@@ -181,7 +181,7 @@ static float get_waveform(int instrument, float advance)
 void vm::getaudio(int chan, void *in_buffer, int in_bytes)
 {
     int const samples_per_second = 22050;
-    int const bytes_per_sample = 4; // stereo S16 for now
+    int const bytes_per_sample = 2; // mono S16 for now
 
     int16_t *buffer = (int16_t *)in_buffer;
     int const samples = in_bytes / bytes_per_sample;
@@ -190,7 +190,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
     {
         if (m_channels[chan].m_sfx == -1)
         {
-            buffer[2 * i] = buffer[2 * i + 1] = 0;
+            buffer[i] = 0;
             continue;
         }
 
@@ -230,7 +230,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         if (volume == 0.f)
         {
             // Play silence
-            buffer[2 * i] = buffer[2 * i + 1] = 0;
+            buffer[i] = 0;
         }
         else
         {
@@ -287,8 +287,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
             // Play note
             float waveform = get_waveform(sfx.notes[note_id].instrument(), phi);
 
-            buffer[2 * i] = buffer[2 * i + 1]
-                  = (int16_t)(32767.99f * volume * waveform);
+            buffer[i] = (int16_t)(32767.99f * volume * waveform);
 
             m_channels[chan].m_phi = phi + freq / samples_per_second;
         }
@@ -308,8 +307,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
 
 #if DEBUG_EXPORT_WAV
     auto fd = exports[&m_channels[chan]];
-    for (int i = 0; i < samples; ++i)
-        fwrite(buffer + 2 * i, 2, 1, fd);
+    fwrite(buffer, samples, 1, fd);
 #endif
 }
 
