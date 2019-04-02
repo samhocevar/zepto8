@@ -34,31 +34,63 @@ endif
     3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h \
     3rdparty/portable-file-dialogs/portable-file-dialogs.h \
     3rdparty/zep/src/buffer.cpp \
+    3rdparty/zep/src/buffer.h \
     3rdparty/zep/src/commands.cpp \
+    3rdparty/zep/src/commands.h \
     3rdparty/zep/src/display.cpp \
+    3rdparty/zep/src/display.h \
     3rdparty/zep/src/editor.cpp \
+    3rdparty/zep/src/editor.h \
+    3rdparty/zep/src/filesystem.h \
+    3rdparty/zep/src/gap_buffer.h \
+    3rdparty/zep/src/imgui/console_imgui.h \
     3rdparty/zep/src/imgui/display_imgui.cpp \
+    3rdparty/zep/src/imgui/display_imgui.h \
     3rdparty/zep/src/imgui/editor_imgui.cpp \
+    3rdparty/zep/src/imgui/editor_imgui.h \
+    3rdparty/zep/src/imgui/usb_hid_keys.h \
     3rdparty/zep/src/mcommon/animation/timer.cpp \
+    3rdparty/zep/src/mcommon/animation/timer.h \
     3rdparty/zep/src/mcommon/file/archive.cpp \
+    3rdparty/zep/src/mcommon/file/archive.h \
     3rdparty/zep/src/mcommon/file/path.cpp \
     3rdparty/zep/src/mcommon/file/path.h \
+    3rdparty/zep/src/mcommon/logger.h \
+    3rdparty/zep/src/mcommon/math/math.h \
+    3rdparty/zep/src/mcommon/string/murmur_hash.h \
     3rdparty/zep/src/mcommon/string/stringutils.cpp \
+    3rdparty/zep/src/mcommon/string/stringutils.h \
+    3rdparty/zep/src/mcommon/threadpool.h \
+    3rdparty/zep/src/mcommon/threadutils.h \
     3rdparty/zep/src/mode.cpp \
+    3rdparty/zep/src/mode.h \
     3rdparty/zep/src/mode_search.cpp \
+    3rdparty/zep/src/mode_search.h \
     3rdparty/zep/src/mode_standard.cpp \
+    3rdparty/zep/src/mode_standard.h \
     3rdparty/zep/src/mode_vim.cpp \
+    3rdparty/zep/src/mode_vim.h \
     3rdparty/zep/src/scroller.cpp \
+    3rdparty/zep/src/scroller.h \
     3rdparty/zep/src/splits.cpp \
+    3rdparty/zep/src/splits.h \
     3rdparty/zep/src/syntax.cpp \
+    3rdparty/zep/src/syntax.h \
     3rdparty/zep/src/syntax_providers.cpp \
+    3rdparty/zep/src/syntax_providers.h \
     3rdparty/zep/src/syntax_rainbow_brackets.cpp \
+    3rdparty/zep/src/syntax_rainbow_brackets.h \
     3rdparty/zep/src/tab_window.cpp \
+    3rdparty/zep/src/tab_window.h \
     3rdparty/zep/src/theme.cpp \
+    3rdparty/zep/src/theme.h \
     3rdparty/zep/src/window.cpp \
+    3rdparty/zep/src/window.h \
+    3rdparty/zep/src/zep.h \
+    3rdparty/zep/src/zep_config.h \
     $(NULL)
 
-EXTRA_DIST += zepto8.vcxproj
+EXTRA_DIST += $(___zepto8_DATA) zepto8.vcxproj
 
 ___z8player_SOURCES = \
     z8player.cpp \
@@ -83,6 +115,7 @@ ___z8tool_SOURCES = \
     compress.cpp compress.h zlib/deflate.h \
     zlib/trees.h zlib/zconf.h zlib/zlib.h zlib/zutil.h \
     minify.cpp minify.h \
+    telnet.h \
     $(NULL)
 ___z8tool_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
@@ -101,10 +134,10 @@ ___z8lua_CPPFLAGS = -xc++ -Iz8lua $(lua_cflags) $(AM_CPPFLAGS) $(AM_CXXFLAGS)
 ___z8lua_LDFLAGS = libz8lua.a $(lua_ldflags)
 ___z8lua_DEPENDENCIES = libz8lua.a
 
-#EXTRA_DIST += z8lua.vcxproj
+EXTRA_DIST += z8lua.vcxproj
 
 libzepto8_a_SOURCES = \
-    zepto8.h \
+    zepto8.h memory.h \
     bios.cpp bios.h cart.cpp cart.h \
     analyzer.cpp analyzer.h lua53-parse.h \
     vm/vm.cpp vm/vm.h \
