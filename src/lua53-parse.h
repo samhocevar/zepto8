@@ -89,7 +89,7 @@ namespace lua53
    // comments). In some places, where it is more efficient,
    // right padding is used.
 
-   namespace pegtl = tao::TAO_PEGTL_NAMESPACE;
+   namespace pegtl = TAO_PEGTL_NAMESPACE;
 
 #if WITH_PICO8
    // Use this helper class to ensure we parse rule R with no risk

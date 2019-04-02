@@ -70,7 +70,7 @@ player::player(lol::ivec2 window_size)
         auto f = std::bind(&vm::getaudio, &m_vm, i,
                            std::placeholders::_1,
                            std::placeholders::_2);
-        m_streams[i] = lol::audio::start_streaming(f, lol::audio::format::int16le, 22050, 1);
+        m_streams[i] = lol::audio::start_streaming(f, lol::audio::format::sint16le, 22050, 1);
     }
 
     // FIXME: the image gets deleted by TextureImage class, it

@@ -35,19 +35,17 @@ endif
     3rdparty/portable-file-dialogs/portable-file-dialogs.h \
     3rdparty/zep/src/buffer.cpp \
     3rdparty/zep/src/commands.cpp \
+    3rdparty/zep/src/display.cpp \
     3rdparty/zep/src/editor.cpp \
     3rdparty/zep/src/imgui/display_imgui.cpp \
     3rdparty/zep/src/imgui/editor_imgui.cpp \
     3rdparty/zep/src/mcommon/animation/timer.cpp \
     3rdparty/zep/src/mcommon/file/archive.cpp \
-    3rdparty/zep/src/mcommon/file/file.cpp \
-    3rdparty/zep/src/mcommon/file/mfilesystem.cpp \
-    3rdparty/zep/src/mcommon/FileWatcher/FileWatcher.cpp \
-    3rdparty/zep/src/mcommon/FileWatcher/FileWatcherLinux.cpp \
-    3rdparty/zep/src/mcommon/FileWatcher/FileWatcherOSX.cpp \
-    3rdparty/zep/src/mcommon/FileWatcher/FileWatcherWin32.cpp \
+    3rdparty/zep/src/mcommon/file/path.cpp \
+    3rdparty/zep/src/mcommon/file/path.h \
     3rdparty/zep/src/mcommon/string/stringutils.cpp \
     3rdparty/zep/src/mode.cpp \
+    3rdparty/zep/src/mode_search.cpp \
     3rdparty/zep/src/mode_standard.cpp \
     3rdparty/zep/src/mode_vim.cpp \
     3rdparty/zep/src/scroller.cpp \
@@ -57,7 +55,6 @@ endif
     3rdparty/zep/src/syntax_rainbow_brackets.cpp \
     3rdparty/zep/src/tab_window.cpp \
     3rdparty/zep/src/theme.cpp \
-    3rdparty/zep/src/window_base.cpp \
     3rdparty/zep/src/window.cpp \
     $(NULL)
 

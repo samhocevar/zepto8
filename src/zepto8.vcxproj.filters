@@ -15,10 +15,16 @@
     <ClCompile Include="3rdparty/zep/src/mcommon/file/archive.cpp">
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/mcommon/file/path.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
     <ClCompile Include="3rdparty/zep/src/buffer.cpp">
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
     <ClCompile Include="3rdparty/zep/src/commands.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/display.cpp">
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
     <ClCompile Include="3rdparty/zep/src/imgui/display_imgui.cpp">
@@ -30,25 +36,10 @@
     <ClCompile Include="3rdparty/zep/src/imgui/editor_imgui.cpp">
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
-    <ClCompile Include="3rdparty/zep/src/mcommon/file/file.cpp">
-      <Filter>3rdparty\zep</Filter>
-    </ClCompile>
-    <ClCompile Include="3rdparty/zep/src/mcommon/FileWatcher/FileWatcher.cpp">
-      <Filter>3rdparty\zep</Filter>
-    </ClCompile>
-    <ClCompile Include="3rdparty/zep/src/mcommon/FileWatcher/FileWatcherLinux.cpp">
-      <Filter>3rdparty\zep</Filter>
-    </ClCompile>
-    <ClCompile Include="3rdparty/zep/src/mcommon/FileWatcher/FileWatcherOSX.cpp">
-      <Filter>3rdparty\zep</Filter>
-    </ClCompile>
-    <ClCompile Include="3rdparty/zep/src/mcommon/FileWatcher/FileWatcherWin32.cpp">
-      <Filter>3rdparty\zep</Filter>
-    </ClCompile>
-    <ClCompile Include="3rdparty/zep/src/mcommon/file/mfilesystem.cpp">
-      <Filter>3rdparty\zep</Filter>
-    </ClCompile>
     <ClCompile Include="3rdparty/zep/src/mode.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/mode_search.cpp">
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
     <ClCompile Include="3rdparty/zep/src/mode_standard.cpp">
@@ -87,9 +78,6 @@
     <ClCompile Include="3rdparty/zep/src/window.cpp">
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
-    <ClCompile Include="3rdparty/zep/src/window_base.cpp">
-      <Filter>3rdparty\zep</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="player.h" />
@@ -109,6 +97,9 @@
     <ClInclude Include="3rdparty/portable-file-dialogs/portable-file-dialogs.h">
       <Filter>3rdparty\portable-file-dialogs</Filter>
     </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/mcommon/file/path.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ide">

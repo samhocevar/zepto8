@@ -91,6 +91,7 @@ class editor_impl : public Zep::ZepEditor_ImGui
 {
 public:
     editor_impl() : Zep::ZepEditor_ImGui("") {}
+    virtual ~editor_impl() {}
 };
 
 class zep_theme : public Zep::ZepTheme

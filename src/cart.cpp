@@ -189,8 +189,7 @@ struct p8_reader
     // Grammar actions
     //
 
-    template<typename R>
-    struct action : pegtl::nothing<R> {};
+    template<typename R> struct action {};
 
     //
     // Parser state
@@ -224,6 +223,7 @@ struct p8_reader
         pegtl::string_input<> in(str, "p8");
         pegtl::parse<r_file, action>(in, *this);
     }
+
 };
 
 template<>
