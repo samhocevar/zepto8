@@ -30,6 +30,7 @@
 #   include "3rdparty/zep/src/zep.h"
 #   include "3rdparty/zep/src/mode_vim.h"
 #   include "3rdparty/zep/src/mode_standard.h"
+#   include "3rdparty/zep/src/filesystem.h"
 #   include "3rdparty/zep/src/imgui/editor_imgui.h"
 #endif
 
@@ -87,11 +88,54 @@ class editor_impl : public TextEditor
 static TextEditor::LanguageDefinition const& get_lang_def();
 static TextEditor::Palette const &get_palette();
 #else
+class zep_filesystem : public Zep::IZepFileSystem
+{
+public:
+    virtual std::string Read(const Zep::ZepPath& filePath) override
+    {
+        return "";
+    }
+
+    virtual bool Write(const Zep::ZepPath& filePath, const void* pData, size_t size) override
+    {
+        return true;
+    }
+
+    virtual const Zep::ZepPath& GetWorkingDirectory() const override
+    {
+        return m_cwd;
+    }
+
+    virtual void SetWorkingDirectory(const Zep::ZepPath& path) override
+    {
+    }
+
+    virtual bool IsDirectory(const Zep::ZepPath& path) const override { return false; }
+    virtual bool IsReadOnly(const Zep::ZepPath& path) const override { return false; }
+    virtual bool Exists(const Zep::ZepPath& path) const override { return false; }
+
+    // A callback API for scaning
+    virtual void ScanDirectory(const Zep::ZepPath& path, std::function<bool(const Zep::ZepPath& path, bool& dont_recurse)> fnScan) const override
+    {
+    }
+
+    // Equivalent means 'the same file'
+    virtual bool Equivalent(const Zep::ZepPath& path1, const Zep::ZepPath& path2) const override { return false; }
+    virtual Zep::ZepPath Canonical(const Zep::ZepPath& path) const override { return path; }
+
+private:
+    Zep::ZepPath m_cwd = "";
+};
+
 class editor_impl : public Zep::ZepEditor_ImGui
 {
 public:
-    editor_impl() : Zep::ZepEditor_ImGui("") {}
-    virtual ~editor_impl() {}
+    editor_impl()
+        : Zep::ZepEditor_ImGui("", new zep_filesystem())
+    {}
+
+    virtual ~editor_impl()
+    {}
 };
 
 class zep_theme : public Zep::ZepTheme
@@ -161,10 +205,10 @@ void editor::render()
 {
 #if USE_LEGACY_EDITOR
     m_impl->Render("Text Editor");
-#else
+#else/*
     m_impl->SetDisplayRegion(Zep::toNVec2f(ImGui::GetCursorScreenPos()),
                              Zep::toNVec2f(ImGui::GetContentRegionAvail()) + Zep::toNVec2f(ImGui::GetCursorScreenPos()));
-    m_impl->Display();
+*/    m_impl->Display();
     m_impl->HandleInput();
 #endif
 }
