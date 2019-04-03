@@ -13,10 +13,10 @@
       <Filter>3rdparty\imgui-color-text-editor</Filter>
     </ClCompile>
     <ClCompile Include="3rdparty/zep/src/mcommon/file/archive.cpp">
-      <Filter>3rdparty\zep</Filter>
+      <Filter>3rdparty\zep\mcommon\file</Filter>
     </ClCompile>
     <ClCompile Include="3rdparty/zep/src/mcommon/file/path.cpp">
-      <Filter>3rdparty\zep</Filter>
+      <Filter>3rdparty\zep\mcommon\file</Filter>
     </ClCompile>
     <ClCompile Include="3rdparty/zep/src/buffer.cpp">
       <Filter>3rdparty\zep</Filter>
@@ -28,13 +28,13 @@
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
     <ClCompile Include="3rdparty/zep/src/imgui/display_imgui.cpp">
-      <Filter>3rdparty\zep</Filter>
+      <Filter>3rdparty\zep\imgui</Filter>
     </ClCompile>
     <ClCompile Include="3rdparty/zep/src/editor.cpp">
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
     <ClCompile Include="3rdparty/zep/src/imgui/editor_imgui.cpp">
-      <Filter>3rdparty\zep</Filter>
+      <Filter>3rdparty\zep\imgui</Filter>
     </ClCompile>
     <ClCompile Include="3rdparty/zep/src/mode.cpp">
       <Filter>3rdparty\zep</Filter>
@@ -55,7 +55,7 @@
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
     <ClCompile Include="3rdparty/zep/src/mcommon/string/stringutils.cpp">
-      <Filter>3rdparty\zep</Filter>
+      <Filter>3rdparty\zep\mcommon\string</Filter>
     </ClCompile>
     <ClCompile Include="3rdparty/zep/src/syntax.cpp">
       <Filter>3rdparty\zep</Filter>
@@ -73,7 +73,7 @@
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
     <ClCompile Include="3rdparty/zep/src/mcommon/animation/timer.cpp">
-      <Filter>3rdparty\zep</Filter>
+      <Filter>3rdparty\zep\mcommon\animation</Filter>
     </ClCompile>
     <ClCompile Include="3rdparty/zep/src/window.cpp">
       <Filter>3rdparty\zep</Filter>
@@ -98,8 +98,104 @@
       <Filter>3rdparty\portable-file-dialogs</Filter>
     </ClInclude>
     <ClInclude Include="3rdparty/zep/src/mcommon/file/path.h">
+      <Filter>3rdparty\zep\mcommon\file</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/buffer.h">
       <Filter>3rdparty\zep</Filter>
-    </ClCompile>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/commands.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/display.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/editor.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/filesystem.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/gap_buffer.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/imgui/console_imgui.h">
+      <Filter>3rdparty\zep\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/imgui/display_imgui.h">
+      <Filter>3rdparty\zep\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/imgui/editor_imgui.h">
+      <Filter>3rdparty\zep\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/imgui/usb_hid_keys.h">
+      <Filter>3rdparty\zep\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/mcommon/animation/timer.h">
+      <Filter>3rdparty\zep\mcommon\animation</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/mcommon/file/archive.h">
+      <Filter>3rdparty\zep\mcommon\file</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/mcommon/logger.h">
+      <Filter>3rdparty\zep\mcommon</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/mcommon/math/math.h">
+      <Filter>3rdparty\zep\mcommon\math</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/mcommon/string/murmur_hash.h">
+      <Filter>3rdparty\zep\mcommon\string</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/mcommon/string/stringutils.h">
+      <Filter>3rdparty\zep\mcommon\string</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/mcommon/threadpool.h">
+      <Filter>3rdparty\zep\mcommon</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/mcommon/threadutils.h">
+      <Filter>3rdparty\zep\mcommon</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/mode.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/mode_search.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/mode_standard.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/mode_vim.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/scroller.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/splits.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/syntax.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/syntax_providers.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/syntax_rainbow_brackets.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/tab_window.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/theme.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/window.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/zep.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/zep_config.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ide">
@@ -119,6 +215,24 @@
     </Filter>
     <Filter Include="3rdparty\zep">
       <UniqueIdentifier>{8aa5accd-0ff8-4c72-8992-157f2d1f0bc0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rdparty\zep\imgui">
+      <UniqueIdentifier>{eb2c60b1-3991-4852-abba-5eb31aaf59d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rdparty\zep\mcommon">
+      <UniqueIdentifier>{3b7dc603-6e3d-4950-99a9-778c6690fe94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rdparty\zep\mcommon\string">
+      <UniqueIdentifier>{5e030ec1-44ba-4301-9fa2-a847611b073a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rdparty\zep\mcommon\math">
+      <UniqueIdentifier>{65a7a623-feb2-4db2-9ca3-9fa3f4e66ffc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rdparty\zep\mcommon\animation">
+      <UniqueIdentifier>{9475fea6-8ab3-4b6f-9247-a124c3f2700a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rdparty\zep\mcommon\file">
+      <UniqueIdentifier>{2f93a7ff-3d51-44b8-ba18-0aa5809b0a6f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
