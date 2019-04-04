@@ -22,6 +22,8 @@
 #include "zepto8.h"
 #include "editor.h"
 
+#define FAKE_FILE_NAME "code.p8"
+
 #define USE_LEGACY_EDITOR 0
 
 #if USE_LEGACY_EDITOR
@@ -93,6 +95,8 @@ class zep_filesystem : public Zep::IZepFileSystem
 public:
     virtual std::string Read(const Zep::ZepPath& filePath) override
     {
+        if (filePath == FAKE_FILE_NAME)
+            return TEST_TEXT;
         return "";
     }
 
@@ -112,7 +116,7 @@ public:
 
     virtual bool IsDirectory(const Zep::ZepPath& path) const override { return false; }
     virtual bool IsReadOnly(const Zep::ZepPath& path) const override { return false; }
-    virtual bool Exists(const Zep::ZepPath& path) const override { return false; }
+    virtual bool Exists(const Zep::ZepPath& path) const override { return path == FAKE_FILE_NAME; }
 
     // A callback API for scaning
     virtual void ScanDirectory(const Zep::ZepPath& path, std::function<bool(const Zep::ZepPath& path, bool& dont_recurse)> fnScan) const override
@@ -120,7 +124,11 @@ public:
     }
 
     // Equivalent means 'the same file'
-    virtual bool Equivalent(const Zep::ZepPath& path1, const Zep::ZepPath& path2) const override { return false; }
+    virtual bool Equivalent(const Zep::ZepPath& path1, const Zep::ZepPath& path2) const override
+    {
+        return path1 == path2;
+    }
+
     virtual Zep::ZepPath Canonical(const Zep::ZepPath& path) const override { return path; }
 
 private:
@@ -191,9 +199,10 @@ editor::editor()
         return std::make_shared<Zep::ZepSyntax>(*pBuffer, pico8_keywords, pico8_identifiers);
     }));
 
-    Zep::ZepBuffer* buffer = m_impl->GetEmptyBuffer("code.p8");
+    m_impl->InitWithFileOrDir(FAKE_FILE_NAME);
+
+    auto* buffer = m_impl->GetFileBuffer(FAKE_FILE_NAME);
     buffer->SetTheme(std::static_pointer_cast<Zep::ZepTheme, zep_theme>(std::make_shared<zep_theme>()));
-    buffer->SetText(TEST_TEXT);
 #endif
 }
 
@@ -205,10 +214,11 @@ void editor::render()
 {
 #if USE_LEGACY_EDITOR
     m_impl->Render("Text Editor");
-#else/*
+#else
+    m_impl->UpdateWindowState();
     m_impl->SetDisplayRegion(Zep::toNVec2f(ImGui::GetCursorScreenPos()),
                              Zep::toNVec2f(ImGui::GetContentRegionAvail()) + Zep::toNVec2f(ImGui::GetCursorScreenPos()));
-*/    m_impl->Display();
+    m_impl->Display();
     m_impl->HandleInput();
 #endif
 }
