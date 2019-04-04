@@ -8,9 +8,6 @@
 	path = src/z8lua
 	url = ../z8lua.git
 	branch = zepto8
-[submodule "src/3rdparty/imgui-color-text-edit"]
-	path = src/3rdparty/imgui-color-text-edit
-	url = ../fork-imgui-color-text-edit.git
 [submodule "src/3rdparty/imgui-club"]
 	path = src/3rdparty/imgui-club
 	url = ../fork-imgui-club.git

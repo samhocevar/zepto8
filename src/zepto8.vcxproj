@@ -36,7 +36,6 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="3rdparty/imgui-color-text-edit/TextEditor.cpp" />
     <ClCompile Include="3rdparty/zep/src/buffer.cpp" />
     <ClCompile Include="3rdparty/zep/src/commands.cpp" />
     <ClCompile Include="3rdparty/zep/src/display.cpp" />
@@ -66,7 +65,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h" />
-    <ClInclude Include="3rdparty/imgui-color-text-edit/TextEditor.h" />
     <ClInclude Include="3rdparty/portable-file-dialogs/portable-file-dialogs.h" />
     <ClInclude Include="3rdparty/zep/src/buffer.h" />
     <ClInclude Include="3rdparty/zep/src/commands.h" />

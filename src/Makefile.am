@@ -29,8 +29,6 @@ ___zepto8_LDFLAGS += --preload-file bios.p8 --preload-file data/zepto8.ttf \
 endif
 
 3rdparty_sources = \
-    3rdparty/imgui-color-text-edit/TextEditor.cpp \
-    3rdparty/imgui-color-text-edit/TextEditor.h \
     3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h \
     3rdparty/portable-file-dialogs/portable-file-dialogs.h \
     3rdparty/zep/src/buffer.cpp \

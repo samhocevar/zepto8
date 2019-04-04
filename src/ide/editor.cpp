@@ -22,19 +22,13 @@
 #include "zepto8.h"
 #include "editor.h"
 
+#include "3rdparty/zep/src/zep.h"
+#include "3rdparty/zep/src/mode_vim.h"
+#include "3rdparty/zep/src/mode_standard.h"
+#include "3rdparty/zep/src/filesystem.h"
+#include "3rdparty/zep/src/imgui/editor_imgui.h"
+
 #define FAKE_FILE_NAME "code.p8"
-
-#define USE_LEGACY_EDITOR 0
-
-#if USE_LEGACY_EDITOR
-#   include "3rdparty/imgui-color-text-edit/TextEditor.h"
-#else
-#   include "3rdparty/zep/src/zep.h"
-#   include "3rdparty/zep/src/mode_vim.h"
-#   include "3rdparty/zep/src/mode_standard.h"
-#   include "3rdparty/zep/src/filesystem.h"
-#   include "3rdparty/zep/src/imgui/editor_imgui.h"
-#endif
 
 namespace z8
 {
@@ -82,14 +76,6 @@ static std::set<std::string> pico8_identifiers =
     "-- \x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d\x8e\x8f\n" \
     "-- \x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\n"
 
-#if USE_LEGACY_EDITOR
-class editor_impl : public TextEditor
-{
-};
-
-static TextEditor::LanguageDefinition const& get_lang_def();
-static TextEditor::Palette const &get_palette();
-#else
 class zep_filesystem : public Zep::IZepFileSystem
 {
 public:
@@ -181,18 +167,10 @@ public:
 private:
     std::map<Zep::ThemeColor, int> m_palette;
 };
-#endif
 
 editor::editor()
   : m_impl(std::make_unique<editor_impl>())
 {
-#if USE_LEGACY_EDITOR
-    m_impl->SetLanguageDefinition(get_lang_def());
-    m_impl->SetPalette(get_palette());
-
-    // Debug text
-    m_impl->SetText(TEST_TEXT);
-#else
     //m_impl->SetMode(Zep::ZepMode_Standard::StaticName());
     m_impl->RegisterSyntaxFactory({".p8"}, Zep::tSyntaxFactory([](Zep::ZepBuffer* pBuffer)
     {
@@ -203,7 +181,6 @@ editor::editor()
 
     auto* buffer = m_impl->GetFileBuffer(FAKE_FILE_NAME);
     buffer->SetTheme(std::static_pointer_cast<Zep::ZepTheme, zep_theme>(std::make_shared<zep_theme>()));
-#endif
 }
 
 editor::~editor()
@@ -212,105 +189,12 @@ editor::~editor()
 
 void editor::render()
 {
-#if USE_LEGACY_EDITOR
-    m_impl->Render("Text Editor");
-#else
     m_impl->UpdateWindowState();
     m_impl->SetDisplayRegion(Zep::toNVec2f(ImGui::GetCursorScreenPos()),
                              Zep::toNVec2f(ImGui::GetContentRegionAvail()) + Zep::toNVec2f(ImGui::GetCursorScreenPos()));
     m_impl->Display();
     m_impl->HandleInput();
-#endif
 }
-
-#if USE_LEGACY_EDITOR
-static TextEditor::LanguageDefinition const& get_lang_def()
-{
-    static bool inited = false;
-    static TextEditor::LanguageDefinition ret;
-
-    if (!inited)
-    {
-        for (auto& k : pico8_keywords)
-            ret.mKeywords.insert(k);
-
-        for (auto& k : pico8_identifiers)
-        {
-            TextEditor::Identifier id;
-            id.mDeclaration = "Built-in function";
-            ret.mIdentifiers.insert(std::make_pair(k, id));
-        }
-
-        #define ADD_COLOR(regex, index) \
-            ret.mTokenRegexStrings.push_back(std::make_pair(std::string(regex), TextEditor::PaletteIndex::index))
-        ADD_COLOR("(--|//).*", Comment);
-        ADD_COLOR("L?\\\"(\\\\.|[^\\\"])*\\\"", String);
-        ADD_COLOR("'[^']*'", String);
-        ADD_COLOR("[+-]?0[xX]([0-9a-fA-F]+([.][0-9a-fA-F]*)?|[.][0-9a-fA-F]+)", Number);
-        ADD_COLOR("[+-]?0[bB]([01]+([.][01]*)?|[.][0-1]+)", Number);
-        ADD_COLOR("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)", Number);
-        ADD_COLOR("[a-zA-Z_][a-zA-Z0-9_]*", Identifier);
-        ADD_COLOR("[-\\[\\]{}!%^&*()+=~|<>?/;,.]", Punctuation);
-        #undef ADD_COLOR
-
-        ret.mCommentStart = "--\\[\\[";
-        ret.mCommentEnd = "\\]\\]";
-        ret.mSingleLineComment = "--";
-
-        ret.mCaseSensitive = true;
-        ret.mAutoIndentation = false;
-
-        ret.mName = "PICO-8";
-
-        inited = true;
-    }
-
-    return ret;
-}
-
-static TextEditor::Palette const &get_palette()
-{
-    static bool inited = false;
-    static TextEditor::Palette ret;
-
-    if (!inited)
-    {
-        static int desc[] =
-        {
-            z8::palette::white,      // None [UNUSED]
-            z8::palette::pink,       // Keyword
-            z8::palette::blue,       // Number
-            z8::palette::blue,       // String
-            z8::palette::blue,       // Char literal
-            z8::palette::white,      // Punctuation
-            z8::palette::indigo,     // Preprocessor [UNUSED]
-            z8::palette::light_gray, // Identifier
-            z8::palette::green,      // Known identifier
-            z8::palette::indigo,     // Preproc identifier [UNUSED]
-            z8::palette::indigo,     // Comment (single line)
-            z8::palette::indigo,     // Comment (multi line)
-            //z8::palette::dark_gray,  // Background
-            z8::palette::dark_blue,  // Background
-            z8::palette::red,        // Cursor
-            z8::palette::yellow,     // Selection
-            z8::palette::red,        // ErrorMarker [UNUSED]
-            z8::palette::red,        // Breakpoint [UNUSED]
-            z8::palette::orange,     // Line number
-            z8::palette::dark_blue,  // Current line fill
-            z8::palette::light_gray, // Current line fill (inactive)
-            z8::palette::light_gray, // Current line edge
-        };
-
-        for (size_t i = 0; i < sizeof(desc) / sizeof(*desc); ++i)
-        {
-            ret[i] = lol::dot(lol::uvec4(1, 1 << 8, 1 << 16, 1 << 24),
-                              lol::uvec4(z8::palette::get8(desc[i])));
-        }
-    }
-
-    return ret;
-}
-#endif
 
 } // namespace z8
 
