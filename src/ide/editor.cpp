@@ -125,7 +125,7 @@ class editor_impl : public Zep::ZepEditor_ImGui
 {
 public:
     editor_impl()
-        : Zep::ZepEditor_ImGui("", new zep_filesystem())
+        : Zep::ZepEditor_ImGui("", Zep::ZepEditorFlags::DisableThreads, new zep_filesystem())
     {}
 
     virtual ~editor_impl()
