@@ -373,7 +373,7 @@ void ide::render_windows()
     if (m_show.player)
     {
         ImGui::SetNextWindowPos(lol::ivec2(800, 100), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowSize(lol::ivec2(400, 420), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(lol::ivec2(420, 450), ImGuiCond_FirstUseEver);
         if (ImGui::Begin("Player", &m_show.player))
         {
             lol::vec2 avail_size = ImGui::GetContentRegionAvail();
