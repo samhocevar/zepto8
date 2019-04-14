@@ -69,7 +69,7 @@ do
     function del(a, v)
         if a != nil then
             for k, v2 in ipairs(a) do
-                if v == v2 then remove(a, k) return end
+                if v == v2 then remove(a, k) return k end
             end
         end
     end
@@ -105,7 +105,8 @@ do
             return false
         end
         -- PICO-8 documentation: legal characters are a..z, 0..9 and underscore (_)
-        if match(s, '[^abcdefghijklmnopqrstuvwxyz0123456789_]') then
+        -- PICO-8 changelog: allow '-' in cartdat() names
+        if match(s, '[^-abcdefghijklmnopqrstuvwxyz0123456789_]') then
             print('cart data id: bad char')
             abort()
             return false
