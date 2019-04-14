@@ -205,6 +205,11 @@ int vm::api_cursor(lua_State *l)
 {
     m_ram.draw_state.cursor.x = (uint8_t)lua_tonumber(l, 1);
     m_ram.draw_state.cursor.y = (uint8_t)lua_tonumber(l, 2);
+    if (!lua_isnone(l, 3))
+    {
+        fix32 colors = lua_tonumber(l, 3);
+        m_ram.draw_state.pen = (uint8_t)colors;
+    }
     return 0;
 }
 
