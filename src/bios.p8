@@ -153,9 +153,12 @@ _G = nil
 
 
 --
--- Hide these functions
+-- Hide these functions from lbaselib
+-- Must keep: assert, getmetatable, load, pairs, print, rawequal, rawlen,
+-- rawget, rawset, setmetatable, type
 --
-error, pcall, dofile = nil
+collectgarbage, dofile, error, ipairs, loadfile, loadstring, next, pcall,
+select, tonumber, tostring, xpcall = nil
 
 
 --
