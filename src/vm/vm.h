@@ -66,8 +66,10 @@ private:
     int api_menuitem(lua_State *l);
     int api_reload(lua_State *l);
     int api_peek(lua_State *l);
+    int api_peek2(lua_State *l);
     int api_peek4(lua_State *l);
     int api_poke(lua_State *l);
+    int api_poke2(lua_State *l);
     int api_poke4(lua_State *l);
     int api_memcpy(lua_State *l);
     int api_memset(lua_State *l);

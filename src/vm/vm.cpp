@@ -63,8 +63,10 @@ vm::vm()
         { "menuitem", &dispatch<&vm::api_menuitem> },
         { "reload",   &dispatch<&vm::api_reload> },
         { "peek",     &dispatch<&vm::api_peek> },
+        { "peek2",    &dispatch<&vm::api_peek2> },
         { "peek4",    &dispatch<&vm::api_peek4> },
         { "poke",     &dispatch<&vm::api_poke> },
+        { "poke2",    &dispatch<&vm::api_poke2> },
         { "poke4",    &dispatch<&vm::api_poke4> },
         { "memcpy",   &dispatch<&vm::api_memcpy> },
         { "memset",   &dispatch<&vm::api_memset> },
@@ -302,6 +304,23 @@ int vm::api_peek(lua_State *l)
     return 1;
 }
 
+int vm::api_peek2(lua_State *l)
+{
+    int addr = (int)lua_tonumber(l, 1) & 0xffff;
+    int16_t bits = 0;
+    for (int i = 0; i < 2; ++i)
+    {
+        /* This code handles partial reads by adding zeroes */
+        if (addr + i < (int)sizeof(m_ram))
+            bits |= m_ram[addr + i] << (8 * i);
+        else if (addr + i >= (int)sizeof(m_ram))
+            bits |= m_ram[addr + i - (int)sizeof(m_ram)] << (8 * i);
+    }
+
+    lua_pushnumber(l, fix32(bits));
+    return 1;
+}
+
 int vm::api_peek4(lua_State *l)
 {
     int addr = (int)lua_tonumber(l, 1) & 0xffff;
@@ -331,18 +350,32 @@ int vm::api_poke(lua_State *l)
     return 0;
 }
 
+int vm::api_poke2(lua_State *l)
+{
+    // Note: poke2() is the same as poke2(0, 0)
+    int addr = (int)lua_tonumber(l, 1);
+    if (addr < 0 || addr > (int)sizeof(m_ram) - 2)
+        return luaL_error(l, "bad memory access");
+
+    uint16_t x = (uint16_t)lua_tonumber(l, 2);
+    m_ram[addr + 0] = (uint8_t)x;
+    m_ram[addr + 1] = (uint8_t)(x >> 8);
+
+    return 0;
+}
+
 int vm::api_poke4(lua_State *l)
 {
-    // Note: poke4() is the same as poke(0, 0)
+    // Note: poke4() is the same as poke4(0, 0)
     int addr = (int)lua_tonumber(l, 1);
     if (addr < 0 || addr > (int)sizeof(m_ram) - 4)
         return luaL_error(l, "bad memory access");
 
     uint32_t x = (uint32_t)lua_tonumber(l, 2).bits();
-    m_ram[addr + 0] = x;
-    m_ram[addr + 1] = x >> 8;
-    m_ram[addr + 2] = x >> 16;
-    m_ram[addr + 3] = x >> 24;
+    m_ram[addr + 0] = (uint8_t)x;
+    m_ram[addr + 1] = (uint8_t)(x >> 8);
+    m_ram[addr + 2] = (uint8_t)(x >> 16);
+    m_ram[addr + 3] = (uint8_t)(x >> 24);
 
     return 0;
 }
