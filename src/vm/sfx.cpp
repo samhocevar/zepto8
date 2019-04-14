@@ -287,7 +287,15 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
             // Play note
             float waveform = get_waveform(sfx.notes[note_id].instrument(), phi);
 
-            buffer[i] = (int16_t)(32767.99f * volume * waveform);
+            int16_t sample = (int16_t)(32767.99f * volume * waveform);
+
+            // Apply hardware effects
+            if (m_ram.hw_state.distort & (1 << chan))
+            {
+                sample = sample / 0x1000 * 0x1249;
+            }
+
+            buffer[i] = sample;
 
             m_channels[chan].m_phi = phi + freq / samples_per_second;
         }

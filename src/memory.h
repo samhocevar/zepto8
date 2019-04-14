@@ -136,6 +136,15 @@ struct draw_state
     uint8_t undocumented3[11];
 };
 
+struct hw_state
+{
+    // 0x5f40—0x5f44: sound channel effects
+    uint8_t half_rate, reverb, distort, lowpass;
+
+    // 0x5f44—0x4f80: undocumented
+    uint8_t undocumented[60];
+};
+
 struct memory
 {
     // This union handles the gfx/map shared section
@@ -192,8 +201,8 @@ struct memory
             // Draw state
             struct draw_state draw_state;
 
-            // Hardware state (mostly undocumented)
-            uint8_t hw_state[0x40];
+            // Hardware state
+            struct hw_state hw_state;
 
             uint8_t gpio_pins[0x80];
 
