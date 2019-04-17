@@ -28,6 +28,18 @@
 namespace z8
 {
 
+// Store a point with unaligned 16-bit coordinates
+struct point
+{
+    inline int16_t x() const { return (int16_t)(b[0] | (b[1] << 8)); }
+    inline int16_t y() const { return (int16_t)(b[2] | (b[3] << 8)); }
+    inline void set_x(int16_t v) { b[0] = (uint8_t)v; b[1] = (uint8_t)(v >> 8); }
+    inline void set_y(int16_t v) { b[2] = (uint8_t)v; b[3] = (uint8_t)(v >> 8); }
+
+private:
+    uint8_t b[4];
+};
+
 // Use uint8_t[2] instead of uint16_t so that 1-byte aligned storage
 // is still possible.
 struct note
@@ -105,14 +117,7 @@ struct draw_state
     cursor;
 
     // 0x5f28—0x5f2c: camera coordinates
-    struct
-    {
-        uint8_t lo_x, hi_x, lo_y, hi_y;
-
-        inline int16_t x() const { return (int16_t)(lo_x | (hi_x << 8)); }
-        inline int16_t y() const { return (int16_t)(lo_y | (hi_y << 8)); }
-    }
-    camera;
+    point camera;
 
     // 0x5f2c: screen mode (double width, etc.)
     uint8_t screen_mode;
@@ -136,14 +141,7 @@ struct draw_state
     uint8_t undocumented3[7];
 
     // 0x5f3c—0x5f40: polyline current point coordinates
-    struct
-    {
-        uint8_t lo_x, hi_x, lo_y, hi_y;
-
-        inline int16_t x() const { return (int16_t)(lo_x | (hi_x << 8)); }
-        inline int16_t y() const { return (int16_t)(lo_y | (hi_y << 8)); }
-    }
-    polyline;
+    point polyline;
 };
 
 struct hw_state

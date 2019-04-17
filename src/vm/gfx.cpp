@@ -301,12 +301,8 @@ int vm::api_camera(lua_State *l)
 {
     auto &ds = m_ram.draw_state;
 
-    int16_t x = (int16_t)lua_tonumber(l, 1);
-    int16_t y = (int16_t)lua_tonumber(l, 2);
-    ds.camera.lo_x = (uint8_t)x;
-    ds.camera.hi_x = (uint8_t)(x >> 8);
-    ds.camera.lo_y = (uint8_t)y;
-    ds.camera.hi_y = (uint8_t)(y >> 8);
+    ds.camera.set_x((int16_t)lua_tonumber(l, 1));
+    ds.camera.set_y((int16_t)lua_tonumber(l, 2));
     return 0;
 }
 
@@ -499,10 +495,8 @@ int vm::api_line(lua_State *l)
     }
 
     // Store polyline state
-    ds.polyline.lo_x = (uint8_t)x1;
-    ds.polyline.hi_x = (uint8_t)(x1 >> 8);
-    ds.polyline.lo_y = (uint8_t)y1;
-    ds.polyline.hi_y = (uint8_t)(y1 >> 8);
+    ds.polyline.set_x(x1);
+    ds.polyline.set_y(y1);
 
     x0 -= ds.camera.x(); y0 -= ds.camera.y();
     x1 -= ds.camera.x(); y1 -= ds.camera.y();
