@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -132,8 +132,18 @@ struct draw_state
     // 0x5f31—0x5f35: fill pattern
     uint8_t fillp[2], fillp_trans, fillp_flag;
 
-    // 0x5f35—0x5f40: undocumented
-    uint8_t undocumented3[11];
+    // 0x5f35—0x5f3c: undocumented
+    uint8_t undocumented3[7];
+
+    // 0x5f3c—0x5f40: polyline current point coordinates
+    struct
+    {
+        uint8_t lo_x, hi_x, lo_y, hi_y;
+
+        inline int16_t x() const { return (int16_t)(lo_x | (hi_x << 8)); }
+        inline int16_t y() const { return (int16_t)(lo_y | (hi_y << 8)); }
+    }
+    polyline;
 };
 
 struct hw_state

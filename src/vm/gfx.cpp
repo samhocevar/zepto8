@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -480,10 +480,33 @@ int vm::api_line(lua_State *l)
 {
     auto &ds = m_ram.draw_state;
 
-    int16_t x0 = (int16_t)lua_tonumber(l, 1) - ds.camera.x();
-    int16_t y0 = (int16_t)lua_tonumber(l, 2) - ds.camera.y();
-    int16_t x1 = (int16_t)lua_tonumber(l, 3) - ds.camera.x();
-    int16_t y1 = (int16_t)lua_tonumber(l, 4) - ds.camera.y();
+    int16_t x0, y0, x1, y1;
+
+    // Polyline mode if and only if there are 2 arguments
+    if (lua_isnone(l, 3) && !lua_isnone(l, 2))
+    {
+        x0 = ds.polyline.x();
+        y0 = ds.polyline.y();
+        x1 = (int16_t)lua_tonumber(l, 1);
+        y1 = (int16_t)lua_tonumber(l, 2);
+    }
+    else
+    {
+        x0 = (int16_t)lua_tonumber(l, 1);
+        y0 = (int16_t)lua_tonumber(l, 2);
+        x1 = (int16_t)lua_tonumber(l, 3);
+        y1 = (int16_t)lua_tonumber(l, 4);
+    }
+
+    // Store polyline state
+    ds.polyline.lo_x = (uint8_t)x1;
+    ds.polyline.hi_x = (uint8_t)(x1 >> 8);
+    ds.polyline.lo_y = (uint8_t)y1;
+    ds.polyline.hi_y = (uint8_t)(y1 >> 8);
+
+    x0 -= ds.camera.x(); y0 -= ds.camera.y();
+    x1 -= ds.camera.x(); y1 -= ds.camera.y();
+
     uint32_t color_bits = lua_to_color_bits(l, 5);
 
     if (x0 == x1 && y0 == y1)
