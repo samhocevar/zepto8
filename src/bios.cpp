@@ -33,7 +33,8 @@ bios::bios()
         bool exists = f.IsValid();
         f.Close();
 
-        if (exists && m_cart.load(file.c_str()))
+        // FIXME: this will redo all the work…
+        if (exists && m_cart.load(filename))
             return;
     }
 
