@@ -2,7 +2,9 @@
 include $(top_srcdir)/lol/build/autotools/common.am
 
 bin_PROGRAMS = ../zepto8 ../z8player ../z8tool ../z8lua
-noinst_LIBRARIES = libzepto8.a libz8lua.a
+noinst_LIBRARIES = $(static_libs)
+
+static_libs = libzepto8.a libz8lua.a libquickjs.a
 
 ___zepto8dir = $(datarootdir)/zepto8
 
@@ -20,8 +22,8 @@ ___zepto8_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      -I3rdparty/zep/m3rdparty \
                      -I3rdparty/zep/src/mcommon \
                      $(AM_CPPFLAGS)
-___zepto8_LDFLAGS = libzepto8.a libz8lua.a -lstdc++fs $(AM_LDFLAGS)
-___zepto8_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@
+___zepto8_LDFLAGS = $(static_libs) -lstdc++fs -ldl $(AM_LDFLAGS)
+___zepto8_DEPENDENCIES = $(static_libs) @LOL_DEPS@
 ___zepto8_DATA = bios.p8 unz8.p8
 if LOL_USE_EMSCRIPTEN
 ___zepto8_LDFLAGS += --preload-file bios.p8 --preload-file data/zepto8.ttf \
@@ -97,8 +99,8 @@ ___z8player_SOURCES = \
 ___z8player_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                        -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
                        $(AM_CPPFLAGS)
-___z8player_LDFLAGS = libzepto8.a libz8lua.a $(AM_LDFLAGS)
-___z8player_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@
+___z8player_LDFLAGS = $(static_libs) -ldl $(AM_LDFLAGS)
+___z8player_DEPENDENCIES = $(static_libs) @LOL_DEPS@
 if LOL_USE_EMSCRIPTEN
 ___z8player_LDFLAGS += --preload-file bios.p8 \
                        --shell-file template.html
@@ -119,8 +121,8 @@ ___z8tool_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
                      -Izlib -DGZ8 -DZ_SOLO -DNO_GZIP -DHAVE_MEMCPY -Dlocal= \
                      $(AM_CPPFLAGS)
-___z8tool_LDFLAGS = libzepto8.a libz8lua.a $(AM_LDFLAGS)
-___z8tool_DEPENDENCIES = libzepto8.a libz8lua.a @LOL_DEPS@
+___z8tool_LDFLAGS = $(static_libs) -ldl $(AM_LDFLAGS)
+___z8tool_DEPENDENCIES = $(static_libs) @LOL_DEPS@
 
 EXTRA_DIST += zlib/deflate.c zlib/trees.c
 EXTRA_DIST += z8tool.vcxproj
@@ -160,7 +162,7 @@ libz8lua_a_SOURCES = \
     z8lua/lparser.h z8lua/lstate.h z8lua/lstring.h z8lua/ltable.h \
     z8lua/ltests.h z8lua/ltm.h z8lua/luaconf.h z8lua/lua.h z8lua/lualib.h \
     z8lua/lundump.h z8lua/lvm.h z8lua/lzio.h
-libz8lua_a_CPPFLAGS = -xc++ -Iz8lua $(lua_cflags) $(AM_CPPFLAGS) $(AM_CXXFLAGS)
+libz8lua_a_CPPFLAGS = $(lua_cflags) $(AM_CPPFLAGS) $(AM_CXXFLAGS)
 
 lua_cflags = -xc++ -Iz8lua -DLUA_USE_POSIX -DLUA_USE_STRTODHEX
 lua_ldflags =
@@ -168,6 +170,20 @@ if HAVE_READLINE
 lua_cflags += -DLUA_USE_READLINE
 lua_ldflags += -lreadline
 endif
+
+libquickjs_a_SOURCES = \
+    quickjs/quickjs.c \
+    quickjs/libregexp.c \
+    quickjs/libunicode.c \
+    quickjs/cutils.c \
+    quickjs/quickjs-libc.c \
+    quickjs/libbf.c
+libquickjs_a_CPPFLAGS = \
+    -Iquickjs -D_GNU_SOURCE -DCONFIG_VERSION=\"2019-08-18\" \
+    $(AM_CPPFLAGS) $(AM_CXXFLAGS) \
+    -Wno-unused-parameter -Wno-sign-compare
+
+EXTRA_DIST += libquickjs.vcxproj
 
 EXTRA_DIST += libz8lua.vcxproj
 
