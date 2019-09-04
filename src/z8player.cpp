@@ -64,11 +64,16 @@ public:
 
         static const JSCFunctionListEntry js_rcn_funcs[] =
         {
-            CPP_JS_CFUNC_DEF("palt", 2, &dispatch<&vm::api_palt> ),
-            CPP_JS_CFUNC_DEF("fget", 1, &dispatch<&vm::api_fget> ),
-            CPP_JS_CFUNC_DEF("flr",  1, &dispatch<&vm::api_flr> ),
-            CPP_JS_CFUNC_DEF("mget", 2, &dispatch<&vm::api_mget> ),
-            CPP_JS_CFUNC_DEF("rnd",  1, &dispatch<&vm::api_rnd> ),
+            CPP_JS_CFUNC_DEF("read",   1, &dispatch<&vm::api_read> ),
+            CPP_JS_CFUNC_DEF("write",  2, &dispatch<&vm::api_write> ),
+
+            CPP_JS_CFUNC_DEF("palset", 4, &dispatch<&vm::api_palset> ),
+            CPP_JS_CFUNC_DEF("palt",   2, &dispatch<&vm::api_palt> ),
+            CPP_JS_CFUNC_DEF("pset",   3, &dispatch<&vm::api_pset> ),
+            CPP_JS_CFUNC_DEF("fget",   1, &dispatch<&vm::api_fget> ),
+            CPP_JS_CFUNC_DEF("flr",    1, &dispatch<&vm::api_flr> ),
+            CPP_JS_CFUNC_DEF("mget",   2, &dispatch<&vm::api_mget> ),
+            CPP_JS_CFUNC_DEF("rnd",    1, &dispatch<&vm::api_rnd> ),
         };
 
         // Add functions to global scope
@@ -92,11 +97,70 @@ public:
 
         eval_file(m_ctx, file, -1);
 
-        char const *code = "init(); update(); draw();";
+        char const *code =
+            "min = Math.min;\n"
+            "max = Math.max;\n"
+            "sin = Math.sin;\n"
+            "cos = Math.cos;\n"
+            "sqrt = Math.sqrt;\n"
+            "if (typeof init != 'undefined') init();\n"
+            "if (typeof update != 'undefined') update();\n"
+            "if (typeof draw != 'undefined') draw();\n";
         eval_buf(m_ctx, code, strlen(code), "<code>", JS_EVAL_TYPE_GLOBAL);
     }
 
 private:
+    JSValue api_read(JSContext *ctx, JSValueConst this_val,
+                     int argc, JSValueConst *argv)
+    {
+        int p;
+        if (JS_ToInt32(ctx, &p, argv[0]))
+            return JS_EXCEPTION;
+        return JS_NewInt32(ctx, m_ram[p & 0xffff]);
+    }
+
+    JSValue api_write(JSContext *ctx, JSValueConst this_val,
+                      int argc, JSValueConst *argv)
+    {
+        int p, x;
+        if (JS_ToInt32(ctx, &p, argv[0]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &x, argv[1]))
+            return JS_EXCEPTION;
+        m_ram[p & 0xffff] = x;
+        return JS_UNDEFINED;
+    }
+
+    JSValue api_palset(JSContext *ctx, JSValueConst this_val,
+                       int argc, JSValueConst *argv)
+    {
+        int x, y, z, t;
+        if (JS_ToInt32(ctx, &x, argv[0]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &y, argv[1]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &z, argv[2]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &t, argv[3]))
+            return JS_EXCEPTION;
+        lol::msg::info("stub: palset(%d, %d, %d, %d)\n", x, y, z, t);
+        return JS_NewInt32(ctx, x);
+    }
+
+    JSValue api_pset(JSContext *ctx, JSValueConst this_val,
+                     int argc, JSValueConst *argv)
+    {
+        int x, y, z;
+        if (JS_ToInt32(ctx, &x, argv[0]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &y, argv[1]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &z, argv[2]))
+            return JS_EXCEPTION;
+        lol::msg::info("stub: pset(%d, %d, %d)\n", x, y, z);
+        return JS_NewInt32(ctx, x);
+    }
+
     JSValue api_palt(JSContext *ctx, JSValueConst this_val,
                      int argc, JSValueConst *argv)
     {
