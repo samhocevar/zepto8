@@ -19,4 +19,4 @@
 	url = ../fork-zep.git
 [submodule "src/quickjs"]
 	path = src/quickjs
-	url = ../../ldarren/quickjs.git
+	url = ../fork-quickjs.git
