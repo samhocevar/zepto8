@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="LolMacros">
     <LolDir Condition="Exists('$(SolutionDir)\lol')">$(SolutionDir)\lol</LolDir>
@@ -38,51 +38,46 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemDefinitionGroup>
-    <ClCompile>
-      <AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-  </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="player.cpp" />
-    <ClCompile Include="z8player.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="player.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="libquickjs.vcxproj">
-      <Project>{5168dfab-3b54-4caa-8654-da760bc53b74}</Project>
-    </ProjectReference>
-    <ProjectReference Include="libz8lua.vcxproj">
-      <Project>{141365e7-f8f3-4d95-b8db-1a093f92f436}</Project>
-    </ProjectReference>
-    <ProjectReference Include="libzepto8.vcxproj">
-      <Project>{9ae29931-c72e-43df-805b-27e4ddfbb582}</Project>
-    </ProjectReference>
-    <ProjectReference Include="$(LolDir)\src\lol-core.vcxproj">
-      <Project>{9e62f2fe-3408-4eae-8238-fd84238ceeda}</Project>
-    </ProjectReference>
-    <ProjectReference Include="$(LolDir)\src\3rdparty\lol-lua.vcxproj">
-      <Project>{d84021ca-b233-4e0f-8a52-071b83bbccc4}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{948C0C9A-2C25-41D9-BF1B-92B14A8C061B}</ProjectGuid>
-    <ConfigurationType>Application</ConfigurationType>
+    <ProjectGuid>{5168dfab-3b54-4caa-8654-da760bc53b74}</ProjectGuid>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(LolDir)\build\msbuild\lol.config.props" />
-  <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(LolDir)\build\msbuild\lolfx.props" />
-  </ImportGroup>
+  <PropertyGroup Label="Configuration">
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(LolDir)\build\msbuild\lol.vars.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <Import Project="$(LolDir)\build\msbuild\lol.rules.props" />
-  <ItemDefinitionGroup />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>CONFIG_VERSION=\"2019-08-18\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="quickjs/quickjs.c" />
+    <ClCompile Include="quickjs/libregexp.c" />
+    <ClCompile Include="quickjs/libunicode.c" />
+    <ClCompile Include="quickjs/cutils.c" />
+    <ClCompile Include="quickjs/quickjs-libc.c" />
+    <ClCompile Include="quickjs/libbf.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="quickjs/quickjs.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(LolDir)\build\msbuild\lolfx.targets" />
