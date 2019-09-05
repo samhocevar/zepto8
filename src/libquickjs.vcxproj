@@ -72,7 +72,6 @@
     <ClCompile Include="quickjs/libregexp.c" />
     <ClCompile Include="quickjs/libunicode.c" />
     <ClCompile Include="quickjs/cutils.c" />
-    <ClCompile Include="quickjs/quickjs-libc.c" />
     <ClCompile Include="quickjs/libbf.c" />
   </ItemGroup>
   <ItemGroup>

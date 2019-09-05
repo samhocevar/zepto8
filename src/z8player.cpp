@@ -21,7 +21,6 @@
 
 extern "C" {
 #include "quickjs/quickjs.h"
-#include "quickjs/quickjs-libc.h"
 }
 
 #include "zepto8.h"
@@ -57,11 +56,6 @@ public:
         m_rt = JS_NewRuntime();
         m_ctx = JS_NewContext(m_rt);
 
-#if 1
-        // This is required for console.log()
-        js_std_add_helpers(m_ctx, 0, nullptr);
-#endif
-
         static const JSCFunctionListEntry js_rcn_funcs[] =
         {
             CPP_JS_CFUNC_DEF("read",   1, &dispatch<&vm::api_read> ),
@@ -95,22 +89,22 @@ public:
         JSValue val = JS_ParseJSON(m_ctx, (char const *)buf, buf_len, file);
 #endif
 
-        eval_file(m_ctx, file, -1);
+        eval_file(m_ctx, file, JS_EVAL_TYPE_GLOBAL);
 
-        char const *code =
+        std::string code =
             "min = Math.min;\n"
             "max = Math.max;\n"
             "sin = Math.sin;\n"
             "cos = Math.cos;\n"
             "sqrt = Math.sqrt;\n"
             "if (typeof init != 'undefined') init();\n";
-        eval_buf(m_ctx, code, strlen(code), "<init_code>", JS_EVAL_TYPE_GLOBAL);
+        eval_buf(m_ctx, code, "<init_code>", JS_EVAL_TYPE_GLOBAL);
 
         code =
             "if (typeof update != 'undefined') update();\n"
             "if (typeof draw != 'undefined') draw();\n";
         for (;;)
-            eval_buf(m_ctx, code, strlen(code), "<loop_code>", JS_EVAL_TYPE_GLOBAL);
+            eval_buf(m_ctx, code, "<loop_code>", JS_EVAL_TYPE_GLOBAL);
     }
 
 private:
@@ -218,45 +212,69 @@ private:
         return JS_NewInt32(ctx, x);
     }
 
-    static int eval_buf(JSContext *ctx, const char *buf, int buf_len,
+    static void dump_error(JSContext *ctx)
+    {
+        JSValue exception_val = JS_GetException(ctx);
+        int is_error = JS_IsError(ctx, exception_val);
+        if (!is_error)
+            lol::msg::error("Throw: ");
+
+        char const *str = JS_ToCString(ctx, exception_val);
+        if (str)
+        {
+            lol::msg::error("%s\n", str);
+            JS_FreeCString(ctx, str);
+        }
+
+        if (is_error)
+        {
+            JSValue val = JS_GetPropertyStr(ctx, exception_val, "stack");
+            if (!JS_IsUndefined(val))
+            {
+                char const *stack = JS_ToCString(ctx, val);
+                lol::msg::error("%s\n", stack);
+                JS_FreeCString(ctx, stack);
+            }
+            JS_FreeValue(ctx, val);
+        }
+        JS_FreeValue(ctx, exception_val);
+    }
+
+    static int eval_buf(JSContext *ctx, std::string const &code,
                         const char *filename, int eval_flags)
     {
-        JSValue val;
-        int ret;
-
-        val = JS_Eval(ctx, buf, buf_len, filename, eval_flags);
-        if (JS_IsException(val)) {
-            js_std_dump_error(ctx);
+        int ret = 0;
+        JSValue val = JS_Eval(ctx, code.c_str(), code.length(), filename, eval_flags);
+        if (JS_IsException(val))
+        {
+            dump_error(ctx);
             ret = -1;
-        } else {
-            ret = 0;
         }
         JS_FreeValue(ctx, val);
         return ret;
     }
 
-    static int eval_file(JSContext *ctx, const char *filename, int module)
+    static int eval_file(JSContext *ctx, const char *filename, int eval_flags)
     {
-        uint8_t *buf;
-        int ret, eval_flags;
-        size_t buf_len;
+        std::string s;
+        lol::File f;
+        for (auto const &candidate : lol::sys::get_path_list(filename))
+        {
+            f.Open(candidate, lol::FileAccess::Read);
+            if (f.IsValid())
+            {
+                s = f.ReadString();
+                f.Close();
 
-        buf = js_load_file(ctx, &buf_len, filename);
-        if (!buf) {
-            perror(filename);
-            exit(1);
+                lol::msg::debug("loaded file %s\n", candidate.c_str());
+                break;
+            }
         }
 
-        if (module < 0) {
-            module = JS_DetectModule((const char *)buf, buf_len);
-        }
-        if (module)
-            eval_flags = JS_EVAL_TYPE_MODULE;
-        else
-            eval_flags = JS_EVAL_TYPE_GLOBAL;
-        ret = eval_buf(ctx, (const char *)buf, buf_len, filename, eval_flags);
-        js_free(ctx, buf);
-        return ret;
+        if (s.length() == 0)
+            return -1;
+
+        return eval_buf(ctx, s, filename, eval_flags);
     }
 
     JSRuntime *m_rt;

@@ -176,7 +176,6 @@ libquickjs_a_SOURCES = \
     quickjs/libregexp.c \
     quickjs/libunicode.c \
     quickjs/cutils.c \
-    quickjs/quickjs-libc.c \
     quickjs/libbf.c
 libquickjs_a_CPPFLAGS = \
     -Iquickjs -D_GNU_SOURCE -DCONFIG_VERSION=\"2019-08-18\" \
