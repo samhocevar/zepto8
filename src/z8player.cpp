@@ -103,10 +103,14 @@ public:
             "sin = Math.sin;\n"
             "cos = Math.cos;\n"
             "sqrt = Math.sqrt;\n"
-            "if (typeof init != 'undefined') init();\n"
+            "if (typeof init != 'undefined') init();\n";
+        eval_buf(m_ctx, code, strlen(code), "<init_code>", JS_EVAL_TYPE_GLOBAL);
+
+        code =
             "if (typeof update != 'undefined') update();\n"
             "if (typeof draw != 'undefined') draw();\n";
-        eval_buf(m_ctx, code, strlen(code), "<code>", JS_EVAL_TYPE_GLOBAL);
+        for (;;)
+            eval_buf(m_ctx, code, strlen(code), "<loop_code>", JS_EVAL_TYPE_GLOBAL);
     }
 
 private:
