@@ -80,31 +80,91 @@ public:
 
     void run(char const *file)
     {
-#if 0
-        size_t buf_len;
-        uint8_t *buf = js_load_file(m_ctx, &buf_len, file);
-        if (!buf)
-            ; /* TODO */
+        std::string s;
+        lol::File f;
+        for (auto const &candidate : lol::sys::get_path_list(file))
+        {
+            f.Open(candidate, lol::FileAccess::Read);
+            if (f.IsValid())
+            {
+                s = f.ReadString();
+                f.Close();
 
-        JSValue val = JS_ParseJSON(m_ctx, (char const *)buf, buf_len, file);
-#endif
+                lol::msg::debug("loaded file %s\n", candidate.c_str());
+                break;
+            }
+        }
 
-        eval_file(m_ctx, file, JS_EVAL_TYPE_GLOBAL);
+        if (s.length() == 0)
+            return;
 
-        std::string code =
+        JSValue bin = JS_ParseJSON(m_ctx, s.c_str(), s.length(), file);
+        if (JS_IsException(bin))
+        {
+            dump_error(m_ctx);
+            JS_FreeValue(m_ctx, bin);
+            return;
+        }
+
+        JSValue name = JS_GetPropertyStr(m_ctx, bin, "name");
+        if (!JS_IsUndefined(name))
+        {
+            char const *tmp = JS_ToCString(m_ctx, name);
+            m_name = tmp;
+            JS_FreeCString(m_ctx, tmp);
+            JS_FreeValue(m_ctx, name);
+        }
+
+        JSValue version = JS_GetPropertyStr(m_ctx, bin, "version");
+        if (!JS_IsUndefined(version))
+        {
+            if (JS_ToInt32(m_ctx, &m_version, version))
+                m_version = -1;
+            JS_FreeValue(m_ctx, version);
+        }
+
+        JSValue code = JS_GetPropertyStr(m_ctx, bin, "code");
+        if (!JS_IsUndefined(code))
+        {
+            m_code = "";
+            for (int i = 0; ; ++i)
+            {
+                JSValue val = JS_GetPropertyUint32(m_ctx, code, i);
+                if (JS_IsUndefined(val))
+                    break;
+                char const *tmp = JS_ToCString(m_ctx, val);
+                m_code += tmp;
+                JS_FreeCString(m_ctx, tmp);
+                m_code += '\n';
+            }
+            JS_FreeValue(m_ctx, code);
+        }
+
+        JSValue rom = JS_GetPropertyStr(m_ctx, bin, "rom");
+        if (!JS_IsUndefined(rom))
+        {
+            /* TODO */
+            JS_FreeValue(m_ctx, rom);
+        }
+
+        lol::msg::debug("running bin version %d (%s)\n", m_version, m_name.c_str());
+
+        eval_buf(m_ctx, m_code, "<cart>", JS_EVAL_TYPE_GLOBAL);
+
+        std::string glue_code =
             "min = Math.min;\n"
             "max = Math.max;\n"
             "sin = Math.sin;\n"
             "cos = Math.cos;\n"
             "sqrt = Math.sqrt;\n"
             "if (typeof init != 'undefined') init();\n";
-        eval_buf(m_ctx, code, "<init_code>", JS_EVAL_TYPE_GLOBAL);
+        eval_buf(m_ctx, glue_code, "<init_code>", JS_EVAL_TYPE_GLOBAL);
 
-        code =
+        glue_code =
             "if (typeof update != 'undefined') update();\n"
             "if (typeof draw != 'undefined') draw();\n";
         for (;;)
-            eval_buf(m_ctx, code, "<loop_code>", JS_EVAL_TYPE_GLOBAL);
+            eval_buf(m_ctx, glue_code, "<loop_code>", JS_EVAL_TYPE_GLOBAL);
     }
 
 private:
@@ -254,31 +314,12 @@ private:
         return ret;
     }
 
-    static int eval_file(JSContext *ctx, const char *filename, int eval_flags)
-    {
-        std::string s;
-        lol::File f;
-        for (auto const &candidate : lol::sys::get_path_list(filename))
-        {
-            f.Open(candidate, lol::FileAccess::Read);
-            if (f.IsValid())
-            {
-                s = f.ReadString();
-                f.Close();
-
-                lol::msg::debug("loaded file %s\n", candidate.c_str());
-                break;
-            }
-        }
-
-        if (s.length() == 0)
-            return -1;
-
-        return eval_buf(ctx, s, filename, eval_flags);
-    }
-
     JSRuntime *m_rt;
     JSContext *m_ctx;
+
+    std::string m_name;
+    std::string m_code;
+    int m_version = -1;
 
     z8::raccoon::memory m_rom;
     z8::raccoon::memory m_ram;
@@ -308,7 +349,7 @@ int main(int argc, char **argv)
     lol::ivec2 win_size(z8::WINDOW_WIDTH, z8::WINDOW_HEIGHT);
     lol::Application app("zepto-8", win_size, 60.0f);
 
-    if (argc >= 2 && lol::ends_with(argv[1], ".rcn.js"))
+    if (argc >= 2 && lol::ends_with(argv[1], ".rcn.json"))
     {
         z8::raccoon::vm vm;
         vm.run(argv[1]);
