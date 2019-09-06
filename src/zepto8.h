@@ -43,6 +43,10 @@ public:
 
     virtual void render(lol::u8vec4 *screen) const = 0;
 
+    // Audio streaming
+    virtual std::function<void(void *, int)> get_streamer(int channel) = 0;
+
+    // IO
     virtual void button(int index, int state) = 0;
     virtual void mouse(lol::ivec2 coords, int buttons) = 0;
     virtual void keyboard(char ch) = 0;

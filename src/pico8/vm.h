@@ -44,6 +44,8 @@ public:
 
     virtual void render(lol::u8vec4 *screen) const;
 
+    virtual std::function<void(void *, int)> get_streamer(int channel);
+
     virtual void button(int index, int state);
     virtual void mouse(lol::ivec2 coords, int buttons);
     virtual void keyboard(char ch);

@@ -243,6 +243,11 @@ void vm::render(lol::u8vec4 *screen) const
 {
 }
 
+std::function<void(void *, int)> vm::get_streamer(int channel)
+{
+    return [](void *, int) {};
+}
+
 void vm::dump_error(JSContext *ctx)
 {
     JSValue exception_val = JS_GetException(ctx);

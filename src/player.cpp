@@ -67,9 +67,7 @@ player::player(lol::ivec2 window_size)
     // Register audio callbacks
     for (int i = 0; i < 4; ++i)
     {
-        auto f = std::bind(&pico8::vm::getaudio, &m_vm, i,
-                           std::placeholders::_1,
-                           std::placeholders::_2);
+        auto f = m_vm.get_streamer(i);
         m_streams[i] = lol::audio::start_streaming(f, lol::audio::format::sint16le, 22050, 1);
     }
 
