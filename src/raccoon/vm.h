@@ -46,42 +46,24 @@ public:
 private:
     std::string get_property_str(JSValue obj, char const *name);
 
-    JSValue api_read(JSContext *ctx, JSValueConst this_val,
-                     int argc, JSValueConst *argv);
-    JSValue api_write(JSContext *ctx, JSValueConst this_val,
-                      int argc, JSValueConst *argv);
-    JSValue api_palset(JSContext *ctx, JSValueConst this_val,
-                       int argc, JSValueConst *argv);
-    JSValue api_pset(JSContext *ctx, JSValueConst this_val,
-                     int argc, JSValueConst *argv);
-    JSValue api_palm(JSContext *ctx, JSValueConst this_val,
-                     int argc, JSValueConst *argv);
-    JSValue api_palt(JSContext *ctx, JSValueConst this_val,
-                     int argc, JSValueConst *argv);
-    JSValue api_btnp(JSContext *ctx, JSValueConst this_val,
-                     int argc, JSValueConst *argv);
-    JSValue api_fget(JSContext *ctx, JSValueConst this_val,
-                     int argc, JSValueConst *argv);
-    JSValue api_cls(JSContext *ctx, JSValueConst this_val,
-                    int argc, JSValueConst *argv);
-    JSValue api_cam(JSContext *ctx, JSValueConst this_val,
-                    int argc, JSValueConst *argv);
-    JSValue api_map(JSContext *ctx, JSValueConst this_val,
-                    int argc, JSValueConst *argv);
-    JSValue api_rect(JSContext *ctx, JSValueConst this_val,
-                     int argc, JSValueConst *argv);
-    JSValue api_rectfill(JSContext *ctx, JSValueConst this_val,
-                         int argc, JSValueConst *argv);
-    JSValue api_spr(JSContext *ctx, JSValueConst this_val,
-                    int argc, JSValueConst *argv);
-    JSValue api_print(JSContext *ctx, JSValueConst this_val,
-                      int argc, JSValueConst *argv);
-    JSValue api_rnd(JSContext *ctx, JSValueConst this_val,
-                    int argc, JSValueConst *argv);
-    JSValue api_mid(JSContext *ctx, JSValueConst this_val,
-                    int argc, JSValueConst *argv);
-    JSValue api_mget(JSContext *ctx, JSValueConst this_val,
-                     int argc, JSValueConst *argv);
+    JSValue api_read(int argc, JSValueConst *argv);
+    JSValue api_write(int argc, JSValueConst *argv);
+    JSValue api_palset(int argc, JSValueConst *argv);
+    JSValue api_pset(int argc, JSValueConst *argv);
+    JSValue api_palm(int argc, JSValueConst *argv);
+    JSValue api_palt(int argc, JSValueConst *argv);
+    JSValue api_btnp(int argc, JSValueConst *argv);
+    JSValue api_fget(int argc, JSValueConst *argv);
+    JSValue api_cls(int argc, JSValueConst *argv);
+    JSValue api_cam(int argc, JSValueConst *argv);
+    JSValue api_map(int argc, JSValueConst *argv);
+    JSValue api_rect(int argc, JSValueConst *argv);
+    JSValue api_rectfill(int argc, JSValueConst *argv);
+    JSValue api_spr(int argc, JSValueConst *argv);
+    JSValue api_print(int argc, JSValueConst *argv);
+    JSValue api_rnd(int argc, JSValueConst *argv);
+    JSValue api_mid(int argc, JSValueConst *argv);
+    JSValue api_mget(int argc, JSValueConst *argv);
 
     static void dump_error(JSContext *ctx);
 

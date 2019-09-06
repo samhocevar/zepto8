@@ -29,15 +29,14 @@ namespace z8::raccoon
 {
 
 /* Helper to dispatch C++ functions to JS C bindings */
-typedef JSValue (vm::*api_func)(JSContext *, JSValueConst,
-                                int, JSValueConst *);
+typedef JSValue (vm::*api_func)(int, JSValueConst *);
 
 template<api_func f>
 static JSValue dispatch(JSContext *ctx, JSValueConst this_val,
                         int argc, JSValueConst *argv)
 {
     vm *that = (vm *)JS_GetContextOpaque(ctx);
-    return ((*that).*f)(ctx, this_val, argc, argv);
+    return ((*that).*f)(argc, argv);
 }
 
 #define JS_DISPATCH_CFUNC_DEF(name, length, func) \
