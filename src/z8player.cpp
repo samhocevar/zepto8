@@ -29,8 +29,6 @@ extern "C" {
 
 #define countof(x) (sizeof(x) / sizeof((x)[0]))
 
-#define CPP_JS_CFUNC_DEF(name, length, func1) { name, JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE, JS_DEF_CFUNC, 0, { length, JS_CFUNC_generic, { func1 } } }
-
 namespace z8::raccoon
 {
 
@@ -48,6 +46,9 @@ static JSValue dispatch(JSContext *ctx, JSValueConst this_val,
     return ((*that).*f)(ctx, this_val, argc, argv);
 }
 
+#define JS_DISPATCH_CFUNC_DEF(name, length, func) \
+    { name, JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE, JS_DEF_CFUNC, 0, { length, JS_CFUNC_generic, { &dispatch<&vm::func> } } }
+
 class vm
 {
 public:
@@ -58,26 +59,26 @@ public:
 
         static const JSCFunctionListEntry js_rcn_funcs[] =
         {
-            CPP_JS_CFUNC_DEF("read",   1, &dispatch<&vm::api_read> ),
-            CPP_JS_CFUNC_DEF("write",  2, &dispatch<&vm::api_write> ),
+            JS_DISPATCH_CFUNC_DEF("read",   1, api_read ),
+            JS_DISPATCH_CFUNC_DEF("write",  2, api_write ),
 
-            CPP_JS_CFUNC_DEF("cls",    1, &dispatch<&vm::api_cls> ),
-            CPP_JS_CFUNC_DEF("cam",    2, &dispatch<&vm::api_cam> ),
-            CPP_JS_CFUNC_DEF("map",    6, &dispatch<&vm::api_map> ),
-            CPP_JS_CFUNC_DEF("palset", 4, &dispatch<&vm::api_palset> ),
-            CPP_JS_CFUNC_DEF("palm",   2, &dispatch<&vm::api_palm> ),
-            CPP_JS_CFUNC_DEF("palt",   2, &dispatch<&vm::api_palt> ),
-            CPP_JS_CFUNC_DEF("pset",   3, &dispatch<&vm::api_pset> ),
-            CPP_JS_CFUNC_DEF("fget",   1, &dispatch<&vm::api_fget> ),
-            CPP_JS_CFUNC_DEF("mget",   2, &dispatch<&vm::api_mget> ),
-            CPP_JS_CFUNC_DEF("spr",    7, &dispatch<&vm::api_spr> ),
-            CPP_JS_CFUNC_DEF("rect",   5, &dispatch<&vm::api_rect> ),
-            CPP_JS_CFUNC_DEF("rectfill", 5, &dispatch<&vm::api_rectfill> ),
-            CPP_JS_CFUNC_DEF("print",  4, &dispatch<&vm::api_print> ),
+            JS_DISPATCH_CFUNC_DEF("cls",    1, api_cls ),
+            JS_DISPATCH_CFUNC_DEF("cam",    2, api_cam ),
+            JS_DISPATCH_CFUNC_DEF("map",    6, api_map ),
+            JS_DISPATCH_CFUNC_DEF("palset", 4, api_palset ),
+            JS_DISPATCH_CFUNC_DEF("palm",   2, api_palm ),
+            JS_DISPATCH_CFUNC_DEF("palt",   2, api_palt ),
+            JS_DISPATCH_CFUNC_DEF("pset",   3, api_pset ),
+            JS_DISPATCH_CFUNC_DEF("fget",   1, api_fget ),
+            JS_DISPATCH_CFUNC_DEF("mget",   2, api_mget ),
+            JS_DISPATCH_CFUNC_DEF("spr",    7, api_spr ),
+            JS_DISPATCH_CFUNC_DEF("rect",   5, api_rect ),
+            JS_DISPATCH_CFUNC_DEF("rectfill", 5, api_rectfill ),
+            JS_DISPATCH_CFUNC_DEF("print",  4, api_print ),
 
-            CPP_JS_CFUNC_DEF("rnd",    1, &dispatch<&vm::api_rnd> ),
-            CPP_JS_CFUNC_DEF("mid",    3, &dispatch<&vm::api_mid> ),
-            CPP_JS_CFUNC_DEF("btnp",   2, &dispatch<&vm::api_btnp> ),
+            JS_DISPATCH_CFUNC_DEF("rnd",    1, api_rnd ),
+            JS_DISPATCH_CFUNC_DEF("mid",    3, api_mid ),
+            JS_DISPATCH_CFUNC_DEF("btnp",   2, api_btnp ),
         };
 
         // Add functions to global scope
