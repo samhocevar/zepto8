@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -22,7 +22,7 @@
 #endif
 
 #include "zepto8.h"
-#include "vm/vm.h"
+#include "pico8/vm.h"
 
 // The telnet class
 // ————————————————
@@ -40,7 +40,7 @@ struct telnet
     {
         disable_echo();
 
-        z8::vm vm;
+        pico8::vm vm;
         vm.load(cart);
         vm.run();
 

@@ -137,12 +137,18 @@ ___z8lua_DEPENDENCIES = libz8lua.a
 EXTRA_DIST += z8lua.vcxproj
 
 libzepto8_a_SOURCES = \
-    zepto8.h memory.h \
+    zepto8.h \
     bios.cpp bios.h cart.cpp cart.h \
     analyzer.cpp analyzer.h lua53-parse.h \
-    vm/vm.cpp vm/vm.h \
-    vm/z8lua.cpp vm/z8lua.h \
-    vm/private.cpp vm/gfx.cpp vm/render.cpp vm/sfx.cpp \
+    \
+    pico8/vm.cpp pico8/vm.h \
+    pico8/memory.h \
+    pico8/z8lua.cpp pico8/z8lua.h \
+    pico8/private.cpp pico8/gfx.cpp pico8/render.cpp pico8/sfx.cpp \
+    \
+    raccoon/vm.cpp raccoon/vm.h \
+    raccoon/memory.h \
+    raccoon/api.cpp \
     $(NULL)
 
 EXTRA_DIST += libzepto8.vcxproj

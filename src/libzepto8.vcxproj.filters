@@ -4,35 +4,52 @@
     <ClCompile Include="analyzer.cpp" />
     <ClCompile Include="bios.cpp" />
     <ClCompile Include="cart.cpp" />
-    <ClCompile Include="vm\gfx.cpp">
-      <Filter>vm</Filter>
+    <ClCompile Include="pico8\gfx.cpp">
+      <Filter>pico8</Filter>
     </ClCompile>
-    <ClCompile Include="vm\private.cpp">
-      <Filter>vm</Filter>
+    <ClCompile Include="pico8\private.cpp">
+      <Filter>pico8</Filter>
     </ClCompile>
-    <ClCompile Include="vm\render.cpp">
-      <Filter>vm</Filter>
+    <ClCompile Include="pico8\render.cpp">
+      <Filter>pico8</Filter>
     </ClCompile>
-    <ClCompile Include="vm\sfx.cpp">
-      <Filter>vm</Filter>
+    <ClCompile Include="pico8\sfx.cpp">
+      <Filter>pico8</Filter>
     </ClCompile>
-    <ClCompile Include="vm\vm.cpp">
-      <Filter>vm</Filter>
+    <ClCompile Include="pico8\vm.cpp">
+      <Filter>pico8</Filter>
+    </ClCompile>
+    <ClCompile Include="raccoon\api.cpp">
+      <Filter>raccoon</Filter>
+    </ClCompile>
+    <ClCompile Include="raccoon\vm.cpp">
+      <Filter>raccoon</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analyzer.h" />
     <ClInclude Include="cart.h" />
     <ClInclude Include="lua53-parse.h" />
-    <ClInclude Include="memory.h" />
+    <ClInclude Include="pico8\memory.h">
+      <Filter>pico8</Filter>
+    </ClCompile>
+    <ClInclude Include="pico8\vm.h">
+      <Filter>pico8</Filter>
+    </ClCompile>
+    <ClInclude Include="raccoon\memory.h">
+      <Filter>raccoon</Filter>
+    </ClCompile>
+    <ClInclude Include="raccoon\vm.h">
+      <Filter>raccoon</Filter>
+    </ClCompile>
     <ClInclude Include="zepto8.h" />
-    <ClInclude Include="vm\vm.h">
-      <Filter>vm</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="vm">
+    <Filter Include="pico8">
       <UniqueIdentifier>{6f37686e-5de3-410d-941c-d5aafbdb59c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="raccoon">
+      <UniqueIdentifier>{50d0600e-9314-4f24-a578-53301f642348}</UniqueIdentifier>
     </Filter>
     <Filter Include="data">
       <UniqueIdentifier>{d45e4565-b73a-4010-8b11-d8ee39404049}</UniqueIdentifier>

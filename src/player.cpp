@@ -17,7 +17,7 @@
 #include <lol/engine.h>
 
 #include "player.h"
-#include "vm/vm.h"
+#include "pico8/vm.h"
 
 namespace z8
 {
@@ -67,7 +67,7 @@ player::player(lol::ivec2 window_size)
     // Register audio callbacks
     for (int i = 0; i < 4; ++i)
     {
-        auto f = std::bind(&vm::getaudio, &m_vm, i,
+        auto f = std::bind(&pico8::vm::getaudio, &m_vm, i,
                            std::placeholders::_1,
                            std::placeholders::_2);
         m_streams[i] = lol::audio::start_streaming(f, lol::audio::format::sint16le, 22050, 1);

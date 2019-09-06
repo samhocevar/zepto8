@@ -16,9 +16,9 @@
 
 #include <lol/engine.h>
 
-#include "vm.h"
+#include "pico8/vm.h"
 
-namespace z8
+namespace z8::pico8
 {
 
 using lol::msg;

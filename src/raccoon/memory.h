@@ -16,19 +16,15 @@
 
 #include "zepto8.h"
 
-// The memory classes: sfx, song, draw_state, memory
-// —————————————————————————————————————————————————
-// These classes map 1-to-1 with the PICO-8 memory layout and provide
+// The Raccoon memory class
+// ————————————————————————
+// These classes map 1-to-1 with the Raccoon memory layout and provide
 // handful accessors for higher level information.
 // For instance:
 //  - "memory[x]" accesses the xth byte in memory
-//  - "memory.sfx[3].effect(6)" gets the effect of the 6th note of the 3rd SFX
-//  - "memory.gpio_pin[2] is the 2nd GPIO pin
+//  - "memory.palette[3].g" gets the green component of the 3rd palette colour
 
-namespace z8
-{
-
-namespace raccoon
+namespace z8::raccoon
 {
 
 struct memory
@@ -89,7 +85,5 @@ static_check_section(screen,     0x6000, 0x2000);
 // Final sanity check
 static_assert(sizeof(memory) == 0x8000, "z8::raccoon::memory should have size 0x8000");
 
-}
-
-}
+} // namespace z8::raccoon
 

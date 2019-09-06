@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -22,7 +22,7 @@
 #include <streambuf>
 
 #include "zepto8.h"
-#include "vm/vm.h"
+#include "pico8/vm.h"
 #include "telnet.h"
 #include "splore.h"
 #include "dither.h"
@@ -165,7 +165,7 @@ int main(int argc, char **argv)
         run_mode == mode::tobin || run_mode == mode::topng ||
         run_mode == mode::todata || run_mode == mode::inspect)
     {
-        z8::cart cart;
+        z8::pico8::cart cart;
         cart.load(in);
 
         if (data)
@@ -219,7 +219,7 @@ int main(int argc, char **argv)
     }
     else if (run_mode == mode::run || run_mode == mode::headless)
     {
-        z8::vm vm;
+        z8::pico8::vm vm;
         vm.load(in);
         vm.run();
         for (bool running = true; running; )

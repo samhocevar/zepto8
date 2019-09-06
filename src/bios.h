@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -21,7 +21,7 @@
 // The actual ZEPTO-8 BIOS: contains the font and the startup code, loaded
 // from a regular .p8 cartridge file.
 
-namespace z8
+namespace z8::pico8
 {
 
 class bios

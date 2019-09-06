@@ -70,20 +70,24 @@
     <ClCompile Include="analyzer.cpp" />
     <ClCompile Include="bios.cpp" />
     <ClCompile Include="cart.cpp" />
-    <ClCompile Include="vm\gfx.cpp" />
-    <ClCompile Include="vm\private.cpp" />
-    <ClCompile Include="vm\render.cpp" />
-    <ClCompile Include="vm\sfx.cpp" />
-    <ClCompile Include="vm\vm.cpp" />
-    <ClCompile Include="vm\z8lua.cpp" />
+    <ClCompile Include="pico8\gfx.cpp" />
+    <ClCompile Include="pico8\private.cpp" />
+    <ClCompile Include="pico8\render.cpp" />
+    <ClCompile Include="pico8\sfx.cpp" />
+    <ClCompile Include="pico8\vm.cpp" />
+    <ClCompile Include="pico8\z8lua.cpp" />
+    <ClCompile Include="raccoon\api.cpp" />
+    <ClCompile Include="raccoon\vm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analyzer.h" />
     <ClInclude Include="cart.h" />
-    <ClInclude Include="lua53-parse.h" />
     <ClInclude Include="memory.h" />
-    <ClInclude Include="vm\vm.h" />
-    <ClInclude Include="vm\z8lua.h" />
+    <ClInclude Include="pico8\memory.h" />
+    <ClInclude Include="pico8\vm.h" />
+    <ClInclude Include="pico8\z8lua.h" />
+    <ClInclude Include="raccoon\memory.h" />
+    <ClInclude Include="raccoon\vm.h" />
     <ClInclude Include="zepto8.h" />
   </ItemGroup>
   <ItemGroup>

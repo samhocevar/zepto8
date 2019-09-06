@@ -16,13 +16,13 @@
 
 #include <lol/engine.h>
 
-#include "vm.h"
+#include "pico8/vm.h"
 #include "z8lua.h"
 
 // FIXME: activate this one day, when we use Lua 5.3
 #define HAVE_LUA_GETEXTRASPACE 0
 
-namespace z8
+namespace z8::pico8
 {
 
 using lol::msg;

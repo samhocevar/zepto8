@@ -16,8 +16,8 @@
 
 #include "zepto8.h"
 
-// The memory classes: sfx, song, draw_state, memory
-// —————————————————————————————————————————————————
+// The PICO-8 memory classes: sfx, song, draw_state, memory
+// ————————————————————————————————————————————————————————
 // These classes map 1-to-1 with the PICO-8 memory layout and provide
 // handful accessors for higher level information.
 // For instance:
@@ -25,7 +25,7 @@
 //  - "memory.sfx[3].effect(6)" gets the effect of the 6th note of the 3rd SFX
 //  - "memory.gpio_pin[2] is the 2nd GPIO pin
 
-namespace z8
+namespace z8::pico8
 {
 
 // Store a point with unaligned 16-bit coordinates

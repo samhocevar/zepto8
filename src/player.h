@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -16,7 +16,7 @@
 
 #include "zepto8.h"
 #include "cart.h"
-#include "vm/vm.h"
+#include "pico8/vm.h"
 
 // The player class
 // ————————————————
@@ -49,7 +49,7 @@ public:
     uint8_t *get_rom() { return (uint8_t *)&m_vm.m_cart.get_rom(); }
 
 private:
-    vm m_vm;
+    pico8::vm m_vm;
     std::map<lol::input::key, int> m_input_map;
     array<u8vec4> m_screen;
     bool m_render = true;

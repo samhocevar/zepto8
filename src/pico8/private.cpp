@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2017 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -16,9 +16,9 @@
 
 #include <lol/engine.h>
 
-#include "vm.h"
+#include "pico8/vm.h"
 
-namespace z8
+namespace z8::pico8
 {
 
 using lol::msg;

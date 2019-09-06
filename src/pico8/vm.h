@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -18,26 +18,35 @@
 #include "bios.h"
 #include "cart.h"
 #include "memory.h"
-#include "vm/z8lua.h"
+#include "pico8/z8lua.h"
 
 namespace z8
 {
 
-using lol::u8vec4;
-
 class player;
 
-class vm
+namespace pico8
+{
+
+using lol::u8vec4;
+
+class vm : z8::vm_base
 {
     friend class z8::player;
 
 public:
     vm();
-    ~vm();
+    virtual ~vm();
 
-    void load(char const *name);
-    void run();
-    bool step(float seconds);
+    virtual void load(char const *name);
+    virtual void run();
+    virtual bool step(float seconds);
+
+    virtual void render(lol::u8vec4 *screen) const;
+
+    virtual void button(int index, int state);
+    virtual void mouse(lol::ivec2 coords, int buttons);
+    virtual void keyboard(char ch);
 
     inline memory &get_ram() { return m_ram; }
     inline memory const &get_ram() const { return m_ram; }
@@ -45,13 +54,8 @@ public:
     inline memory &get_rom() { return m_cart.get_rom(); }
     inline memory const &get_rom() const { return m_cart.get_rom(); }
 
-    void render(lol::u8vec4 *screen) const;
     void print_ansi(lol::ivec2 term_size = lol::ivec2(128, 128),
                     uint8_t const *prev_screen = nullptr) const;
-
-    void button(int index, int state);
-    void mouse(lol::ivec2 coords, int buttons);
-    void keyboard(char ch);
 
 private:
     static int panic_hook(lua_State *l);
@@ -172,6 +176,8 @@ private:
     lol::timer m_timer;
     int m_instructions;
 };
+
+} // namespace pico8
 
 } // namespace z8
 

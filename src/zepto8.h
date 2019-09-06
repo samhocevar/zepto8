@@ -23,6 +23,31 @@
 namespace z8
 {
 
+using lol::u8vec4;
+
+//
+// The generic VM interface
+//
+
+class vm_base
+{
+    friend class player;
+
+public:
+    vm_base() = default;
+    virtual ~vm_base() = default;
+
+    virtual void load(char const *name) = 0;
+    virtual void run() = 0;
+    virtual bool step(float seconds) = 0;
+
+    virtual void render(lol::u8vec4 *screen) const = 0;
+
+    virtual void button(int index, int state) = 0;
+    virtual void mouse(lol::ivec2 coords, int buttons) = 0;
+    virtual void keyboard(char ch) = 0;
+};
+
 enum
 {
     PICO8_VERSION = 16,
