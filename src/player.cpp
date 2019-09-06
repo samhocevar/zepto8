@@ -17,14 +17,18 @@
 #include <lol/engine.h>
 
 #include "player.h"
+
+#include "zepto8.h"
 #include "pico8/vm.h"
+#include "raccoon/vm.h"
 
 namespace z8
 {
 
 using lol::msg;
 
-player::player(lol::ivec2 window_size)
+player::player(lol::ivec2 window_size,
+               bool is_raccoon)
   : m_input_map
     {
         { lol::input::key::SC_Left, 0 },
@@ -53,6 +57,12 @@ player::player(lol::ivec2 window_size)
         { lol::input::key::SC_Tab, 13 },
     }
 {
+    // FIXME: find a way to use std::make_shared here on MSVC
+    if (is_raccoon)
+        m_vm.reset((z8::vm_base *)new raccoon::vm());
+    else
+        m_vm.reset((z8::vm_base *)new pico8::vm());
+
     // Allow text input
     lol::input::keyboard()->capture_text(true);
 
@@ -67,7 +77,7 @@ player::player(lol::ivec2 window_size)
     // Register audio callbacks
     for (int i = 0; i < 4; ++i)
     {
-        auto f = m_vm.get_streamer(i);
+        auto f = m_vm->get_streamer(i);
         m_streams[i] = lol::audio::start_streaming(f, lol::audio::format::sint16le, 22050, 1);
     }
 
@@ -100,12 +110,12 @@ player::~player()
 
 void player::load(char const *name)
 {
-    m_vm.load(name);
+    m_vm->load(name);
 }
 
 void player::run()
 {
-    m_vm.run();
+    m_vm->run();
 }
 
 void player::tick_game(float seconds)
@@ -117,14 +127,14 @@ void player::tick_game(float seconds)
 
     // Update button states
     for (auto const &k : m_input_map)
-        m_vm.button(k.second, keyboard->key(k.first));
+        m_vm->button(k.second, keyboard->key(k.first));
 
     if (keyboard->key_pressed(lol::input::key::SC_Return))
-        m_vm.keyboard('\r');
+        m_vm->keyboard('\r');
     if (keyboard->key_pressed(lol::input::key::SC_Backspace))
-        m_vm.keyboard('\x08');
+        m_vm->keyboard('\x08');
     if (keyboard->key_pressed(lol::input::key::SC_Delete))
-        m_vm.keyboard('\x7f');
+        m_vm->keyboard('\x7f');
 
     // Mouse events
     lol::ivec2 mousepos((int)mouse->axis(lol::input::axis::ScreenX),
@@ -132,9 +142,9 @@ void player::tick_game(float seconds)
     int buttons = (mouse->button(lol::input::button::BTN_Left) ? 1 : 0)
                 + (mouse->button(lol::input::button::BTN_Right) ? 2 : 0)
                 + (mouse->button(lol::input::button::BTN_Middle) ? 4 : 0);
-    m_vm.mouse(lol::ivec2(mousepos.x - (WINDOW_WIDTH - SCREEN_WIDTH) / 2,
-                          WINDOW_HEIGHT - 1 - mousepos.y - (WINDOW_HEIGHT - SCREEN_HEIGHT) / 2) / 4,
-               buttons);
+    m_vm->mouse(lol::ivec2(mousepos.x - (WINDOW_WIDTH - SCREEN_WIDTH) / 2,
+                           WINDOW_HEIGHT - 1 - mousepos.y - (WINDOW_HEIGHT - SCREEN_HEIGHT) / 2) / 4,
+                buttons);
 
     // Keyboard events
     for (auto ch : keyboard->text())
@@ -142,11 +152,11 @@ void player::tick_game(float seconds)
         // Convert uppercase characters to special glyphs
         if (ch >= 'A' && ch <= 'Z')
             ch = '\x80' + (ch - 'A');
-        m_vm.keyboard(ch);
+        m_vm->keyboard(ch);
     }
 
     // Step the VM
-    m_vm.step(seconds);
+    m_vm->step(seconds);
 }
 
 void player::tick_draw(float seconds, lol::Scene &scene)
@@ -154,20 +164,22 @@ void player::tick_draw(float seconds, lol::Scene &scene)
     lol::WorldEntity::tick_draw(seconds, scene);
 
     // Render the VM screen to our buffer
-    m_vm.render(m_screen.data());
+    m_vm->render(m_screen.data());
 
+#if 0 // FIXME: PICO-8 specific
     {
         // Render the font
         u8vec4 data[128 * 32];
         for (int j = 0; j < 32; ++j)
         for (int i = 0; i < 128; ++i)
         {
-            auto p = m_vm.m_bios.get_spixel(i, j);
+            auto p = m_vm->m_bios.get_spixel(i, j);
             data[j * 128 + i] = p ? palette::get8(p) : u8vec4(0);
         }
         m_font_tile->GetTexture()->Bind();
         m_font_tile->GetTexture()->SetData(data);
     }
+#endif
 
     // Blit buffer to the texture
     // FIXME: move this to some kind of memory viewer class?

@@ -49,17 +49,9 @@ int main(int argc, char **argv)
     lol::ivec2 win_size(z8::WINDOW_WIDTH, z8::WINDOW_HEIGHT);
     lol::Application app("zepto-8", win_size, 60.0f);
 
-    if (argc >= 2 && lol::ends_with(argv[1], ".rcn.json"))
-    {
-        z8::raccoon::vm vm;
-        vm.load(argv[1]);
-        vm.run();
-        for (;;)
-            vm.step(1 / 60.f);
-        return EXIT_SUCCESS;
-    }
+    bool is_raccoon = argc >= 2 && lol::ends_with(argv[1], ".rcn.json");
 
-    z8::player *player = new z8::player(win_size);
+    z8::player *player = new z8::player(win_size, is_raccoon);
 
     if (argc >= 2)
     {

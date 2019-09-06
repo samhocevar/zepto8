@@ -16,7 +16,6 @@
 
 #include "zepto8.h"
 #include "cart.h"
-#include "pico8/vm.h"
 
 // The player class
 // ————————————————
@@ -32,7 +31,7 @@ using lol::u8vec4;
 class player : public lol::WorldEntity
 {
 public:
-    player(ivec2 window_size);
+    player(ivec2 window_size, bool is_raccoon = false);
     virtual ~player();
 
     virtual void tick_game(float seconds) override;
@@ -45,11 +44,14 @@ public:
     lol::Texture *get_texture();
     lol::Texture *get_font_texture();
 
+#if 0 // FIXME: PICO-8 specific
     uint8_t *get_ram() { return (uint8_t *)&m_vm.get_ram(); }
     uint8_t *get_rom() { return (uint8_t *)&m_vm.m_cart.get_rom(); }
+#endif
 
 private:
-    pico8::vm m_vm;
+    std::shared_ptr<vm_base> m_vm;
+
     std::map<lol::input::key, int> m_input_map;
     array<u8vec4> m_screen;
     bool m_render = true;

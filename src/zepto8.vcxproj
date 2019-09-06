@@ -113,6 +113,9 @@
     <ClInclude Include="zepto8.h" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="libquickjs.vcxproj">
+      <Project>{5168dfab-3b54-4caa-8654-da760bc53b74}</Project>
+    </ProjectReference>
     <ProjectReference Include="libz8lua.vcxproj">
       <Project>{141365e7-f8f3-4d95-b8db-1a093f92f436}</Project>
     </ProjectReference>
