@@ -119,7 +119,8 @@ struct palette
             lol::u8vec4(0xff, 0x9d, 0x81, 0xff),
         };
 
-        return pal[n];
+        // Bit 0x80 activates the second half of the palette
+        return pal[(n & 0xf) | ((n & 0x80) >> 3)];
     }
 
     /* Find the closest palette element to c (a vector of floats in 0…1) */

@@ -614,11 +614,19 @@ int vm::api_pal(lua_State *l)
     else
     {
         int c0 = (int)lua_tonumber(l, 1) & 0xf;
-        int c1 = (int)lua_tonumber(l, 2) & 0xf;
+        int c1 = (int)lua_tonumber(l, 2);
         int p = (int)lua_tonumber(l, 3);
 
-        ds.pal[p & 1][c0] &= 0x10;
-        ds.pal[p & 1][c0] |= c1;
+        if (p & 1)
+        {
+            ds.pal[1][c0] = c1 & 0xff;
+        }
+        else
+        {
+            // Transparency bit is preserved
+            ds.pal[p & 1][c0] &= 0x10;
+            ds.pal[p & 1][c0] |= c1 & 0xf;
+        }
     }
 
     return 0;
