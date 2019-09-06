@@ -61,13 +61,23 @@ public:
             CPP_JS_CFUNC_DEF("read",   1, &dispatch<&vm::api_read> ),
             CPP_JS_CFUNC_DEF("write",  2, &dispatch<&vm::api_write> ),
 
+            CPP_JS_CFUNC_DEF("cls",    1, &dispatch<&vm::api_cls> ),
+            CPP_JS_CFUNC_DEF("cam",    2, &dispatch<&vm::api_cam> ),
+            CPP_JS_CFUNC_DEF("map",    6, &dispatch<&vm::api_map> ),
             CPP_JS_CFUNC_DEF("palset", 4, &dispatch<&vm::api_palset> ),
+            CPP_JS_CFUNC_DEF("palm",   2, &dispatch<&vm::api_palm> ),
             CPP_JS_CFUNC_DEF("palt",   2, &dispatch<&vm::api_palt> ),
             CPP_JS_CFUNC_DEF("pset",   3, &dispatch<&vm::api_pset> ),
             CPP_JS_CFUNC_DEF("fget",   1, &dispatch<&vm::api_fget> ),
-            CPP_JS_CFUNC_DEF("flr",    1, &dispatch<&vm::api_flr> ),
             CPP_JS_CFUNC_DEF("mget",   2, &dispatch<&vm::api_mget> ),
+            CPP_JS_CFUNC_DEF("spr",    7, &dispatch<&vm::api_spr> ),
+            CPP_JS_CFUNC_DEF("rect",   5, &dispatch<&vm::api_rect> ),
+            CPP_JS_CFUNC_DEF("rectfill", 5, &dispatch<&vm::api_rectfill> ),
+            CPP_JS_CFUNC_DEF("print",  4, &dispatch<&vm::api_print> ),
+
             CPP_JS_CFUNC_DEF("rnd",    1, &dispatch<&vm::api_rnd> ),
+            CPP_JS_CFUNC_DEF("mid",    3, &dispatch<&vm::api_mid> ),
+            CPP_JS_CFUNC_DEF("btnp",   2, &dispatch<&vm::api_btnp> ),
         };
 
         // Add functions to global scope
@@ -76,6 +86,19 @@ public:
         JS_FreeValue(m_ctx, global_obj);
 
         JS_SetContextOpaque(m_ctx, this);
+    }
+
+    std::string get_property_str(JSValue obj, char const *name)
+    {
+        JSValue prop = JS_GetPropertyStr(m_ctx, obj, name);
+        if (JS_IsUndefined(prop))
+            return "";
+
+        char const *tmp = JS_ToCString(m_ctx, prop);
+        std::string ret(tmp);
+        JS_FreeCString(m_ctx, tmp);
+        JS_FreeValue(m_ctx, prop);
+        return ret;
     }
 
     void run(char const *file)
@@ -106,14 +129,9 @@ public:
             return;
         }
 
-        JSValue name = JS_GetPropertyStr(m_ctx, bin, "name");
-        if (!JS_IsUndefined(name))
-        {
-            char const *tmp = JS_ToCString(m_ctx, name);
-            m_name = tmp;
-            JS_FreeCString(m_ctx, tmp);
-            JS_FreeValue(m_ctx, name);
-        }
+        m_name = get_property_str(bin, "name");
+        m_host = get_property_str(bin, "host");
+        m_link = get_property_str(bin, "link");
 
         JSValue version = JS_GetPropertyStr(m_ctx, bin, "version");
         if (!JS_IsUndefined(version))
@@ -143,11 +161,45 @@ public:
         JSValue rom = JS_GetPropertyStr(m_ctx, bin, "rom");
         if (!JS_IsUndefined(rom))
         {
-            /* TODO */
+            std::map<char const *, size_t> sections
+            {
+                { "spr", offsetof(raccoon::memory, sprites) },
+                { "map", offsetof(raccoon::memory, map) },
+                { "pal", offsetof(raccoon::memory, palette) },
+                { "spf", offsetof(raccoon::memory, flags) },
+                { "snd", offsetof(raccoon::memory, sound) },
+                { "mus", offsetof(raccoon::memory, music) },
+            };
+
+            for (auto kv : sections)
+            {
+                JSValue data = JS_GetPropertyStr(m_ctx, rom, kv.first);
+                if (JS_IsUndefined(data))
+                    continue;
+
+                size_t offset = kv.second;
+                for (int i = 0; ; ++i)
+                {
+                    JSValue val = JS_GetPropertyUint32(m_ctx, data, i);
+                    if (JS_IsUndefined(val))
+                        break;
+                    char const *tmp = JS_ToCString(m_ctx, val);
+                    for (int j = 0; tmp[j] && tmp[j + 1] && offset < sizeof(raccoon::memory); j += 2)
+                    {
+                        char str[3] = { tmp[j], tmp[j + 1], '\0' };
+                        m_rom[offset++] = std::strtoul(str, nullptr, 16);
+                    }
+                    JS_FreeCString(m_ctx, tmp);
+                    JS_FreeValue(m_ctx, val);
+                }
+                JS_FreeValue(m_ctx, data);
+            }
             JS_FreeValue(m_ctx, rom);
         }
 
         lol::msg::debug("running bin version %d (%s)\n", m_version, m_name.c_str());
+
+        memcpy(&m_ram, &m_rom, sizeof(m_rom));
 
         eval_buf(m_ctx, m_code, "<cart>", JS_EVAL_TYPE_GLOBAL);
 
@@ -156,6 +208,10 @@ public:
             "max = Math.max;\n"
             "sin = Math.sin;\n"
             "cos = Math.cos;\n"
+            "atan2 = Math.atan2;\n"
+            "abs = Math.abs;\n"
+            "flr = Math.floor;\n"
+            "sign = Math.sign;\n"
             "sqrt = Math.sqrt;\n"
             "if (typeof init != 'undefined') init();\n";
         eval_buf(m_ctx, glue_code, "<init_code>", JS_EVAL_TYPE_GLOBAL);
@@ -192,17 +248,17 @@ private:
     JSValue api_palset(JSContext *ctx, JSValueConst this_val,
                        int argc, JSValueConst *argv)
     {
-        int x, y, z, t;
-        if (JS_ToInt32(ctx, &x, argv[0]))
+        int n, r, g, b;
+        if (JS_ToInt32(ctx, &n, argv[0]))
             return JS_EXCEPTION;
-        if (JS_ToInt32(ctx, &y, argv[1]))
+        if (JS_ToInt32(ctx, &r, argv[1]))
             return JS_EXCEPTION;
-        if (JS_ToInt32(ctx, &z, argv[2]))
+        if (JS_ToInt32(ctx, &g, argv[2]))
             return JS_EXCEPTION;
-        if (JS_ToInt32(ctx, &t, argv[3]))
+        if (JS_ToInt32(ctx, &b, argv[3]))
             return JS_EXCEPTION;
-        lol::msg::info("stub: palset(%d, %d, %d, %d)\n", x, y, z, t);
-        return JS_NewInt32(ctx, x);
+        m_ram.palette[n & 0xf] = lol::u8vec3(r, g, b);
+        return JS_UNDEFINED;
     }
 
     JSValue api_pset(JSContext *ctx, JSValueConst this_val,
@@ -219,6 +275,18 @@ private:
         return JS_NewInt32(ctx, x);
     }
 
+    JSValue api_palm(JSContext *ctx, JSValueConst this_val,
+                     int argc, JSValueConst *argv)
+    {
+        int x, y;
+        if (JS_ToInt32(ctx, &x, argv[0]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &y, argv[1]))
+            return JS_EXCEPTION;
+        lol::msg::info("stub: palm(%d, %d)\n", x, y);
+        return JS_UNDEFINED;
+    }
+
     JSValue api_palt(JSContext *ctx, JSValueConst this_val,
                      int argc, JSValueConst *argv)
     {
@@ -231,24 +299,142 @@ private:
         return JS_NewInt32(ctx, x);
     }
 
-    JSValue api_fget(JSContext *ctx, JSValueConst this_val,
+    JSValue api_btnp(JSContext *ctx, JSValueConst this_val,
                      int argc, JSValueConst *argv)
     {
         int x, y;
+        if (JS_ToInt32(ctx, &x, argv[0]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &y, argv[1]))
+            return JS_EXCEPTION;
+        lol::msg::info("stub: btnp(%d, %d)\n", x, y);
+        return JS_NewInt32(ctx, x);
+    }
+
+    JSValue api_fget(JSContext *ctx, JSValueConst this_val,
+                     int argc, JSValueConst *argv)
+    {
+        int x;
         if (JS_ToInt32(ctx, &x, argv[0]))
             return JS_EXCEPTION;
         lol::msg::info("stub: fget(%d)\n", x);
         return JS_NewInt32(ctx, x);
     }
 
-    JSValue api_flr(JSContext *ctx, JSValueConst this_val,
+    JSValue api_cls(JSContext *ctx, JSValueConst this_val,
+                    int argc, JSValueConst *argv)
+    {
+        int x;
+        if (argc == 0 || JS_ToInt32(ctx, &x, argv[0]))
+            x = 0;
+        lol::msg::info("stub: cls(%d)\n", x);
+        return JS_NewInt32(ctx, x);
+    }
+
+    JSValue api_cam(JSContext *ctx, JSValueConst this_val,
                     int argc, JSValueConst *argv)
     {
         int x, y;
         if (JS_ToInt32(ctx, &x, argv[0]))
             return JS_EXCEPTION;
-        lol::msg::info("stub: flr(%d)\n", x);
+        if (JS_ToInt32(ctx, &y, argv[1]))
+            return JS_EXCEPTION;
+        lol::msg::info("stub: cam(%d, %d)\n", x, y);
         return JS_NewInt32(ctx, x);
+    }
+
+    JSValue api_map(JSContext *ctx, JSValueConst this_val,
+                    int argc, JSValueConst *argv)
+    {
+        int x, y, z, t, u, v;
+        if (JS_ToInt32(ctx, &x, argv[0]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &y, argv[1]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &z, argv[2]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &t, argv[3]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &u, argv[4]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &v, argv[5]))
+            return JS_EXCEPTION;
+        lol::msg::info("stub: map(%d, %d, %d, %d, %d, %d)\n", x, y, z, t, u, v);
+        return JS_NewInt32(ctx, x);
+    }
+
+    JSValue api_rect(JSContext *ctx, JSValueConst this_val,
+                     int argc, JSValueConst *argv)
+    {
+        int x, y, z, t, u;
+        if (JS_ToInt32(ctx, &x, argv[0]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &y, argv[1]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &z, argv[2]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &t, argv[3]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &u, argv[4]))
+            return JS_EXCEPTION;
+        lol::msg::info("stub: rect(%d, %d, %d, %d, %d)\n", x, y, z, t, u);
+        return JS_NewInt32(ctx, x);
+    }
+
+    JSValue api_rectfill(JSContext *ctx, JSValueConst this_val,
+                         int argc, JSValueConst *argv)
+    {
+        int x, y, z, t, u;
+        if (JS_ToInt32(ctx, &x, argv[0]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &y, argv[1]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &z, argv[2]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &t, argv[3]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &u, argv[4]))
+            return JS_EXCEPTION;
+        lol::msg::info("stub: rectfill(%d, %d, %d, %d, %d)\n", x, y, z, t, u);
+        return JS_NewInt32(ctx, x);
+    }
+
+    JSValue api_spr(JSContext *ctx, JSValueConst this_val,
+                    int argc, JSValueConst *argv)
+    {
+        int x, y, z, t, u, v, w;
+        if (JS_ToInt32(ctx, &x, argv[0]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &y, argv[1]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &z, argv[2]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &t, argv[3]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &u, argv[4]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &v, argv[5]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &w, argv[5]))
+            return JS_EXCEPTION;
+        lol::msg::info("stub: spr(%d, %d, %d, %d, %d, %d, %d)\n", x, y, z, t, u, v, w);
+        return JS_UNDEFINED;
+    }
+
+    JSValue api_print(JSContext *ctx, JSValueConst this_val,
+                      int argc, JSValueConst *argv)
+    {
+        int x, y, z;
+        if (JS_ToInt32(ctx, &x, argv[0]))
+            return JS_EXCEPTION;
+        if (JS_ToInt32(ctx, &y, argv[1]))
+            return JS_EXCEPTION;
+        char const *str = JS_ToCString(ctx, argv[2]);
+        if (JS_ToInt32(ctx, &z, argv[3]))
+            return JS_EXCEPTION;
+        lol::msg::info("stub: print(%d, %d, %s, %d)\n", x, y, str, z);
+        JS_FreeCString(ctx, str);
+        return JS_UNDEFINED;
     }
 
     JSValue api_rnd(JSContext *ctx, JSValueConst this_val,
@@ -258,6 +444,21 @@ private:
         if (argc == 0 || JS_ToFloat64(ctx, &x, argv[0]))
             x = 1.0;
         return JS_NewFloat64(ctx, lol::rand(x));
+    }
+
+    JSValue api_mid(JSContext *ctx, JSValueConst this_val,
+                    int argc, JSValueConst *argv)
+    {
+        double x, y, z, ret;
+        if (JS_ToFloat64(ctx, &x, argv[0]))
+            return JS_EXCEPTION;
+        if (JS_ToFloat64(ctx, &y, argv[1]))
+            return JS_EXCEPTION;
+        if (JS_ToFloat64(ctx, &z, argv[2]))
+            return JS_EXCEPTION;
+        ret = x > y ? y > z ? y : std::min(x, z)
+                    : x > z ? x : std::min(y, z);
+        return JS_NewFloat64(ctx, ret);
     }
 
     JSValue api_mget(JSContext *ctx, JSValueConst this_val,
@@ -317,8 +518,8 @@ private:
     JSRuntime *m_rt;
     JSContext *m_ctx;
 
-    std::string m_name;
     std::string m_code;
+    std::string m_name, m_link, m_host;
     int m_version = -1;
 
     z8::raccoon::memory m_rom;

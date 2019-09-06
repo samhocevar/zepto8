@@ -35,7 +35,9 @@ struct memory
 {
     uint8_t sprites[128 * 96 / 2];
     uint8_t map[128 * 64];
-    uint8_t palette[16 * 3];
+
+    lol::u8vec3 palette[16];
+
     uint8_t flags[192];
     uint8_t sound[64 * (8 + 8 + 32 * 16) / 8];
     uint8_t music[64 * (4 * 6 + 2 + 6) / 8];
