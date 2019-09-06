@@ -241,6 +241,20 @@ void vm::keyboard(char ch)
 
 void vm::render(lol::u8vec4 *screen) const
 {
+    /* Precompute the current palette for pairs of pixels */
+    struct { u8vec4 a, b; } lut[256];
+    for (int n = 0; n < 256; ++n)
+    {
+        lut[n].a = u8vec4(m_ram.palette[n % 16], 0xff);
+        lut[n].b = u8vec4(m_ram.palette[n / 16], 0xff);
+    }
+
+    /* Render actual screen */
+    for (uint8_t p : m_ram.screen)
+    {
+        *screen++ = lut[p].a;
+        *screen++ = lut[p].b;
+    }
 }
 
 std::function<void(void *, int)> vm::get_streamer(int channel)
