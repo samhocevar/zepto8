@@ -82,7 +82,6 @@
   <ItemGroup>
     <ClInclude Include="analyzer.h" />
     <ClInclude Include="cart.h" />
-    <ClInclude Include="memory.h" />
     <ClInclude Include="pico8\memory.h" />
     <ClInclude Include="pico8\vm.h" />
     <ClInclude Include="pico8\z8lua.h" />

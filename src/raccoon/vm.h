@@ -66,6 +66,7 @@ private:
     JSValue api_rnd(int argc, JSValueConst *argv);
     JSValue api_mid(int argc, JSValueConst *argv);
     JSValue api_mget(int argc, JSValueConst *argv);
+    JSValue api_mus(int argc, JSValueConst *argv);
 
     static void dump_error(JSContext *ctx);
 

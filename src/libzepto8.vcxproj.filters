@@ -25,24 +25,25 @@
     <ClCompile Include="raccoon\vm.cpp">
       <Filter>raccoon</Filter>
     </ClCompile>
+    <ClCompile Include="pico8\z8lua.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analyzer.h" />
     <ClInclude Include="cart.h" />
-    <ClInclude Include="lua53-parse.h" />
     <ClInclude Include="pico8\memory.h">
       <Filter>pico8</Filter>
-    </ClCompile>
+    </ClInclude>
     <ClInclude Include="pico8\vm.h">
       <Filter>pico8</Filter>
-    </ClCompile>
+    </ClInclude>
     <ClInclude Include="raccoon\memory.h">
       <Filter>raccoon</Filter>
-    </ClCompile>
+    </ClInclude>
     <ClInclude Include="raccoon\vm.h">
       <Filter>raccoon</Filter>
-    </ClCompile>
+    </ClInclude>
     <ClInclude Include="zepto8.h" />
+    <ClInclude Include="pico8\z8lua.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="pico8">

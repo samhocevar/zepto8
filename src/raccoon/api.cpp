@@ -257,5 +257,14 @@ JSValue vm::api_mget(int argc, JSValueConst *argv)
     return JS_NewInt32(m_ctx, x);
 }
 
+JSValue vm::api_mus(int argc, JSValueConst *argv)
+{
+    int n;
+    if (JS_ToInt32(m_ctx, &n, argv[0]))
+        return JS_EXCEPTION;
+    lol::msg::info("stub: mus(%d)\n", n);
+    return JS_UNDEFINED;
+}
+
 }
 
