@@ -108,11 +108,48 @@ JSValue vm::api_btnp(int argc, JSValueConst *argv)
 
 JSValue vm::api_fget(int argc, JSValueConst *argv)
 {
-    int x;
-    if (JS_ToInt32(m_ctx, &x, argv[0]))
+    int n, f;
+    if (JS_ToInt32(m_ctx, &n, argv[0]))
         return JS_EXCEPTION;
-    lol::msg::info("stub: fget(%d)\n", x);
-    return JS_NewInt32(m_ctx, x);
+    if (n < 0 || n >= 192)
+        return JS_UNDEFINED;
+    uint8_t field = m_ram.flags[n];
+    if (argc == 1)
+        return JS_NewInt32(m_ctx, field);
+    if (JS_ToInt32(m_ctx, &f, argv[1]))
+        return JS_EXCEPTION;
+    return JS_NewInt32(m_ctx, (field >> f) & 0x1);
+}
+
+JSValue vm::api_fset(int argc, JSValueConst *argv)
+{
+    int n, f, v;
+    if (JS_ToInt32(m_ctx, &n, argv[0]))
+        return JS_EXCEPTION;
+#if 0 // FIXME: I think this should be the correct behaviour
+    if (JS_ToInt32(m_ctx, &f, argv[1]))
+        return JS_EXCEPTION;
+    if (n < 0 || n >= 192)
+        return JS_UNDEFINED;
+    if (argc == 3)
+    {
+        if (JS_ToInt32(m_ctx, &v, argv[2]))
+            return JS_EXCEPTION;
+        uint8_t mask = 1 << f;
+        f = (m_ram.flags[n] & ~mask) | (v ? mask : 0);
+    }
+    m_ram.flags[n] = f;
+#else
+    if (JS_ToInt32(m_ctx, &v, argv[2]))
+        return JS_EXCEPTION;
+    if (!JS_IsUndefined(argv[1]) && !JS_ToInt32(m_ctx, &f, argv[1]))
+    {
+        uint8_t mask = 1 << f;
+        v = (m_ram.flags[n] & ~mask) | (v ? mask : 0);
+    }
+    m_ram.flags[n] = v;
+#endif
+    return JS_UNDEFINED;
 }
 
 JSValue vm::api_cls(int argc, JSValueConst *argv)

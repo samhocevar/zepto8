@@ -51,11 +51,13 @@ private:
     JSValue api_read(int argc, JSValueConst *argv);
     JSValue api_write(int argc, JSValueConst *argv);
     JSValue api_palset(int argc, JSValueConst *argv);
+    JSValue api_fget(int argc, JSValueConst *argv);
+    JSValue api_fset(int argc, JSValueConst *argv);
+
     JSValue api_pset(int argc, JSValueConst *argv);
     JSValue api_palm(int argc, JSValueConst *argv);
     JSValue api_palt(int argc, JSValueConst *argv);
     JSValue api_btnp(int argc, JSValueConst *argv);
-    JSValue api_fget(int argc, JSValueConst *argv);
     JSValue api_cls(int argc, JSValueConst *argv);
     JSValue api_cam(int argc, JSValueConst *argv);
     JSValue api_map(int argc, JSValueConst *argv);

@@ -52,14 +52,16 @@ vm::vm()
         JS_DISPATCH_CFUNC_DEF("read",   1, api_read ),
         JS_DISPATCH_CFUNC_DEF("write",  2, api_write ),
 
+        JS_DISPATCH_CFUNC_DEF("palset", 4, api_palset ),
+        JS_DISPATCH_CFUNC_DEF("fget",   2, api_fget ),
+        JS_DISPATCH_CFUNC_DEF("fset",   3, api_fset ),
+
         JS_DISPATCH_CFUNC_DEF("cls",    1, api_cls ),
         JS_DISPATCH_CFUNC_DEF("cam",    2, api_cam ),
         JS_DISPATCH_CFUNC_DEF("map",    6, api_map ),
-        JS_DISPATCH_CFUNC_DEF("palset", 4, api_palset ),
         JS_DISPATCH_CFUNC_DEF("palm",   2, api_palm ),
         JS_DISPATCH_CFUNC_DEF("palt",   2, api_palt ),
         JS_DISPATCH_CFUNC_DEF("pset",   3, api_pset ),
-        JS_DISPATCH_CFUNC_DEF("fget",   1, api_fget ),
         JS_DISPATCH_CFUNC_DEF("mget",   2, api_mget ),
         JS_DISPATCH_CFUNC_DEF("spr",    7, api_spr ),
         JS_DISPATCH_CFUNC_DEF("rect",   5, api_rect ),
