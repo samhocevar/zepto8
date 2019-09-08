@@ -62,15 +62,19 @@ JSValue vm::api_palset(int argc, JSValueConst *argv)
 
 JSValue vm::api_pset(int argc, JSValueConst *argv)
 {
-    int x, y, z;
+    int x, y, c;
     if (JS_ToInt32(m_ctx, &x, argv[0]))
         return JS_EXCEPTION;
     if (JS_ToInt32(m_ctx, &y, argv[1]))
         return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &z, argv[2]))
+    if (JS_ToInt32(m_ctx, &c, argv[2]))
         return JS_EXCEPTION;
-    lol::msg::info("stub: pset(%d, %d, %d)\n", x, y, z);
-    return JS_NewInt32(m_ctx, x);
+    if (x < 0 || x >= 128 || y < 0 || y >= 64)
+        return JS_UNDEFINED;
+    c &= 15;
+    uint8_t &data = m_ram.screen[y][x / 2];
+    data = data & (x & 1 ? 0x0f : 0xf0) | (x & 1 ? c << 4 : c);
+    return JS_UNDEFINED;
 }
 
 JSValue vm::api_palm(int argc, JSValueConst *argv)
@@ -126,7 +130,6 @@ JSValue vm::api_fset(int argc, JSValueConst *argv)
     int n, f, v;
     if (JS_ToInt32(m_ctx, &n, argv[0]))
         return JS_EXCEPTION;
-#if 0 // FIXME: I think this should be the correct behaviour
     if (JS_ToInt32(m_ctx, &f, argv[1]))
         return JS_EXCEPTION;
     if (n < 0 || n >= 192)
@@ -139,26 +142,16 @@ JSValue vm::api_fset(int argc, JSValueConst *argv)
         f = (m_ram.flags[n] & ~mask) | (v ? mask : 0);
     }
     m_ram.flags[n] = f;
-#else
-    if (JS_ToInt32(m_ctx, &v, argv[2]))
-        return JS_EXCEPTION;
-    if (!JS_IsUndefined(argv[1]) && !JS_ToInt32(m_ctx, &f, argv[1]))
-    {
-        uint8_t mask = 1 << f;
-        v = (m_ram.flags[n] & ~mask) | (v ? mask : 0);
-    }
-    m_ram.flags[n] = v;
-#endif
     return JS_UNDEFINED;
 }
 
 JSValue vm::api_cls(int argc, JSValueConst *argv)
 {
-    int x;
-    if (argc == 0 || JS_ToInt32(m_ctx, &x, argv[0]))
-        x = 0;
-    lol::msg::info("stub: cls(%d)\n", x);
-    return JS_NewInt32(m_ctx, x);
+    int c;
+    if (argc == 0 || JS_ToInt32(m_ctx, &c, argv[0]))
+        c = 0;
+	memset(m_ram.screen, (c & 15) * 0x11, sizeof(m_ram.screen));
+    return JS_UNDEFINED;
 }
 
 JSValue vm::api_cam(int argc, JSValueConst *argv)
@@ -210,18 +203,28 @@ JSValue vm::api_rect(int argc, JSValueConst *argv)
 
 JSValue vm::api_rectfill(int argc, JSValueConst *argv)
 {
-    int x, y, z, t, u;
+    int x, y, w, h, c;
     if (JS_ToInt32(m_ctx, &x, argv[0]))
         return JS_EXCEPTION;
     if (JS_ToInt32(m_ctx, &y, argv[1]))
         return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &z, argv[2]))
+    if (JS_ToInt32(m_ctx, &w, argv[2]))
         return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &t, argv[3]))
+    if (JS_ToInt32(m_ctx, &h, argv[3]))
         return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &u, argv[4]))
+    if (JS_ToInt32(m_ctx, &c, argv[4]))
         return JS_EXCEPTION;
-    lol::msg::info("stub: rectfill(%d, %d, %d, %d, %d)\n", x, y, z, t, u);
+    int x0 = std::max(x, 0);
+    int x1 = std::min(x + w, 127);
+    int y0 = std::max(y, 0);
+    int y1 = std::min(y + h, 127);
+    c &= 15;
+    for (y = y0; y <= y1; ++y)
+    for (x = x0; x <= x1; ++x)
+    {
+        uint8_t &data = m_ram.screen[y][x / 2];
+        data = data & (x & 1 ? 0x0f : 0xf0) | (x & 1 ? c << 4 : c);
+    }
     return JS_NewInt32(m_ctx, x);
 }
 

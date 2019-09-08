@@ -254,7 +254,8 @@ void vm::render(lol::u8vec4 *screen) const
     }
 
     /* Render actual screen */
-    for (uint8_t p : m_ram.screen)
+    for (auto &line : m_ram.screen)
+    for (uint8_t p : line)
     {
         *screen++ = lut[p].a;
         *screen++ = lut[p].b;

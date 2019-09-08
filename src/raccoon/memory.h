@@ -29,7 +29,7 @@ namespace z8::raccoon
 
 struct memory
 {
-    uint8_t sprites[128 * 96 / 2];
+    uint8_t sprites[96][128 / 2];
     uint8_t map[64][128];
 
     lol::u8vec3 palette[16];
@@ -47,7 +47,7 @@ struct memory
     uint8_t padding2[6];
 
     uint8_t gamepad[2 * 4];
-    uint8_t screen[128 * 128 / 2];
+    uint8_t screen[128][128 / 2];
 
     inline uint8_t &operator[](int n)
     {
