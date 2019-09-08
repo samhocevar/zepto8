@@ -26,6 +26,18 @@ extern "C" {
 namespace z8::raccoon
 {
 
+template<typename T> static void setpixel(T &data, int x, int y, uint8_t c)
+{
+    uint8_t &p = data[y][x / 2];
+    p = p & (x & 1 ? 0x0f : 0xf0) | (x & 1 ? c << 4 : c);
+}
+
+template<typename T> static uint8_t getpixel(T const &data, int x, int y)
+{
+    uint8_t const &p = data[y][x / 2];
+    return (x & 1 ? p >> 4 : p) & 0xf;
+}
+
 JSValue vm::api_read(int argc, JSValueConst *argv)
 {
     int p;
@@ -71,20 +83,18 @@ JSValue vm::api_pset(int argc, JSValueConst *argv)
         return JS_EXCEPTION;
     if (x < 0 || x >= 128 || y < 0 || y >= 64)
         return JS_UNDEFINED;
-    c &= 15;
-    uint8_t &data = m_ram.screen[y][x / 2];
-    data = data & (x & 1 ? 0x0f : 0xf0) | (x & 1 ? c << 4 : c);
+    setpixel(m_ram.screen, x, y, c & 15);
     return JS_UNDEFINED;
 }
 
 JSValue vm::api_palm(int argc, JSValueConst *argv)
 {
-    int x, y;
-    if (JS_ToInt32(m_ctx, &x, argv[0]))
+    int c0, c1;
+    if (JS_ToInt32(m_ctx, &c0, argv[0]))
         return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &y, argv[1]))
+    if (JS_ToInt32(m_ctx, &c1, argv[1]))
         return JS_EXCEPTION;
-    lol::msg::info("stub: palm(%d, %d)\n", x, y);
+	m_ram.palmod[c0 & 0xf] = c1 & 0xf;
     return JS_UNDEFINED;
 }
 
@@ -150,7 +160,7 @@ JSValue vm::api_cls(int argc, JSValueConst *argv)
     int c;
     if (argc == 0 || JS_ToInt32(m_ctx, &c, argv[0]))
         c = 0;
-	memset(m_ram.screen, (c & 15) * 0x11, sizeof(m_ram.screen));
+    memset(m_ram.screen, (c & 15) * 0x11, sizeof(m_ram.screen));
     return JS_UNDEFINED;
 }
 
@@ -218,34 +228,41 @@ JSValue vm::api_rectfill(int argc, JSValueConst *argv)
     int x1 = std::min(x + w, 127);
     int y0 = std::max(y, 0);
     int y1 = std::min(y + h, 127);
-    c &= 15;
     for (y = y0; y <= y1; ++y)
-    for (x = x0; x <= x1; ++x)
-    {
-        uint8_t &data = m_ram.screen[y][x / 2];
-        data = data & (x & 1 ? 0x0f : 0xf0) | (x & 1 ? c << 4 : c);
-    }
+        for (x = x0; x <= x1; ++x)
+            setpixel(m_ram.screen, x, y, c & 15);
     return JS_NewInt32(m_ctx, x);
 }
 
 JSValue vm::api_spr(int argc, JSValueConst *argv)
 {
-    int x, y, z, t, u, v, w;
-    if (JS_ToInt32(m_ctx, &x, argv[0]))
+    int n, x, y, fx, fy;
+    double w, h;
+    if (JS_ToInt32(m_ctx, &n, argv[0]))
         return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &y, argv[1]))
+    if (JS_ToInt32(m_ctx, &x, argv[1]))
         return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &z, argv[2]))
+    if (JS_ToInt32(m_ctx, &y, argv[2]))
         return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &t, argv[3]))
+    if (JS_ToFloat64(m_ctx, &w, argv[3]))
         return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &u, argv[4]))
+    if (JS_ToFloat64(m_ctx, &h, argv[4]))
         return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &v, argv[5]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &w, argv[5]))
-        return JS_EXCEPTION;
-    lol::msg::info("stub: spr(%d, %d, %d, %d, %d, %d, %d)\n", x, y, z, t, u, v, w);
+    if (JS_ToInt32(m_ctx, &fx, argv[5]))
+        fx = 0;
+    if (JS_ToInt32(m_ctx, &fy, argv[6]))
+        fy = 0;
+    int sx = n % 16 * 8, sy = n / 16 * 8;
+    int sw = (int)(w * 8), sh = (int)(h * 8);
+    for (int dy = 0; dy < sh; ++dy)
+        for (int dx = 0; dx < sw; ++dx)
+        {
+            auto c = getpixel(m_ram.sprites,
+                              fx ? sx + sw - 1 - dx : sx + dx,
+                              fy ? sy + sh - 1 - dy : sy + dy);
+            c = m_ram.palmod[c] & 0xf;
+            setpixel(m_ram.screen, x + dx, y + dy, c);
+        }
     return JS_UNDEFINED;
 }
 

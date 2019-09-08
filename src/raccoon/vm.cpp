@@ -202,6 +202,8 @@ void vm::run()
     lol::msg::debug("running bin version %d (%s)\n", m_version, m_name.c_str());
 
     memcpy(&m_ram, &m_rom, sizeof(m_rom));
+    for (int i = 0; i < 16; ++i)
+        m_ram.palmod[i] = i;
 
     eval_buf(m_ctx, m_code, "<cart>", JS_EVAL_TYPE_GLOBAL);
 
