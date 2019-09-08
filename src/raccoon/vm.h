@@ -53,6 +53,8 @@ private:
     JSValue api_palset(int argc, JSValueConst *argv);
     JSValue api_fget(int argc, JSValueConst *argv);
     JSValue api_fset(int argc, JSValueConst *argv);
+    JSValue api_mget(int argc, JSValueConst *argv);
+    JSValue api_mset(int argc, JSValueConst *argv);
 
     JSValue api_pset(int argc, JSValueConst *argv);
     JSValue api_palm(int argc, JSValueConst *argv);
@@ -67,7 +69,6 @@ private:
     JSValue api_print(int argc, JSValueConst *argv);
     JSValue api_rnd(int argc, JSValueConst *argv);
     JSValue api_mid(int argc, JSValueConst *argv);
-    JSValue api_mget(int argc, JSValueConst *argv);
     JSValue api_mus(int argc, JSValueConst *argv);
 
     static void dump_error(JSContext *ctx);

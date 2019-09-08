@@ -290,8 +290,24 @@ JSValue vm::api_mget(int argc, JSValueConst *argv)
         return JS_EXCEPTION;
     if (JS_ToInt32(m_ctx, &y, argv[1]))
         return JS_EXCEPTION;
-    lol::msg::info("stub: mget(%d, %d)\n", x, y);
-    return JS_NewInt32(m_ctx, x);
+    if (x < 0 || x >= 128 || y < 0 || y >= 64)
+        return JS_UNDEFINED;
+    return JS_NewInt32(m_ctx, m_ram.map[y][x]);
+}
+
+JSValue vm::api_mset(int argc, JSValueConst *argv)
+{
+    int x, y, n;
+    if (JS_ToInt32(m_ctx, &x, argv[0]))
+        return JS_EXCEPTION;
+    if (JS_ToInt32(m_ctx, &y, argv[1]))
+        return JS_EXCEPTION;
+    if (JS_ToInt32(m_ctx, &n, argv[2]))
+        return JS_EXCEPTION;
+    if (x < 0 || x >= 128 || y < 0 || y >= 64)
+        return JS_UNDEFINED;
+    m_ram.map[y][x] = n;
+    return JS_UNDEFINED;
 }
 
 JSValue vm::api_mus(int argc, JSValueConst *argv)
