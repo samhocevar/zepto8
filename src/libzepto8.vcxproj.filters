@@ -25,7 +25,9 @@
     <ClCompile Include="raccoon\vm.cpp">
       <Filter>raccoon</Filter>
     </ClCompile>
-    <ClCompile Include="pico8\z8lua.cpp" />
+    <ClCompile Include="pico8\z8lua.cpp">
+      <Filter>pico8</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analyzer.h" />
@@ -43,7 +45,12 @@
       <Filter>raccoon</Filter>
     </ClInclude>
     <ClInclude Include="zepto8.h" />
-    <ClInclude Include="pico8\z8lua.h" />
+    <ClInclude Include="pico8\z8lua.h">
+      <Filter>pico8</Filter>
+    </ClInclude>
+    <ClInclude Include="raccoon\font.h">
+      <Filter>raccoon</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="pico8">

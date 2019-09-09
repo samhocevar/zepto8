@@ -22,6 +22,7 @@ extern "C" {
 
 #include "zepto8.h"
 #include "raccoon/vm.h"
+#include "raccoon/font.h"
 
 namespace z8::raccoon
 {
@@ -94,7 +95,7 @@ JSValue vm::api_palm(int argc, JSValueConst *argv)
         return JS_EXCEPTION;
     if (JS_ToInt32(m_ctx, &c1, argv[1]))
         return JS_EXCEPTION;
-	m_ram.palmod[c0 & 0xf] = c1 & 0xf;
+    m_ram.palmod[c0 & 0xf] = c1 & 0xf;
     return JS_UNDEFINED;
 }
 
@@ -268,15 +269,39 @@ JSValue vm::api_spr(int argc, JSValueConst *argv)
 
 JSValue vm::api_print(int argc, JSValueConst *argv)
 {
-    int x, y, z;
+    int x, y, c;
     if (JS_ToInt32(m_ctx, &x, argv[0]))
         return JS_EXCEPTION;
     if (JS_ToInt32(m_ctx, &y, argv[1]))
         return JS_EXCEPTION;
     char const *str = JS_ToCString(m_ctx, argv[2]);
-    if (JS_ToInt32(m_ctx, &z, argv[3]))
+    if (JS_ToInt32(m_ctx, &c, argv[3]))
         return JS_EXCEPTION;
-    lol::msg::info("stub: print(%d, %d, %s, %d)\n", x, y, str, z);
+    c &= 15;
+    for (int n = 0; str[n]; ++n)
+    {
+        uint8_t ch = (uint8_t)str[n];
+        if (ch < 0x20 || ch >= 0x80)
+            continue;
+        uint32_t data = font_data[ch - 0x20];
+
+        if (ch == ',')
+            x -= 1;
+
+        for (int dx = 0; dx < 3; ++dx)
+        for (int dy = 0; dy < 7; ++dy)
+            if (data & (1 << (dx * 8 + dy)))
+                setpixel(m_ram.screen, x + dx, y + dy, c);
+        if (data & 0xff0000)
+            x += 4;
+        else if (data & 0xff00)
+            x += 3;
+        else if (data & 0xff)
+            x += 2;
+        else if (ch == ' ')
+            x += 4;
+    }
+
     JS_FreeCString(m_ctx, str);
     return JS_UNDEFINED;
 }

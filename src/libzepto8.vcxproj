@@ -85,6 +85,7 @@
     <ClInclude Include="pico8\memory.h" />
     <ClInclude Include="pico8\vm.h" />
     <ClInclude Include="pico8\z8lua.h" />
+    <ClInclude Include="raccoon\font.h" />
     <ClInclude Include="raccoon\memory.h" />
     <ClInclude Include="raccoon\vm.h" />
     <ClInclude Include="zepto8.h" />
