@@ -30,7 +30,7 @@ namespace z8::raccoon
 template<typename T> static void setpixel(T &data, int x, int y, uint8_t c)
 {
     uint8_t &p = data[y][x / 2];
-    p = p & (x & 1 ? 0x0f : 0xf0) | (x & 1 ? c << 4 : c);
+    p = (p & (x & 1 ? 0x0f : 0xf0)) | (x & 1 ? c << 4 : c);
 }
 
 template<typename T> static uint8_t getpixel(T const &data, int x, int y)
@@ -96,7 +96,7 @@ JSValue vm::api_palm(int argc, JSValueConst *argv)
     if (JS_ToInt32(m_ctx, &c1, argv[1]))
         return JS_EXCEPTION;
     uint8_t &data = m_ram.palmod[c0 & 0xf];
-    data = data & 0xf0 | (c1 & 0xf);
+    data = (data & 0xf0) | (c1 & 0xf);
     return JS_UNDEFINED;
 }
 
@@ -108,7 +108,7 @@ JSValue vm::api_palt(int argc, JSValueConst *argv)
     if (JS_ToInt32(m_ctx, &v, argv[1]))
         return JS_EXCEPTION;
     uint8_t &data = m_ram.palmod[c & 0xf];
-    data = data & 0x7f | (v ? 0x80 : 0x00);
+    data = (data & 0x7f) | (v ? 0x80 : 0x00);
     return JS_UNDEFINED;
 }
 
@@ -120,7 +120,7 @@ JSValue vm::api_btnp(int argc, JSValueConst *argv)
     if (JS_ToInt32(m_ctx, &y, argv[1]))
         return JS_EXCEPTION;
     lol::msg::info("stub: btnp(%d, %d)\n", x, y);
-    return JS_NewInt32(m_ctx, x);
+    return JS_NewInt32(m_ctx, 0);
 }
 
 JSValue vm::api_fget(int argc, JSValueConst *argv)
@@ -174,8 +174,8 @@ JSValue vm::api_cam(int argc, JSValueConst *argv)
         return JS_EXCEPTION;
     if (JS_ToInt32(m_ctx, &y, argv[1]))
         return JS_EXCEPTION;
-    m_ram.camera.x = -(int16_t)x;
-    m_ram.camera.y = -(int16_t)y;
+    m_ram.camera.x = (int16_t)x;
+    m_ram.camera.y = (int16_t)y;
     return JS_UNDEFINED;
 }
 
@@ -196,19 +196,31 @@ JSValue vm::api_map(int argc, JSValueConst *argv)
         return JS_EXCEPTION;
     sx -= m_ram.camera.x;
     sy -= m_ram.camera.y;
-    for (int y = 0; y < celh * 8; ++y)
-        for (int x = 0; x < celw * 8; ++x)
+    for (int y = 0; y < celh; ++y)
+    for (int x = 0; x < celw; ++x)
+    {
+        if (celx + x < 0 || celx + x >= 128 || cely + y < 0 || cely + y >= 64)
+            continue;
+        int n = m_ram.map[cely + y][celx + x];
+        int startx = sx + x * 8, starty = sy + y * 8;
+        int sprx = n % 16 * 8, spry = n / 16 * 8;
+
+        for (int dy = 0; dy < 8; ++dy)
+        for (int dx = 0; dx < 8; ++dx)
         {
-            if (sx + x < 0 || sx + x >= 128 || sy + y < 0 || sy + y >= 128)
+            if (startx + dx < 0 || startx + dx >= 128 ||
+                starty + dy < 0 || starty + dy >= 128)
                 continue;
-            int n = m_ram.map[cely + y / 8][celx + x / 8];
-            int sprx = n % 16 * 8, spry = n / 16 * 8;
-            auto c = getpixel(m_ram.sprites, sprx + x % 8, spry + y % 8);
+            if (sprx + dx < 0 || sprx + dx >= 128 ||
+                spry + dy < 0 || spry + dy >= 96)
+                continue;
+            auto c = getpixel(m_ram.sprites, sprx + dx, spry + dy);
             if (m_ram.palmod[c] & 0x80)
                 continue;
             c = m_ram.palmod[c] & 0xf;
-            setpixel(m_ram.screen, sx + x, sy + y, c);
+            setpixel(m_ram.screen, startx + dx, starty + dy, c);
         }
+    }
     return JS_UNDEFINED;
 }
 
@@ -264,13 +276,13 @@ JSValue vm::api_spr(int argc, JSValueConst *argv)
         return JS_EXCEPTION;
     if (JS_ToInt32(m_ctx, &y, argv[2]))
         return JS_EXCEPTION;
-    if (JS_ToFloat64(m_ctx, &w, argv[3]))
-        return JS_EXCEPTION;
-    if (JS_ToFloat64(m_ctx, &h, argv[4]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &fx, argv[5]))
+    if (argc < 4 || JS_ToFloat64(m_ctx, &w, argv[3]))
+        w = 1.0;
+    if (argc < 5 || JS_ToFloat64(m_ctx, &h, argv[4]))
+        h = 1.0;
+    if (argc < 6 || JS_ToInt32(m_ctx, &fx, argv[5]))
         fx = 0;
-    if (JS_ToInt32(m_ctx, &fy, argv[6]))
+    if (argc < 7 || JS_ToInt32(m_ctx, &fy, argv[6]))
         fy = 0;
     x -= m_ram.camera.x;
     y -= m_ram.camera.y;
@@ -284,6 +296,8 @@ JSValue vm::api_spr(int argc, JSValueConst *argv)
             auto c = getpixel(m_ram.sprites,
                               fx ? sx + sw - 1 - dx : sx + dx,
                               fy ? sy + sh - 1 - dy : sy + dy);
+            if (m_ram.palmod[c] & 0x80)
+                continue;
             c = m_ram.palmod[c] & 0xf;
             setpixel(m_ram.screen, x + dx, y + dy, c);
         }
