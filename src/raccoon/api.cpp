@@ -174,8 +174,9 @@ JSValue vm::api_cam(int argc, JSValueConst *argv)
         return JS_EXCEPTION;
     if (JS_ToInt32(m_ctx, &y, argv[1]))
         return JS_EXCEPTION;
-    lol::msg::info("stub: cam(%d, %d)\n", x, y);
-    return JS_NewInt32(m_ctx, x);
+    m_ram.camera.x = -(int16_t)x;
+    m_ram.camera.y = -(int16_t)y;
+    return JS_UNDEFINED;
 }
 
 JSValue vm::api_map(int argc, JSValueConst *argv)
@@ -193,12 +194,14 @@ JSValue vm::api_map(int argc, JSValueConst *argv)
         return JS_EXCEPTION;
     if (JS_ToInt32(m_ctx, &celh, argv[5]))
         return JS_EXCEPTION;
+    sx -= m_ram.camera.x;
+    sy -= m_ram.camera.y;
     for (int y = 0; y < celh * 8; ++y)
         for (int x = 0; x < celw * 8; ++x)
         {
             if (sx + x < 0 || sx + x >= 128 || sy + y < 0 || sy + y >= 128)
                 continue;
-            int n = m_ram.map[y / 8][x / 8];
+            int n = m_ram.map[cely + y / 8][celx + x / 8];
             int sprx = n % 16 * 8, spry = n / 16 * 8;
             auto c = getpixel(m_ram.sprites, sprx + x % 8, spry + y % 8);
             if (m_ram.palmod[c] & 0x80)
@@ -239,6 +242,8 @@ JSValue vm::api_rectfill(int argc, JSValueConst *argv)
         return JS_EXCEPTION;
     if (JS_ToInt32(m_ctx, &c, argv[4]))
         return JS_EXCEPTION;
+    x -= m_ram.camera.x;
+    y -= m_ram.camera.y;
     int x0 = std::max(x, 0);
     int x1 = std::min(x + w, 127);
     int y0 = std::max(y, 0);
@@ -267,11 +272,15 @@ JSValue vm::api_spr(int argc, JSValueConst *argv)
         fx = 0;
     if (JS_ToInt32(m_ctx, &fy, argv[6]))
         fy = 0;
+    x -= m_ram.camera.x;
+    y -= m_ram.camera.y;
     int sx = n % 16 * 8, sy = n / 16 * 8;
     int sw = (int)(w * 8), sh = (int)(h * 8);
     for (int dy = 0; dy < sh; ++dy)
         for (int dx = 0; dx < sw; ++dx)
         {
+            if (x + dx < 0 || x + dx >= 128 || y + dy < 0 || y + dy >= 128)
+                continue;
             auto c = getpixel(m_ram.sprites,
                               fx ? sx + sw - 1 - dx : sx + dx,
                               fy ? sy + sh - 1 - dy : sy + dy);
@@ -291,6 +300,8 @@ JSValue vm::api_print(int argc, JSValueConst *argv)
     char const *str = JS_ToCString(m_ctx, argv[2]);
     if (JS_ToInt32(m_ctx, &c, argv[3]))
         return JS_EXCEPTION;
+    x -= m_ram.camera.x;
+    y -= m_ram.camera.y;
     c &= 15;
     for (int n = 0; str[n]; ++n)
     {
