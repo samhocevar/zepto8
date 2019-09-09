@@ -95,19 +95,21 @@ JSValue vm::api_palm(int argc, JSValueConst *argv)
         return JS_EXCEPTION;
     if (JS_ToInt32(m_ctx, &c1, argv[1]))
         return JS_EXCEPTION;
-    m_ram.palmod[c0 & 0xf] = c1 & 0xf;
+    uint8_t &data = m_ram.palmod[c0 & 0xf];
+    data = data & 0xf0 | (c1 & 0xf);
     return JS_UNDEFINED;
 }
 
 JSValue vm::api_palt(int argc, JSValueConst *argv)
 {
-    int x, y;
-    if (JS_ToInt32(m_ctx, &x, argv[0]))
+    int c, v;
+    if (JS_ToInt32(m_ctx, &c, argv[0]))
         return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &y, argv[1]))
+    if (JS_ToInt32(m_ctx, &v, argv[1]))
         return JS_EXCEPTION;
-    lol::msg::info("stub: palt(%d, %d)\n", x, y);
-    return JS_NewInt32(m_ctx, x);
+    uint8_t &data = m_ram.palmod[c & 0xf];
+    data = data & 0x7f | (v ? 0x80 : 0x00);
+    return JS_UNDEFINED;
 }
 
 JSValue vm::api_btnp(int argc, JSValueConst *argv)
@@ -178,21 +180,33 @@ JSValue vm::api_cam(int argc, JSValueConst *argv)
 
 JSValue vm::api_map(int argc, JSValueConst *argv)
 {
-    int x, y, z, t, u, v;
-    if (JS_ToInt32(m_ctx, &x, argv[0]))
+    int celx, cely, sx, sy, celw, celh;
+    if (JS_ToInt32(m_ctx, &celx, argv[0]))
         return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &y, argv[1]))
+    if (JS_ToInt32(m_ctx, &cely, argv[1]))
         return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &z, argv[2]))
+    if (JS_ToInt32(m_ctx, &sx, argv[2]))
         return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &t, argv[3]))
+    if (JS_ToInt32(m_ctx, &sy, argv[3]))
         return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &u, argv[4]))
+    if (JS_ToInt32(m_ctx, &celw, argv[4]))
         return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &v, argv[5]))
+    if (JS_ToInt32(m_ctx, &celh, argv[5]))
         return JS_EXCEPTION;
-    lol::msg::info("stub: map(%d, %d, %d, %d, %d, %d)\n", x, y, z, t, u, v);
-    return JS_NewInt32(m_ctx, x);
+    for (int y = 0; y < celh * 8; ++y)
+        for (int x = 0; x < celw * 8; ++x)
+        {
+            if (sx + x < 0 || sx + x >= 128 || sy + y < 0 || sy + y >= 128)
+                continue;
+            int n = m_ram.map[y / 8][x / 8];
+            int sprx = n % 16 * 8, spry = n / 16 * 8;
+            auto c = getpixel(m_ram.sprites, sprx + x % 8, spry + y % 8);
+            if (m_ram.palmod[c] & 0x80)
+                continue;
+            c = m_ram.palmod[c] & 0xf;
+            setpixel(m_ram.screen, sx + x, sy + y, c);
+        }
+    return JS_UNDEFINED;
 }
 
 JSValue vm::api_rect(int argc, JSValueConst *argv)
