@@ -71,14 +71,14 @@ void vm::api_palt(int c, int v)
 
 bool vm::api_btn(int i, std::optional<int> p)
 {
-    lol::msg::info("stub: btn(%d, %d)\n", i, p);
-    return false;
+    int bit = 1 << (i + 8 * (p.has_value() ? p.value() : 0));
+    return m_ram.gamepad[0] & bit;
 }
 
 bool vm::api_btnp(int i, std::optional<int> p)
 {
-    lol::msg::info("stub: btnp(%d, %d)\n", i, p);
-    return false;
+    int bit = 1 << (i + 8 * (p.has_value() ? p.value() : 0));
+    return (m_ram.gamepad[0] & bit) && !(m_ram.gamepad[1] & bit);
 }
 
 int vm::api_fget(int n, std::optional<int> f)

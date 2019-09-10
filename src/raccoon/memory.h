@@ -46,7 +46,7 @@ struct memory
 
     uint8_t padding2[6];
 
-    uint8_t gamepad[2 * 4];
+    uint32_t gamepad[2];
     uint8_t screen[128][128 / 2];
 
     inline uint8_t &operator[](int n)

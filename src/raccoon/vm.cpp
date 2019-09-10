@@ -275,11 +275,16 @@ bool vm::step(float seconds)
         "if (typeof draw != 'undefined') draw();\n";
     eval_buf(m_ctx, code, "<step_code>", JS_EVAL_TYPE_GLOBAL);
 
+    m_ram.gamepad[1] = m_ram.gamepad[0];
+    m_ram.gamepad[0] = 0;
+
     return true;
 }
 
 void vm::button(int index, int state)
 {
+    if (state)
+        m_ram.gamepad[0] |= 1 << index;
 }
 
 void vm::mouse(lol::ivec2 coords, int buttons)
