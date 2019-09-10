@@ -53,7 +53,7 @@ private:
     JSValue api_palset(int argc, JSValueConst *argv);
     JSValue api_fget(int argc, JSValueConst *argv);
     JSValue api_fset(int argc, JSValueConst *argv);
-    JSValue api_mget(int argc, JSValueConst *argv);
+    int api_mget(int x, int y);
     JSValue api_mset(int argc, JSValueConst *argv);
     JSValue api_pset(int argc, JSValueConst *argv);
 

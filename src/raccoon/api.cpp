@@ -367,16 +367,11 @@ JSValue vm::api_mid(int argc, JSValueConst *argv)
     return JS_NewFloat64(m_ctx, ret);
 }
 
-JSValue vm::api_mget(int argc, JSValueConst *argv)
+int vm::api_mget(int x, int y)
 {
-    int x, y;
-    if (JS_ToInt32(m_ctx, &x, argv[0]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &y, argv[1]))
-        return JS_EXCEPTION;
     if (x < 0 || x >= 128 || y < 0 || y >= 64)
-        return JS_UNDEFINED;
-    return JS_NewInt32(m_ctx, m_ram.map[y][x]);
+        return 0;
+    return m_ram.map[y][x];
 }
 
 JSValue vm::api_mset(int argc, JSValueConst *argv)

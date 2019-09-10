@@ -42,6 +42,35 @@ static JSValue dispatch(JSContext *ctx, JSValueConst this_val,
 #define JS_DISPATCH_CFUNC_DEF(name, length, func) \
     { name, JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE, JS_DEF_CFUNC, 0, { length, JS_CFUNC_generic, { &dispatch<&vm::func> } } }
 
+/* Next generation dispatch helper (WIP) */
+template<typename T> JSValue js_retval(JSContext *ctx, T const &x);
+template<> JSValue js_retval<int>(JSContext *ctx, int const &x) { return JS_NewInt32(ctx, x); }
+template<> JSValue js_retval<double>(JSContext *ctx, double const &x) { return JS_NewFloat64(ctx, x); }
+
+template<typename T> constexpr int count_args();
+template<typename T, typename R, typename... A>
+constexpr int count_args(R (T::*)(A...)) { return (int)sizeof...(A); }
+
+template<auto FN>
+static JSValue dispatch2(JSContext *ctx, JSValueConst this_val,
+                         int argc, JSValueConst *argv)
+{
+    static_assert(count_args(FN) == 2);
+
+    vm *that = (vm *)JS_GetContextOpaque(ctx);
+    auto f = std::mem_fn(FN);
+
+    std::array<int, count_args(FN)> tmp;
+    for (size_t i = 0; i < tmp.size(); ++i)
+        if (JS_ToInt32(ctx, &tmp[i], argv[i]))
+            return JS_EXCEPTION;
+
+    return JS_NewInt32(ctx, f(that, tmp[0], tmp[1]));
+}
+
+#define JS_DISPATCH_NG_CFUNC_DEF(name, func) \
+    { name, JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE, JS_DEF_CFUNC, 0, { count_args(&vm::func), JS_CFUNC_generic, { &dispatch2<&vm::func> } } }
+
 vm::vm()
 {
     m_rt = JS_NewRuntime();
@@ -55,7 +84,7 @@ vm::vm()
         JS_DISPATCH_CFUNC_DEF("palset", 4, api_palset ),
         JS_DISPATCH_CFUNC_DEF("fget",   2, api_fget ),
         JS_DISPATCH_CFUNC_DEF("fset",   3, api_fset ),
-        JS_DISPATCH_CFUNC_DEF("mget",   2, api_mget ),
+        JS_DISPATCH_NG_CFUNC_DEF("mget",   api_mget ),
         JS_DISPATCH_CFUNC_DEF("mset",   3, api_mset ),
 
         JS_DISPATCH_CFUNC_DEF("cls",    1, api_cls ),
