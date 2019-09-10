@@ -28,20 +28,6 @@ extern "C" {
 namespace z8::raccoon
 {
 
-/* Helper to dispatch C++ functions to JS C bindings */
-typedef JSValue (vm::*api_func)(int, JSValueConst *);
-
-template<api_func f>
-static JSValue dispatch(JSContext *ctx, JSValueConst this_val,
-                        int argc, JSValueConst *argv)
-{
-    vm *that = (vm *)JS_GetContextOpaque(ctx);
-    return ((*that).*f)(argc, argv);
-}
-
-#define JS_DISPATCH_CFUNC_DEF(name, length, func) \
-    { name, JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE, JS_DEF_CFUNC, 0, { length, JS_CFUNC_generic, { &dispatch<&vm::func> } } }
-
 // Count arguments in a T::* member function prototype
 template<typename T, typename R, typename... A>
 constexpr int count_args(R (T::*)(A...)) { return (int)sizeof...(A); }
@@ -60,6 +46,12 @@ static void js_unbox(JSContext *ctx, int &arg, JSValueConst jsval) { JS_ToInt32(
 static void js_unbox(JSContext *ctx, std::optional<int> &arg, JSValueConst jsval) { int tmp = 0; JS_ToInt32(ctx, &tmp, jsval); arg = tmp; }
 static void js_unbox(JSContext *ctx, double &arg, JSValueConst jsval) { JS_ToFloat64(ctx, &arg, jsval); }
 static void js_unbox(JSContext *ctx, std::optional<double> &arg, JSValueConst jsval) { double tmp = 0.0; JS_ToFloat64(ctx, &tmp, jsval); arg = tmp; }
+static void js_unbox(JSContext *ctx, std::string &str, JSValueConst jsval)
+{
+    char const *data = JS_ToCString(ctx, jsval);
+    str = std::string(data);
+    JS_FreeCString(ctx, data);
+}
 
 // Convert a T::* member function to a lambda taking the same arguments.
 // That lambda also retrieves “this” from the JS context, and converts
@@ -79,10 +71,10 @@ static inline auto js_wrap(JSContext *ctx, void (T::*f)(A...))
     return [that, f](A... args) -> JSValue { (that->*f)(args...); return JS_UNDEFINED; };
 }
 
-// Next generation dispatch helper (WIP)
+// Helper to dispatch C++ functions to JS C bindings
 template<auto FN>
-static JSValue dispatch2(JSContext *ctx, JSValueConst this_val,
-                         int argc, JSValueConst *argv)
+static JSValue dispatch(JSContext *ctx, JSValueConst this_val,
+                        int argc, JSValueConst *argv)
 {
     // Create the argument list tuple
     auto args = js_tuple(FN);
@@ -97,8 +89,8 @@ static JSValue dispatch2(JSContext *ctx, JSValueConst this_val,
     return std::apply(f, args);
 }
 
-#define JS_DISPATCH_NG_CFUNC_DEF(name, func) \
-    { name, JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE, JS_DEF_CFUNC, 0, { count_args(&vm::func), JS_CFUNC_generic, { &dispatch2<&vm::func> } } }
+#define JS_DISPATCH_CFUNC_DEF(name, func) \
+    { name, JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE, JS_DEF_CFUNC, 0, { count_args(&vm::func), JS_CFUNC_generic, { &dispatch<&vm::func> } } }
 
 vm::vm()
 {
@@ -107,31 +99,31 @@ vm::vm()
 
     static const JSCFunctionListEntry js_rcn_funcs[] =
     {
-        JS_DISPATCH_NG_CFUNC_DEF("read",   api_read ),
-        JS_DISPATCH_NG_CFUNC_DEF("write",  api_write ),
+        JS_DISPATCH_CFUNC_DEF("read",     api_read),
+        JS_DISPATCH_CFUNC_DEF("write",    api_write),
 
-        JS_DISPATCH_NG_CFUNC_DEF("palset", api_palset ),
-        JS_DISPATCH_NG_CFUNC_DEF("fget",   api_fget ),
-        JS_DISPATCH_NG_CFUNC_DEF("fset",   api_fset ),
-        JS_DISPATCH_NG_CFUNC_DEF("mget",   api_mget ),
-        JS_DISPATCH_NG_CFUNC_DEF("mset",   api_mset ),
+        JS_DISPATCH_CFUNC_DEF("palset",   api_palset),
+        JS_DISPATCH_CFUNC_DEF("fget",     api_fget),
+        JS_DISPATCH_CFUNC_DEF("fset",     api_fset),
+        JS_DISPATCH_CFUNC_DEF("mget",     api_mget),
+        JS_DISPATCH_CFUNC_DEF("mset",     api_mset),
 
-        JS_DISPATCH_NG_CFUNC_DEF("cls",    api_cls ),
-        JS_DISPATCH_NG_CFUNC_DEF("cam",    api_cam ),
-        JS_DISPATCH_NG_CFUNC_DEF("map",    api_map ),
-        JS_DISPATCH_NG_CFUNC_DEF("palm",   api_palm ),
-        JS_DISPATCH_NG_CFUNC_DEF("palt",   api_palt ),
-        JS_DISPATCH_NG_CFUNC_DEF("pset",   api_pset ),
-        JS_DISPATCH_NG_CFUNC_DEF("spr",    api_spr ),
-        JS_DISPATCH_NG_CFUNC_DEF("rect",   api_rect ),
-        JS_DISPATCH_NG_CFUNC_DEF("rectfill", api_rectfill ),
-        JS_DISPATCH_CFUNC_DEF("print",  4, api_print ),
+        JS_DISPATCH_CFUNC_DEF("cls",      api_cls),
+        JS_DISPATCH_CFUNC_DEF("cam",      api_cam),
+        JS_DISPATCH_CFUNC_DEF("map",      api_map),
+        JS_DISPATCH_CFUNC_DEF("palm",     api_palm),
+        JS_DISPATCH_CFUNC_DEF("palt",     api_palt),
+        JS_DISPATCH_CFUNC_DEF("pset",     api_pset),
+        JS_DISPATCH_CFUNC_DEF("spr",      api_spr),
+        JS_DISPATCH_CFUNC_DEF("rect",     api_rect),
+        JS_DISPATCH_CFUNC_DEF("rectfill", api_rectfill),
+        JS_DISPATCH_CFUNC_DEF("print",    api_print),
 
-        JS_DISPATCH_NG_CFUNC_DEF("rnd",    api_rnd ),
-        JS_DISPATCH_NG_CFUNC_DEF("mid",    api_mid ),
-        JS_DISPATCH_NG_CFUNC_DEF("mus",    api_mus ),
-        JS_DISPATCH_NG_CFUNC_DEF("btn",    api_btn ),
-        JS_DISPATCH_NG_CFUNC_DEF("btnp",   api_btnp ),
+        JS_DISPATCH_CFUNC_DEF("rnd",      api_rnd),
+        JS_DISPATCH_CFUNC_DEF("mid",      api_mid),
+        JS_DISPATCH_CFUNC_DEF("mus",      api_mus),
+        JS_DISPATCH_CFUNC_DEF("btn",      api_btn),
+        JS_DISPATCH_CFUNC_DEF("btnp",     api_btnp),
     };
 
     // Add functions to global scope

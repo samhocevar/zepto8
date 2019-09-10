@@ -194,22 +194,13 @@ void vm::api_spr(int n, int x, int y,
         }
 }
 
-JSValue vm::api_print(int argc, JSValueConst *argv)
+void vm::api_print(int x, int y, std::string str, int c)
 {
-    int x, y, c;
-    if (JS_ToInt32(m_ctx, &x, argv[0]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &y, argv[1]))
-        return JS_EXCEPTION;
-    char const *str = JS_ToCString(m_ctx, argv[2]);
-    if (JS_ToInt32(m_ctx, &c, argv[3]))
-        return JS_EXCEPTION;
     x -= m_ram.camera.x;
     y -= m_ram.camera.y;
     c &= 15;
-    for (int n = 0; str[n]; ++n)
+    for (uint8_t ch : str)
     {
-        uint8_t ch = (uint8_t)str[n];
         if (ch < 0x20 || ch >= 0x80)
             continue;
         uint32_t data = font_data[ch - 0x20];
@@ -230,9 +221,6 @@ JSValue vm::api_print(int argc, JSValueConst *argv)
         else if (ch == ' ')
             x += 4;
     }
-
-    JS_FreeCString(m_ctx, str);
-    return JS_UNDEFINED;
 }
 
 double vm::api_rnd(std::optional<double> x)

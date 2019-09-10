@@ -71,7 +71,7 @@ private:
     void api_spr(int n, int x, int y,
                  std::optional<double> w, std::optional<double> h,
                  std::optional<int> fx, std::optional<int> fy);
-    JSValue api_print(int argc, JSValueConst *argv);
+    void api_print(int x, int y, std::string str, int c);
     double api_rnd(std::optional<double> x);
     double api_mid(double x, double y, double z);
     void api_mus(int n);
