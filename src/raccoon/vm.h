@@ -18,6 +18,8 @@ extern "C" {
 #include "quickjs/quickjs.h"
 }
 
+#include <optional>
+
 #include "zepto8.h"
 #include "player.h"
 #include "raccoon/memory.h"
@@ -51,23 +53,26 @@ private:
     int api_read(int p);
     void api_write(int p, int x);
     void api_palset(int n, int r, int g, int b);
-    JSValue api_fget(int argc, JSValueConst *argv);
-    JSValue api_fset(int argc, JSValueConst *argv);
+    int api_fget(int n, std::optional<int> f);
+    void api_fset(int n, int f, std::optional<int> v);
     int api_mget(int x, int y);
     void api_mset(int x, int y, int n);
     void api_pset(int x, int y, int c);
 
     void api_palm(int c0, int c1);
     void api_palt(int c, int v);
-    JSValue api_btnp(int argc, JSValueConst *argv);
-    JSValue api_cls(int argc, JSValueConst *argv);
+    bool api_btn(int i, std::optional<int> p);
+    bool api_btnp(int i, std::optional<int> p);
+    void api_cls(std::optional<int> c);
     void api_cam(int x, int y);
     void api_map(int celx, int cely, int sx, int sy, int celw, int celh);
     void api_rect(int x, int y, int w, int h, int c);
     void api_rectfill(int x, int y, int w, int h, int c);
-    JSValue api_spr(int argc, JSValueConst *argv);
+    void api_spr(int n, int x, int y,
+                 std::optional<double> w, std::optional<double> h,
+                 std::optional<int> fx, std::optional<int> fy);
     JSValue api_print(int argc, JSValueConst *argv);
-    JSValue api_rnd(int argc, JSValueConst *argv);
+    double api_rnd(std::optional<double> x);
     double api_mid(double x, double y, double z);
     void api_mus(int n);
 

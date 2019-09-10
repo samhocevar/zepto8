@@ -51,12 +51,15 @@ template<typename T, typename R, typename... A>
 auto js_tuple(R (T::*)(A...)) { return std::tuple<A...>(); }
 
 // Convert a standard type to a JSValue
-JSValue js_box(JSContext *ctx, int const &x) { return JS_NewInt32(ctx, x); }
-JSValue js_box(JSContext *ctx, double const &x) { return JS_NewFloat64(ctx, x); }
+JSValue js_box(JSContext *ctx, bool x) { return JS_NewBool(ctx, (int)x); }
+JSValue js_box(JSContext *ctx, int x) { return JS_NewInt32(ctx, x); }
+JSValue js_box(JSContext *ctx, double x) { return JS_NewFloat64(ctx, x); }
 
 // Convert a JSValue to a standard type
 static void js_unbox(JSContext *ctx, int &arg, JSValueConst jsval) { JS_ToInt32(ctx, &arg, jsval); }
+static void js_unbox(JSContext *ctx, std::optional<int> &arg, JSValueConst jsval) { int tmp = 0; JS_ToInt32(ctx, &tmp, jsval); arg = tmp; }
 static void js_unbox(JSContext *ctx, double &arg, JSValueConst jsval) { JS_ToFloat64(ctx, &arg, jsval); }
+static void js_unbox(JSContext *ctx, std::optional<double> &arg, JSValueConst jsval) { double tmp = 0.0; JS_ToFloat64(ctx, &tmp, jsval); arg = tmp; }
 
 // Convert a T::* member function to a lambda taking the same arguments.
 // That lambda also retrieves “this” from the JS context, and converts
@@ -108,26 +111,27 @@ vm::vm()
         JS_DISPATCH_NG_CFUNC_DEF("write",  api_write ),
 
         JS_DISPATCH_NG_CFUNC_DEF("palset", api_palset ),
-        JS_DISPATCH_CFUNC_DEF("fget",   2, api_fget ),
-        JS_DISPATCH_CFUNC_DEF("fset",   3, api_fset ),
+        JS_DISPATCH_NG_CFUNC_DEF("fget",   api_fget ),
+        JS_DISPATCH_NG_CFUNC_DEF("fset",   api_fset ),
         JS_DISPATCH_NG_CFUNC_DEF("mget",   api_mget ),
         JS_DISPATCH_NG_CFUNC_DEF("mset",   api_mset ),
 
-        JS_DISPATCH_CFUNC_DEF("cls",    1, api_cls ),
+        JS_DISPATCH_NG_CFUNC_DEF("cls",    api_cls ),
         JS_DISPATCH_NG_CFUNC_DEF("cam",    api_cam ),
         JS_DISPATCH_NG_CFUNC_DEF("map",    api_map ),
         JS_DISPATCH_NG_CFUNC_DEF("palm",   api_palm ),
         JS_DISPATCH_NG_CFUNC_DEF("palt",   api_palt ),
         JS_DISPATCH_NG_CFUNC_DEF("pset",   api_pset ),
-        JS_DISPATCH_CFUNC_DEF("spr",    7, api_spr ),
+        JS_DISPATCH_NG_CFUNC_DEF("spr",    api_spr ),
         JS_DISPATCH_NG_CFUNC_DEF("rect",   api_rect ),
         JS_DISPATCH_NG_CFUNC_DEF("rectfill", api_rectfill ),
         JS_DISPATCH_CFUNC_DEF("print",  4, api_print ),
 
-        JS_DISPATCH_CFUNC_DEF("rnd",    1, api_rnd ),
+        JS_DISPATCH_NG_CFUNC_DEF("rnd",    api_rnd ),
         JS_DISPATCH_NG_CFUNC_DEF("mid",    api_mid ),
         JS_DISPATCH_NG_CFUNC_DEF("mus",    api_mus ),
-        JS_DISPATCH_CFUNC_DEF("btnp",   2, api_btnp ),
+        JS_DISPATCH_NG_CFUNC_DEF("btn",    api_btn ),
+        JS_DISPATCH_NG_CFUNC_DEF("btnp",   api_btnp ),
     };
 
     // Add functions to global scope

@@ -73,59 +73,43 @@ void vm::api_palt(int c, int v)
     data = (data & 0x7f) | (v ? 0x80 : 0x00);
 }
 
-JSValue vm::api_btnp(int argc, JSValueConst *argv)
+bool vm::api_btn(int i, std::optional<int> p)
 {
-    int x, y;
-    if (JS_ToInt32(m_ctx, &x, argv[0]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &y, argv[1]))
-        return JS_EXCEPTION;
-    lol::msg::info("stub: btnp(%d, %d)\n", x, y);
-    return JS_NewInt32(m_ctx, 0);
+    lol::msg::info("stub: btn(%d, %d)\n", i, p);
+    return false;
 }
 
-JSValue vm::api_fget(int argc, JSValueConst *argv)
+bool vm::api_btnp(int i, std::optional<int> p)
 {
-    int n, f;
-    if (JS_ToInt32(m_ctx, &n, argv[0]))
-        return JS_EXCEPTION;
+    lol::msg::info("stub: btnp(%d, %d)\n", i, p);
+    return false;
+}
+
+int vm::api_fget(int n, std::optional<int> f)
+{
     if (n < 0 || n >= 192)
-        return JS_UNDEFINED;
+        return 0;
     uint8_t field = m_ram.flags[n];
-    if (argc == 1)
-        return JS_NewInt32(m_ctx, field);
-    if (JS_ToInt32(m_ctx, &f, argv[1]))
-        return JS_EXCEPTION;
-    return JS_NewInt32(m_ctx, (field >> f) & 0x1);
+    if (!f.has_value())
+        return field;
+    return (field >> f.value()) & 0x1;
 }
 
-JSValue vm::api_fset(int argc, JSValueConst *argv)
+void vm::api_fset(int n, int f, std::optional<int> v)
 {
-    int n, f, v;
-    if (JS_ToInt32(m_ctx, &n, argv[0]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &f, argv[1]))
-        return JS_EXCEPTION;
     if (n < 0 || n >= 192)
-        return JS_UNDEFINED;
-    if (argc == 3)
+        return;
+    if (v.has_value())
     {
-        if (JS_ToInt32(m_ctx, &v, argv[2]))
-            return JS_EXCEPTION;
         uint8_t mask = 1 << f;
-        f = (m_ram.flags[n] & ~mask) | (v ? mask : 0);
+        f = (m_ram.flags[n] & ~mask) | (v.value() ? mask : 0);
     }
     m_ram.flags[n] = f;
-    return JS_UNDEFINED;
 }
 
-JSValue vm::api_cls(int argc, JSValueConst *argv)
+void vm::api_cls(std::optional<int> c)
 {
-    int c;
-    if (argc == 0 || JS_ToInt32(m_ctx, &c, argv[0]))
-        c = 0;
-    memset(m_ram.screen, (c & 15) * 0x11, sizeof(m_ram.screen));
-    return JS_UNDEFINED;
+    memset(m_ram.screen, (c.value() & 15) * 0x11, sizeof(m_ram.screen));
 }
 
 void vm::api_cam(int x, int y)
@@ -183,42 +167,31 @@ void vm::api_rectfill(int x, int y, int w, int h, int c)
             setpixel(m_ram.screen, x, y, c & 15);
 }
 
-JSValue vm::api_spr(int argc, JSValueConst *argv)
+void vm::api_spr(int n, int x, int y,
+                 std::optional<double> w, std::optional<double> h,
+                 std::optional<int> fx, std::optional<int> fy)
 {
-    int n, x, y, fx, fy;
-    double w, h;
-    if (JS_ToInt32(m_ctx, &n, argv[0]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &x, argv[1]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &y, argv[2]))
-        return JS_EXCEPTION;
-    if (argc < 4 || JS_ToFloat64(m_ctx, &w, argv[3]))
-        w = 1.0;
-    if (argc < 5 || JS_ToFloat64(m_ctx, &h, argv[4]))
-        h = 1.0;
-    if (argc < 6 || JS_ToInt32(m_ctx, &fx, argv[5]))
-        fx = 0;
-    if (argc < 7 || JS_ToInt32(m_ctx, &fy, argv[6]))
-        fy = 0;
     x -= m_ram.camera.x;
     y -= m_ram.camera.y;
     int sx = n % 16 * 8, sy = n / 16 * 8;
-    int sw = (int)(w * 8), sh = (int)(h * 8);
+    int sw = w.has_value() ? (int)(w.value() * 8) : 8;
+    int sh = h.has_value() ? (int)(h.value() * 8) : 8;
+    int flip_x = fx.has_value() && fx.value();
+    int flip_y = fy.has_value() && fy.value();
+
     for (int dy = 0; dy < sh; ++dy)
         for (int dx = 0; dx < sw; ++dx)
         {
             if (x + dx < 0 || x + dx >= 128 || y + dy < 0 || y + dy >= 128)
                 continue;
             auto c = getpixel(m_ram.sprites,
-                              fx ? sx + sw - 1 - dx : sx + dx,
-                              fy ? sy + sh - 1 - dy : sy + dy);
+                              flip_x ? sx + sw - 1 - dx : sx + dx,
+                              flip_y ? sy + sh - 1 - dy : sy + dy);
             if (m_ram.palmod[c] & 0x80)
                 continue;
             c = m_ram.palmod[c] & 0xf;
             setpixel(m_ram.screen, x + dx, y + dy, c);
         }
-    return JS_UNDEFINED;
 }
 
 JSValue vm::api_print(int argc, JSValueConst *argv)
@@ -262,12 +235,9 @@ JSValue vm::api_print(int argc, JSValueConst *argv)
     return JS_UNDEFINED;
 }
 
-JSValue vm::api_rnd(int argc, JSValueConst *argv)
+double vm::api_rnd(std::optional<double> x)
 {
-    double x;
-    if (argc == 0 || JS_ToFloat64(m_ctx, &x, argv[0]))
-        x = 1.0;
-    return JS_NewFloat64(m_ctx, lol::rand(x));
+    return lol::rand(x.has_value() ? x.value() : 1.0);
 }
 
 double vm::api_mid(double x, double y, double z)
