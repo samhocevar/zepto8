@@ -47,15 +47,9 @@ JSValue vm::api_read(int argc, JSValueConst *argv)
     return JS_NewInt32(m_ctx, m_ram[p & 0xffff]);
 }
 
-JSValue vm::api_write(int argc, JSValueConst *argv)
+void vm::api_write(int p, int x)
 {
-    int p, x;
-    if (JS_ToInt32(m_ctx, &p, argv[0]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &x, argv[1]))
-        return JS_EXCEPTION;
     m_ram[p & 0xffff] = x;
-    return JS_UNDEFINED;
 }
 
 JSValue vm::api_palset(int argc, JSValueConst *argv)
@@ -88,28 +82,16 @@ JSValue vm::api_pset(int argc, JSValueConst *argv)
     return JS_UNDEFINED;
 }
 
-JSValue vm::api_palm(int argc, JSValueConst *argv)
+void vm::api_palm(int c0, int c1)
 {
-    int c0, c1;
-    if (JS_ToInt32(m_ctx, &c0, argv[0]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &c1, argv[1]))
-        return JS_EXCEPTION;
     uint8_t &data = m_ram.palmod[c0 & 0xf];
     data = (data & 0xf0) | (c1 & 0xf);
-    return JS_UNDEFINED;
 }
 
-JSValue vm::api_palt(int argc, JSValueConst *argv)
+void vm::api_palt(int c, int v)
 {
-    int c, v;
-    if (JS_ToInt32(m_ctx, &c, argv[0]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &v, argv[1]))
-        return JS_EXCEPTION;
     uint8_t &data = m_ram.palmod[c & 0xf];
     data = (data & 0x7f) | (v ? 0x80 : 0x00);
-    return JS_UNDEFINED;
 }
 
 JSValue vm::api_btnp(int argc, JSValueConst *argv)
@@ -167,16 +149,10 @@ JSValue vm::api_cls(int argc, JSValueConst *argv)
     return JS_UNDEFINED;
 }
 
-JSValue vm::api_cam(int argc, JSValueConst *argv)
+void vm::api_cam(int x, int y)
 {
-    int x, y;
-    if (JS_ToInt32(m_ctx, &x, argv[0]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &y, argv[1]))
-        return JS_EXCEPTION;
     m_ram.camera.x = (int16_t)x;
     m_ram.camera.y = (int16_t)y;
-    return JS_UNDEFINED;
 }
 
 JSValue vm::api_map(int argc, JSValueConst *argv)

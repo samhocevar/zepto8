@@ -49,7 +49,7 @@ private:
     std::string get_property_str(JSValue obj, char const *name);
 
     JSValue api_read(int argc, JSValueConst *argv);
-    JSValue api_write(int argc, JSValueConst *argv);
+    void api_write(int p, int x);
     JSValue api_palset(int argc, JSValueConst *argv);
     JSValue api_fget(int argc, JSValueConst *argv);
     JSValue api_fset(int argc, JSValueConst *argv);
@@ -57,11 +57,11 @@ private:
     JSValue api_mset(int argc, JSValueConst *argv);
     JSValue api_pset(int argc, JSValueConst *argv);
 
-    JSValue api_palm(int argc, JSValueConst *argv);
-    JSValue api_palt(int argc, JSValueConst *argv);
+    void api_palm(int c0, int c1);
+    void api_palt(int c, int v);
     JSValue api_btnp(int argc, JSValueConst *argv);
     JSValue api_cls(int argc, JSValueConst *argv);
-    JSValue api_cam(int argc, JSValueConst *argv);
+    void api_cam(int x, int y);
     JSValue api_map(int argc, JSValueConst *argv);
     JSValue api_rect(int argc, JSValueConst *argv);
     JSValue api_rectfill(int argc, JSValueConst *argv);

@@ -42,30 +42,45 @@ static JSValue dispatch(JSContext *ctx, JSValueConst this_val,
 #define JS_DISPATCH_CFUNC_DEF(name, length, func) \
     { name, JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE, JS_DEF_CFUNC, 0, { length, JS_CFUNC_generic, { &dispatch<&vm::func> } } }
 
-/* Next generation dispatch helper (WIP) */
-template<typename T> JSValue js_retval(JSContext *ctx, T const &x);
-template<> JSValue js_retval<int>(JSContext *ctx, int const &x) { return JS_NewInt32(ctx, x); }
-template<> JSValue js_retval<double>(JSContext *ctx, double const &x) { return JS_NewFloat64(ctx, x); }
-
-template<typename T> constexpr int count_args();
+// Count arguments in a T::* member function prototype
 template<typename T, typename R, typename... A>
 constexpr int count_args(R (T::*)(A...)) { return (int)sizeof...(A); }
 
+// Convert a standard type to a JSValue
+JSValue js_box(JSContext *ctx, int const &x) { return JS_NewInt32(ctx, x); }
+JSValue js_box(JSContext *ctx, double const &x) { return JS_NewFloat64(ctx, x); }
+
+// Convert a T::* member function to a lambda taking the same arguments,
+// retrieving “this” from the JS context, and converting the return value
+// to a JSValue. Some specialisation is needed when returning void.
+template<typename T, typename R, typename... A>
+static inline auto js_wrap(JSContext *ctx, R (T::*f)(A...))
+{
+    T *that = (T *)JS_GetContextOpaque(ctx);
+    return [ctx, that, f](A... args) -> JSValue { return js_box(ctx, (that->*f)(args...)); };
+}
+
+template<typename T, typename... A>
+static inline auto js_wrap(JSContext *ctx, void (T::*f)(A...))
+{
+    T *that = (T *)JS_GetContextOpaque(ctx);
+    return [that, f](A... args) -> JSValue { (that->*f)(args...); return JS_UNDEFINED; };
+}
+
+// Next generation dispatch helper (WIP)
 template<auto FN>
 static JSValue dispatch2(JSContext *ctx, JSValueConst this_val,
                          int argc, JSValueConst *argv)
 {
     static_assert(count_args(FN) == 2);
 
-    vm *that = (vm *)JS_GetContextOpaque(ctx);
-    auto f = std::mem_fn(FN);
-
     std::array<int, count_args(FN)> tmp;
     for (size_t i = 0; i < tmp.size(); ++i)
         if (JS_ToInt32(ctx, &tmp[i], argv[i]))
             return JS_EXCEPTION;
 
-    return JS_NewInt32(ctx, f(that, tmp[0], tmp[1]));
+    auto f = js_wrap(ctx, FN);
+    return f(tmp[0], tmp[1]);
 }
 
 #define JS_DISPATCH_NG_CFUNC_DEF(name, func) \
@@ -79,7 +94,7 @@ vm::vm()
     static const JSCFunctionListEntry js_rcn_funcs[] =
     {
         JS_DISPATCH_CFUNC_DEF("read",   1, api_read ),
-        JS_DISPATCH_CFUNC_DEF("write",  2, api_write ),
+        JS_DISPATCH_NG_CFUNC_DEF("write",  api_write ),
 
         JS_DISPATCH_CFUNC_DEF("palset", 4, api_palset ),
         JS_DISPATCH_CFUNC_DEF("fget",   2, api_fget ),
@@ -88,10 +103,10 @@ vm::vm()
         JS_DISPATCH_CFUNC_DEF("mset",   3, api_mset ),
 
         JS_DISPATCH_CFUNC_DEF("cls",    1, api_cls ),
-        JS_DISPATCH_CFUNC_DEF("cam",    2, api_cam ),
+        JS_DISPATCH_NG_CFUNC_DEF("cam",    api_cam ),
         JS_DISPATCH_CFUNC_DEF("map",    6, api_map ),
-        JS_DISPATCH_CFUNC_DEF("palm",   2, api_palm ),
-        JS_DISPATCH_CFUNC_DEF("palt",   2, api_palt ),
+        JS_DISPATCH_NG_CFUNC_DEF("palm",   api_palm ),
+        JS_DISPATCH_NG_CFUNC_DEF("palt",   api_palt ),
         JS_DISPATCH_CFUNC_DEF("pset",   3, api_pset ),
         JS_DISPATCH_CFUNC_DEF("spr",    7, api_spr ),
         JS_DISPATCH_CFUNC_DEF("rect",   5, api_rect ),
