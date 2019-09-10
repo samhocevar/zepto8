@@ -128,6 +128,7 @@ vm::vm()
         JS_DISPATCH_CFUNC_DEF("rnd",      api_rnd),
         JS_DISPATCH_CFUNC_DEF("mid",      api_mid),
         JS_DISPATCH_CFUNC_DEF("mus",      api_mus),
+        JS_DISPATCH_CFUNC_DEF("sfx",      api_sfx),
         JS_DISPATCH_CFUNC_DEF("btn",      api_btn),
         JS_DISPATCH_CFUNC_DEF("btnp",     api_btnp),
     };

@@ -69,6 +69,7 @@ private:
     double api_rnd(std::optional<double> x);
     double api_mid(double x, double y, double z);
     void api_mus(int n);
+    void api_sfx(int a, int b, int c, int d);
 
 private:
     struct JSRuntime *m_rt;

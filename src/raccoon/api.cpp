@@ -249,5 +249,10 @@ void vm::api_mus(int n)
     lol::msg::info("stub: mus(%d)\n", n);
 }
 
+void vm::api_sfx(int a, int b, int c, int d)
+{
+    lol::msg::info("stub: sfx(%d, %d, %d, %d)\n", a, b, c, d);
+}
+
 }
 
