@@ -221,7 +221,8 @@ void vm::api_print(int x, int y, std::string str, int c)
 
 double vm::api_rnd(std::optional<double> x)
 {
-    return lol::rand(x.has_value() ? x.value() : 1.0);
+    return x.has_value() ? std::floor(lol::rand(x.value()))
+                         : lol::rand(1.0);
 }
 
 double vm::api_mid(double x, double y, double z)
