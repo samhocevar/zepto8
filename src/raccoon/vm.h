@@ -14,10 +14,6 @@
 
 #include <lol/engine.h>
 
-extern "C" {
-#include "quickjs/quickjs.h"
-}
-
 #include <optional>
 
 #include "zepto8.h"
@@ -48,8 +44,6 @@ public:
     virtual void keyboard(char ch);
 
 private:
-    std::string get_property_str(JSValue obj, char const *name);
-
     int api_read(int p);
     void api_write(int p, int x);
     void api_palset(int n, int r, int g, int b);
@@ -76,14 +70,9 @@ private:
     double api_mid(double x, double y, double z);
     void api_mus(int n);
 
-    static void dump_error(JSContext *ctx);
-
-    static int eval_buf(JSContext *ctx, std::string const &code,
-                        const char *filename, int eval_flags);
-
 private:
-    JSRuntime *m_rt;
-    JSContext *m_ctx;
+    struct JSRuntime *m_rt;
+    struct JSContext *m_ctx;
 
     std::string m_code;
     std::string m_name, m_link, m_host;

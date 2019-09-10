@@ -16,10 +16,6 @@
 
 #include <lol/engine.h>
 
-extern "C" {
-#include "quickjs/quickjs.h"
-}
-
 #include "zepto8.h"
 #include "raccoon/vm.h"
 #include "raccoon/font.h"

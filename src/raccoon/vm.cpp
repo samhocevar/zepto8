@@ -28,6 +28,12 @@ extern "C" {
 namespace z8::raccoon
 {
 
+static std::string get_property_str(JSContext *ctx, JSValue obj,
+                                    char const *name);
+static void dump_error(JSContext *ctx);
+static int eval_buf(JSContext *ctx, std::string const &code,
+                    const char *filename, int eval_flags);
+
 // Count arguments in a T::* member function prototype
 template<typename T, typename R, typename... A>
 constexpr int count_args(R (T::*)(A...)) { return (int)sizeof...(A); }
@@ -138,19 +144,6 @@ vm::~vm()
 {
 }
 
-std::string vm::get_property_str(JSValue obj, char const *name)
-{
-    JSValue prop = JS_GetPropertyStr(m_ctx, obj, name);
-    if (JS_IsUndefined(prop))
-        return "";
-
-    char const *tmp = JS_ToCString(m_ctx, prop);
-    std::string ret(tmp);
-    JS_FreeCString(m_ctx, tmp);
-    JS_FreeValue(m_ctx, prop);
-    return ret;
-}
-
 void vm::load(char const *file)
 {
     std::string s;
@@ -179,9 +172,9 @@ void vm::load(char const *file)
         return;
     }
 
-    m_name = get_property_str(bin, "name");
-    m_host = get_property_str(bin, "host");
-    m_link = get_property_str(bin, "link");
+    m_name = get_property_str(m_ctx, bin, "name");
+    m_host = get_property_str(m_ctx, bin, "host");
+    m_link = get_property_str(m_ctx, bin, "link");
 
     JSValue version = JS_GetPropertyStr(m_ctx, bin, "version");
     if (!JS_IsUndefined(version))
@@ -321,7 +314,20 @@ std::function<void(void *, int)> vm::get_streamer(int channel)
     return [](void *, int) {};
 }
 
-void vm::dump_error(JSContext *ctx)
+static std::string get_property_str(JSContext *ctx, JSValue obj, char const *name)
+{
+    JSValue prop = JS_GetPropertyStr(ctx, obj, name);
+    if (JS_IsUndefined(prop))
+        return "";
+
+    char const *tmp = JS_ToCString(ctx, prop);
+    std::string ret(tmp);
+    JS_FreeCString(ctx, tmp);
+    JS_FreeValue(ctx, prop);
+    return ret;
+}
+
+static void dump_error(JSContext *ctx)
 {
     JSValue exception_val = JS_GetException(ctx);
     int is_error = JS_IsError(ctx, exception_val);
@@ -349,8 +355,8 @@ void vm::dump_error(JSContext *ctx)
     JS_FreeValue(ctx, exception_val);
 }
 
-int vm::eval_buf(JSContext *ctx, std::string const &code,
-                 const char *filename, int eval_flags)
+static int eval_buf(JSContext *ctx, std::string const &code,
+                    const char *filename, int eval_flags)
 {
     int ret = 0;
     JSValue val = JS_Eval(ctx, code.c_str(), code.length(), filename, eval_flags);
