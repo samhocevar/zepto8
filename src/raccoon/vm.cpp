@@ -246,7 +246,7 @@ void vm::run()
     lol::msg::debug("running bin version %d (%s)\n", m_version, m_name.c_str());
 
     memset(&m_ram, 0, sizeof(m_ram));
-    memcpy(&m_ram, &m_rom, sizeof(m_rom));
+    memcpy(&m_ram, &m_rom, offsetof(decltype(m_ram), padding1));
     for (int i = 0; i < 16; ++i)
         m_ram.palmod[i] = i;
 
