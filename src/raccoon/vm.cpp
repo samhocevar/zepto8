@@ -72,15 +72,13 @@ template<auto FN>
 static JSValue dispatch2(JSContext *ctx, JSValueConst this_val,
                          int argc, JSValueConst *argv)
 {
-    static_assert(count_args(FN) == 2);
-
-    std::array<int, count_args(FN)> tmp;
-    for (size_t i = 0; i < tmp.size(); ++i)
-        if (JS_ToInt32(ctx, &tmp[i], argv[i]))
+    std::array<int, count_args(FN)> args;
+    for (size_t i = 0; i < args.size(); ++i)
+        if (JS_ToInt32(ctx, &args[i], argv[i]))
             return JS_EXCEPTION;
 
     auto f = js_wrap(ctx, FN);
-    return f(tmp[0], tmp[1]);
+    return std::apply(f, args);
 }
 
 #define JS_DISPATCH_NG_CFUNC_DEF(name, func) \
@@ -93,29 +91,29 @@ vm::vm()
 
     static const JSCFunctionListEntry js_rcn_funcs[] =
     {
-        JS_DISPATCH_CFUNC_DEF("read",   1, api_read ),
+        JS_DISPATCH_NG_CFUNC_DEF("read",   api_read ),
         JS_DISPATCH_NG_CFUNC_DEF("write",  api_write ),
 
-        JS_DISPATCH_CFUNC_DEF("palset", 4, api_palset ),
+        JS_DISPATCH_NG_CFUNC_DEF("palset", api_palset ),
         JS_DISPATCH_CFUNC_DEF("fget",   2, api_fget ),
         JS_DISPATCH_CFUNC_DEF("fset",   3, api_fset ),
         JS_DISPATCH_NG_CFUNC_DEF("mget",   api_mget ),
-        JS_DISPATCH_CFUNC_DEF("mset",   3, api_mset ),
+        JS_DISPATCH_NG_CFUNC_DEF("mset",   api_mset ),
 
         JS_DISPATCH_CFUNC_DEF("cls",    1, api_cls ),
         JS_DISPATCH_NG_CFUNC_DEF("cam",    api_cam ),
-        JS_DISPATCH_CFUNC_DEF("map",    6, api_map ),
+        JS_DISPATCH_NG_CFUNC_DEF("map",    api_map ),
         JS_DISPATCH_NG_CFUNC_DEF("palm",   api_palm ),
         JS_DISPATCH_NG_CFUNC_DEF("palt",   api_palt ),
-        JS_DISPATCH_CFUNC_DEF("pset",   3, api_pset ),
+        JS_DISPATCH_NG_CFUNC_DEF("pset",   api_pset ),
         JS_DISPATCH_CFUNC_DEF("spr",    7, api_spr ),
-        JS_DISPATCH_CFUNC_DEF("rect",   5, api_rect ),
-        JS_DISPATCH_CFUNC_DEF("rectfill", 5, api_rectfill ),
+        JS_DISPATCH_NG_CFUNC_DEF("rect",   api_rect ),
+        JS_DISPATCH_NG_CFUNC_DEF("rectfill", api_rectfill ),
         JS_DISPATCH_CFUNC_DEF("print",  4, api_print ),
 
         JS_DISPATCH_CFUNC_DEF("rnd",    1, api_rnd ),
         JS_DISPATCH_CFUNC_DEF("mid",    3, api_mid ),
-        JS_DISPATCH_CFUNC_DEF("mus",    1, api_mus ),
+        JS_DISPATCH_NG_CFUNC_DEF("mus",    api_mus ),
         JS_DISPATCH_CFUNC_DEF("btnp",   2, api_btnp ),
     };
 

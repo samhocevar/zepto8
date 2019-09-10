@@ -39,12 +39,9 @@ template<typename T> static uint8_t getpixel(T const &data, int x, int y)
     return (x & 1 ? p >> 4 : p) & 0xf;
 }
 
-JSValue vm::api_read(int argc, JSValueConst *argv)
+int vm::api_read(int p)
 {
-    int p;
-    if (JS_ToInt32(m_ctx, &p, argv[0]))
-        return JS_EXCEPTION;
-    return JS_NewInt32(m_ctx, m_ram[p & 0xffff]);
+    return m_ram[p & 0xffff];
 }
 
 void vm::api_write(int p, int x)
@@ -52,34 +49,16 @@ void vm::api_write(int p, int x)
     m_ram[p & 0xffff] = x;
 }
 
-JSValue vm::api_palset(int argc, JSValueConst *argv)
+void vm::api_palset(int n, int r, int g, int b)
 {
-    int n, r, g, b;
-    if (JS_ToInt32(m_ctx, &n, argv[0]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &r, argv[1]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &g, argv[2]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &b, argv[3]))
-        return JS_EXCEPTION;
     m_ram.palette[n & 0xf] = lol::u8vec3(r, g, b);
-    return JS_UNDEFINED;
 }
 
-JSValue vm::api_pset(int argc, JSValueConst *argv)
+void vm::api_pset(int x, int y, int c)
 {
-    int x, y, c;
-    if (JS_ToInt32(m_ctx, &x, argv[0]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &y, argv[1]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &c, argv[2]))
-        return JS_EXCEPTION;
     if (x < 0 || x >= 128 || y < 0 || y >= 64)
-        return JS_UNDEFINED;
+        return;
     setpixel(m_ram.screen, x, y, c & 15);
-    return JS_UNDEFINED;
 }
 
 void vm::api_palm(int c0, int c1)
@@ -155,21 +134,8 @@ void vm::api_cam(int x, int y)
     m_ram.camera.y = (int16_t)y;
 }
 
-JSValue vm::api_map(int argc, JSValueConst *argv)
+void vm::api_map(int celx, int cely, int sx, int sy, int celw, int celh)
 {
-    int celx, cely, sx, sy, celw, celh;
-    if (JS_ToInt32(m_ctx, &celx, argv[0]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &cely, argv[1]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &sx, argv[2]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &sy, argv[3]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &celw, argv[4]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &celh, argv[5]))
-        return JS_EXCEPTION;
     sx -= m_ram.camera.x;
     sy -= m_ram.camera.y;
     for (int y = 0; y < celh; ++y)
@@ -197,39 +163,15 @@ JSValue vm::api_map(int argc, JSValueConst *argv)
             setpixel(m_ram.screen, startx + dx, starty + dy, c);
         }
     }
-    return JS_UNDEFINED;
 }
 
-JSValue vm::api_rect(int argc, JSValueConst *argv)
+void vm::api_rect(int x, int y, int w, int h, int c)
 {
-    int x, y, z, t, u;
-    if (JS_ToInt32(m_ctx, &x, argv[0]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &y, argv[1]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &z, argv[2]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &t, argv[3]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &u, argv[4]))
-        return JS_EXCEPTION;
-    lol::msg::info("stub: rect(%d, %d, %d, %d, %d)\n", x, y, z, t, u);
-    return JS_NewInt32(m_ctx, x);
+    lol::msg::info("stub: rect(%d, %d, %d, %d, %d)\n", x, y, w, h, c);
 }
 
-JSValue vm::api_rectfill(int argc, JSValueConst *argv)
+void vm::api_rectfill(int x, int y, int w, int h, int c)
 {
-    int x, y, w, h, c;
-    if (JS_ToInt32(m_ctx, &x, argv[0]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &y, argv[1]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &w, argv[2]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &h, argv[3]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &c, argv[4]))
-        return JS_EXCEPTION;
     x -= m_ram.camera.x;
     y -= m_ram.camera.y;
     int x0 = std::max(x, 0);
@@ -239,7 +181,6 @@ JSValue vm::api_rectfill(int argc, JSValueConst *argv)
     for (y = y0; y <= y1; ++y)
         for (x = x0; x <= x1; ++x)
             setpixel(m_ram.screen, x, y, c & 15);
-    return JS_NewInt32(m_ctx, x);
 }
 
 JSValue vm::api_spr(int argc, JSValueConst *argv)
@@ -350,28 +291,16 @@ int vm::api_mget(int x, int y)
     return m_ram.map[y][x];
 }
 
-JSValue vm::api_mset(int argc, JSValueConst *argv)
+void vm::api_mset(int x, int y, int n)
 {
-    int x, y, n;
-    if (JS_ToInt32(m_ctx, &x, argv[0]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &y, argv[1]))
-        return JS_EXCEPTION;
-    if (JS_ToInt32(m_ctx, &n, argv[2]))
-        return JS_EXCEPTION;
     if (x < 0 || x >= 128 || y < 0 || y >= 64)
-        return JS_UNDEFINED;
+        return;
     m_ram.map[y][x] = n;
-    return JS_UNDEFINED;
 }
 
-JSValue vm::api_mus(int argc, JSValueConst *argv)
+void vm::api_mus(int n)
 {
-    int n;
-    if (JS_ToInt32(m_ctx, &n, argv[0]))
-        return JS_EXCEPTION;
     lol::msg::info("stub: mus(%d)\n", n);
-    return JS_UNDEFINED;
 }
 
 }

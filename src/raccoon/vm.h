@@ -48,28 +48,28 @@ public:
 private:
     std::string get_property_str(JSValue obj, char const *name);
 
-    JSValue api_read(int argc, JSValueConst *argv);
+    int api_read(int p);
     void api_write(int p, int x);
-    JSValue api_palset(int argc, JSValueConst *argv);
+    void api_palset(int n, int r, int g, int b);
     JSValue api_fget(int argc, JSValueConst *argv);
     JSValue api_fset(int argc, JSValueConst *argv);
     int api_mget(int x, int y);
-    JSValue api_mset(int argc, JSValueConst *argv);
-    JSValue api_pset(int argc, JSValueConst *argv);
+    void api_mset(int x, int y, int n);
+    void api_pset(int x, int y, int c);
 
     void api_palm(int c0, int c1);
     void api_palt(int c, int v);
     JSValue api_btnp(int argc, JSValueConst *argv);
     JSValue api_cls(int argc, JSValueConst *argv);
     void api_cam(int x, int y);
-    JSValue api_map(int argc, JSValueConst *argv);
-    JSValue api_rect(int argc, JSValueConst *argv);
-    JSValue api_rectfill(int argc, JSValueConst *argv);
+    void api_map(int celx, int cely, int sx, int sy, int celw, int celh);
+    void api_rect(int x, int y, int w, int h, int c);
+    void api_rectfill(int x, int y, int w, int h, int c);
     JSValue api_spr(int argc, JSValueConst *argv);
     JSValue api_print(int argc, JSValueConst *argv);
     JSValue api_rnd(int argc, JSValueConst *argv);
     JSValue api_mid(int argc, JSValueConst *argv);
-    JSValue api_mus(int argc, JSValueConst *argv);
+    void api_mus(int n);
 
     static void dump_error(JSContext *ctx);
 
