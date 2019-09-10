@@ -46,13 +46,22 @@ static JSValue dispatch(JSContext *ctx, JSValueConst this_val,
 template<typename T, typename R, typename... A>
 constexpr int count_args(R (T::*)(A...)) { return (int)sizeof...(A); }
 
+// Declare a tuple matching the arguments of a T::* member function
+template<typename T, typename R, typename... A>
+auto js_tuple(R (T::*)(A...)) { return std::tuple<A...>(); }
+
 // Convert a standard type to a JSValue
 JSValue js_box(JSContext *ctx, int const &x) { return JS_NewInt32(ctx, x); }
 JSValue js_box(JSContext *ctx, double const &x) { return JS_NewFloat64(ctx, x); }
 
-// Convert a T::* member function to a lambda taking the same arguments,
-// retrieving “this” from the JS context, and converting the return value
-// to a JSValue. Some specialisation is needed when returning void.
+// Convert a JSValue to a standard type
+static void js_unbox(JSContext *ctx, int &arg, JSValueConst jsval) { JS_ToInt32(ctx, &arg, jsval); }
+static void js_unbox(JSContext *ctx, double &arg, JSValueConst jsval) { JS_ToFloat64(ctx, &arg, jsval); }
+
+// Convert a T::* member function to a lambda taking the same arguments.
+// That lambda also retrieves “this” from the JS context, and converts
+// the return value to a JSValue. Some specialisation is needed when the
+// original function returns void.
 template<typename T, typename R, typename... A>
 static inline auto js_wrap(JSContext *ctx, R (T::*f)(A...))
 {
@@ -72,11 +81,15 @@ template<auto FN>
 static JSValue dispatch2(JSContext *ctx, JSValueConst this_val,
                          int argc, JSValueConst *argv)
 {
-    std::array<int, count_args(FN)> args;
-    for (size_t i = 0; i < args.size(); ++i)
-        if (JS_ToInt32(ctx, &args[i], argv[i]))
-            return JS_EXCEPTION;
+    // Create the argument list tuple
+    auto args = js_tuple(FN);
 
+    // Load arguments from argv into the tuple, with type safety. Uses the
+    // technique presented in https://stackoverflow.com/a/54053084/111461
+    int i = 0;
+    std::apply([&](auto&&... arg) {((i < argc ? js_unbox(ctx, arg, argv[i++]) : i++), ...);}, args);
+
+    // Call the API function with the loaded arguments
     auto f = js_wrap(ctx, FN);
     return std::apply(f, args);
 }
@@ -112,7 +125,7 @@ vm::vm()
         JS_DISPATCH_CFUNC_DEF("print",  4, api_print ),
 
         JS_DISPATCH_CFUNC_DEF("rnd",    1, api_rnd ),
-        JS_DISPATCH_CFUNC_DEF("mid",    3, api_mid ),
+        JS_DISPATCH_NG_CFUNC_DEF("mid",    api_mid ),
         JS_DISPATCH_NG_CFUNC_DEF("mus",    api_mus ),
         JS_DISPATCH_CFUNC_DEF("btnp",   2, api_btnp ),
     };

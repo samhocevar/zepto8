@@ -68,7 +68,7 @@ private:
     JSValue api_spr(int argc, JSValueConst *argv);
     JSValue api_print(int argc, JSValueConst *argv);
     JSValue api_rnd(int argc, JSValueConst *argv);
-    JSValue api_mid(int argc, JSValueConst *argv);
+    double api_mid(double x, double y, double z);
     void api_mus(int n);
 
     static void dump_error(JSContext *ctx);

@@ -270,18 +270,10 @@ JSValue vm::api_rnd(int argc, JSValueConst *argv)
     return JS_NewFloat64(m_ctx, lol::rand(x));
 }
 
-JSValue vm::api_mid(int argc, JSValueConst *argv)
+double vm::api_mid(double x, double y, double z)
 {
-    double x, y, z, ret;
-    if (JS_ToFloat64(m_ctx, &x, argv[0]))
-        return JS_EXCEPTION;
-    if (JS_ToFloat64(m_ctx, &y, argv[1]))
-        return JS_EXCEPTION;
-    if (JS_ToFloat64(m_ctx, &z, argv[2]))
-        return JS_EXCEPTION;
-    ret = x > y ? y > z ? y : std::min(x, z)
-                : x > z ? x : std::min(y, z);
-    return JS_NewFloat64(m_ctx, ret);
+    return x > y ? y > z ? y : std::min(x, z)
+                 : x > z ? x : std::min(y, z);
 }
 
 int vm::api_mget(int x, int y)
