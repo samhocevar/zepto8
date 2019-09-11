@@ -57,6 +57,13 @@ void vm::api_pset(int x, int y, int c)
     setpixel(m_ram.screen, x, y, c & 15);
 }
 
+int vm::api_pget(int x, int y)
+{
+    if (x < 0 || x >= 128 || y < 0 || y >= 64)
+        return 0;
+    return getpixel(m_ram.screen, x, y);
+}
+
 void vm::api_palm(int c0, int c1)
 {
     uint8_t &data = m_ram.palmod[c0 & 0xf];
@@ -147,20 +154,39 @@ void vm::api_map(int celx, int cely, int sx, int sy, int celw, int celh)
 
 void vm::api_rect(int x, int y, int w, int h, int c)
 {
-    lol::msg::info("stub: rect(%d, %d, %d, %d, %d)\n", x, y, w, h, c);
+    x -= m_ram.camera.x;
+    y -= m_ram.camera.y;
+    c = m_ram.palmod[c & 0xf] & 0xf;
+    int x0 = std::max(x, 0);
+    int x1 = std::min(x + w, 127);
+    if (y >= 0 && y < 128)
+        for (int dx = x0; dx <= x1; ++dx)
+            setpixel(m_ram.screen, dx, y, c);
+    if (y + h - 1 >= 0 && y + h - 1 < 128)
+        for (int dx = x0; dx <= x1; ++dx)
+            setpixel(m_ram.screen, dx, y + h - 1, c);
+    int y0 = std::max(y, 0);
+    int y1 = std::min(y + h, 127);
+    if (x >= 0 && x < 128)
+        for (int dy = y0; dy <= y1; ++dy)
+            setpixel(m_ram.screen, x, dy, c);
+    if (x + w - 1 >= 0 && x + w - 1 < 128)
+        for (int dy = y0; dy <= y1; ++dy)
+            setpixel(m_ram.screen, x + w - 1, dy, c);
 }
 
 void vm::api_rectfill(int x, int y, int w, int h, int c)
 {
     x -= m_ram.camera.x;
     y -= m_ram.camera.y;
+    c = m_ram.palmod[c & 0xf] & 0xf;
     int x0 = std::max(x, 0);
     int x1 = std::min(x + w, 127);
     int y0 = std::max(y, 0);
     int y1 = std::min(y + h, 127);
-    for (y = y0; y <= y1; ++y)
-        for (x = x0; x <= x1; ++x)
-            setpixel(m_ram.screen, x, y, c & 15);
+    for (int dy = y0; dy <= y1; ++dy)
+        for (int dx = x0; dx <= x1; ++dx)
+            setpixel(m_ram.screen, dx, dy, c);
 }
 
 void vm::api_spr(int n, int x, int y,

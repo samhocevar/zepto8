@@ -119,6 +119,7 @@ vm::vm()
         JS_DISPATCH_CFUNC_DEF("map",      api_map),
         JS_DISPATCH_CFUNC_DEF("palm",     api_palm),
         JS_DISPATCH_CFUNC_DEF("palt",     api_palt),
+        JS_DISPATCH_CFUNC_DEF("pget",     api_pget),
         JS_DISPATCH_CFUNC_DEF("pset",     api_pset),
         JS_DISPATCH_CFUNC_DEF("spr",      api_spr),
         JS_DISPATCH_CFUNC_DEF("rect",     api_rect),
@@ -261,8 +262,10 @@ void vm::run()
         "atan2 = Math.atan2;\n"
         "abs = Math.abs;\n"
         "flr = Math.floor;\n"
+        "ceil = Math.ceil;\n"
         "sign = Math.sign;\n"
         "sqrt = Math.sqrt;\n"
+        "r = rnd; p = pset; c = cls; b = btn;\n"
         "if (typeof init != 'undefined') init();\n";
     eval_buf(m_ctx, code, "<run_code>", JS_EVAL_TYPE_GLOBAL);
 }

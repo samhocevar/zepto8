@@ -51,6 +51,7 @@ private:
     void api_fset(int n, int f, std::optional<int> v);
     int api_mget(int x, int y);
     void api_mset(int x, int y, int n);
+    int api_pget(int x, int y);
     void api_pset(int x, int y, int c);
 
     void api_palm(int c0, int c1);
