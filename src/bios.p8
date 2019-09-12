@@ -57,6 +57,7 @@ do
     function add(a, x) if a != nil then insert(a, x) end return x end
     sub = string.sub
 
+    local ipairs = ipairs
     function foreach(a, f)
         if a != nil then for k, v in ipairs(a) do f(v) end end
     end
@@ -78,6 +79,7 @@ do
     t = time
 
     -- Use the new peek4() and poke4() functions
+    local tonumber = tonumber
     function dget(n)
         n = tonumber(n)
         return n >= 0 and n < 64 and peek4(0x5e00 + 4 * n) or 0
