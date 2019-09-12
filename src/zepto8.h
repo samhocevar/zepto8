@@ -23,6 +23,11 @@
 namespace z8
 {
 
+namespace pico8
+{
+    class bios; // TODO: get rid of this
+}
+
 using lol::u8vec4;
 
 //
@@ -50,6 +55,13 @@ public:
     virtual void button(int index, int state) = 0;
     virtual void mouse(lol::ivec2 coords, int buttons) = 0;
     virtual void keyboard(char ch) = 0;
+
+    // Memory (TODO: switch to std::span one day…)
+    virtual std::tuple<uint8_t *, size_t> ram() = 0;
+    virtual std::tuple<uint8_t *, size_t> rom() = 0;
+
+protected:
+    std::unique_ptr<pico8::bios> m_bios; // TODO: get rid of this
 };
 
 //

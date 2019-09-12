@@ -50,11 +50,8 @@ public:
     virtual void mouse(lol::ivec2 coords, int buttons);
     virtual void keyboard(char ch);
 
-    inline memory &get_ram() { return m_ram; }
-    inline memory const &get_ram() const { return m_ram; }
-
-    inline memory &get_rom() { return m_cart.get_rom(); }
-    inline memory const &get_rom() const { return m_cart.get_rom(); }
+    virtual std::tuple<uint8_t *, size_t> ram();
+    virtual std::tuple<uint8_t *, size_t> rom();
 
     void print_ansi(lol::ivec2 term_size = lol::ivec2(128, 128),
                     uint8_t const *prev_screen = nullptr) const;
@@ -143,7 +140,6 @@ private:
 
 private:
     lua_State *m_lua;
-    bios m_bios;
     cart m_cart;
     memory m_ram;
 

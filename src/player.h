@@ -44,10 +44,8 @@ public:
     lol::Texture *get_texture();
     lol::Texture *get_font_texture();
 
-#if 0 // FIXME: PICO-8 specific
-    uint8_t *get_ram() { return (uint8_t *)&m_vm.get_ram(); }
-    uint8_t *get_rom() { return (uint8_t *)&m_vm.m_cart.get_rom(); }
-#endif
+    std::tuple<uint8_t *, size_t> ram() { return m_vm->ram(); }
+    std::tuple<uint8_t *, size_t> rom() { return m_vm->rom(); }
 
 private:
     std::shared_ptr<vm_base> m_vm;

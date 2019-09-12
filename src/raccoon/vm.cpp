@@ -22,6 +22,7 @@ extern "C" {
 
 #include "zepto8.h"
 #include "raccoon/vm.h"
+#include "bios.h" // TODO: remove references to PICO-8 stuff
 
 namespace z8::raccoon
 {
@@ -147,7 +148,7 @@ void vm::run()
     lol::msg::debug("running bin version %d (%s)\n", m_version, m_name.c_str());
 
     memset(&m_ram, 0, sizeof(m_ram));
-    memcpy(&m_ram, &m_rom, offsetof(decltype(m_ram), padding1));
+    memcpy(&m_ram, &m_rom, offsetof(decltype(m_ram), end_of_rom));
     for (int i = 0; i < 16; ++i)
         m_ram.palmod[i] = i;
 
@@ -220,6 +221,16 @@ void vm::render(lol::u8vec4 *screen) const
 std::function<void(void *, int)> vm::get_streamer(int channel)
 {
     return [](void *, int) {};
+}
+
+std::tuple<uint8_t *, size_t> vm::ram()
+{
+    return std::make_tuple(&m_ram[0], sizeof(m_ram));
+}
+
+std::tuple<uint8_t *, size_t> vm::rom()
+{
+    return std::make_tuple(&m_rom[0], offsetof(decltype(m_rom), end_of_rom));
 }
 
 static std::string get_property_str(JSContext *ctx, JSValue obj, char const *name)

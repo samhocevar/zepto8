@@ -43,6 +43,9 @@ public:
     virtual void mouse(lol::ivec2 coords, int buttons);
     virtual void keyboard(char ch);
 
+    virtual std::tuple<uint8_t *, size_t> ram();
+    virtual std::tuple<uint8_t *, size_t> rom();
+
 private:
     void js_wrap();
 

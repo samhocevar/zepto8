@@ -17,6 +17,7 @@
 #include <lol/engine.h>
 
 #include "pico8/vm.h"
+#include "bios.h"
 
 namespace z8::pico8
 {
@@ -245,7 +246,7 @@ int vm::api_print(lua_State *l)
                     int16_t screen_x = (int16_t)x - ds.camera.x() + dx;
                     int16_t screen_y = (int16_t)y - ds.camera.y() + dy;
 
-                    if (m_bios.get_spixel(font_x + dx, font_y + dy))
+                    if (m_bios->get_spixel(font_x + dx, font_y + dy))
                         set_pixel(screen_x, screen_y, color_bits);
                 }
 

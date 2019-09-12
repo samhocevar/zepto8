@@ -166,20 +166,19 @@ void player::tick_draw(float seconds, lol::Scene &scene)
     // Render the VM screen to our buffer
     m_vm->render(m_screen.data());
 
-#if 0 // FIXME: PICO-8 specific
+    if (m_vm->m_bios) // FIXME: PICO-8 specific
     {
         // Render the font
         u8vec4 data[128 * 32];
         for (int j = 0; j < 32; ++j)
         for (int i = 0; i < 128; ++i)
         {
-            auto p = m_vm->m_bios.get_spixel(i, j);
+            auto p = m_vm->m_bios->get_spixel(i, j);
             data[j * 128 + i] = p ? palette::get8(p) : u8vec4(0);
         }
         m_font_tile->GetTexture()->Bind();
         m_font_tile->GetTexture()->SetData(data);
     }
-#endif
 
     // Blit buffer to the texture
     // FIXME: move this to some kind of memory viewer class?

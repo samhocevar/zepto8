@@ -353,9 +353,8 @@ void ide::render_windows()
         ImGui::SetNextWindowSize(lol::ivec2(512, 256), ImGuiCond_FirstUseEver);
         if (ImGui::Begin("ROM", &m_show.rom))
         {
-#if 0 // FIXME: PICO-8 specific
-            m_rom_edit.DrawContents(m_player->get_rom(), 0x5e00);
-#endif
+            auto rom = m_player->rom();
+            m_rom_edit.DrawContents(std::get<0>(rom), std::get<1>(rom));
         }
         ImGui::End();
     }
@@ -367,9 +366,8 @@ void ide::render_windows()
         ImGui::SetNextWindowSize(lol::ivec2(512, 246), ImGuiCond_FirstUseEver);
         if (ImGui::Begin("RAM", &m_show.ram))
         {
-#if 0 // FIXME: PICO-8 specific
-            m_ram_edit.DrawContents(m_player->get_ram(), 0x8000);
-#endif
+            auto ram = m_player->ram();
+            m_ram_edit.DrawContents(std::get<0>(ram), std::get<1>(ram));
         }
         ImGui::End();
     }
