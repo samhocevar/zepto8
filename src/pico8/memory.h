@@ -158,7 +158,7 @@ struct memory
     // This union handles the gfx/map shared section
     union
     {
-        screen<128, 128> gfx;
+        u4mat2<128, 128> gfx;
 
         struct
         {
@@ -215,7 +215,7 @@ struct memory
             uint8_t gpio_pins[0x80];
 
             // The screen
-            screen<128, 128> screen;
+            u4mat2<128, 128> screen;
         };
     };
 

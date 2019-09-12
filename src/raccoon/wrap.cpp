@@ -79,7 +79,7 @@ static inline auto js_wrap(JSContext *ctx, void (T::*f)(A...))
 
 // Helper to dispatch C++ functions to JS C bindings
 template<auto FN>
-static JSValue dispatch(JSContext *ctx, JSValueConst this_val,
+static JSValue dispatch(JSContext *ctx, JSValueConst,
                         int argc, JSValueConst *argv)
 {
     // Create the argument list tuple

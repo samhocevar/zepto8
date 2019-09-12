@@ -69,7 +69,7 @@ protected:
 //
 
 template<int W, int H>
-class screen
+class u4mat2
 {
 public:
     inline uint8_t get(int x, int y) const
