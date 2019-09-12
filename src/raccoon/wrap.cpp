@@ -44,9 +44,9 @@ static JSValue js_box(JSContext *ctx, double x) { return JS_NewFloat64(ctx, x); 
 // Convert a JSValue to a standard type
 template<typename T> static void js_unbox(JSContext *ctx, T &, JSValueConst jsval);
 
-template<> static void js_unbox(JSContext *ctx, int &arg, JSValueConst jsval) { JS_ToInt32(ctx, &arg, jsval); }
-template<> static void js_unbox(JSContext *ctx, double &arg, JSValueConst jsval) { JS_ToFloat64(ctx, &arg, jsval); }
-template<> static void js_unbox(JSContext *ctx, std::string &str, JSValueConst jsval)
+template<> void js_unbox(JSContext *ctx, int &arg, JSValueConst jsval) { JS_ToInt32(ctx, &arg, jsval); }
+template<> void js_unbox(JSContext *ctx, double &arg, JSValueConst jsval) { JS_ToFloat64(ctx, &arg, jsval); }
+template<> void js_unbox(JSContext *ctx, std::string &str, JSValueConst jsval)
 {
     char const *data = JS_ToCString(ctx, jsval);
     str = std::string(data);
@@ -54,7 +54,7 @@ template<> static void js_unbox(JSContext *ctx, std::string &str, JSValueConst j
 }
 
 // Unboxing to std::optional always unboxes
-template<typename T> static void js_unbox(JSContext *ctx, std::optional<T> &arg, JSValueConst jsval)
+template<typename T> void js_unbox(JSContext *ctx, std::optional<T> &arg, JSValueConst jsval)
 {
     js_unbox(ctx, *(arg = T()), jsval);
 }
@@ -88,7 +88,7 @@ static JSValue dispatch(JSContext *ctx, JSValueConst this_val,
     // Load arguments from argv into the tuple, with type safety. Uses the
     // technique presented in https://stackoverflow.com/a/54053084/111461
     int i = 0;
-    std::apply([&](auto&&... arg) {((i < argc ? js_unbox(ctx, arg, argv[i++]) : i++), ...);}, args);
+    std::apply([&](auto&&... arg) {((i < argc ? js_unbox(ctx, arg, argv[i++]), 0 : i++), ...);}, args);
 
     // Call the API function with the loaded arguments
     auto f = js_wrap(ctx, FN);

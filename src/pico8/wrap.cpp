@@ -35,11 +35,11 @@ static void lua_push(lua_State *l, fix32 x) { lua_pushnumber(l, x); }
 // Get a standard type from the Lua stack
 template<typename T> static void lua_get(lua_State *l, int i, T &);
 
-template<> static void lua_get(lua_State *l, int i, fix32 &arg) { arg = lua_tonumber(l, i); }
-template<> static void lua_get(lua_State *l, int i, int16_t &arg) { arg = (int16_t)lua_tonumber(l, i); }
+template<> void lua_get(lua_State *l, int i, fix32 &arg) { arg = lua_tonumber(l, i); }
+template<> void lua_get(lua_State *l, int i, int16_t &arg) { arg = (int16_t)lua_tonumber(l, i); }
 
 // Unboxing to std::optional checks for lua_isnone() first
-template<typename T> static void lua_get(lua_State *l, int i, std::optional<T> &arg)
+template<typename T> void lua_get(lua_State *l, int i, std::optional<T> &arg)
 {
     if (!lua_isnone(l, i))
         lua_get(l, i, *(arg = T()));
