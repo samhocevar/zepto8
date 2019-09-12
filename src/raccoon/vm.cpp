@@ -277,5 +277,5 @@ static int eval_buf(JSContext *ctx, std::string const &code,
     return ret;
 }
 
-}
+} // namespace z8::raccoon
 

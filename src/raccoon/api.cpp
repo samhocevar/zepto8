@@ -268,5 +268,5 @@ void vm::api_sfx(int a, int b, int c, int d)
     lol::msg::info("stub: sfx(%d, %d, %d, %d)\n", a, b, c, d);
 }
 
-}
+} // namespace z8::raccoon
 

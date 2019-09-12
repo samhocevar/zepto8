@@ -16,6 +16,8 @@
 
 #include <lol/engine.h>
 
+#include <optional>
+
 extern "C" {
 #include "quickjs/quickjs.h"
 }
@@ -23,34 +25,38 @@ extern "C" {
 #include "zepto8.h"
 #include "raccoon/vm.h"
 
-#define countof(x) (sizeof(x) / sizeof((x)[0]))
-
 namespace z8::raccoon
 {
 
 // Count arguments in a T::* member function prototype
 template<typename T, typename R, typename... A>
-constexpr int count_args(R (T::*)(A...)) { return (int)sizeof...(A); }
+constexpr uint8_t count_args(R (T::*)(A...)) { return (uint8_t)sizeof...(A); }
 
 // Declare a tuple matching the arguments of a T::* member function
 template<typename T, typename R, typename... A>
-auto js_tuple(R (T::*)(A...)) { return std::tuple<A...>(); }
+static auto js_tuple(R (T::*)(A...)) { return std::tuple<A...>(); }
 
 // Convert a standard type to a JSValue
-JSValue js_box(JSContext *ctx, bool x) { return JS_NewBool(ctx, (int)x); }
-JSValue js_box(JSContext *ctx, int x) { return JS_NewInt32(ctx, x); }
-JSValue js_box(JSContext *ctx, double x) { return JS_NewFloat64(ctx, x); }
+static JSValue js_box(JSContext *ctx, bool x) { return JS_NewBool(ctx, (int)x); }
+static JSValue js_box(JSContext *ctx, int x) { return JS_NewInt32(ctx, x); }
+static JSValue js_box(JSContext *ctx, double x) { return JS_NewFloat64(ctx, x); }
 
 // Convert a JSValue to a standard type
-static void js_unbox(JSContext *ctx, int &arg, JSValueConst jsval) { JS_ToInt32(ctx, &arg, jsval); }
-static void js_unbox(JSContext *ctx, std::optional<int> &arg, JSValueConst jsval) { int tmp = 0; JS_ToInt32(ctx, &tmp, jsval); arg = tmp; }
-static void js_unbox(JSContext *ctx, double &arg, JSValueConst jsval) { JS_ToFloat64(ctx, &arg, jsval); }
-static void js_unbox(JSContext *ctx, std::optional<double> &arg, JSValueConst jsval) { double tmp = 0.0; JS_ToFloat64(ctx, &tmp, jsval); arg = tmp; }
-static void js_unbox(JSContext *ctx, std::string &str, JSValueConst jsval)
+template<typename T> static void js_unbox(JSContext *ctx, T &, JSValueConst jsval);
+
+template<> static void js_unbox(JSContext *ctx, int &arg, JSValueConst jsval) { JS_ToInt32(ctx, &arg, jsval); }
+template<> static void js_unbox(JSContext *ctx, double &arg, JSValueConst jsval) { JS_ToFloat64(ctx, &arg, jsval); }
+template<> static void js_unbox(JSContext *ctx, std::string &str, JSValueConst jsval)
 {
     char const *data = JS_ToCString(ctx, jsval);
     str = std::string(data);
     JS_FreeCString(ctx, data);
+}
+
+// Unboxing to std::optional always unboxes
+template<typename T> static void js_unbox(JSContext *ctx, std::optional<T> &arg, JSValueConst jsval)
+{
+    js_unbox(ctx, *(arg = T()), jsval);
 }
 
 // Convert a T::* member function to a lambda taking the same arguments.
@@ -61,14 +67,14 @@ template<typename T, typename R, typename... A>
 static inline auto js_wrap(JSContext *ctx, R (T::*f)(A...))
 {
     T *that = (T *)JS_GetContextOpaque(ctx);
-    return [ctx, that, f](A... args) -> JSValue { return js_box(ctx, (that->*f)(args...)); };
+    return [=](A... args) -> JSValue { return js_box(ctx, (that->*f)(args...)); };
 }
 
 template<typename T, typename... A>
 static inline auto js_wrap(JSContext *ctx, void (T::*f)(A...))
 {
     T *that = (T *)JS_GetContextOpaque(ctx);
-    return [that, f](A... args) -> JSValue { (that->*f)(args...); return JS_UNDEFINED; };
+    return [=](A... args) -> JSValue { (that->*f)(args...); return JS_UNDEFINED; };
 }
 
 // Helper to dispatch C++ functions to JS C bindings
@@ -94,7 +100,7 @@ static JSValue dispatch(JSContext *ctx, JSValueConst this_val,
 
 void vm::js_wrap()
 {
-    static const JSCFunctionListEntry js_rcn_funcs[] =
+    static std::vector<JSCFunctionListEntry> const funcs =
     {
         JS_DISPATCH_CFUNC_DEF("read",     api_read),
         JS_DISPATCH_CFUNC_DEF("write",    api_write),
@@ -127,9 +133,9 @@ void vm::js_wrap()
 
     // Add functions to global scope
     auto global_obj = JS_GetGlobalObject(m_ctx);
-    JS_SetPropertyFunctionList(m_ctx, global_obj, js_rcn_funcs, countof(js_rcn_funcs));
+    JS_SetPropertyFunctionList(m_ctx, global_obj, funcs.data(), (int)funcs.size());
     JS_FreeValue(m_ctx, global_obj);
 }
 
-}
+} // namespace z8::raccoon
 
