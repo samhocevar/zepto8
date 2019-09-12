@@ -28,9 +28,7 @@ namespace z8
 using lol::msg;
 
 /* Helper to dispatch C++ functions to Lua C bindings */
-typedef int (vm::*api_func)(lua_State *);
-
-template<api_func f> static int dispatch(lua_State *l)
+template<auto FN> static int dispatch(lua_State *l)
 {
 #if HAVE_LUA_GETEXTRASPACE
     vm *that = *static_cast<vm**>(lua_getextraspace(l));
@@ -39,7 +37,7 @@ template<api_func f> static int dispatch(lua_State *l)
     vm *that = (vm *)lua_touserdata(l, -1);
     lua_remove(l, -1);
 #endif
-    return ((*that).*f)(l);
+    return ((*that).*FN)(l);
 }
 
 vm::vm()
