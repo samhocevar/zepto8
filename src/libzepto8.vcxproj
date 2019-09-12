@@ -75,6 +75,7 @@
     <ClCompile Include="pico8\render.cpp" />
     <ClCompile Include="pico8\sfx.cpp" />
     <ClCompile Include="pico8\vm.cpp" />
+    <ClCompile Include="pico8\wrap.cpp" />
     <ClCompile Include="pico8\z8lua.cpp" />
     <ClCompile Include="raccoon\api.cpp" />
     <ClCompile Include="raccoon\vm.cpp" />

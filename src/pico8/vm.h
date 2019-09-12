@@ -93,7 +93,7 @@ private:
     int api_print(lua_State *l);
 
     // Graphics
-    int api_camera(lua_State *l);
+    void api_camera(int16_t x, int16_t y);
     int api_circ(lua_State *l);
     int api_circfill(lua_State *l);
     int api_clip(lua_State *l);
@@ -125,6 +125,8 @@ private:
     int api_time(lua_State *l);
 
 private:
+    void install_lua_api();
+
     uint8_t get_pixel(int16_t x, int16_t y) const;
 
     uint32_t lua_to_color_bits(lua_State *l, int n);

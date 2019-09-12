@@ -286,13 +286,12 @@ int vm::api_print(lua_State *l)
 // Graphics
 //
 
-int vm::api_camera(lua_State *l)
+void vm::api_camera(int16_t x, int16_t y)
 {
     auto &ds = m_ram.draw_state;
 
-    ds.camera.set_x((int16_t)lua_tonumber(l, 1));
-    ds.camera.set_y((int16_t)lua_tonumber(l, 2));
-    return 0;
+    ds.camera.set_x(x);
+    ds.camera.set_y(y);
 }
 
 int vm::api_circ(lua_State *l)

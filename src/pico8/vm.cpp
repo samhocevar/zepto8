@@ -49,6 +49,8 @@ vm::vm()
     lua_atpanic(m_lua, &vm::panic_hook);
     luaL_openlibs(m_lua);
 
+    install_lua_api();
+
     // Store a pointer to us in global state
 #if HAVE_LUA_GETEXTRASPACE
     *static_cast<vm**>(lua_getextraspace(m_lua)) = this;
@@ -81,7 +83,7 @@ vm::vm()
         { "cursor", &dispatch<&vm::api_cursor> },
         { "print",  &dispatch<&vm::api_print> },
 
-        { "camera",   &dispatch<&vm::api_camera> },
+        //{ "camera",   &dispatch<&vm::api_camera> },
         { "circ",     &dispatch<&vm::api_circ> },
         { "circfill", &dispatch<&vm::api_circfill> },
         { "clip",     &dispatch<&vm::api_clip> },

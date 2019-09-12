@@ -19,6 +19,9 @@
     <ClCompile Include="pico8\vm.cpp">
       <Filter>pico8</Filter>
     </ClCompile>
+    <ClCompile Include="pico8\wrap.cpp">
+      <Filter>pico8</Filter>
+    </ClCompile>
     <ClCompile Include="raccoon\api.cpp">
       <Filter>raccoon</Filter>
     </ClCompile>
