@@ -23,18 +23,6 @@
 namespace z8::raccoon
 {
 
-template<typename T> static void setpixel(T &data, int x, int y, uint8_t c)
-{
-    uint8_t &p = data[y][x / 2];
-    p = (p & (x & 1 ? 0x0f : 0xf0)) | (x & 1 ? c << 4 : c);
-}
-
-template<typename T> static uint8_t getpixel(T const &data, int x, int y)
-{
-    uint8_t const &p = data[y][x / 2];
-    return (x & 1 ? p >> 4 : p) & 0xf;
-}
-
 int vm::api_read(int p)
 {
     return m_ram[p & 0xffff];
@@ -54,14 +42,14 @@ void vm::api_pset(int x, int y, int c)
 {
     if (x < 0 || x >= 128 || y < 0 || y >= 64)
         return;
-    setpixel(m_ram.screen, x, y, c & 15);
+    m_ram.screen.set(x, y, c & 15);
 }
 
 int vm::api_pget(int x, int y)
 {
     if (x < 0 || x >= 128 || y < 0 || y >= 64)
         return 0;
-    return getpixel(m_ram.screen, x, y);
+    return m_ram.screen.get(x, y);
 }
 
 void vm::api_palm(int c0, int c1)
@@ -112,7 +100,7 @@ void vm::api_fset(int n, int f, std::optional<int> v)
 
 void vm::api_cls(std::optional<int> c)
 {
-    memset(m_ram.screen, (c.value() & 15) * 0x11, sizeof(m_ram.screen));
+    memset(&m_ram.screen, (c.value() & 15) * 0x11, sizeof(m_ram.screen));
 }
 
 void vm::api_cam(int x, int y)
@@ -143,11 +131,11 @@ void vm::api_map(int celx, int cely, int sx, int sy, int celw, int celh)
             if (sprx + dx < 0 || sprx + dx >= 128 ||
                 spry + dy < 0 || spry + dy >= 96)
                 continue;
-            auto c = getpixel(m_ram.sprites, sprx + dx, spry + dy);
+            auto c = m_ram.sprites.get(sprx + dx, spry + dy);
             if (m_ram.palmod[c] & 0x80)
                 continue;
             c = m_ram.palmod[c] & 0xf;
-            setpixel(m_ram.screen, startx + dx, starty + dy, c);
+            m_ram.screen.set(startx + dx, starty + dy, c);
         }
     }
 }
@@ -161,18 +149,18 @@ void vm::api_rect(int x, int y, int w, int h, int c)
     int x1 = std::min(x + w, 127);
     if (y >= 0 && y < 128)
         for (int dx = x0; dx <= x1; ++dx)
-            setpixel(m_ram.screen, dx, y, c);
+            m_ram.screen.set(dx, y, c);
     if (y + h - 1 >= 0 && y + h - 1 < 128)
         for (int dx = x0; dx <= x1; ++dx)
-            setpixel(m_ram.screen, dx, y + h - 1, c);
+            m_ram.screen.set(dx, y + h - 1, c);
     int y0 = std::max(y, 0);
     int y1 = std::min(y + h, 127);
     if (x >= 0 && x < 128)
         for (int dy = y0; dy <= y1; ++dy)
-            setpixel(m_ram.screen, x, dy, c);
+            m_ram.screen.set(x, dy, c);
     if (x + w - 1 >= 0 && x + w - 1 < 128)
         for (int dy = y0; dy <= y1; ++dy)
-            setpixel(m_ram.screen, x + w - 1, dy, c);
+            m_ram.screen.set(x + w - 1, dy, c);
 }
 
 void vm::api_rectfill(int x, int y, int w, int h, int c)
@@ -186,7 +174,7 @@ void vm::api_rectfill(int x, int y, int w, int h, int c)
     int y1 = std::min(y + h, 127);
     for (int dy = y0; dy <= y1; ++dy)
         for (int dx = x0; dx <= x1; ++dx)
-            setpixel(m_ram.screen, dx, dy, c);
+            m_ram.screen.set(dx, dy, c);
 }
 
 void vm::api_spr(int n, int x, int y,
@@ -206,13 +194,12 @@ void vm::api_spr(int n, int x, int y,
         {
             if (x + dx < 0 || x + dx >= 128 || y + dy < 0 || y + dy >= 128)
                 continue;
-            auto c = getpixel(m_ram.sprites,
-                              flip_x ? sx + sw - 1 - dx : sx + dx,
-                              flip_y ? sy + sh - 1 - dy : sy + dy);
+            auto c = m_ram.sprites.get(flip_x ? sx + sw - 1 - dx : sx + dx,
+                                       flip_y ? sy + sh - 1 - dy : sy + dy);
             if (m_ram.palmod[c] & 0x80)
                 continue;
             c = m_ram.palmod[c] & 0xf;
-            setpixel(m_ram.screen, x + dx, y + dy, c);
+            m_ram.screen.set(x + dx, y + dy, c);
         }
 }
 
@@ -233,7 +220,7 @@ void vm::api_print(int x, int y, std::string str, int c)
         for (int dx = 0; dx < 3; ++dx)
         for (int dy = 0; dy < 7; ++dy)
             if (data & (1 << (dx * 8 + dy)))
-                setpixel(m_ram.screen, x + dx, y + dy, c);
+                m_ram.screen.set(x + dx, y + dy, c);
         if (data & 0xff0000)
             x += 4;
         else if (data & 0xff00)
