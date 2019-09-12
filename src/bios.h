@@ -39,9 +39,7 @@ public:
         if (x < 0 || x >= 128 || y < 0 || y >= 128)
             return 0;
 
-        auto const &gfx = m_cart.get_rom().gfx;
-        int offset = (128 * y + x) / 2;
-        return (x & 1) ? gfx[offset] >> 4 : gfx[offset] & 0xf;
+        return m_cart.get_rom().gfx.get(x, y);
     }
 
 private:

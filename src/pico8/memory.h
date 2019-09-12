@@ -158,7 +158,7 @@ struct memory
     // This union handles the gfx/map shared section
     union
     {
-        uint8_t gfx[0x2000];
+        screen<128, 128> gfx;
 
         struct
         {
@@ -214,8 +214,8 @@ struct memory
 
             uint8_t gpio_pins[0x80];
 
-            // The screen, as an array of bytes
-            uint8_t screen[0x2000];
+            // The screen
+            screen<128, 128> screen;
         };
     };
 
@@ -235,14 +235,12 @@ struct memory
     // Hardware pixel accessor
     uint8_t pixel(int x, int y) const
     {
-        ASSERT(x >= 0 && x < 128 && y >= 0 && y < 128);
         uint8_t const mode = draw_state.screen_mode;
         x = (mode & 0xfd) == 5 ? std::min(x, 127 - x)
           : (mode & 0xfd) == 1 ? x / 2 : x;
         y = (mode & 0xfe) == 6 ? std::min(y, 127 - y)
           : (mode & 0xfe) == 2 ? y / 2 : y;
-        uint8_t const data = screen[y * 64 + x / 2];
-        return x & 1 ? data >> 4 : data & 0xf;
+        return screen.get(x, y);
     }
 };
 

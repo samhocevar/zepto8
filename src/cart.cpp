@@ -605,7 +605,7 @@ std::string cart::get_p8() const
     // Export gfx section
     int gfx_lines = 0;
     for (int i = 0; i < (int)sizeof(m_rom.gfx); ++i)
-        if (m_rom.gfx[i] != 0)
+        if (m_rom.gfx.data[i / 64][i % 64] != 0)
             gfx_lines = 1 + i / 64;
 
     for (int line = 0; line < gfx_lines; ++line)
@@ -614,7 +614,7 @@ std::string cart::get_p8() const
             ret += "__gfx__\n";
 
         for (int i = 0; i < 64; ++i)
-            ret += lol::format("%02x", uint8_t(m_rom.gfx[64 * line + i] * 0x101 / 0x10));
+            ret += lol::format("%02x", uint8_t(m_rom.gfx.data[line][i] * 0x101 / 0x10));
 
         ret += '\n';
     }

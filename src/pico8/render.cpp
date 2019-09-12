@@ -36,7 +36,8 @@ void vm::render(lol::u8vec4 *screen) const
     }
 
     /* Render actual screen */
-    for (uint8_t p : m_ram.screen)
+    for (auto const &line : m_ram.screen.data)
+    for (uint8_t p : line)
     {
         *screen++ = lut[p].a;
         *screen++ = lut[p].b;
@@ -72,7 +73,7 @@ void vm::print_ansi(lol::ivec2 term_size,
 
     for (int y = 0; y < 2 * lol::min(64, term_size.y); y += 2)
     {
-        if (prev_screen && !memcmp(&m_ram.screen[y * 64],
+        if (prev_screen && !memcmp(m_ram.screen.data[y],
                                    &prev_screen[y * 64], 128))
             continue;
 
@@ -84,8 +85,8 @@ void vm::print_ansi(lol::ivec2 term_size,
         {
             int offset = y * 64 + x / 2;
             int shift = 4 * (x & 1);
-            uint8_t fg = (m_ram.screen[offset] >> shift) & 0xf;
-            uint8_t bg = (m_ram.screen[offset + 64] >> shift) & 0xf;
+            uint8_t fg = m_ram.screen.get(x, y);
+            uint8_t bg = m_ram.screen.get(x, y + 1);
             char const *glyph = "▀";
 
             if (fg < bg)
