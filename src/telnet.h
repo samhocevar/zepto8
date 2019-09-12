@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -22,7 +22,7 @@
 #endif
 
 #include "zepto8.h"
-#include "vm/vm.h"
+#include "pico8/vm.h"
 
 // The telnet class
 // ————————————————
@@ -40,11 +40,11 @@ struct telnet
     {
         disable_echo();
 
-        z8::vm vm;
+        pico8::vm vm;
         vm.load(cart);
         vm.run();
 
-        auto const &ram = vm.get_ram();
+        auto const &ram = vm.ram();
 
         while (true)
         {
@@ -93,8 +93,9 @@ struct telnet
             vm.print_ansi(m_term_size,
                           m_screen.count() ? m_screen.data() : nullptr);
 
-            m_screen.resize(sizeof(ram.screen));
-            ::memcpy(m_screen.data(), &ram.screen, sizeof(ram.screen));
+            // FIXME: PICO-8 specific
+            m_screen.resize(0x2000);
+            ::memcpy(m_screen.data(), std::get<0>(ram) + 0x6000, 0x2000);
 
             t.wait(1.f / 60.f);
         }

@@ -16,30 +16,10 @@
 
 #include <lol/engine.h>
 
-#include "bios.h"
+#include "raccoon.h"
 
-namespace z8::pico8
+namespace z8
 {
-
-bios::bios()
-{
-    char const *filename = "bios.p8";
-
-    // Initialize BIOS
-    for (auto const &file : lol::sys::get_path_list(filename))
-    {
-        lol::File f;
-        f.Open(file, lol::FileAccess::Read);
-        bool exists = f.IsValid();
-        f.Close();
-
-        // FIXME: this will redo all the work…
-        if (exists && m_cart.load(filename))
-            return;
-    }
-
-    lol::msg::error("unable to load BIOS file %s\n", filename);
-}
 
 } // namespace z8
 

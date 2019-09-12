@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -18,40 +18,43 @@
 #include "bios.h"
 #include "cart.h"
 #include "memory.h"
-#include "vm/z8lua.h"
+#include "pico8/z8lua.h"
 
 namespace z8
 {
 
-using lol::u8vec4;
-
 class player;
 
-class vm
+namespace pico8
+{
+
+using lol::u8vec4;
+
+class vm : z8::vm_base
 {
     friend class z8::player;
 
 public:
     vm();
-    ~vm();
+    virtual ~vm();
 
-    void load(char const *name);
-    void run();
-    bool step(float seconds);
+    virtual void load(char const *name);
+    virtual void run();
+    virtual bool step(float seconds);
 
-    inline memory &get_ram() { return m_ram; }
-    inline memory const &get_ram() const { return m_ram; }
+    virtual void render(lol::u8vec4 *screen) const;
 
-    inline memory &get_rom() { return m_cart.get_rom(); }
-    inline memory const &get_rom() const { return m_cart.get_rom(); }
+    virtual std::function<void(void *, int)> get_streamer(int channel);
 
-    void render(lol::u8vec4 *screen) const;
+    virtual void button(int index, int state);
+    virtual void mouse(lol::ivec2 coords, int buttons);
+    virtual void keyboard(char ch);
+
+    virtual std::tuple<uint8_t *, size_t> ram();
+    virtual std::tuple<uint8_t *, size_t> rom();
+
     void print_ansi(lol::ivec2 term_size = lol::ivec2(128, 128),
                     uint8_t const *prev_screen = nullptr) const;
-
-    void button(int index, int state);
-    void mouse(lol::ivec2 coords, int buttons);
-    void keyboard(char ch);
 
 private:
     static int panic_hook(lua_State *l);
@@ -87,7 +90,7 @@ private:
     int api_print(lua_State *l);
 
     // Graphics
-    int api_camera(lua_State *l);
+    void api_camera(int16_t x, int16_t y);
     int api_circ(lua_State *l);
     int api_circfill(lua_State *l);
     int api_clip(lua_State *l);
@@ -119,6 +122,8 @@ private:
     int api_time(lua_State *l);
 
 private:
+    void install_lua_api();
+
     uint8_t get_pixel(int16_t x, int16_t y) const;
 
     uint32_t lua_to_color_bits(lua_State *l, int n);
@@ -135,7 +140,6 @@ private:
 
 private:
     lua_State *m_lua;
-    bios m_bios;
     cart m_cart;
     memory m_ram;
 
@@ -172,6 +176,8 @@ private:
     lol::timer m_timer;
     int m_instructions;
 };
+
+} // namespace pico8
 
 } // namespace z8
 

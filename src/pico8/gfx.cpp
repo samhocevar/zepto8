@@ -16,9 +16,10 @@
 
 #include <lol/engine.h>
 
-#include "vm.h"
+#include "pico8/vm.h"
+#include "bios.h"
 
-namespace z8
+namespace z8::pico8
 {
 
 using lol::msg;
@@ -72,8 +73,7 @@ uint8_t vm::get_pixel(int16_t x, int16_t y) const
     if (x < ds.clip.x1 || x >= ds.clip.x2 || y < ds.clip.y1 || y >= ds.clip.y2)
         return 0;
 
-    int offset = (128 * y + x) / 2;
-    return (x & 1) ? m_ram.screen[offset] >> 4 : m_ram.screen[offset] & 0xf;
+    return m_ram.screen.get(x, y);
 }
 
 void vm::set_pixel(int16_t x, int16_t y, uint32_t color_bits)
@@ -91,10 +91,7 @@ void vm::set_pixel(int16_t x, int16_t y, uint32_t color_bits)
         color = (color_bits >> 20) & 0xf;
     }
 
-    int offset = (128 * y + x) / 2;
-    uint8_t mask = (x & 1) ? 0x0f : 0xf0;
-    uint8_t p = (x & 1) ? color << 4 : color;
-    m_ram.screen[offset] = (m_ram.screen[offset] & mask) | p;
+    m_ram.screen.set(x, y, color);
 }
 
 void vm::setspixel(int16_t x, int16_t y, uint8_t color)
@@ -102,10 +99,7 @@ void vm::setspixel(int16_t x, int16_t y, uint8_t color)
     if (x < 0 || x >= 128 || y < 0 || y >= 128)
         return;
 
-    int offset = (128 * y + x) / 2;
-    uint8_t mask = (x & 1) ? 0x0f : 0xf0;
-    uint8_t p = (x & 1) ? color << 4 : color;
-    m_ram.gfx[offset] = (m_ram.gfx[offset] & mask) | p;
+    m_ram.gfx.set(x, y, color);
 }
 
 uint8_t vm::getspixel(int16_t x, int16_t y)
@@ -113,8 +107,7 @@ uint8_t vm::getspixel(int16_t x, int16_t y)
     if (x < 0 || x >= 128 || y < 0 || y >= 128)
         return 0;
 
-    int offset = (128 * y + x) / 2;
-    return (x & 1) ? m_ram.gfx[offset] >> 4 : m_ram.gfx[offset] & 0xf;
+    return m_ram.gfx.get(x, y);
 }
 
 void vm::hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits)
@@ -141,7 +134,7 @@ void vm::hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits)
     }
     else
     {
-        uint8_t *p = &m_ram.screen[(128 * y) / 2];
+        uint8_t *p = m_ram.screen.data[y];
         uint8_t color = (color_bits >> 16) & 0xf;
 
         if (x1 & 1)
@@ -189,10 +182,7 @@ void vm::vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits)
         uint8_t p = (x & 1) ? color << 4 : color;
 
         for (int16_t y = y1; y <= y2; ++y)
-        {
-            int offset = (128 * y + x) / 2;
-            m_ram.screen[offset] = (m_ram.screen[offset] & mask) | p;
-        }
+            m_ram.screen.data[y][x] = (m_ram.screen.data[y][x] & mask) | p;
     }
 }
 
@@ -256,7 +246,7 @@ int vm::api_print(lua_State *l)
                     int16_t screen_x = (int16_t)x - ds.camera.x() + dx;
                     int16_t screen_y = (int16_t)y - ds.camera.y() + dy;
 
-                    if (m_bios.get_spixel(font_x + dx, font_y + dy))
+                    if (m_bios->get_spixel(font_x + dx, font_y + dy))
                         set_pixel(screen_x, screen_y, color_bits);
                 }
 
@@ -274,7 +264,7 @@ int vm::api_print(lua_State *l)
         // FIXME: is this affected by the camera?
         if (y > fix32(116.0))
         {
-            uint8_t *s = m_ram.screen;
+            uint8_t *s = m_ram.screen.data[0];
             memmove(s, s + lines * 64, sizeof(m_ram.screen) - lines * 64);
             ::memset(s + sizeof(m_ram.screen) - lines * 64, 0, lines * 64);
             y -= fix32(lines);
@@ -297,13 +287,12 @@ int vm::api_print(lua_State *l)
 // Graphics
 //
 
-int vm::api_camera(lua_State *l)
+void vm::api_camera(int16_t x, int16_t y)
 {
     auto &ds = m_ram.draw_state;
 
-    ds.camera.set_x((int16_t)lua_tonumber(l, 1));
-    ds.camera.set_y((int16_t)lua_tonumber(l, 2));
-    return 0;
+    ds.camera.set_x(x);
+    ds.camera.set_y(y);
 }
 
 int vm::api_circ(lua_State *l)
@@ -397,7 +386,7 @@ int vm::api_clip(lua_State *l)
 int vm::api_cls(lua_State *l)
 {
     int c = (int)lua_tonumber(l, 1) & 0xf;
-    ::memset(&m_ram.screen[0], c * 0x11, sizeof(m_ram.screen));
+    ::memset(&m_ram.screen, c * 0x11, sizeof(m_ram.screen));
 
     // Documentation: “Clear the screen and reset the clipping rectangle”.
     auto &ds = m_ram.draw_state;

@@ -16,13 +16,14 @@
 
 #include <lol/engine.h>
 
-#include "vm.h"
+#include "pico8/vm.h"
+#include "bios.h"
 #include "z8lua.h"
 
 // FIXME: activate this one day, when we use Lua 5.3
 #define HAVE_LUA_GETEXTRASPACE 0
 
-namespace z8
+namespace z8::pico8
 {
 
 using lol::msg;
@@ -43,9 +44,13 @@ template<auto FN> static int dispatch(lua_State *l)
 vm::vm()
   : m_instructions(0)
 {
+    m_bios = std::make_unique<bios>();
+
     m_lua = luaL_newstate();
     lua_atpanic(m_lua, &vm::panic_hook);
     luaL_openlibs(m_lua);
+
+    install_lua_api();
 
     // Store a pointer to us in global state
 #if HAVE_LUA_GETEXTRASPACE
@@ -79,7 +84,7 @@ vm::vm()
         { "cursor", &dispatch<&vm::api_cursor> },
         { "print",  &dispatch<&vm::api_print> },
 
-        { "camera",   &dispatch<&vm::api_camera> },
+        //{ "camera",   &dispatch<&vm::api_camera> },
         { "circ",     &dispatch<&vm::api_circ> },
         { "circfill", &dispatch<&vm::api_circfill> },
         { "clip",     &dispatch<&vm::api_clip> },
@@ -124,7 +129,7 @@ vm::vm()
     ::memset(&m_ram, 0, sizeof(m_ram));
 
     // Initialize Zepto8 runtime
-    int status = luaL_dostring(m_lua, m_bios.get_code().c_str());
+    int status = luaL_dostring(m_lua, m_bios->get_code().c_str());
     if (status != LUA_OK)
     {
         char const *message = lua_tostring(m_lua, -1);
@@ -137,6 +142,17 @@ vm::vm()
 vm::~vm()
 {
     lua_close(m_lua);
+}
+
+std::tuple<uint8_t *, size_t> vm::ram()
+{
+    return std::make_tuple(&m_ram[0], sizeof(m_ram));
+}
+
+std::tuple<uint8_t *, size_t> vm::rom()
+{
+    auto rom = m_cart.get_rom();
+    return std::make_tuple(&rom[0], sizeof(rom));
 }
 
 int vm::panic_hook(lua_State* l)

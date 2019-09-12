@@ -16,8 +16,8 @@
 
 #include "zepto8.h"
 
-// The memory classes: sfx, song, draw_state, memory
-// —————————————————————————————————————————————————
+// The PICO-8 memory classes: sfx, song, draw_state, memory
+// ————————————————————————————————————————————————————————
 // These classes map 1-to-1 with the PICO-8 memory layout and provide
 // handful accessors for higher level information.
 // For instance:
@@ -25,7 +25,7 @@
 //  - "memory.sfx[3].effect(6)" gets the effect of the 6th note of the 3rd SFX
 //  - "memory.gpio_pin[2] is the 2nd GPIO pin
 
-namespace z8
+namespace z8::pico8
 {
 
 // Store a point with unaligned 16-bit coordinates
@@ -158,7 +158,7 @@ struct memory
     // This union handles the gfx/map shared section
     union
     {
-        uint8_t gfx[0x2000];
+        u4mat2<128, 128> gfx;
 
         struct
         {
@@ -214,8 +214,8 @@ struct memory
 
             uint8_t gpio_pins[0x80];
 
-            // The screen, as an array of bytes
-            uint8_t screen[0x2000];
+            // The screen
+            u4mat2<128, 128> screen;
         };
     };
 
@@ -235,14 +235,12 @@ struct memory
     // Hardware pixel accessor
     uint8_t pixel(int x, int y) const
     {
-        ASSERT(x >= 0 && x < 128 && y >= 0 && y < 128);
         uint8_t const mode = draw_state.screen_mode;
         x = (mode & 0xfd) == 5 ? std::min(x, 127 - x)
           : (mode & 0xfd) == 1 ? x / 2 : x;
         y = (mode & 0xfe) == 6 ? std::min(y, 127 - y)
           : (mode & 0xfe) == 2 ? y / 2 : y;
-        uint8_t const data = screen[y * 64 + x / 2];
-        return x & 1 ? data >> 4 : data & 0xf;
+        return screen.get(x, y);
     }
 };
 

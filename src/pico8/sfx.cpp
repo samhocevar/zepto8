@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -16,9 +16,9 @@
 
 #include <lol/engine.h>
 
-#include "vm.h"
+#include "pico8/vm.h"
 
-namespace z8
+namespace z8::pico8
 {
 
 #define DEBUG_EXPORT_WAV 0
@@ -173,6 +173,14 @@ static float get_waveform(int instrument, float advance)
     }
 
     return 0.0f;
+}
+
+std::function<void(void *, int)> vm::get_streamer(int channel)
+{
+    // Return a function that calls getaudio() with channel as first arg
+    return std::bind(&vm::getaudio, this, channel,
+                     std::placeholders::_1,
+                     std::placeholders::_2);
 }
 
 // FIXME: there is a problem with the per-channel approach; if a channel
