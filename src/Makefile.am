@@ -148,7 +148,7 @@ libzepto8_a_SOURCES = \
     \
     raccoon/vm.cpp raccoon/vm.h \
     raccoon/memory.h raccoon/font.h \
-    raccoon/api.cpp \
+    raccoon/wrap.cpp raccoon/api.cpp \
     $(NULL)
 
 EXTRA_DIST += libzepto8.vcxproj

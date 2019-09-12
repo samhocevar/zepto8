@@ -78,6 +78,7 @@
     <ClCompile Include="pico8\z8lua.cpp" />
     <ClCompile Include="raccoon\api.cpp" />
     <ClCompile Include="raccoon\vm.cpp" />
+    <ClCompile Include="raccoon\wrap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analyzer.h" />

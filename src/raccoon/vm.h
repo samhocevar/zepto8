@@ -44,6 +44,9 @@ public:
     virtual void keyboard(char ch);
 
 private:
+    void js_wrap();
+
+private:
     int api_read(int p);
     void api_write(int p, int x);
     void api_palset(int n, int r, int g, int b);
