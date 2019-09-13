@@ -67,12 +67,12 @@ private:
     int private_stub(lua_State *l);
 
     // System
-    int api_run(lua_State *l);
-    int api_menuitem(lua_State *l);
+    void api_run();
+    void api_menuitem();
     int api_reload(lua_State *l);
-    int api_peek(lua_State *l);
-    int api_peek2(lua_State *l);
-    int api_peek4(lua_State *l);
+    int16_t api_peek(int16_t addr);
+    int16_t api_peek2(int16_t addr);
+    fix32 api_peek4(int16_t addr);
     int api_poke(lua_State *l);
     int api_poke2(lua_State *l);
     int api_poke4(lua_State *l);
@@ -83,7 +83,7 @@ private:
     int api_extcmd(lua_State *l);
 
     // I/O
-    int api_update_buttons(lua_State *l);
+    void api_update_buttons();
     int api_btn(lua_State *l);
     int api_btnp(lua_State *l);
 
@@ -132,7 +132,7 @@ private:
     int api_sfx(lua_State *l);
 
     // Deprecated
-    int api_time(lua_State *l);
+    fix32 api_time();
 
 private:
     void install_lua_api();

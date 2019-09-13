@@ -106,12 +106,12 @@ void vm::install_lua_api()
 {
     static const luaL_Reg zepto8lib[] =
     {
-        //{ "run",      &dispatch<&vm::api_run> },
-        //{ "menuitem", &dispatch<&vm::api_menuitem> },
+        { "run",      &dispatch<&vm::api_run> },
+        { "menuitem", &dispatch<&vm::api_menuitem> },
         //{ "reload",   &dispatch<&vm::api_reload> },
-        //{ "peek",     &dispatch<&vm::api_peek> },
-        //{ "peek2",    &dispatch<&vm::api_peek2> },
-        //{ "peek4",    &dispatch<&vm::api_peek4> },
+        { "peek",     &dispatch<&vm::api_peek> },
+        { "peek2",    &dispatch<&vm::api_peek2> },
+        { "peek4",    &dispatch<&vm::api_peek4> },
         //{ "poke",     &dispatch<&vm::api_poke> },
         //{ "poke2",    &dispatch<&vm::api_poke2> },
         //{ "poke4",    &dispatch<&vm::api_poke4> },
@@ -121,7 +121,7 @@ void vm::install_lua_api()
         //{ "printh",   &vm::api_printh },
         //{ "extcmd",   &dispatch<&vm::api_extcmd> },
 
-        //{ "_update_buttons", &dispatch<&vm::api_update_buttons> },
+        { "_update_buttons", &dispatch<&vm::api_update_buttons> },
         //{ "btn",  &dispatch<&vm::api_btn> },
         //{ "btnp", &dispatch<&vm::api_btnp> },
 
@@ -155,7 +155,7 @@ void vm::install_lua_api()
         //{ "music", &dispatch<&vm::api_music> },
         //{ "sfx",   &dispatch<&vm::api_sfx> },
 
-        //{ "time", &dispatch<&vm::api_time> },
+        { "time", &dispatch<&vm::api_time> },
 
         //{ "__cartdata", &dispatch<&vm::private_cartdata> },
         //{ "__stub",     &dispatch<&vm::private_stub> },

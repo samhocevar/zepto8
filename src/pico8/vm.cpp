@@ -62,12 +62,12 @@ vm::vm()
 
     static const luaL_Reg zepto8lib[] =
     {
-        { "run",      &dispatch<&vm::api_run> },
-        { "menuitem", &dispatch<&vm::api_menuitem> },
+        //{ "run",      &dispatch<&vm::api_run> },
+        //{ "menuitem", &dispatch<&vm::api_menuitem> },
         { "reload",   &dispatch<&vm::api_reload> },
-        { "peek",     &dispatch<&vm::api_peek> },
-        { "peek2",    &dispatch<&vm::api_peek2> },
-        { "peek4",    &dispatch<&vm::api_peek4> },
+        //{ "peek",     &dispatch<&vm::api_peek> },
+        //{ "peek2",    &dispatch<&vm::api_peek2> },
+        //{ "peek4",    &dispatch<&vm::api_peek4> },
         { "poke",     &dispatch<&vm::api_poke> },
         { "poke2",    &dispatch<&vm::api_poke2> },
         { "poke4",    &dispatch<&vm::api_poke4> },
@@ -77,7 +77,7 @@ vm::vm()
         { "printh",   &vm::api_printh },
         { "extcmd",   &dispatch<&vm::api_extcmd> },
 
-        { "_update_buttons", &dispatch<&vm::api_update_buttons> },
+        //{ "_update_buttons", &dispatch<&vm::api_update_buttons> },
         { "btn",  &dispatch<&vm::api_btn> },
         { "btnp", &dispatch<&vm::api_btnp> },
 
@@ -111,7 +111,7 @@ vm::vm()
         { "music", &dispatch<&vm::api_music> },
         { "sfx",   &dispatch<&vm::api_sfx> },
 
-        { "time", &dispatch<&vm::api_time> },
+        //{ "time", &dispatch<&vm::api_time> },
 
         { "__cartdata", &dispatch<&vm::private_cartdata> },
         { "__stub",     &dispatch<&vm::private_stub> },
@@ -242,25 +242,21 @@ int vm::private_stub(lua_State *l)
 // System
 //
 
-int vm::api_run(lua_State *l)
+void vm::api_run()
 {
     // Initialise VM state (TODO: check what else to init)
     ::memset(m_buttons, 0, sizeof(m_buttons));
 
     // Load cartridge code and call _z8.run_cart() on it
-    lua_getglobal(l, "_z8");
-    lua_getfield(l, -1, "run_cart");
-    lua_pushstring(l, m_cart.get_lua().c_str());
-    lua_pcall(l, 1, 0, 0);
-
-    return 0;
+    lua_getglobal(m_lua, "_z8");
+    lua_getfield(m_lua, -1, "run_cart");
+    lua_pushstring(m_lua, m_cart.get_lua().c_str());
+    lua_pcall(m_lua, 1, 0, 0);
 }
 
-int vm::api_menuitem(lua_State *l)
+void vm::api_menuitem()
 {
-    UNUSED(l);
     msg::info("z8:stub:menuitem\n");
-    return 0;
 }
 
 int vm::api_reload(lua_State *l)
@@ -307,20 +303,16 @@ int vm::api_reload(lua_State *l)
     return 0;
 }
 
-int vm::api_peek(lua_State *l)
+int16_t vm::api_peek(int16_t addr)
 {
     // Note: peek() is the same as peek(0)
-    int addr = (int)lua_tonumber(l, 1);
-    if (addr < 0 || addr >= (int)sizeof(m_ram))
+    if (addr < 0 || (int)addr >= (int)sizeof(m_ram))
         return 0;
-
-    lua_pushnumber(l, m_ram[addr]);
-    return 1;
+    return m_ram[addr];
 }
 
-int vm::api_peek2(lua_State *l)
+int16_t vm::api_peek2(int16_t addr)
 {
-    int addr = (int)lua_tonumber(l, 1) & 0xffff;
     int16_t bits = 0;
     for (int i = 0; i < 2; ++i)
     {
@@ -331,13 +323,11 @@ int vm::api_peek2(lua_State *l)
             bits |= m_ram[addr + i - (int)sizeof(m_ram)] << (8 * i);
     }
 
-    lua_pushnumber(l, fix32(bits));
-    return 1;
+    return bits;
 }
 
-int vm::api_peek4(lua_State *l)
+fix32 vm::api_peek4(int16_t addr)
 {
-    int addr = (int)lua_tonumber(l, 1) & 0xffff;
     int32_t bits = 0;
     for (int i = 0; i < 4; ++i)
     {
@@ -348,8 +338,7 @@ int vm::api_peek4(lua_State *l)
             bits |= m_ram[addr + i - (int)sizeof(m_ram)] << (8 * i);
     }
 
-    lua_pushnumber(l, fix32::frombits(bits));
-    return 1;
+    return fix32::frombits(bits);
 }
 
 int vm::api_poke(lua_State *l)
@@ -587,10 +576,8 @@ int vm::api_extcmd(lua_State *l)
 // I/O
 //
 
-int vm::api_update_buttons(lua_State *l)
+void vm::api_update_buttons()
 {
-    UNUSED(l);
-
     // Update button state
     for (int i = 0; i < 64; ++i)
     {
@@ -600,8 +587,6 @@ int vm::api_update_buttons(lua_State *l)
             m_buttons[0][i] = 0;
         m_buttons[1][i] = 0;
     }
-
-    return 0;
 }
 
 int vm::api_btn(lua_State *l)
@@ -655,10 +640,9 @@ int vm::api_btnp(lua_State *l)
 // Deprecated
 //
 
-int vm::api_time(lua_State *l)
+fix32 vm::api_time()
 {
-    lua_pushnumber(l, (double)m_timer.poll());
-    return 1;
+    return (fix32)(double)m_timer.poll();
 }
 
 } // namespace z8
