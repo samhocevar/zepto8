@@ -29,18 +29,18 @@ using lol::msg;
  *  - bits 0x000f0000: default color (palette applied)
  *  - bits 0x00f00000: color for patterns (palette applied)
  *  - bit  0x01000000: transparency for patterns */
-uint32_t vm::lua_to_color_bits(lua_State *l, int n)
+uint32_t vm::to_color_bits(std::optional<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
-    if (!lua_isnone(l, n))
+    if (c.has_value())
     {
         /* From the PICO-8 documentation:
          *  -- bit  0x1000.0000 means the non-colour bits should be observed
          *  -- bit  0x0100.0000 transparency bit
          *  -- bits 0x00FF.0000 are the usual colour bits
          *  -- bits 0x0000.FFFF are interpreted as the fill pattern */
-        fix32 col = lua_tonumber(l, n);
+        fix32 col = c.value();
         ds.pen = (col.bits() >> 16) & 0xff;
 
         if (col.bits() & 0x10000000 && ds.fillp_flag) // 0x5f34
@@ -191,42 +191,35 @@ void vm::vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits)
 // Text
 //
 
-int vm::api_cursor(lua_State *l)
+void vm::api_cursor(uint8_t x, uint8_t y,
+                    std::optional<uint8_t> c)
 {
-    m_ram.draw_state.cursor.x = (uint8_t)lua_tonumber(l, 1);
-    m_ram.draw_state.cursor.y = (uint8_t)lua_tonumber(l, 2);
-    if (!lua_isnone(l, 3))
-    {
-        fix32 colors = lua_tonumber(l, 3);
-        m_ram.draw_state.pen = (uint8_t)colors;
-    }
-    return 0;
+    m_ram.draw_state.cursor.x = x;
+    m_ram.draw_state.cursor.y = y;
+    if (c.has_value())
+        m_ram.draw_state.pen = c.value();
 }
 
-int vm::api_print(lua_State *l)
+void vm::api_print(std::optional<std::string> str,
+                   std::optional<fix32> opt_x,
+                   std::optional<fix32> opt_y,
+                   std::optional<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
-    if (lua_isnone(l, 1))
-        return 0;
-
-    // Leverage lua_pushtostr() to make sure we have a string
-    lua_pushtostr(l, false);
-    char const *str = lua_tostring(l, -1);
-    lua_pop(l, 1);
+    if (!str.has_value())
+        return;
 
     // FIXME: make x and y int16_t instead?
-    bool use_cursor = lua_isnone(l, 2) || lua_isnone(l, 3);
-    fix32 x = use_cursor ? fix32(ds.cursor.x) : lua_tonumber(l, 2);
-    fix32 y = use_cursor ? fix32(ds.cursor.y) : lua_tonumber(l, 3);
-    // FIXME: we ignore fillp here, but should we set it in lua_to_color_bits()?
-    uint32_t color_bits = lua_to_color_bits(l, 4) & 0xf0000;
+    bool use_cursor = !opt_x.has_value() || !opt_y.has_value();
+    fix32 x = use_cursor ? fix32(ds.cursor.x) : opt_x.value();
+    fix32 y = use_cursor ? fix32(ds.cursor.y) : opt_y.value();
+    // FIXME: we ignore fillp here, but should we set it in to_color_bits()?
+    uint32_t color_bits = to_color_bits(c) & 0xf0000;
     fix32 initial_x = x;
 
-    for (int n = 0; str[n]; ++n)
+    for (uint8_t ch : str.value())
     {
-        int ch = (int)(uint8_t)str[n];
-
         if (ch == '\n')
         {
             x = initial_x;
@@ -279,8 +272,6 @@ int vm::api_print(lua_State *l)
         ds.cursor.x = (uint8_t)initial_x;
         ds.cursor.y = (uint8_t)y;
     }
-
-    return 0;
 }
 
 //
@@ -295,14 +286,14 @@ void vm::api_camera(int16_t x, int16_t y)
     ds.camera.set_y(y);
 }
 
-int vm::api_circ(lua_State *l)
+void vm::api_circ(int16_t x, int16_t y, int16_t r,
+                  std::optional<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
-    int16_t x = (int16_t)lua_tonumber(l, 1) - ds.camera.x();
-    int16_t y = (int16_t)lua_tonumber(l, 2) - ds.camera.y();
-    int16_t r = (int16_t)lua_tonumber(l, 3);
-    uint32_t color_bits = lua_to_color_bits(l, 4);
+    x -= ds.camera.x();
+    y -= ds.camera.y();
+    uint32_t color_bits = to_color_bits(c);
 
     for (int16_t dx = r, dy = 0, err = 0; dx >= dy; )
     {
@@ -325,18 +316,16 @@ int vm::api_circ(lua_State *l)
             err += 1 - 2 * dx;
         }
     }
-
-    return 0;
 }
 
-int vm::api_circfill(lua_State *l)
+void vm::api_circfill(int16_t x, int16_t y, int16_t r,
+                      std::optional<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
-    int16_t x = (int16_t)lua_tonumber(l, 1) - ds.camera.x();
-    int16_t y = (int16_t)lua_tonumber(l, 2) - ds.camera.y();
-    int16_t r = (int16_t)lua_tonumber(l, 3);
-    uint32_t color_bits = lua_to_color_bits(l, 4);
+    x -= ds.camera.x();
+    y -= ds.camera.y();
+    uint32_t color_bits = to_color_bits(c);
 
     for (int16_t dx = r, dy = 0, err = 0; dx >= dy; )
     {
@@ -356,8 +345,6 @@ int vm::api_circfill(lua_State *l)
             err += 1 - 2 * dx;
         }
     }
-
-    return 0;
 }
 
 int vm::api_clip(lua_State *l)
@@ -461,26 +448,28 @@ int vm::api_fset(lua_State *l)
     return 0;
 }
 
-int vm::api_line(lua_State *l)
+void vm::api_line(int16_t x0,
+                  std::optional<int16_t> opt_y0,
+                  std::optional<int16_t> opt_x1,
+                  int16_t y1,
+                  std::optional<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
-    int16_t x0, y0, x1, y1;
+    int16_t y0, x1;
 
     // Polyline mode if and only if there are 2 arguments
-    if (lua_isnone(l, 3) && !lua_isnone(l, 2))
+    if (opt_y0.has_value() && !opt_x1.has_value())
     {
+        x1 = x0;
+        y1 = opt_y0.value();
         x0 = ds.polyline.x();
         y0 = ds.polyline.y();
-        x1 = (int16_t)lua_tonumber(l, 1);
-        y1 = (int16_t)lua_tonumber(l, 2);
     }
     else
     {
-        x0 = (int16_t)lua_tonumber(l, 1);
-        y0 = (int16_t)lua_tonumber(l, 2);
-        x1 = (int16_t)lua_tonumber(l, 3);
-        y1 = (int16_t)lua_tonumber(l, 4);
+        y0 = opt_y0.value();
+        x1 = opt_x1.value();
     }
 
     // Store polyline state
@@ -490,7 +479,7 @@ int vm::api_line(lua_State *l)
     x0 -= ds.camera.x(); y0 -= ds.camera.y();
     x1 -= ds.camera.x(); y1 -= ds.camera.y();
 
-    uint32_t color_bits = lua_to_color_bits(l, 5);
+    uint32_t color_bits = to_color_bits(c);
 
     if (x0 == x1 && y0 == y1)
     {
@@ -512,8 +501,6 @@ int vm::api_line(lua_State *l)
             set_pixel(x, y, color_bits);
         }
     }
-
-    return 0;
 }
 
 int vm::api_map(lua_State *l)
@@ -657,27 +644,28 @@ int vm::api_pget(lua_State *l)
     return 1;
 }
 
-int vm::api_pset(lua_State *l)
+void vm::api_pset(int16_t x, int16_t y,
+                  std::optional<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
-    int16_t x = (int16_t)lua_tonumber(l, 1) - ds.camera.x();
-    int16_t y = (int16_t)lua_tonumber(l, 2) - ds.camera.y();
-    uint32_t color_bits = lua_to_color_bits(l, 3);
+    x -= ds.camera.x();
+    y -= ds.camera.y();
+    uint32_t color_bits = to_color_bits(c);
     set_pixel(x, y, color_bits);
-
-    return 0;
 }
 
-int vm::api_rect(lua_State *l)
+void vm::api_rect(int16_t x0, int16_t y0,
+                  int16_t x1, int16_t y1,
+                  std::optional<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
-    int16_t x0 = (int16_t)lua_tonumber(l, 1) - ds.camera.x();
-    int16_t y0 = (int16_t)lua_tonumber(l, 2) - ds.camera.y();
-    int16_t x1 = (int16_t)lua_tonumber(l, 3) - ds.camera.x();
-    int16_t y1 = (int16_t)lua_tonumber(l, 4) - ds.camera.y();
-    uint32_t color_bits = lua_to_color_bits(l, 5);
+    x0 -= ds.camera.x();
+    y0 -= ds.camera.y();
+    x1 -= ds.camera.x();
+    y1 -= ds.camera.y();
+    uint32_t color_bits = to_color_bits(c);
 
     if (x0 > x1)
         std::swap(x0, x1);
@@ -693,27 +681,25 @@ int vm::api_rect(lua_State *l)
         vline(x0, y0 + 1, y1 - 1, color_bits);
         vline(x1, y0 + 1, y1 - 1, color_bits);
     }
-
-    return 0;
 }
 
-int vm::api_rectfill(lua_State *l)
+void vm::api_rectfill(int16_t x0, int16_t y0,
+                      int16_t x1, int16_t y1,
+                      std::optional<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
-    int16_t x0 = (int16_t)lua_tonumber(l, 1) - ds.camera.x();
-    int16_t y0 = (int16_t)lua_tonumber(l, 2) - ds.camera.y();
-    int16_t x1 = (int16_t)lua_tonumber(l, 3) - ds.camera.x();
-    int16_t y1 = (int16_t)lua_tonumber(l, 4) - ds.camera.y();
-    uint32_t color_bits = lua_to_color_bits(l, 5);
+    x0 -= ds.camera.x();
+    y0 -= ds.camera.y();
+    x1 -= ds.camera.x();
+    y1 -= ds.camera.y();
+    uint32_t color_bits = to_color_bits(c);
 
     if (y0 > y1)
         std::swap(y0, y1);
 
     for (int16_t y = y0; y <= y1; ++y)
         hline(x0, x1, y, color_bits);
-
-    return 0;
 }
 
 int vm::api_sget(lua_State *l)

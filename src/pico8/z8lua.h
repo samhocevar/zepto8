@@ -24,7 +24,7 @@ namespace z8
 {
 
 char const *lua_tostringorboolean(lua_State *l, int n);
-void lua_pushtostr(lua_State *l, bool do_hex);
+void lua_pushtostr(lua_State *l, int n, bool do_hex);
 
 } // namespace z8
 

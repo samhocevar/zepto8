@@ -14,6 +14,8 @@
 
 #include <lol/engine.h>
 
+#include <optional>
+
 #include "zepto8.h"
 #include "bios.h"
 #include "cart.h"
@@ -86,29 +88,42 @@ private:
     int api_btnp(lua_State *l);
 
     // Text
-    int api_cursor(lua_State *l);
-    int api_print(lua_State *l);
+    void api_cursor(uint8_t x, uint8_t y,
+                    std::optional<uint8_t> c);
+    void api_print(std::optional<std::string> str,
+                   std::optional<fix32> x,
+                   std::optional<fix32> y,
+                   std::optional<fix32> c);
 
     // Graphics
     void api_camera(int16_t x, int16_t y);
-    int api_circ(lua_State *l);
-    int api_circfill(lua_State *l);
+    void api_circ(int16_t x, int16_t y, int16_t r,
+                  std::optional<fix32> c);
+    void api_circfill(int16_t x, int16_t y, int16_t r,
+                      std::optional<fix32> c);
     int api_clip(lua_State *l);
     int api_cls(lua_State *l);
     int api_color(lua_State *l);
     int api_fillp(lua_State *l);
     int api_fget(lua_State *l);
     int api_fset(lua_State *l);
-    int api_line(lua_State *l);
+    void api_line(int16_t x0, std::optional<int16_t> opt_y0,
+                  std::optional<int16_t> opt_x1, int16_t y1,
+                  std::optional<fix32> c);
     int api_map(lua_State *l);
     int api_mget(lua_State *l);
     int api_mset(lua_State *l);
     int api_pal(lua_State *l);
     int api_palt(lua_State *l);
     int api_pget(lua_State *l);
-    int api_pset(lua_State *l);
-    int api_rect(lua_State *l);
-    int api_rectfill(lua_State *l);
+    void api_pset(int16_t x, int16_t y,
+                  std::optional<fix32> c);
+    void api_rect(int16_t x0, int16_t y0,
+                  int16_t x1, int16_t y1,
+                  std::optional<fix32> c);
+    void api_rectfill(int16_t x0, int16_t y0,
+                      int16_t x1, int16_t y1,
+                      std::optional<fix32> c);
     int api_sget(lua_State *l);
     int api_sset(lua_State *l);
     int api_spr(lua_State *l);
@@ -126,7 +141,7 @@ private:
 
     uint8_t get_pixel(int16_t x, int16_t y) const;
 
-    uint32_t lua_to_color_bits(lua_State *l, int n);
+    uint32_t to_color_bits(std::optional<fix32> c);
 
     void set_pixel(int16_t x, int16_t y, uint32_t color_bits);
 

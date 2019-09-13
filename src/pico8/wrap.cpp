@@ -20,6 +20,7 @@
 
 #include "zepto8.h"
 #include "pico8/vm.h"
+#include "pico8/z8lua.h"
 
 namespace z8::pico8
 {
@@ -36,7 +37,16 @@ static void lua_push(lua_State *l, fix32 x) { lua_pushnumber(l, x); }
 template<typename T> static void lua_get(lua_State *l, int i, T &);
 
 template<> void lua_get(lua_State *l, int i, fix32 &arg) { arg = lua_tonumber(l, i); }
+template<> void lua_get(lua_State *l, int i, uint8_t &arg) { arg = (uint8_t)lua_tonumber(l, i); }
 template<> void lua_get(lua_State *l, int i, int16_t &arg) { arg = (int16_t)lua_tonumber(l, i); }
+template<> void lua_get(lua_State *l, int i, uint16_t &arg) { arg = (uint16_t)lua_tonumber(l, i); }
+
+template<> void lua_get(lua_State *l, int i, std::string &arg)
+{
+    lua_pushtostr(l, i, false);
+    arg = lua_tostring(l, -1);
+    lua_pop(l, 1);
+}
 
 // Unboxing to std::optional checks for lua_isnone() first
 template<typename T> void lua_get(lua_State *l, int i, std::optional<T> &arg)
@@ -96,7 +106,59 @@ void vm::install_lua_api()
 {
     static const luaL_Reg zepto8lib[] =
     {
+        //{ "run",      &dispatch<&vm::api_run> },
+        //{ "menuitem", &dispatch<&vm::api_menuitem> },
+        //{ "reload",   &dispatch<&vm::api_reload> },
+        //{ "peek",     &dispatch<&vm::api_peek> },
+        //{ "peek2",    &dispatch<&vm::api_peek2> },
+        //{ "peek4",    &dispatch<&vm::api_peek4> },
+        //{ "poke",     &dispatch<&vm::api_poke> },
+        //{ "poke2",    &dispatch<&vm::api_poke2> },
+        //{ "poke4",    &dispatch<&vm::api_poke4> },
+        //{ "memcpy",   &dispatch<&vm::api_memcpy> },
+        //{ "memset",   &dispatch<&vm::api_memset> },
+        //{ "stat",     &dispatch<&vm::api_stat> },
+        //{ "printh",   &vm::api_printh },
+        //{ "extcmd",   &dispatch<&vm::api_extcmd> },
+
+        //{ "_update_buttons", &dispatch<&vm::api_update_buttons> },
+        //{ "btn",  &dispatch<&vm::api_btn> },
+        //{ "btnp", &dispatch<&vm::api_btnp> },
+
+        { "cursor", &dispatch<&vm::api_cursor> },
+        { "print",  &dispatch<&vm::api_print> },
+
         { "camera",   &dispatch<&vm::api_camera> },
+        { "circ",     &dispatch<&vm::api_circ> },
+        { "circfill", &dispatch<&vm::api_circfill> },
+        //{ "clip",     &dispatch<&vm::api_clip> },
+        //{ "cls",      &dispatch<&vm::api_cls> },
+        //{ "color",    &dispatch<&vm::api_color> },
+        //{ "fillp",    &dispatch<&vm::api_fillp> },
+        //{ "fget",     &dispatch<&vm::api_fget> },
+        //{ "fset",     &dispatch<&vm::api_fset> },
+        { "line",     &dispatch<&vm::api_line> },
+        //{ "map",      &dispatch<&vm::api_map> },
+        //{ "mget",     &dispatch<&vm::api_mget> },
+        //{ "mset",     &dispatch<&vm::api_mset> },
+        //{ "pal",      &dispatch<&vm::api_pal> },
+        //{ "palt",     &dispatch<&vm::api_palt> },
+        //{ "pget",     &dispatch<&vm::api_pget> },
+        { "pset",     &dispatch<&vm::api_pset> },
+        { "rect",     &dispatch<&vm::api_rect> },
+        { "rectfill", &dispatch<&vm::api_rectfill> },
+        //{ "sget",     &dispatch<&vm::api_sget> },
+        //{ "sset",     &dispatch<&vm::api_sset> },
+        //{ "spr",      &dispatch<&vm::api_spr> },
+        //{ "sspr",     &dispatch<&vm::api_sspr> },
+
+        //{ "music", &dispatch<&vm::api_music> },
+        //{ "sfx",   &dispatch<&vm::api_sfx> },
+
+        //{ "time", &dispatch<&vm::api_time> },
+
+        //{ "__cartdata", &dispatch<&vm::private_cartdata> },
+        //{ "__stub",     &dispatch<&vm::private_stub> },
 
         { nullptr, nullptr },
     };
