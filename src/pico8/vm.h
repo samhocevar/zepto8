@@ -97,32 +97,30 @@ private:
 
     // Graphics
     void api_camera(int16_t x, int16_t y);
-    void api_circ(int16_t x, int16_t y, int16_t r,
-                  std::optional<fix32> c);
-    void api_circfill(int16_t x, int16_t y, int16_t r,
-                      std::optional<fix32> c);
-    int api_clip(lua_State *l);
-    int api_cls(lua_State *l);
-    int api_color(lua_State *l);
-    int api_fillp(lua_State *l);
+    void api_circ(int16_t x, int16_t y, int16_t r, std::optional<fix32> c);
+    void api_circfill(int16_t x, int16_t y, int16_t r, std::optional<fix32> c);
+    void api_clip(int16_t x, int16_t y, int16_t w, std::optional<int16_t> h);
+    void api_cls(uint8_t c);
+    void api_color(uint8_t c);
+    void api_fillp(fix32 fillp);
     int api_fget(lua_State *l);
     int api_fset(lua_State *l);
     void api_line(int16_t x0, std::optional<int16_t> opt_y0,
                   std::optional<int16_t> opt_x1, int16_t y1,
                   std::optional<fix32> c);
-    int api_map(lua_State *l);
-    int api_mget(lua_State *l);
-    int api_mset(lua_State *l);
-    int api_pal(lua_State *l);
-    int api_palt(lua_State *l);
-    int api_pget(lua_State *l);
-    void api_pset(int16_t x, int16_t y,
+    void api_map(int16_t cel_x, int16_t cel_y, int16_t sx, int16_t sy,
+                 std::optional<int16_t> in_cel_w,
+                 std::optional<int16_t> in_cel_h, int16_t layer);
+    fix32 api_mget(int16_t x, int16_t y);
+    void api_mset(int16_t x, int16_t y, uint8_t n);
+    void api_pal(std::optional<int16_t> c0,
+                 std::optional<int16_t> c1, uint8_t p);
+    void api_palt(std::optional<int16_t> c, std::optional<uint8_t> t);
+    fix32 api_pget(int16_t x, int16_t y);
+    void api_pset(int16_t x, int16_t y, std::optional<fix32> c);
+    void api_rect(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
                   std::optional<fix32> c);
-    void api_rect(int16_t x0, int16_t y0,
-                  int16_t x1, int16_t y1,
-                  std::optional<fix32> c);
-    void api_rectfill(int16_t x0, int16_t y0,
-                      int16_t x1, int16_t y1,
+    void api_rectfill(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
                       std::optional<fix32> c);
     int api_sget(lua_State *l);
     int api_sset(lua_State *l);

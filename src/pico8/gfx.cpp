@@ -33,14 +33,14 @@ uint32_t vm::to_color_bits(std::optional<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
-    if (c.has_value())
+    if (c)
     {
         /* From the PICO-8 documentation:
          *  -- bit  0x1000.0000 means the non-colour bits should be observed
          *  -- bit  0x0100.0000 transparency bit
          *  -- bits 0x00FF.0000 are the usual colour bits
          *  -- bits 0x0000.FFFF are interpreted as the fill pattern */
-        fix32 col = c.value();
+        fix32 col = *c;
         ds.pen = (col.bits() >> 16) & 0xff;
 
         if (col.bits() & 0x10000000 && ds.fillp_flag) // 0x5f34
@@ -196,8 +196,8 @@ void vm::api_cursor(uint8_t x, uint8_t y,
 {
     m_ram.draw_state.cursor.x = x;
     m_ram.draw_state.cursor.y = y;
-    if (c.has_value())
-        m_ram.draw_state.pen = c.value();
+    if (c)
+        m_ram.draw_state.pen = *c;
 }
 
 void vm::api_print(std::optional<std::string> str,
@@ -207,18 +207,18 @@ void vm::api_print(std::optional<std::string> str,
 {
     auto &ds = m_ram.draw_state;
 
-    if (!str.has_value())
+    if (!str)
         return;
 
     // FIXME: make x and y int16_t instead?
-    bool use_cursor = !opt_x.has_value() || !opt_y.has_value();
-    fix32 x = use_cursor ? fix32(ds.cursor.x) : opt_x.value();
-    fix32 y = use_cursor ? fix32(ds.cursor.y) : opt_y.value();
+    bool use_cursor = !opt_x || !opt_y;
+    fix32 x = use_cursor ? fix32(ds.cursor.x) : *opt_x;
+    fix32 y = use_cursor ? fix32(ds.cursor.y) : *opt_y;
     // FIXME: we ignore fillp here, but should we set it in to_color_bits()?
     uint32_t color_bits = to_color_bits(c) & 0xf0000;
     fix32 initial_x = x;
 
-    for (uint8_t ch : str.value())
+    for (uint8_t ch : *str)
     {
         if (ch == '\n')
         {
@@ -347,33 +347,31 @@ void vm::api_circfill(int16_t x, int16_t y, int16_t r,
     }
 }
 
-int vm::api_clip(lua_State *l)
+void vm::api_clip(int16_t x, int16_t y, int16_t w, std::optional<int16_t> h)
 {
-    int x1 = 0, y1 = 0, x2 = 128, y2 = 128;
+    int16_t x1 = 0, y1 = 0, x2 = 128, y2 = 128;
 
-    /* XXX: there were rendering issues with Hyperspace by J.Fry when we were
-     * only checking for lua_isnone(l,1) (instead of 4) because first argument
-     * was actually "" instead of nil. */
-    if (!lua_isnone(l, 4))
+    // XXX: there were rendering issues with Hyperspace by J.Fry when the
+    // code only checked for a first argument (instead of 4th) because we
+    // were called using clip"" instead of clip().
+    if (h)
     {
-        x1 = std::max(x1, (int)lua_tonumber(l, 1));
-        y1 = std::max(y1, (int)lua_tonumber(l, 2));
-        x2 = std::min(x2, x1 + (int)lua_tonumber(l, 3));
-        y2 = std::min(y2, y1 + (int)lua_tonumber(l, 4));
+        x2 = std::min(x2, (int16_t)(x1 + w));
+        y2 = std::min(y2, (int16_t)(y1 + *h));
+        x1 = std::max(x1, x);
+        y1 = std::max(y1, y);
     }
 
     auto &ds = m_ram.draw_state;
-    ds.clip.x1 = x1;
-    ds.clip.y1 = y1;
-    ds.clip.x2 = x2;
-    ds.clip.y2 = y2;
-    return 0;
+    ds.clip.x1 = (uint8_t)x1;
+    ds.clip.y1 = (uint8_t)y1;
+    ds.clip.x2 = (uint8_t)x2;
+    ds.clip.y2 = (uint8_t)y2;
 }
 
-int vm::api_cls(lua_State *l)
+void vm::api_cls(uint8_t c)
 {
-    int c = (int)lua_tonumber(l, 1) & 0xf;
-    ::memset(&m_ram.screen, c * 0x11, sizeof(m_ram.screen));
+    ::memset(&m_ram.screen, c % 0x10 * 0x11, sizeof(m_ram.screen));
 
     // Documentation: “Clear the screen and reset the clipping rectangle”.
     auto &ds = m_ram.draw_state;
@@ -383,23 +381,18 @@ int vm::api_cls(lua_State *l)
     // Undocumented: set cursor to 0,0
     m_ram.draw_state.cursor.x = 0;
     m_ram.draw_state.cursor.y = 0;
-    return 0;
 }
 
-int vm::api_color(lua_State *l)
+void vm::api_color(uint8_t c)
 {
-    fix32 colors = lua_tonumber(l, 1);
-    m_ram.draw_state.pen = (uint8_t)colors;
-    return 0;
+    m_ram.draw_state.pen = c;
 }
 
-int vm::api_fillp(lua_State *l)
+void vm::api_fillp(fix32 fillp)
 {
-    fix32 fillp = lua_tonumber(l, 1);
     m_ram.draw_state.fillp[0] = fillp.bits() >> 16;
     m_ram.draw_state.fillp[1] = fillp.bits() >> 24;
     m_ram.draw_state.fillp_trans = (fillp.bits() >> 15) & 1;
-    return 0;
 }
 
 int vm::api_fget(lua_State *l)
@@ -459,17 +452,17 @@ void vm::api_line(int16_t x0,
     int16_t y0, x1;
 
     // Polyline mode if and only if there are 2 arguments
-    if (opt_y0.has_value() && !opt_x1.has_value())
+    if (opt_y0 && !opt_x1)
     {
         x1 = x0;
-        y1 = opt_y0.value();
+        y1 = *opt_y0;
         x0 = ds.polyline.x();
         y0 = ds.polyline.y();
     }
     else
     {
-        y0 = opt_y0.value();
-        x1 = opt_x1.value();
+        y0 = *opt_y0;
+        x1 = *opt_x1;
     }
 
     // Store polyline state
@@ -503,20 +496,21 @@ void vm::api_line(int16_t x0,
     }
 }
 
-int vm::api_map(lua_State *l)
+void vm::api_map(int16_t cel_x, int16_t cel_y, int16_t sx, int16_t sy,
+                 std::optional<int16_t> in_cel_w,
+                 std::optional<int16_t> in_cel_h,
+                 int16_t layer)
 {
     auto &ds = m_ram.draw_state;
 
-    int16_t cel_x = (int16_t)lua_tonumber(l, 1);
-    int16_t cel_y = (int16_t)lua_tonumber(l, 2);
-    int16_t sx = (int16_t)lua_tonumber(l, 3) - ds.camera.x();
-    int16_t sy = (int16_t)lua_tonumber(l, 4) - ds.camera.y();
+    sx -= ds.camera.x();
+    sy -= ds.camera.y();
+
     // PICO-8 documentation: “If cel_w and cel_h are not specified,
     // defaults to 128,32”.
-    bool no_size = lua_isnone(l, 5) && lua_isnone(l, 6);
-    int16_t cel_w = no_size ? 128 : (int16_t)lua_tonumber(l, 5);
-    int16_t cel_h = no_size ? 32 : (int16_t)lua_tonumber(l, 6);
-    int16_t layer = (int16_t)lua_tonumber(l, 7);
+    bool no_size = !in_cel_w && !in_cel_h;
+    int16_t cel_w = no_size ? 128 : *in_cel_w;
+    int16_t cel_h = no_size ? 32 : *in_cel_h;
 
     for (int16_t dy = 0; dy < cel_h * 8; ++dy)
     for (int16_t dx = 0; dx < cel_w * 8; ++dx)
@@ -541,40 +535,30 @@ int vm::api_map(lua_State *l)
             }
         }
     }
-
-    return 0;
 }
 
-int vm::api_mget(lua_State *l)
+fix32 vm::api_mget(int16_t x, int16_t y)
 {
-    int x = (int)lua_tonumber(l, 1);
-    int y = (int)lua_tonumber(l, 2);
-    uint8_t n = 0;
+    if (x < 0 || x >= 128 || y < 0 || y >= 64)
+        return 0;
 
-    if (x >= 0 && x < 128 && y >= 0 && y < 64)
-        n = m_ram.map[128 * y + x];
-
-    lua_pushnumber(l, fix32(n));
-    return 1;
+    return m_ram.map[128 * y + x];
 }
 
-int vm::api_mset(lua_State *l)
+void vm::api_mset(int16_t x, int16_t y, uint8_t n)
 {
-    int x = (int)lua_tonumber(l, 1);
-    int y = (int)lua_tonumber(l, 2);
-    int n = (int)lua_tonumber(l, 3);
+    if (x < 0 || x >= 128 || y < 0 || y >= 64)
+        return;
 
-    if (x >= 0 && x < 128 && y >= 0 && y < 64)
-        m_ram.map[128 * y + x] = n;
-
-    return 0;
+    m_ram.map[128 * y + x] = n;
 }
 
-int vm::api_pal(lua_State *l)
+void vm::api_pal(std::optional<int16_t> c0,
+                 std::optional<int16_t> c1, uint8_t p)
 {
     auto &ds = m_ram.draw_state;
 
-    if (lua_isnone(l, 1) || lua_isnone(l, 2))
+    if (!c0 || !c1)
     {
         // PICO-8 documentation: “pal() to reset to system defaults (including
         // transparency values and fill pattern)”
@@ -589,30 +573,25 @@ int vm::api_pal(lua_State *l)
     }
     else
     {
-        int c0 = (int)lua_tonumber(l, 1) & 0xf;
-        int c1 = (int)lua_tonumber(l, 2);
-        int p = (int)lua_tonumber(l, 3);
-
         if (p & 1)
         {
-            ds.pal[1][c0] = c1 & 0xff;
+            ds.pal[1][*c0 & 0xf] = *c1 & 0xff;
         }
         else
         {
             // Transparency bit is preserved
-            ds.pal[p & 1][c0] &= 0x10;
-            ds.pal[p & 1][c0] |= c1 & 0xf;
+            ds.pal[p & 1][*c0 & 0xf] &= 0x10;
+            ds.pal[p & 1][*c0 & 0xf] |= *c1 & 0xf;
         }
     }
-
-    return 0;
 }
 
-int vm::api_palt(lua_State *l)
+void vm::api_palt(std::optional<int16_t> c,
+                  std::optional<uint8_t> t)
 {
     auto &ds = m_ram.draw_state;
 
-    if (lua_isnone(l, 1) || lua_isnone(l, 2))
+    if (!c || !t)
     {
         for (int i = 0; i < 16; ++i)
         {
@@ -622,26 +601,20 @@ int vm::api_palt(lua_State *l)
     }
     else
     {
-        int c = (int)lua_tonumber(l, 1) & 0xf;
-        int t = lua_toboolean(l, 2);
-        ds.pal[0][c] &= 0xf;
-        ds.pal[0][c] |= t ? 0x10 : 0x00;
+        ds.pal[0][*c & 0xf] &= 0xf;
+        ds.pal[0][*c & 0xf] |= *t ? 0x10 : 0x00;
     }
-
-    return 0;
 }
 
-int vm::api_pget(lua_State *l)
+fix32 vm::api_pget(int16_t x, int16_t y)
 {
     auto &ds = m_ram.draw_state;
 
     /* pget() is affected by camera() and by clip() */
     // FIXME: "and by clip()"? wut?
-    int16_t x = (int16_t)lua_tonumber(l, 1) - ds.camera.x();
-    int16_t y = (int16_t)lua_tonumber(l, 2) - ds.camera.y();
-    lua_pushnumber(l, fix32(get_pixel(x, y)));
-
-    return 1;
+    x -= ds.camera.x();
+    y -= ds.camera.y();
+    return get_pixel(x, y);
 }
 
 void vm::api_pset(int16_t x, int16_t y,
