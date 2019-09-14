@@ -416,29 +416,21 @@ int vm::api_fget(lua_State *l)
     return 1;
 }
 
-int vm::api_fset(lua_State *l)
+void vm::api_fset(std::optional<int16_t> n,
+                  std::optional<int16_t> f,
+                  std::optional<bool> b)
 {
-    if (lua_isnone(l, 1) || lua_isnone(l, 2))
-        return 0;
+    if (!n || !f || *n < 0 || *n >= (int16_t)sizeof(m_ram.gfx_props))
+        return;
 
-    int n = (int)lua_tonumber(l, 1);
+    uint8_t &data = m_ram.gfx_props[*n];
 
-    if (n >= 0 && n < (int)sizeof(m_ram.gfx_props))
-    {
-        uint8_t bits = m_ram.gfx_props[n];
-        int f = (int)lua_tonumber(l, 2);
-
-        if (lua_isnone(l, 3))
-            bits = f;
-        else if (lua_toboolean(l, 3))
-            bits |= 1 << (int)f;
-        else
-            bits &= ~(1 << (int)f);
-
-        m_ram.gfx_props[n] = bits;
-    }
-
-    return 0;
+    if (!b)
+        data = *f;
+    else if (*b)
+        data |= 1 << *f;
+    else
+        data &= ~(1 << *f);
 }
 
 void vm::api_line(int16_t x0,
@@ -675,35 +667,23 @@ void vm::api_rectfill(int16_t x0, int16_t y0,
         hline(x0, x1, y, color_bits);
 }
 
-int vm::api_sget(lua_State *l)
+int16_t vm::api_sget(int16_t x, int16_t y)
 {
-    int16_t x = (int16_t)lua_tonumber(l, 1);
-    int16_t y = (int16_t)lua_tonumber(l, 2);
-
-    lua_pushnumber(l, getspixel(x, y));
-
-    return 1;
+    return getspixel(x, y);
 }
 
-int vm::api_sset(lua_State *l)
+void vm::api_sset(int16_t x, int16_t y, std::optional<int16_t> c)
 {
     auto &ds = m_ram.draw_state;
 
-    int16_t x = lua_tonumber(l, 1);
-    int16_t y = lua_tonumber(l, 2);
-    uint8_t col = lua_isnone(l, 3) ? ds.pen : (uint8_t)lua_tonumber(l, 3);
-    int c = ds.pal[0][col & 0xf];
-
-    setspixel(x, y, c);
-
-    return 0;
+    uint8_t col = c ? (uint8_t)*c : ds.pen;
+    setspixel(x, y, ds.pal[0][col & 0xf]);
 }
 
 int vm::api_spr(lua_State *l)
 {
     auto &ds = m_ram.draw_state;
 
-    // FIXME: should we abort if n == 0?
     int16_t n = (int16_t)lua_tonumber(l, 1);
     int16_t x = (int16_t)lua_tonumber(l, 2) - ds.camera.x();
     int16_t y = (int16_t)lua_tonumber(l, 3) - ds.camera.y();

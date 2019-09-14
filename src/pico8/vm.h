@@ -104,7 +104,8 @@ private:
     void api_color(uint8_t c);
     void api_fillp(fix32 fillp);
     int api_fget(lua_State *l);
-    int api_fset(lua_State *l);
+    void api_fset(std::optional<int16_t> n, std::optional<int16_t> f,
+                  std::optional<bool> b);
     void api_line(int16_t x0, std::optional<int16_t> opt_y0,
                   std::optional<int16_t> opt_x1, int16_t y1,
                   std::optional<fix32> c);
@@ -122,8 +123,8 @@ private:
                   std::optional<fix32> c);
     void api_rectfill(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
                       std::optional<fix32> c);
-    int api_sget(lua_State *l);
-    int api_sset(lua_State *l);
+    int16_t api_sget(int16_t x, int16_t y);
+    void api_sset(int16_t x, int16_t y, std::optional<int16_t> c);
     int api_spr(lua_State *l);
     int api_sspr(lua_State *l);
 
