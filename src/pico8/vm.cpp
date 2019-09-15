@@ -108,13 +108,13 @@ vm::vm()
         { "spr",      &dispatch<&vm::api_spr> },
         { "sspr",     &dispatch<&vm::api_sspr> },
 
-        { "music", &dispatch<&vm::api_music> },
-        { "sfx",   &dispatch<&vm::api_sfx> },
+        //{ "music", &dispatch<&vm::api_music> },
+        //{ "sfx",   &dispatch<&vm::api_sfx> },
 
         //{ "time", &dispatch<&vm::api_time> },
 
         { "__cartdata", &dispatch<&vm::private_cartdata> },
-        { "__stub",     &dispatch<&vm::private_stub> },
+        //{ "__stub",     &dispatch<&vm::private_stub> },
 
         { nullptr, nullptr },
     };
@@ -231,11 +231,9 @@ void vm::keyboard(char ch)
     m_keyboard.stop = (m_keyboard.stop + 1) % (int)sizeof(m_keyboard.chars);
 }
 
-int vm::private_stub(lua_State *l)
+void vm::private_stub(std::string str)
 {
-    char const *str = lua_tostring(l, 1);
-    msg::info("z8:stub:%s\n", str);
-    return 0;
+    msg::info("z8:stub:%s\n", str.c_str());
 }
 
 //

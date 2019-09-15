@@ -153,13 +153,13 @@ void vm::install_lua_api()
         //{ "spr",      &dispatch<&vm::api_spr> },
         //{ "sspr",     &dispatch<&vm::api_sspr> },
 
-        //{ "music", &dispatch<&vm::api_music> },
-        //{ "sfx",   &dispatch<&vm::api_sfx> },
+        { "music", &dispatch<&vm::api_music> },
+        { "sfx",   &dispatch<&vm::api_sfx> },
 
         { "time", &dispatch<&vm::api_time> },
 
         //{ "__cartdata", &dispatch<&vm::private_cartdata> },
-        //{ "__stub",     &dispatch<&vm::private_stub> },
+        { "__stub",     &dispatch<&vm::private_stub> },
 
         { nullptr, nullptr },
     };

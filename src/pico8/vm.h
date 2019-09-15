@@ -64,7 +64,7 @@ private:
 
     // Private methods (hidden from the user)
     int private_cartdata(lua_State *l);
-    int private_stub(lua_State *l);
+    void private_stub(std::string str);
 
     // System
     void api_run();
@@ -129,8 +129,8 @@ private:
     int api_sspr(lua_State *l);
 
     // Sound
-    int api_music(lua_State *l);
-    int api_sfx(lua_State *l);
+    void api_music(int16_t pattern, int16_t fade_len, int16_t mask);
+    void api_sfx(int16_t sfx, std::optional<int16_t> in_chan, int16_t offset);
 
     // Deprecated
     fix32 api_time();

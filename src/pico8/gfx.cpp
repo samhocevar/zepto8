@@ -426,7 +426,7 @@ void vm::api_fset(std::optional<int16_t> n,
     uint8_t &data = m_ram.gfx_props[*n];
 
     if (!b)
-        data = *f;
+        data = (uint8_t)*f;
     else if (*b)
         data |= 1 << *f;
     else

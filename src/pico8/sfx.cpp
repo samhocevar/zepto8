@@ -331,17 +331,14 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
 // Sound
 //
 
-int vm::api_music(lua_State *l)
+void vm::api_music(int16_t pattern, int16_t fade_len, int16_t mask)
 {
-    // Pattern: 0..63, -1 to stop music.
-    int pattern = (int)lua_tonumber(l, 1);
-    // Fade length in milliseconds (default 0)
-    int fade_len = (int)lua_tonumber(l, 2);
-    // Reserved channels
-    int channel_mask = (int)lua_tonumber(l, 3) & 0xf;
+    // pattern: 0..63, -1 to stop music.
+    // fade_len: fade length in milliseconds (default 0)
+    // mask: reserved channels
 
     if (pattern < -1 || pattern > 63)
-        return 0;
+        return;
 
     if (pattern == -1 && m_music.m_pattern >= 0)
     {
@@ -350,29 +347,27 @@ int vm::api_music(lua_State *l)
             if (m_music.m_mask & (1 << i))
                 m_channels[i].m_sfx = -1;
         m_music.m_pattern = -1;
-        return 0;
+        return;
     }
 
     m_music.m_pattern = pattern;
-    m_music.m_mask = channel_mask;
+    m_music.m_mask = mask & 0xf;
 
     msg::info("z8:stub:music\n");
-    return 0;
 }
 
-int vm::api_sfx(lua_State *l)
+void vm::api_sfx(int16_t sfx, std::optional<int16_t> in_chan, int16_t offset)
 {
     // SFX index: valid values are 0..63 for actual samples,
     // -1 to stop sound on a channel, -2 to stop looping on a channel
-    int sfx = (int)lua_tonumber(l, 1);
     // Audio channel: valid values are 0..3 or -1 (autoselect)
-    int chan = lua_isnone(l, 2) ? -1 : (int)lua_tonumber(l, 2);
     // Sound offset: valid values are 0..31, negative values act as 0,
     // and fractional values are ignored
-    int offset = lol::max(0, (int)lua_tonumber(l, 3));
+
+    int chan = in_chan ? *in_chan : -1;
 
     if (sfx < -2 || sfx > 63 || chan < -1 || chan > 4 || offset > 31)
-        return 0;
+        return;
 
     if (sfx == -1)
     {
@@ -422,7 +417,7 @@ int vm::api_sfx(lua_State *l)
                     m_channels[i].m_sfx = -1;
 
             m_channels[chan].m_sfx = sfx;
-            m_channels[chan].m_offset = (float)offset;
+            m_channels[chan].m_offset = std::max(0.f, (float)offset);
             m_channels[chan].m_phi = 0.f;
             m_channels[chan].m_can_loop = true;
             // Playing an instrument starting with the note C-2 and the
@@ -433,8 +428,6 @@ int vm::api_sfx(lua_State *l)
             m_channels[chan].m_prev_vol = 0.f;
         }
     }
-
-    return 0;
 }
 
 } // namespace z8
