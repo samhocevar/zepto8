@@ -37,6 +37,7 @@ static void lua_push(lua_State *l, fix32 x) { lua_pushnumber(l, x); }
 template<typename T> static void lua_get(lua_State *l, int i, T &);
 
 template<> void lua_get(lua_State *l, int i, fix32 &arg) { arg = lua_tonumber(l, i); }
+template<> void lua_get(lua_State *l, int i, bool &arg) { arg = (bool)lua_toboolean(l, i); }
 template<> void lua_get(lua_State *l, int i, uint8_t &arg) { arg = (uint8_t)lua_tonumber(l, i); }
 template<> void lua_get(lua_State *l, int i, int16_t &arg) { arg = (int16_t)lua_tonumber(l, i); }
 template<> void lua_get(lua_State *l, int i, uint16_t &arg) { arg = (uint16_t)lua_tonumber(l, i); }
