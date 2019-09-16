@@ -149,8 +149,8 @@ void vm::install_lua_api()
         { "rectfill", &dispatch<&vm::api_rectfill> },
         { "sget",     &dispatch<&vm::api_sget> },
         { "sset",     &dispatch<&vm::api_sset> },
-        //{ "spr",      &dispatch<&vm::api_spr> },
-        //{ "sspr",     &dispatch<&vm::api_sspr> },
+        { "spr",      &dispatch<&vm::api_spr> },
+        { "sspr",     &dispatch<&vm::api_sspr> },
 
         { "music", &dispatch<&vm::api_music> },
         { "sfx",   &dispatch<&vm::api_sfx> },

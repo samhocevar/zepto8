@@ -105,8 +105,8 @@ vm::vm()
         //{ "rectfill", &dispatch<&vm::api_rectfill> },
         //{ "sget",     &dispatch<&vm::api_sget> },
         //{ "sset",     &dispatch<&vm::api_sset> },
-        { "spr",      &dispatch<&vm::api_spr> },
-        { "sspr",     &dispatch<&vm::api_sspr> },
+        //{ "spr",      &dispatch<&vm::api_spr> },
+        //{ "sspr",     &dispatch<&vm::api_sspr> },
 
         //{ "music", &dispatch<&vm::api_music> },
         //{ "sfx",   &dispatch<&vm::api_sfx> },
@@ -263,8 +263,7 @@ void vm::api_menuitem()
     msg::info("z8:stub:menuitem\n");
 }
 
-void vm::api_reload(int16_t in_dst, int16_t in_src,
-                    std::optional<int16_t> in_size)
+void vm::api_reload(int16_t in_dst, int16_t in_src, opt<int16_t> in_size)
 {
     int dst = 0, src = 0, size = offsetof(memory, code);
 

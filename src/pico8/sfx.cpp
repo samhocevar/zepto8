@@ -355,7 +355,7 @@ void vm::api_music(int16_t pattern, int16_t fade_len, int16_t mask)
     msg::info("z8:stub:music\n");
 }
 
-void vm::api_sfx(int16_t sfx, std::optional<int16_t> in_chan, int16_t offset)
+void vm::api_sfx(int16_t sfx, opt<int16_t> in_chan, int16_t offset)
 {
     // SFX index: valid values are 0..63 for actual samples,
     // -1 to stop sound on a channel, -2 to stop looping on a channel

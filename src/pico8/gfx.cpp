@@ -29,7 +29,7 @@ using lol::msg;
  *  - bits 0x000f0000: default color (palette applied)
  *  - bits 0x00f00000: color for patterns (palette applied)
  *  - bit  0x01000000: transparency for patterns */
-uint32_t vm::to_color_bits(std::optional<fix32> c)
+uint32_t vm::to_color_bits(opt<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
@@ -191,8 +191,7 @@ void vm::vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits)
 // Text
 //
 
-void vm::api_cursor(uint8_t x, uint8_t y,
-                    std::optional<uint8_t> c)
+void vm::api_cursor(uint8_t x, uint8_t y, opt<uint8_t> c)
 {
     m_ram.draw_state.cursor.x = x;
     m_ram.draw_state.cursor.y = y;
@@ -200,10 +199,8 @@ void vm::api_cursor(uint8_t x, uint8_t y,
         m_ram.draw_state.pen = *c;
 }
 
-void vm::api_print(std::optional<std::string> str,
-                   std::optional<fix32> opt_x,
-                   std::optional<fix32> opt_y,
-                   std::optional<fix32> c)
+void vm::api_print(opt<std::string> str, opt<fix32> opt_x, opt<fix32> opt_y,
+                   opt<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
@@ -286,8 +283,7 @@ void vm::api_camera(int16_t x, int16_t y)
     ds.camera.set_y(y);
 }
 
-void vm::api_circ(int16_t x, int16_t y, int16_t r,
-                  std::optional<fix32> c)
+void vm::api_circ(int16_t x, int16_t y, int16_t r, opt<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
@@ -318,8 +314,7 @@ void vm::api_circ(int16_t x, int16_t y, int16_t r,
     }
 }
 
-void vm::api_circfill(int16_t x, int16_t y, int16_t r,
-                      std::optional<fix32> c)
+void vm::api_circfill(int16_t x, int16_t y, int16_t r, opt<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
@@ -347,7 +342,7 @@ void vm::api_circfill(int16_t x, int16_t y, int16_t r,
     }
 }
 
-void vm::api_clip(int16_t x, int16_t y, int16_t w, std::optional<int16_t> h)
+void vm::api_clip(int16_t x, int16_t y, int16_t w, opt<int16_t> h)
 {
     int16_t x1 = 0, y1 = 0, x2 = 128, y2 = 128;
 
@@ -416,9 +411,7 @@ int vm::api_fget(lua_State *l)
     return 1;
 }
 
-void vm::api_fset(std::optional<int16_t> n,
-                  std::optional<int16_t> f,
-                  std::optional<bool> b)
+void vm::api_fset(opt<int16_t> n, opt<int16_t> f, opt<bool> b)
 {
     if (!n || !f || *n < 0 || *n >= (int16_t)sizeof(m_ram.gfx_props))
         return;
@@ -433,11 +426,8 @@ void vm::api_fset(std::optional<int16_t> n,
         data &= ~(1 << *f);
 }
 
-void vm::api_line(int16_t x0,
-                  std::optional<int16_t> opt_y0,
-                  std::optional<int16_t> opt_x1,
-                  int16_t y1,
-                  std::optional<fix32> c)
+void vm::api_line(int16_t x0, opt<int16_t> opt_y0, opt<int16_t> opt_x1,
+                  int16_t y1, opt<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
@@ -489,9 +479,7 @@ void vm::api_line(int16_t x0,
 }
 
 void vm::api_map(int16_t cel_x, int16_t cel_y, int16_t sx, int16_t sy,
-                 std::optional<int16_t> in_cel_w,
-                 std::optional<int16_t> in_cel_h,
-                 int16_t layer)
+                 opt<int16_t> in_cel_w, opt<int16_t> in_cel_h, int16_t layer)
 {
     auto &ds = m_ram.draw_state;
 
@@ -545,8 +533,7 @@ void vm::api_mset(int16_t x, int16_t y, uint8_t n)
     m_ram.map[128 * y + x] = n;
 }
 
-void vm::api_pal(std::optional<int16_t> c0,
-                 std::optional<int16_t> c1, uint8_t p)
+void vm::api_pal(opt<int16_t> c0, opt<int16_t> c1, uint8_t p)
 {
     auto &ds = m_ram.draw_state;
 
@@ -578,8 +565,7 @@ void vm::api_pal(std::optional<int16_t> c0,
     }
 }
 
-void vm::api_palt(std::optional<int16_t> c,
-                  std::optional<uint8_t> t)
+void vm::api_palt(opt<int16_t> c, opt<uint8_t> t)
 {
     auto &ds = m_ram.draw_state;
 
@@ -609,8 +595,7 @@ fix32 vm::api_pget(int16_t x, int16_t y)
     return get_pixel(x, y);
 }
 
-void vm::api_pset(int16_t x, int16_t y,
-                  std::optional<fix32> c)
+void vm::api_pset(int16_t x, int16_t y, opt<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
@@ -620,9 +605,7 @@ void vm::api_pset(int16_t x, int16_t y,
     set_pixel(x, y, color_bits);
 }
 
-void vm::api_rect(int16_t x0, int16_t y0,
-                  int16_t x1, int16_t y1,
-                  std::optional<fix32> c)
+void vm::api_rect(int16_t x0, int16_t y0, int16_t x1, int16_t y1, opt<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
@@ -648,9 +631,8 @@ void vm::api_rect(int16_t x0, int16_t y0,
     }
 }
 
-void vm::api_rectfill(int16_t x0, int16_t y0,
-                      int16_t x1, int16_t y1,
-                      std::optional<fix32> c)
+void vm::api_rectfill(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
+                      opt<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
@@ -672,7 +654,7 @@ int16_t vm::api_sget(int16_t x, int16_t y)
     return getspixel(x, y);
 }
 
-void vm::api_sset(int16_t x, int16_t y, std::optional<int16_t> c)
+void vm::api_sset(int16_t x, int16_t y, opt<int16_t> c)
 {
     auto &ds = m_ram.draw_state;
 
@@ -680,17 +662,16 @@ void vm::api_sset(int16_t x, int16_t y, std::optional<int16_t> c)
     setspixel(x, y, ds.pal[0][col & 0xf]);
 }
 
-int vm::api_spr(lua_State *l)
+void vm::api_spr(int16_t n, int16_t x, int16_t y, opt<fix32> w,
+                 opt<fix32> h, bool flip_x, bool flip_y)
 {
     auto &ds = m_ram.draw_state;
 
-    int16_t n = (int16_t)lua_tonumber(l, 1);
-    int16_t x = (int16_t)lua_tonumber(l, 2) - ds.camera.x();
-    int16_t y = (int16_t)lua_tonumber(l, 3) - ds.camera.y();
-    int16_t w8 = lua_isnoneornil(l, 4) ? 8 : (int16_t)(lua_tonumber(l, 4) * fix32(8.0));
-    int16_t h8 = lua_isnoneornil(l, 5) ? 8 : (int16_t)(lua_tonumber(l, 5) * fix32(8.0));
-    int flip_x = lua_toboolean(l, 6);
-    int flip_y = lua_toboolean(l, 7);
+    x -= ds.camera.x();
+    y -= ds.camera.y();
+
+    int16_t w8 = w ? (int16_t)(*w * fix32(8.0)) : 8;
+    int16_t h8 = h ? (int16_t)(*h * fix32(8.0)) : 8;
 
     for (int16_t j = 0; j < h8; ++j)
         for (int16_t i = 0; i < w8; ++i)
@@ -704,24 +685,18 @@ int vm::api_spr(lua_State *l)
                 set_pixel(x + i, y + j, color_bits);
             }
         }
-
-    return 0;
 }
 
-int vm::api_sspr(lua_State *l)
+void vm::api_sspr(int16_t sx, int16_t sy, int16_t sw, int16_t sh,
+                  int16_t dx, int16_t dy, opt<int16_t> in_dw,
+                  opt<int16_t> in_dh, bool flip_x, bool flip_y)
 {
     auto &ds = m_ram.draw_state;
 
-    int16_t sx = (int16_t)lua_tonumber(l, 1);
-    int16_t sy = (int16_t)lua_tonumber(l, 2);
-    int16_t sw = (int16_t)lua_tonumber(l, 3);
-    int16_t sh = (int16_t)lua_tonumber(l, 4);
-    int16_t dx = (int16_t)lua_tonumber(l, 5) - ds.camera.x();
-    int16_t dy = (int16_t)lua_tonumber(l, 6) - ds.camera.y();
-    int16_t dw = lua_isnone(l, 7) ? sw : (int16_t)lua_tonumber(l, 7);
-    int16_t dh = lua_isnone(l, 8) ? sh : (int16_t)lua_tonumber(l, 8);
-    int flip_x = lua_toboolean(l, 9);
-    int flip_y = lua_toboolean(l, 10);
+    dx -= ds.camera.x();
+    dy -= ds.camera.y();
+    int16_t dw = in_dw ? *in_dw : sw;
+    int16_t dh = in_dh ? *in_dh : sh;
 
     // Iterate over destination pixels
     // FIXME: maybe clamp if target area is too big?
@@ -742,8 +717,6 @@ int vm::api_sspr(lua_State *l)
             set_pixel(dx + i, dy + j, color_bits);
         }
     }
-
-    return 0;
 }
 
 } // namespace z8
