@@ -17,6 +17,7 @@
 #include <lol/engine.h>
 
 #include <optional>
+#include <variant>
 
 #include "zepto8.h"
 #include "pico8/vm.h"
@@ -30,8 +31,17 @@ template<typename T, typename R, typename... A>
 static auto lua_tuple(R (T::*)(A...)) { return std::tuple<A...>(); }
 
 // Push a standard type to the Lua stack
-static void lua_push(lua_State *l, int16_t x) { lua_pushnumber(l, x); }
-static void lua_push(lua_State *l, fix32 x) { lua_pushnumber(l, x); }
+template<typename T> static void lua_push(lua_State *l, T const &);
+
+template<> void lua_push(lua_State *l, bool const &x) { lua_pushboolean(l, x); }
+template<> void lua_push(lua_State *l, int16_t const &x) { lua_pushnumber(l, x); }
+template<> void lua_push(lua_State *l, fix32 const &x) { lua_pushnumber(l, x); }
+
+// Boxing an std::variant pushes the active alternative
+template<typename... T> void lua_push(lua_State *l, std::variant<T...> const &x)
+{
+    std::visit([l](auto&& arg){ lua_push(l, arg); }, x);
+}
 
 // Get a standard type from the Lua stack
 template<typename T> static void lua_get(lua_State *l, int i, T &);
@@ -122,8 +132,8 @@ void vm::install_lua_api()
         //{ "extcmd",   &dispatch<&vm::api_extcmd> },
 
         { "_update_buttons", &dispatch<&vm::api_update_buttons> },
-        //{ "btn",  &dispatch<&vm::api_btn> },
-        //{ "btnp", &dispatch<&vm::api_btnp> },
+        { "btn",  &dispatch<&vm::api_btn> },
+        { "btnp", &dispatch<&vm::api_btnp> },
 
         { "cursor", &dispatch<&vm::api_cursor> },
         { "print",  &dispatch<&vm::api_print> },

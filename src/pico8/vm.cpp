@@ -78,8 +78,8 @@ vm::vm()
         { "extcmd",   &dispatch<&vm::api_extcmd> },
 
         //{ "_update_buttons", &dispatch<&vm::api_update_buttons> },
-        { "btn",  &dispatch<&vm::api_btn> },
-        { "btnp", &dispatch<&vm::api_btnp> },
+        //{ "btn",  &dispatch<&vm::api_btn> },
+        //{ "btnp", &dispatch<&vm::api_btnp> },
 
         //{ "cursor", &dispatch<&vm::api_cursor> },
         //{ "print",  &dispatch<&vm::api_print> },
@@ -581,27 +581,20 @@ void vm::api_update_buttons()
     }
 }
 
-int vm::api_btn(lua_State *l)
+var<bool, int16_t> vm::api_btn(opt<int16_t> n, int16_t p)
 {
-    if (lua_isnone(l, 1))
-    {
-        int bits = 0;
-        for (int i = 0; i < 16; ++i)
-            bits |= m_buttons[0][i] ? 1 << i : 0;
-        lua_pushnumber(l, bits);
-    }
-    else
-    {
-        int index = (int)lua_tonumber(l, 1) + 8 * (int)lua_tonumber(l, 2);
-        lua_pushboolean(l, m_buttons[0][index]);
-    }
+    if (n)
+        return (bool)m_buttons[0][(*n + 8 * p) & 0x3f];
 
-    return 1;
+    int16_t bits = 0;
+    for (int i = 0; i < 16; ++i)
+        bits |= m_buttons[0][i] ? 1 << i : 0;
+    return bits;
 }
 
-int vm::api_btnp(lua_State *l)
+var<bool, int16_t> vm::api_btnp(opt<int16_t> n, int16_t p)
 {
-    auto was_pressed = [](int i)
+    auto was_pressed = [](int i) -> bool
     {
         // “Same as btn() but only true when the button was not pressed the last frame”
         if (i == 1)
@@ -612,20 +605,13 @@ int vm::api_btnp(lua_State *l)
         return false;
     };
 
-    if (lua_isnone(l, 1))
-    {
-        int bits = 0;
-        for (int i = 0; i < 16; ++i)
-            bits |= was_pressed(m_buttons[0][i]) ? 1 << i : 0;
-        lua_pushnumber(l, bits);
-    }
-    else
-    {
-        int index = (int)lua_tonumber(l, 1) + 8 * (int)lua_tonumber(l, 2);
-        lua_pushboolean(l, was_pressed(m_buttons[0][index]));
-    }
+    if (n)
+        return was_pressed(m_buttons[0][(*n + 8 * p) & 0x3f]);
 
-    return 1;
+    int16_t bits = 0;
+    for (int i = 0; i < 16; ++i)
+        bits |= was_pressed(m_buttons[0][i]) ? 1 << i : 0;
+    return bits;
 }
 
 //

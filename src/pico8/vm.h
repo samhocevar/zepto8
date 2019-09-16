@@ -15,6 +15,7 @@
 #include <lol/engine.h>
 
 #include <optional>
+#include <variant>
 
 #include "zepto8.h"
 #include "bios.h"
@@ -32,11 +33,12 @@ namespace pico8
 
 using lol::u8vec4;
 
+template<typename T> using opt = std::optional<T>;
+template<typename... T> using var = std::variant<T...>;
+
 class vm : z8::vm_base
 {
     friend class z8::player;
-
-    template<class T> using opt = std::optional<T>;
 
 public:
     vm();
@@ -87,8 +89,8 @@ private:
 
     // I/O
     void api_update_buttons();
-    int api_btn(lua_State *l);
-    int api_btnp(lua_State *l);
+    var<bool, int16_t> api_btn(opt<int16_t> n, int16_t p);
+    var<bool, int16_t> api_btnp(opt<int16_t> n, int16_t p);
 
     // Text
     void api_cursor(uint8_t x, uint8_t y, opt<uint8_t> c);
