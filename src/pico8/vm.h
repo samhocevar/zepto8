@@ -59,6 +59,7 @@ public:
                     uint8_t const *prev_screen = nullptr) const;
 
 private:
+    void runtime_error(std::string str);
     static int panic_hook(lua_State *l);
     static void instruction_hook(lua_State *l, lua_Debug *ar);
 
@@ -69,15 +70,16 @@ private:
     // System
     void api_run();
     void api_menuitem();
-    int api_reload(lua_State *l);
+    void api_reload(int16_t in_dst, int16_t in_src,
+                    std::optional<int16_t> in_size);
     int16_t api_peek(int16_t addr);
     int16_t api_peek2(int16_t addr);
     fix32 api_peek4(int16_t addr);
-    int api_poke(lua_State *l);
-    int api_poke2(lua_State *l);
-    int api_poke4(lua_State *l);
-    int api_memcpy(lua_State *l);
-    int api_memset(lua_State *l);
+    void api_poke(int16_t addr, int16_t val);
+    void api_poke2(int16_t addr, int16_t val);
+    void api_poke4(int16_t addr, fix32 val);
+    void api_memcpy(int16_t dst, int16_t src, int16_t size);
+    void api_memset(int16_t dst, uint8_t val, int16_t size);
     int api_stat(lua_State *l);
     static int api_printh(lua_State *l);
     int api_extcmd(lua_State *l);

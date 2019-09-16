@@ -64,15 +64,15 @@ vm::vm()
     {
         //{ "run",      &dispatch<&vm::api_run> },
         //{ "menuitem", &dispatch<&vm::api_menuitem> },
-        { "reload",   &dispatch<&vm::api_reload> },
+        //{ "reload",   &dispatch<&vm::api_reload> },
         //{ "peek",     &dispatch<&vm::api_peek> },
         //{ "peek2",    &dispatch<&vm::api_peek2> },
         //{ "peek4",    &dispatch<&vm::api_peek4> },
-        { "poke",     &dispatch<&vm::api_poke> },
-        { "poke2",    &dispatch<&vm::api_poke2> },
-        { "poke4",    &dispatch<&vm::api_poke4> },
-        { "memcpy",   &dispatch<&vm::api_memcpy> },
-        { "memset",   &dispatch<&vm::api_memset> },
+        //{ "poke",     &dispatch<&vm::api_poke> },
+        //{ "poke2",    &dispatch<&vm::api_poke2> },
+        //{ "poke4",    &dispatch<&vm::api_poke4> },
+        //{ "memcpy",   &dispatch<&vm::api_memcpy> },
+        //{ "memset",   &dispatch<&vm::api_memset> },
         { "stat",     &dispatch<&vm::api_stat> },
         { "printh",   &vm::api_printh },
         { "extcmd",   &dispatch<&vm::api_extcmd> },
@@ -153,6 +153,12 @@ std::tuple<uint8_t *, size_t> vm::rom()
 {
     auto rom = m_cart.get_rom();
     return std::make_tuple(&rom[0], sizeof(rom));
+}
+
+void vm::runtime_error(std::string str)
+{
+    // This function never returns
+    luaL_error(m_lua, str.c_str());
 }
 
 int vm::panic_hook(lua_State* l)
@@ -257,27 +263,29 @@ void vm::api_menuitem()
     msg::info("z8:stub:menuitem\n");
 }
 
-int vm::api_reload(lua_State *l)
+void vm::api_reload(int16_t in_dst, int16_t in_src,
+                    std::optional<int16_t> in_size)
 {
     int dst = 0, src = 0, size = offsetof(memory, code);
 
+    if (in_size && *in_size <= 0)
+        return;
+
     // PICO-8 fully reloads the cartridge if not all arguments are passed
-    if (!lua_isnone(l, 3))
+    if (in_size)
     {
-        dst = (int)lua_tonumber(l, 1) & 0xffff;
-        src = (int)lua_tonumber(l, 2) & 0xffff;
-        size = (int)lua_tonumber(l, 3);
+        dst = in_dst & 0xffff;
+        src = in_src & 0xffff;
+        size = *in_size & 0xffff;
     }
-
-    if (size <= 0)
-        return 0;
-
-    size = size & 0xffff;
 
     // Attempting to write outside the memory area raises an error. Everything
     // else seems legal, especially reading from anywhere.
     if (dst + size > (int)sizeof(m_ram))
-        return luaL_error(l, "bad memory access");
+    {
+        runtime_error("bad memory access");
+        return;
+    }
 
     // If reading from after the cart, fill that part with zeroes
     if (src > (int)offsetof(memory, code))
@@ -297,8 +305,6 @@ int vm::api_reload(lua_State *l)
 
     // If there is anything left to copy, it’s zeroes again
     ::memset(&m_ram[dst], 0, size);
-
-    return 0;
 }
 
 int16_t vm::api_peek(int16_t addr)
@@ -339,65 +345,63 @@ fix32 vm::api_peek4(int16_t addr)
     return fix32::frombits(bits);
 }
 
-int vm::api_poke(lua_State *l)
+void vm::api_poke(int16_t addr, int16_t val)
 {
     // Note: poke() is the same as poke(0, 0)
-    int addr = (int)lua_tonumber(l, 1);
-    int val = (int)lua_tonumber(l, 2);
     if (addr < 0 || addr > (int)sizeof(m_ram) - 1)
-        return luaL_error(l, "bad memory access");
-
+    {
+        runtime_error("bad memory access");
+        return;
+    }
     m_ram[addr] = (uint8_t)val;
-    return 0;
 }
 
-int vm::api_poke2(lua_State *l)
+void vm::api_poke2(int16_t addr, int16_t val)
 {
     // Note: poke2() is the same as poke2(0, 0)
-    int addr = (int)lua_tonumber(l, 1);
     if (addr < 0 || addr > (int)sizeof(m_ram) - 2)
-        return luaL_error(l, "bad memory access");
+    {
+        runtime_error("bad memory access");
+        return;
+    }
 
-    uint16_t x = (uint16_t)lua_tonumber(l, 2);
-    m_ram[addr + 0] = (uint8_t)x;
-    m_ram[addr + 1] = (uint8_t)(x >> 8);
-
-    return 0;
+    m_ram[addr + 0] = (uint8_t)val;
+    m_ram[addr + 1] = (uint8_t)((uint16_t)val >> 8);
 }
 
-int vm::api_poke4(lua_State *l)
+void vm::api_poke4(int16_t addr, fix32 val)
 {
     // Note: poke4() is the same as poke4(0, 0)
-    int addr = (int)lua_tonumber(l, 1);
     if (addr < 0 || addr > (int)sizeof(m_ram) - 4)
-        return luaL_error(l, "bad memory access");
+    {
+        runtime_error("bad memory access");
+        return;
+    }
 
-    uint32_t x = (uint32_t)lua_tonumber(l, 2).bits();
+    uint32_t x = (uint32_t)val.bits();
     m_ram[addr + 0] = (uint8_t)x;
     m_ram[addr + 1] = (uint8_t)(x >> 8);
     m_ram[addr + 2] = (uint8_t)(x >> 16);
     m_ram[addr + 3] = (uint8_t)(x >> 24);
-
-    return 0;
 }
 
-int vm::api_memcpy(lua_State *l)
+void vm::api_memcpy(int16_t in_dst, int16_t in_src, int16_t in_size)
 {
-    int dst = (int)lua_tonumber(l, 1);
-    int src = (int)lua_tonumber(l, 2) & 0xffff;
-    int size = (int)lua_tonumber(l, 3);
+    if (in_size <= 0)
+        return;
 
-    if (size <= 0)
-        return 0;
-
-    size = size & 0xffff;
+    // TODO: see if we can stick to int16_t instead of promoting these variables
+    int src = in_src & 0xffff;
+    int dst = in_dst & 0xffff;
+    int size = in_size & 0xffff;
 
     // Attempting to write outside the memory area raises an error. Everything
     // else seems legal, especially reading from anywhere.
     if (dst < 0 || dst + size > (int)sizeof(m_ram))
     {
         msg::info("z8:segv:memcpy(0x%x,0x%x,0x%x)\n", src, dst, size);
-        return luaL_error(l, "bad memory access");
+        runtime_error("bad memory access");
+        return;
     }
 
     // If source is outside main memory, part of the operation will be
@@ -424,30 +428,21 @@ int vm::api_memcpy(lua_State *l)
         ::memset(&m_ram[delayed_dst], 0, delayed_size);
     if (size)
         ::memset(&m_ram[dst], 0, size);
-
-    return 0;
 }
 
-int vm::api_memset(lua_State *l)
+void vm::api_memset(int16_t dst, uint8_t val, int16_t size)
 {
-    int dst = (int)lua_tonumber(l, 1);
-    int val = (int)lua_tonumber(l, 2) & 0xff;
-    int size = (int)lua_tonumber(l, 3);
-
     if (size <= 0)
-        return 0;
-
-    size = size & 0xffff;
+        return;
 
     if (dst < 0 || dst + size > (int)sizeof(m_ram))
     {
         msg::info("z8:segv:memset(0x%x,0x%x,0x%x)\n", dst, val, size);
-        return luaL_error(l, "bad memory access");
+        runtime_error("bad memory access");
+        return;
     }
 
     ::memset(&m_ram[dst], val, size);
-
-    return 0;
 }
 
 int vm::api_stat(lua_State *l)
