@@ -104,7 +104,7 @@ private:
     void api_cls(uint8_t c);
     void api_color(uint8_t c);
     void api_fillp(fix32 fillp);
-    int api_fget(lua_State *l);
+    opt<var<int16_t, bool>> api_fget(opt<int16_t> n, opt<int16_t> f);
     void api_fset(opt<int16_t> n, opt<int16_t> f, opt<bool> b);
     void api_line(int16_t x0, opt<int16_t> opt_y0, opt<int16_t> opt_x1,
                   int16_t y1, opt<fix32> c);

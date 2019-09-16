@@ -31,16 +31,22 @@ template<typename T, typename R, typename... A>
 static auto lua_tuple(R (T::*)(A...)) { return std::tuple<A...>(); }
 
 // Push a standard type to the Lua stack
-template<typename T> static void lua_push(lua_State *l, T const &);
+template<typename T> static int lua_push(lua_State *l, T const &);
 
-template<> void lua_push(lua_State *l, bool const &x) { lua_pushboolean(l, x); }
-template<> void lua_push(lua_State *l, int16_t const &x) { lua_pushnumber(l, x); }
-template<> void lua_push(lua_State *l, fix32 const &x) { lua_pushnumber(l, x); }
+template<> int lua_push(lua_State *l, bool const &x) { lua_pushboolean(l, x); return 1; }
+template<> int lua_push(lua_State *l, int16_t const &x) { lua_pushnumber(l, x); return 1; }
+template<> int lua_push(lua_State *l, fix32 const &x) { lua_pushnumber(l, x); return 1; }
 
 // Boxing an std::variant pushes the active alternative
-template<typename... T> void lua_push(lua_State *l, std::variant<T...> const &x)
+template<typename... T> int lua_push(lua_State *l, std::variant<T...> const &x)
 {
-    std::visit([l](auto&& arg){ lua_push(l, arg); }, x);
+    return std::visit([l](auto&& arg) -> int { return lua_push(l, arg); }, x);
+}
+
+// Boxing an std::optional returns 0 or 1 depending on whether there is an object
+template<typename T> int lua_push(lua_State *l, std::optional<T> const &x)
+{
+    return x ? lua_push(l, *x) : 0;
 }
 
 // Get a standard type from the Lua stack
@@ -79,7 +85,7 @@ static inline auto lua_wrap(lua_State *l, R (T::*f)(A...))
     T *that = (T *)lua_touserdata(l, -1);
     lua_remove(l, -1);
 #endif
-    return [=](A... args) -> int { lua_push(l, (that->*f)(args...)); return 1; };
+    return [=](A... args) -> int { return lua_push(l, (that->*f)(args...)); };
 }
 
 template<typename T, typename... A>
@@ -145,7 +151,7 @@ void vm::install_lua_api()
         { "cls",      &dispatch<&vm::api_cls> },
         { "color",    &dispatch<&vm::api_color> },
         { "fillp",    &dispatch<&vm::api_fillp> },
-        //{ "fget",     &dispatch<&vm::api_fget> },
+        { "fget",     &dispatch<&vm::api_fget> },
         { "fset",     &dispatch<&vm::api_fset> },
         { "line",     &dispatch<&vm::api_line> },
         { "map",      &dispatch<&vm::api_map> },

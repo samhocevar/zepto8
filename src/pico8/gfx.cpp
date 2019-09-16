@@ -390,25 +390,19 @@ void vm::api_fillp(fix32 fillp)
     m_ram.draw_state.fillp_trans = (fillp.bits() >> 15) & 1;
 }
 
-int vm::api_fget(lua_State *l)
+opt<var<int16_t, bool>> vm::api_fget(opt<int16_t> n, opt<int16_t> f)
 {
-    if (lua_isnone(l, 1))
-        return 0;
+    if (!n)
+        return std::nullopt; // return 0 arguments
 
-    int n = (int)lua_tonumber(l, 1);
-    uint8_t bits = 0;
+    int16_t bits = 0;
+    if (*n >= 0 && *n < (int)sizeof(m_ram.gfx_props))
+        bits = m_ram.gfx_props[*n];
 
-    if (n >= 0 && n < (int)sizeof(m_ram.gfx_props))
-    {
-        bits = m_ram.gfx_props[n];
-    }
+    if (f)
+        return (bool)(bits & (1 << *f)); // return a boolean
 
-    if (lua_isnone(l, 2))
-        lua_pushnumber(l, bits);
-    else
-        lua_pushboolean(l, bits & (1 << (int)lua_tonumber(l, 2)));
-
-    return 1;
+    return bits; // return a number
 }
 
 void vm::api_fset(opt<int16_t> n, opt<int16_t> f, opt<bool> b)

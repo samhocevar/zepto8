@@ -91,7 +91,7 @@ vm::vm()
         //{ "cls",      &dispatch<&vm::api_cls> },
         //{ "color",    &dispatch<&vm::api_color> },
         //{ "fillp",    &dispatch<&vm::api_fillp> },
-        { "fget",     &dispatch<&vm::api_fget> },
+        //{ "fget",     &dispatch<&vm::api_fget> },
         //{ "fset",     &dispatch<&vm::api_fset> },
         //{ "line",     &dispatch<&vm::api_line> },
         //{ "map",      &dispatch<&vm::api_map> },
