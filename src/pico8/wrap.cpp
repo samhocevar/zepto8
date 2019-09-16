@@ -36,6 +36,8 @@ template<typename T> static int lua_push(lua_State *l, T const &);
 template<> int lua_push(lua_State *l, bool const &x) { lua_pushboolean(l, x); return 1; }
 template<> int lua_push(lua_State *l, int16_t const &x) { lua_pushnumber(l, x); return 1; }
 template<> int lua_push(lua_State *l, fix32 const &x) { lua_pushnumber(l, x); return 1; }
+template<> int lua_push(lua_State *l, std::string const &s) { lua_pushlstring(l, s.c_str(), (int)s.size()); return 1; }
+template<> int lua_push(lua_State *l, std::nullptr_t const &) { lua_pushnil(l); return 1; }
 
 // Boxing an std::variant pushes the active alternative
 template<typename... T> int lua_push(lua_State *l, std::variant<T...> const &x)
@@ -133,9 +135,9 @@ void vm::install_lua_api()
         { "poke4",    &dispatch<&vm::api_poke4> },
         { "memcpy",   &dispatch<&vm::api_memcpy> },
         { "memset",   &dispatch<&vm::api_memset> },
-        //{ "stat",     &dispatch<&vm::api_stat> },
-        //{ "printh",   &vm::api_printh },
-        //{ "extcmd",   &dispatch<&vm::api_extcmd> },
+        { "stat",     &dispatch<&vm::api_stat> },
+        { "printh",   &dispatch<&vm::api_printh> },
+        { "extcmd",   &dispatch<&vm::api_extcmd> },
 
         { "_update_buttons", &dispatch<&vm::api_update_buttons> },
         { "btn",  &dispatch<&vm::api_btn> },
@@ -173,7 +175,7 @@ void vm::install_lua_api()
 
         { "time", &dispatch<&vm::api_time> },
 
-        //{ "__cartdata", &dispatch<&vm::private_cartdata> },
+        { "__cartdata", &dispatch<&vm::private_cartdata> },
         { "__stub",     &dispatch<&vm::private_stub> },
 
         { nullptr, nullptr },

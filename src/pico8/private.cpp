@@ -17,31 +17,29 @@
 #include <lol/engine.h>
 
 #include "pico8/vm.h"
+#include "pico8/z8lua.h"
 
 namespace z8::pico8
 {
 
 using lol::msg;
 
-int vm::private_cartdata(lua_State *l)
+opt<bool> vm::private_cartdata()
 {
-    if (lua_isnone(l, 1))
-    {
-        // No argument given: we return whether there is data
-        lua_pushboolean(l, m_cartdata.size() > 0);
-        return 1;
-    }
-    else if (!lua_isstring(l, 1))
+    // No argument given: we return whether there is data
+    if (lua_isnone(m_lua, 1))
+        return m_cartdata.size() > 0;
+
+    if (!lua_isstring(m_lua, 1))
     {
         // Nil or invalid argument given: get rid of cart data
         m_cartdata = "";
-        return 0;
+        return std::nullopt;
     }
 
-    m_cartdata = lua_tostring(l, 1);
+    m_cartdata = lua_tostring(m_lua, 1);
     msg::info("z8:stub:cartdata \"%s\"\n", m_cartdata.c_str());
-    lua_pushboolean(l, false);
-    return 1;
+    return false;
 }
 
 } // namespace z8

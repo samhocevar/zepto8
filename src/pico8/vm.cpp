@@ -73,9 +73,9 @@ vm::vm()
         //{ "poke4",    &dispatch<&vm::api_poke4> },
         //{ "memcpy",   &dispatch<&vm::api_memcpy> },
         //{ "memset",   &dispatch<&vm::api_memset> },
-        { "stat",     &dispatch<&vm::api_stat> },
-        { "printh",   &vm::api_printh },
-        { "extcmd",   &dispatch<&vm::api_extcmd> },
+        //{ "stat",     &dispatch<&vm::api_stat> },
+        //{ "printh",   &vm::api_printh },
+        //{ "extcmd",   &dispatch<&vm::api_extcmd> },
 
         //{ "_update_buttons", &dispatch<&vm::api_update_buttons> },
         //{ "btn",  &dispatch<&vm::api_btn> },
@@ -113,7 +113,7 @@ vm::vm()
 
         //{ "time", &dispatch<&vm::api_time> },
 
-        { "__cartdata", &dispatch<&vm::private_cartdata> },
+        //{ "__cartdata", &dispatch<&vm::private_cartdata> },
         //{ "__stub",     &dispatch<&vm::private_stub> },
 
         { nullptr, nullptr },
@@ -444,11 +444,8 @@ void vm::api_memset(int16_t dst, uint8_t val, int16_t size)
     ::memset(&m_ram[dst], val, size);
 }
 
-int vm::api_stat(lua_State *l)
+var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
 {
-    int id = (int)lua_tonumber(l, 1);
-    fix32 ret(0.0);
-
     // Documented PICO-8 stat() arguments:
     // “0  Memory usage (0..2048)
     //  1  CPU used since last flip (1.0 == 100% CPU at 30fps)
@@ -471,42 +468,43 @@ int vm::api_stat(lua_State *l)
     {
         // Perform a GC to avoid accounting for short lifespan objects.
         // Not sure about the performance cost of this.
-        lua_gc(l, LUA_GCCOLLECT, 0);
+        lua_gc(m_lua, LUA_GCCOLLECT, 0);
 
         // From the PICO-8 documentation:
-        int32_t bits = ((int)lua_gc(l, LUA_GCCOUNT, 0) << 16)
-                     + ((int)lua_gc(l, LUA_GCCOUNTB, 0) << 6);
-        ret = fix32::frombits(bits);
+        int32_t bits = ((int)lua_gc(m_lua, LUA_GCCOUNT, 0) << 16)
+                     + ((int)lua_gc(m_lua, LUA_GCCOUNTB, 0) << 6);
+        return fix32::frombits(bits);
     }
-    else if (id == 1)
-    {
-        // TODO
-    }
-    else if (id == 5)
+
+    if (id == 1)
+        return (int16_t)0;
+
+    if (id == 4)
+        return std::string();
+
+    if (id == 5)
     {
         // Undocumented (see http://pico-8.wikia.com/wiki/Stat)
-        ret = PICO8_VERSION;
+        return (int16_t)PICO8_VERSION;
     }
-    else if (id >= 16 && id <= 19)
-    {
-        ret = fix32(m_channels[id & 3].m_sfx);
-    }
-    else if (id >= 20 && id <= 23)
-    {
-        ret = m_channels[id & 3].m_sfx == -1 ? fix32(-1)
-                : fix32((int)m_channels[id & 3].m_offset);
-    }
-    else if (id == 24)
-    {
-        ret = fix32(m_music.m_pattern);
-    }
-    else if (id == 25)
-    {
-    }
-    else if (id == 26)
-    {
-    }
-    else if (id >= 30 && id <= 36)
+
+    if (id == 6)
+        return std::string();
+
+    if (id >= 16 && id <= 19)
+        return m_channels[id & 3].m_sfx;
+
+    if (id >= 20 && id <= 23)
+        return m_channels[id & 3].m_sfx == -1 ? fix32(-1)
+                    : fix32((int)m_channels[id & 3].m_offset);
+
+    if (id == 24)
+        return fix32(m_music.m_pattern);
+
+    if (id == 25 || id == 26)
+        return (int16_t)0;
+
+    if (id >= 30 && id <= 36)
     {
         bool devkit_mode = m_ram.draw_state.mouse_flag == 1;
         bool has_text = devkit_mode && m_keyboard.start != m_keyboard.stop;
@@ -514,54 +512,65 @@ int vm::api_stat(lua_State *l)
         // Undocumented (see http://pico-8.wikia.com/wiki/Stat)
         switch (id)
         {
-            case 30: lua_pushboolean(l, has_text); return 1;
+            case 30: return has_text;
             case 31:
                 if (!has_text)
+                    return std::string();
+
+                if (m_keyboard.stop > m_keyboard.start)
                 {
-                    lua_pushstring(l, "");
-                }
-                else if (m_keyboard.stop > m_keyboard.start)
-                {
-                    lua_pushlstring(l, &m_keyboard.chars[m_keyboard.start], m_keyboard.stop - m_keyboard.start);
+                    std::string ret(&m_keyboard.chars[m_keyboard.start],
+                                    m_keyboard.stop - m_keyboard.start);
                     m_keyboard.start = m_keyboard.stop = 0;
+                    return ret;
                 }
-                else /* if (m_keyboard.stop < m_keyboard.start) */
+
+                /* if (m_keyboard.stop < m_keyboard.start) */
                 {
-                    lua_pushlstring(l, &m_keyboard.chars[m_keyboard.start], (int)sizeof(m_keyboard.chars) - m_keyboard.start);
+                    std::string ret(&m_keyboard.chars[m_keyboard.start],
+                                    (int)sizeof(m_keyboard.chars) - m_keyboard.start);
                     m_keyboard.start = 0;
                 }
-                return 1;
-            case 32: ret = devkit_mode ? m_mouse.x : fix32(0); break;
-            case 33: ret = devkit_mode ? m_mouse.y : fix32(0); break;
-            case 34: ret = devkit_mode ? m_mouse.b : fix32(0); break;
-            case 35: ret = 0; break; // FIXME
-            case 36: ret = 0; break; // FIXME
+                return (int16_t)0;
+            case 32: return devkit_mode ? m_mouse.x : fix32(0); break;
+            case 33: return devkit_mode ? m_mouse.y : fix32(0); break;
+            case 34: return devkit_mode ? m_mouse.b : fix32(0); break;
+            case 35: return (int16_t)0; break; // FIXME
+            case 36: return (int16_t)0; break; // FIXME
         }
     }
 
-    lua_pushnumber(l, ret);
-    return 1;
+    if (id >= 48 && id < 72)
+    {
+        if (id == 49 || (id >= 58 && id <= 63))
+            return std::string();
+        return nullptr;
+    }
+
+    if (id >= 72 && id < 100)
+        return (int16_t)0;
+
+    if (id == 100 || id == 101)
+        return nullptr;
+
+    return (int16_t)0;
 }
 
-int vm::api_printh(lua_State *l)
+void vm::api_printh(/* FIXME: argument construction */)
 {
-    fprintf(stdout, "%s\n", lua_tostringorboolean(l, 1));
+    fprintf(stdout, "%s\n", lua_tostringorboolean(m_lua, 1));
     fflush(stdout);
-
-    return 0;
 }
 
-int vm::api_extcmd(lua_State *l)
+void vm::api_extcmd(/* FIXME: argument construction */)
 {
-    char const *str = lua_tostringorboolean(l, 1);
+    char const *str = lua_tostringorboolean(m_lua, 1);
 
     if (strcmp("label", str) == 0
          || strcmp("screen", str) == 0
          || strcmp("rec", str) == 0
          || strcmp("video", str) == 0)
         msg::info("z8:stub:extcmd(%s)\n", str);
-
-    return 0;
 }
 
 //

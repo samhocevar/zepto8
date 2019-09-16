@@ -64,11 +64,11 @@ public:
 
 private:
     void runtime_error(std::string str);
-    static int panic_hook(lua_State *l);
-    static void instruction_hook(lua_State *l, lua_Debug *ar);
+    static int panic_hook(struct lua_State *l);
+    static void instruction_hook(struct lua_State *l, struct lua_Debug *ar);
 
     // Private methods (hidden from the user)
-    int private_cartdata(lua_State *l);
+    opt<bool> private_cartdata();
     void private_stub(std::string str);
 
     // System
@@ -83,9 +83,9 @@ private:
     void api_poke4(int16_t addr, fix32 val);
     void api_memcpy(int16_t dst, int16_t src, int16_t size);
     void api_memset(int16_t dst, uint8_t val, int16_t size);
-    int api_stat(lua_State *l);
-    static int api_printh(lua_State *l);
-    int api_extcmd(lua_State *l);
+    var<bool, int16_t, fix32, std::string, std::nullptr_t> api_stat(int16_t id);
+    void api_printh();
+    void api_extcmd();
 
     // I/O
     void api_update_buttons();
@@ -151,7 +151,7 @@ private:
     void getaudio(int channel, void *buffer, int bytes);
 
 private:
-    lua_State *m_lua;
+    struct lua_State *m_lua;
     cart m_cart;
     memory m_ram;
 
