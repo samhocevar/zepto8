@@ -28,19 +28,6 @@ namespace z8::pico8
 
 using lol::msg;
 
-/* Helper to dispatch C++ functions to Lua C bindings */
-template<auto FN> static int dispatch(lua_State *l)
-{
-#if HAVE_LUA_GETEXTRASPACE
-    vm *that = *static_cast<vm**>(lua_getextraspace(l));
-#else
-    lua_getglobal(l, "\x01");
-    vm *that = (vm *)lua_touserdata(l, -1);
-    lua_remove(l, -1);
-#endif
-    return ((*that).*FN)(l);
-}
-
 vm::vm()
   : m_instructions(0)
 {
@@ -51,76 +38,6 @@ vm::vm()
     luaL_openlibs(m_lua);
 
     install_lua_api();
-
-    // Store a pointer to us in global state
-#if HAVE_LUA_GETEXTRASPACE
-    *static_cast<vm**>(lua_getextraspace(m_lua)) = this;
-#else
-    lua_pushlightuserdata(m_lua, this);
-    lua_setglobal(m_lua, "\x01");
-#endif
-
-    static const luaL_Reg zepto8lib[] =
-    {
-        //{ "run",      &dispatch<&vm::api_run> },
-        //{ "menuitem", &dispatch<&vm::api_menuitem> },
-        //{ "reload",   &dispatch<&vm::api_reload> },
-        //{ "peek",     &dispatch<&vm::api_peek> },
-        //{ "peek2",    &dispatch<&vm::api_peek2> },
-        //{ "peek4",    &dispatch<&vm::api_peek4> },
-        //{ "poke",     &dispatch<&vm::api_poke> },
-        //{ "poke2",    &dispatch<&vm::api_poke2> },
-        //{ "poke4",    &dispatch<&vm::api_poke4> },
-        //{ "memcpy",   &dispatch<&vm::api_memcpy> },
-        //{ "memset",   &dispatch<&vm::api_memset> },
-        //{ "stat",     &dispatch<&vm::api_stat> },
-        //{ "printh",   &vm::api_printh },
-        //{ "extcmd",   &dispatch<&vm::api_extcmd> },
-
-        //{ "_update_buttons", &dispatch<&vm::api_update_buttons> },
-        //{ "btn",  &dispatch<&vm::api_btn> },
-        //{ "btnp", &dispatch<&vm::api_btnp> },
-
-        //{ "cursor", &dispatch<&vm::api_cursor> },
-        //{ "print",  &dispatch<&vm::api_print> },
-
-        //{ "camera",   &dispatch<&vm::api_camera> },
-        //{ "circ",     &dispatch<&vm::api_circ> },
-        //{ "circfill", &dispatch<&vm::api_circfill> },
-        //{ "clip",     &dispatch<&vm::api_clip> },
-        //{ "cls",      &dispatch<&vm::api_cls> },
-        //{ "color",    &dispatch<&vm::api_color> },
-        //{ "fillp",    &dispatch<&vm::api_fillp> },
-        //{ "fget",     &dispatch<&vm::api_fget> },
-        //{ "fset",     &dispatch<&vm::api_fset> },
-        //{ "line",     &dispatch<&vm::api_line> },
-        //{ "map",      &dispatch<&vm::api_map> },
-        //{ "mget",     &dispatch<&vm::api_mget> },
-        //{ "mset",     &dispatch<&vm::api_mset> },
-        //{ "pal",      &dispatch<&vm::api_pal> },
-        //{ "palt",     &dispatch<&vm::api_palt> },
-        //{ "pget",     &dispatch<&vm::api_pget> },
-        //{ "pset",     &dispatch<&vm::api_pset> },
-        //{ "rect",     &dispatch<&vm::api_rect> },
-        //{ "rectfill", &dispatch<&vm::api_rectfill> },
-        //{ "sget",     &dispatch<&vm::api_sget> },
-        //{ "sset",     &dispatch<&vm::api_sset> },
-        //{ "spr",      &dispatch<&vm::api_spr> },
-        //{ "sspr",     &dispatch<&vm::api_sspr> },
-
-        //{ "music", &dispatch<&vm::api_music> },
-        //{ "sfx",   &dispatch<&vm::api_sfx> },
-
-        //{ "time", &dispatch<&vm::api_time> },
-
-        //{ "__cartdata", &dispatch<&vm::private_cartdata> },
-        //{ "__stub",     &dispatch<&vm::private_stub> },
-
-        { nullptr, nullptr },
-    };
-
-    lua_pushglobaltable(m_lua);
-    luaL_setfuncs(m_lua, zepto8lib, 0);
 
     // Automatically yield every 1000 instructions
     lua_sethook(m_lua, &vm::instruction_hook, LUA_MASKCOUNT, 1000);

@@ -122,6 +122,14 @@ static int dispatch(lua_State *l)
 
 void vm::install_lua_api()
 {
+    // Store a pointer to us in global state
+#if HAVE_LUA_GETEXTRASPACE
+    *static_cast<vm**>(lua_getextraspace(m_lua)) = this;
+#else
+    lua_pushlightuserdata(m_lua, this);
+    lua_setglobal(m_lua, "\x01");
+#endif
+
     static const luaL_Reg zepto8lib[] =
     {
         { "run",      &dispatch<&vm::api_run> },
