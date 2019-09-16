@@ -83,8 +83,6 @@ void vm::print_ansi(lol::ivec2 term_size,
 
         for (int x = 0; x < lol::min(128, term_size.x); ++x)
         {
-            int offset = y * 64 + x / 2;
-            int shift = 4 * (x & 1);
             uint8_t fg = m_ram.screen.get(x, y);
             uint8_t bg = m_ram.screen.get(x, y + 1);
             char const *glyph = "▀";

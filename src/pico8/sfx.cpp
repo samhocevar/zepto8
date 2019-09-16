@@ -175,12 +175,11 @@ static float get_waveform(int instrument, float advance)
     return 0.0f;
 }
 
-std::function<void(void *, int)> vm::get_streamer(int channel)
+std::function<void(void *, int)> vm::get_streamer(int ch)
 {
+    using namespace std::placeholders;
     // Return a function that calls getaudio() with channel as first arg
-    return std::bind(&vm::getaudio, this, channel,
-                     std::placeholders::_1,
-                     std::placeholders::_2);
+    return std::bind(&vm::getaudio, this, ch, _1, _2);
 }
 
 // FIXME: there is a problem with the per-channel approach; if a channel
