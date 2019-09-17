@@ -224,11 +224,10 @@ void vm::api_print(opt<std::string> str, opt<fix32> opt_x, opt<fix32> opt_y,
         }
         else
         {
-            // PICO-8 characters end at 0x99.
-            int index = ch > 0x20 && ch < 0x9a ? ch - 0x20 : 0;
-            int16_t w = index < 0x60 ? 4 : 8;
-            int font_x = index % (128 / w) * w;
-            int font_y = index / (128 / w) * 6 - (w / 8 * 18);
+            int16_t w = ch < 0x80 ? 4 : 8;
+            int offset = ch < 0x80 ? ch : 2 * ch - 0x80;
+            int font_x = offset % 32 * 4;
+            int font_y = offset / 32 * 6;
 
             for (int16_t dy = 0; dy < 5; ++dy)
                 for (int16_t dx = 0; dx < w; ++dx)
