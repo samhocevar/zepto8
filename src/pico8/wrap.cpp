@@ -73,13 +73,12 @@ template<typename T> void lua_get(lua_State *l, int i, std::optional<T> &arg)
         lua_get(l, i, *(arg = T()));
 }
 
-// Convert a T::* member function to a lambda taking the same arguments.
-// That lambda also retrieves “this” from the Lua state, and pushes the
-// return value to the Lua stack. Some specialisation is needed when the
-// original function returns void.
+// Call a T::* member function with arguments pulled from the Lua stack,
+// and push the result to the Lua stack.
 template<typename T, typename R, typename... A>
-static inline auto lua_wrap(lua_State *l, R (T::*f)(A...))
+static inline auto dispatch(lua_State *l, R (T::*f)(A...))
 {
+    // Retrieve “this” from the Lua state.
 #if HAVE_LUA_GETEXTRASPACE
     T *that = *static_cast<T**>(lua_getextraspace(l));
 #else
@@ -87,11 +86,22 @@ static inline auto lua_wrap(lua_State *l, R (T::*f)(A...))
     T *that = (T *)lua_touserdata(l, -1);
     lua_remove(l, -1);
 #endif
-    return [=](A... args) -> int { return lua_push(l, (that->*f)(args...)); };
+    auto call = [&](A... a)
+    {
+        // Load arguments from argv into the tuple, with type safety. Uses the
+        // technique presented in https://stackoverflow.com/a/54053084/111461
+        int i = 0;
+        (lua_get(l, ++i, a), ...);
+        // Call the API function with the loaded arguments. Some specialization
+        // is needed when the wrapped function returns void, see next function.
+        return lua_push(l, (that->*f)(a...));
+    };
+
+    return std::apply(call, lua_tuple(f));
 }
 
 template<typename T, typename... A>
-static inline auto lua_wrap(lua_State *l, void (T::*f)(A...))
+static inline auto dispatch(lua_State *l, void (T::*f)(A...))
 {
 #if HAVE_LUA_GETEXTRASPACE
     T *that = *static_cast<T**>(lua_getextraspace(l));
@@ -100,24 +110,21 @@ static inline auto lua_wrap(lua_State *l, void (T::*f)(A...))
     T *that = (T *)lua_touserdata(l, -1);
     lua_remove(l, -1);
 #endif
-    return [=](A... args) -> int { (that->*f)(args...); return 0; };
+    auto call = [&](A... a)
+    {
+        int i = 0;
+        (lua_get(l, ++i, a), ...);
+        (that->*f)(a...);
+        return 0;
+    };
+    return std::apply(call, lua_tuple(f));
 }
 
 // Helper to dispatch C++ functions to Lua C bindings
 template<auto FN>
 static int dispatch(lua_State *l)
 {
-    // Create the argument list tuple
-    auto args = lua_tuple(FN);
-
-    // Load arguments from argv into the tuple, with type safety. Uses the
-    // technique presented in https://stackoverflow.com/a/54053084/111461
-    int i = 0;
-    std::apply([&](auto&&... arg) {((lua_get(l, ++i, arg)), ...);}, args);
-
-    // Call the API function with the loaded arguments
-    auto f = lua_wrap(l, FN);
-    return std::apply(f, args);
+    return dispatch(l, FN);
 }
 
 void vm::install_lua_api()
