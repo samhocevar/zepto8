@@ -26,10 +26,6 @@
 namespace z8::pico8
 {
 
-// Declare a tuple matching the arguments of a T::* member function
-template<typename T, typename R, typename... A>
-static auto lua_tuple(R (T::*)(A...)) { return std::tuple<A...>(); }
-
 // Push a standard type to the Lua stack
 template<typename T> static int lua_push(lua_State *l, T const &);
 
@@ -93,31 +89,16 @@ static inline auto dispatch(lua_State *l, R (T::*f)(A...))
         int i = 0;
         (lua_get(l, ++i, a), ...);
         // Call the API function with the loaded arguments. Some specialization
-        // is needed when the wrapped function returns void, see next function.
-        return lua_push(l, (that->*f)(a...));
+        // is needed when the wrapped function returns void.
+        if constexpr (std::is_same<R, void>::value)
+            return (that->*f)(a...), 0;
+        else
+            return lua_push(l, (that->*f)(a...));
     };
 
-    return std::apply(call, lua_tuple(f));
-}
-
-template<typename T, typename... A>
-static inline auto dispatch(lua_State *l, void (T::*f)(A...))
-{
-#if HAVE_LUA_GETEXTRASPACE
-    T *that = *static_cast<T**>(lua_getextraspace(l));
-#else
-    lua_getglobal(l, "\x01");
-    T *that = (T *)lua_touserdata(l, -1);
-    lua_remove(l, -1);
-#endif
-    auto call = [&](A... a)
-    {
-        int i = 0;
-        (lua_get(l, ++i, a), ...);
-        (that->*f)(a...);
-        return 0;
-    };
-    return std::apply(call, lua_tuple(f));
+    // Call the lambda with a tuple of values matching the argument types
+    // of the wrapped function.
+    return std::apply(call, std::tuple<A...>());
 }
 
 // Helper to dispatch C++ functions to Lua C bindings
