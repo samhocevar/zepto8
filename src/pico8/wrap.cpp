@@ -66,13 +66,19 @@ template<> void lua_get(lua_State *l, int i, std::string &arg)
 template<typename T> void lua_get(lua_State *l, int i, std::optional<T> &arg)
 {
     if (!lua_isnone(l, i))
-        lua_get(l, i, *(arg = T()));
+        arg = lua_get<T>(l, i);
+}
+
+template<typename T> static T lua_get(lua_State *l, int i)
+{
+    T ret; lua_get(l, i, ret); return ret;
 }
 
 // Call a T::* member function with arguments pulled from the Lua stack,
 // and push the result to the Lua stack.
-template<typename T, typename R, typename... A>
-static inline auto dispatch(lua_State *l, R (T::*f)(A...))
+template<typename T, typename R, typename... A, size_t... IS>
+static inline int dispatch(lua_State *l, R (T::*f)(A...),
+                           std::index_sequence<IS...>)
 {
     // Retrieve “this” from the Lua state.
 #if HAVE_LUA_GETEXTRASPACE
@@ -82,30 +88,27 @@ static inline auto dispatch(lua_State *l, R (T::*f)(A...))
     T *that = (T *)lua_touserdata(l, -1);
     lua_remove(l, -1);
 #endif
-    auto call = [&](A... a)
-    {
-        // Load arguments from argv into the tuple, with type safety. Uses the
-        // technique presented in https://stackoverflow.com/a/54053084/111461
-        int i = 0;
-        (lua_get(l, ++i, a), ...);
-        // Call the API function with the loaded arguments. Some specialization
-        // is needed when the wrapped function returns void.
-        if constexpr (std::is_same<R, void>::value)
-            return (that->*f)(a...), 0;
-        else
-            return lua_push(l, (that->*f)(a...));
-    };
 
-    // Call the lambda with a tuple of values matching the argument types
-    // of the wrapped function.
-    return std::apply(call, std::tuple<A...>());
+    // Call the API function with the loaded arguments. Some specialization
+    // is needed when the wrapped function returns void.
+    if constexpr (std::is_same<R, void>::value)
+        return (that->*f)(lua_get<A>(l, IS + 1)...), 0;
+    else
+        return lua_push(l, (that->*f)(lua_get<A>(l, IS + 1)...));
+}
+
+// Helper to create an index sequence from a member function’s signature
+template<typename T, typename R, typename... A>
+constexpr auto make_seq(R (T::*f)(A...))
+{
+    return std::index_sequence_for<A...>();
 }
 
 // Helper to dispatch C++ functions to Lua C bindings
 template<auto FN>
-static int dispatch(lua_State *l)
+static int wrap(lua_State *l)
 {
-    return dispatch(l, FN);
+    return dispatch(l, FN, make_seq(FN));
 }
 
 void vm::install_lua_api()
@@ -120,59 +123,59 @@ void vm::install_lua_api()
 
     static const luaL_Reg zepto8lib[] =
     {
-        { "run",      &dispatch<&vm::api_run> },
-        { "menuitem", &dispatch<&vm::api_menuitem> },
-        { "reload",   &dispatch<&vm::api_reload> },
-        { "peek",     &dispatch<&vm::api_peek> },
-        { "peek2",    &dispatch<&vm::api_peek2> },
-        { "peek4",    &dispatch<&vm::api_peek4> },
-        { "poke",     &dispatch<&vm::api_poke> },
-        { "poke2",    &dispatch<&vm::api_poke2> },
-        { "poke4",    &dispatch<&vm::api_poke4> },
-        { "memcpy",   &dispatch<&vm::api_memcpy> },
-        { "memset",   &dispatch<&vm::api_memset> },
-        { "stat",     &dispatch<&vm::api_stat> },
-        { "printh",   &dispatch<&vm::api_printh> },
-        { "extcmd",   &dispatch<&vm::api_extcmd> },
+        { "run",      &wrap<&vm::api_run> },
+        { "menuitem", &wrap<&vm::api_menuitem> },
+        { "reload",   &wrap<&vm::api_reload> },
+        { "peek",     &wrap<&vm::api_peek> },
+        { "peek2",    &wrap<&vm::api_peek2> },
+        { "peek4",    &wrap<&vm::api_peek4> },
+        { "poke",     &wrap<&vm::api_poke> },
+        { "poke2",    &wrap<&vm::api_poke2> },
+        { "poke4",    &wrap<&vm::api_poke4> },
+        { "memcpy",   &wrap<&vm::api_memcpy> },
+        { "memset",   &wrap<&vm::api_memset> },
+        { "stat",     &wrap<&vm::api_stat> },
+        { "printh",   &wrap<&vm::api_printh> },
+        { "extcmd",   &wrap<&vm::api_extcmd> },
 
-        { "_update_buttons", &dispatch<&vm::api_update_buttons> },
-        { "btn",  &dispatch<&vm::api_btn> },
-        { "btnp", &dispatch<&vm::api_btnp> },
+        { "_update_buttons", &wrap<&vm::api_update_buttons> },
+        { "btn",  &wrap<&vm::api_btn> },
+        { "btnp", &wrap<&vm::api_btnp> },
 
-        { "cursor", &dispatch<&vm::api_cursor> },
-        { "print",  &dispatch<&vm::api_print> },
+        { "cursor", &wrap<&vm::api_cursor> },
+        { "print",  &wrap<&vm::api_print> },
 
-        { "camera",   &dispatch<&vm::api_camera> },
-        { "circ",     &dispatch<&vm::api_circ> },
-        { "circfill", &dispatch<&vm::api_circfill> },
-        { "clip",     &dispatch<&vm::api_clip> },
-        { "cls",      &dispatch<&vm::api_cls> },
-        { "color",    &dispatch<&vm::api_color> },
-        { "fillp",    &dispatch<&vm::api_fillp> },
-        { "fget",     &dispatch<&vm::api_fget> },
-        { "fset",     &dispatch<&vm::api_fset> },
-        { "line",     &dispatch<&vm::api_line> },
-        { "map",      &dispatch<&vm::api_map> },
-        { "mget",     &dispatch<&vm::api_mget> },
-        { "mset",     &dispatch<&vm::api_mset> },
-        { "pal",      &dispatch<&vm::api_pal> },
-        { "palt",     &dispatch<&vm::api_palt> },
-        { "pget",     &dispatch<&vm::api_pget> },
-        { "pset",     &dispatch<&vm::api_pset> },
-        { "rect",     &dispatch<&vm::api_rect> },
-        { "rectfill", &dispatch<&vm::api_rectfill> },
-        { "sget",     &dispatch<&vm::api_sget> },
-        { "sset",     &dispatch<&vm::api_sset> },
-        { "spr",      &dispatch<&vm::api_spr> },
-        { "sspr",     &dispatch<&vm::api_sspr> },
+        { "camera",   &wrap<&vm::api_camera> },
+        { "circ",     &wrap<&vm::api_circ> },
+        { "circfill", &wrap<&vm::api_circfill> },
+        { "clip",     &wrap<&vm::api_clip> },
+        { "cls",      &wrap<&vm::api_cls> },
+        { "color",    &wrap<&vm::api_color> },
+        { "fillp",    &wrap<&vm::api_fillp> },
+        { "fget",     &wrap<&vm::api_fget> },
+        { "fset",     &wrap<&vm::api_fset> },
+        { "line",     &wrap<&vm::api_line> },
+        { "map",      &wrap<&vm::api_map> },
+        { "mget",     &wrap<&vm::api_mget> },
+        { "mset",     &wrap<&vm::api_mset> },
+        { "pal",      &wrap<&vm::api_pal> },
+        { "palt",     &wrap<&vm::api_palt> },
+        { "pget",     &wrap<&vm::api_pget> },
+        { "pset",     &wrap<&vm::api_pset> },
+        { "rect",     &wrap<&vm::api_rect> },
+        { "rectfill", &wrap<&vm::api_rectfill> },
+        { "sget",     &wrap<&vm::api_sget> },
+        { "sset",     &wrap<&vm::api_sset> },
+        { "spr",      &wrap<&vm::api_spr> },
+        { "sspr",     &wrap<&vm::api_sspr> },
 
-        { "music", &dispatch<&vm::api_music> },
-        { "sfx",   &dispatch<&vm::api_sfx> },
+        { "music", &wrap<&vm::api_music> },
+        { "sfx",   &wrap<&vm::api_sfx> },
 
-        { "time", &dispatch<&vm::api_time> },
+        { "time", &wrap<&vm::api_time> },
 
-        { "__cartdata", &dispatch<&vm::private_cartdata> },
-        { "__stub",     &dispatch<&vm::private_stub> },
+        { "__cartdata", &wrap<&vm::private_cartdata> },
+        { "__stub",     &wrap<&vm::private_stub> },
 
         { nullptr, nullptr },
     };
