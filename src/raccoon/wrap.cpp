@@ -28,14 +28,6 @@ extern "C" {
 namespace z8::raccoon
 {
 
-// Count arguments in a T::* member function prototype
-template<typename T, typename R, typename... A>
-constexpr uint8_t count_args(R (T::*)(A...)) { return (uint8_t)sizeof...(A); }
-
-// Declare a tuple matching the arguments of a T::* member function
-template<typename T, typename R, typename... A>
-static auto js_tuple(R (T::*)(A...)) { return std::tuple<A...>(); }
-
 // Convert a standard type to a JSValue
 static JSValue js_box(JSContext *ctx, bool x) { return JS_NewBool(ctx, (int)x); }
 static JSValue js_box(JSContext *ctx, int x) { return JS_NewInt32(ctx, x); }
@@ -59,44 +51,45 @@ template<typename T> void js_unbox(JSContext *ctx, std::optional<T> &arg, JSValu
     js_unbox(ctx, *(arg = T()), jsval);
 }
 
-// Convert a T::* member function to a lambda taking the same arguments.
-// That lambda also retrieves “this” from the JS context, and converts
-// the return value to a JSValue. Some specialisation is needed when the
-// original function returns void.
-template<typename T, typename R, typename... A>
-static inline auto js_wrap(JSContext *ctx, R (T::*f)(A...))
+template<typename T> static T js_unbox(JSContext *ctx, JSValueConst jsval)
 {
-    T *that = (T *)JS_GetContextOpaque(ctx);
-    return [=](A... args) -> JSValue { return js_box(ctx, (that->*f)(args...)); };
+    T ret; js_unbox(ctx, ret, jsval); return ret;
 }
 
-template<typename T, typename... A>
-static inline auto js_wrap(JSContext *ctx, void (T::*f)(A...))
+template<typename T, typename R, typename... A, size_t... IS>
+static JSValue dispatch(JSContext *ctx, int argc, JSValueConst *argv,
+                        R (T::*f)(A...), std::index_sequence<IS...>)
 {
+    // Retrieve “this” from the JS context.
     T *that = (T *)JS_GetContextOpaque(ctx);
-    return [=](A... args) -> JSValue { (that->*f)(args...); return JS_UNDEFINED; };
+
+    // Call the API function with the loaded arguments. Some specialization
+    // is needed when the wrapped function returns void.
+    if constexpr (std::is_same<R, void>::value)
+        return (that->*f)((IS < argc ? js_unbox<A>(ctx, argv[IS]) : A())...), JS_UNDEFINED;
+    else
+        return js_box(ctx, (that->*f)((IS < argc ? js_unbox<A>(ctx, argv[IS]) : A())...));
+}
+
+// Helper to create an index sequence from a member function’s signature
+template<typename T, typename R, typename... A>
+constexpr auto make_seq(R (T::*f)(A...))
+{
+    return std::index_sequence_for<A...>();
 }
 
 // Helper to dispatch C++ functions to JS C bindings
 template<auto FN>
-static JSValue dispatch(JSContext *ctx, JSValueConst,
-                        int argc, JSValueConst *argv)
+static JSValue wrap(JSContext *ctx, JSValueConst,
+                    int argc, JSValueConst *argv)
 {
-    // Create the argument list tuple
-    auto args = js_tuple(FN);
-
-    // Load arguments from argv into the tuple, with type safety. Uses the
-    // technique presented in https://stackoverflow.com/a/54053084/111461
-    int i = 0;
-    std::apply([&](auto&&... arg) {((i < argc ? js_unbox(ctx, arg, argv[i++]), 0 : i++), ...);}, args);
-
-    // Call the API function with the loaded arguments
-    auto f = js_wrap(ctx, FN);
-    return std::apply(f, args);
+    return dispatch(ctx, argc, argv, FN, make_seq(FN));
 }
 
 #define JS_DISPATCH_CFUNC_DEF(name, func) \
-    { name, JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE, JS_DEF_CFUNC, 0, { count_args(&vm::func), JS_CFUNC_generic, { &dispatch<&vm::func> } } }
+    { name, JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE, JS_DEF_CFUNC, 0, \
+        { (uint8_t)make_seq(&vm::func).size(), JS_CFUNC_generic, { &wrap<&vm::func> } } \
+    }
 
 void vm::js_wrap()
 {
