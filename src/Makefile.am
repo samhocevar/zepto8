@@ -18,9 +18,7 @@ ___zepto8_SOURCES = \
     $(NULL)
 ___zepto8_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
-                     -I3rdparty/zep/src \
-                     -I3rdparty/zep/m3rdparty \
-                     -I3rdparty/zep/src/mcommon \
+                     -I3rdparty/zep/include \
                      $(AM_CPPFLAGS)
 ___zepto8_LDFLAGS = $(static_libs) -lstdc++fs -ldl $(AM_LDFLAGS)
 ___zepto8_DEPENDENCIES = $(static_libs) @LOL_DEPS@
@@ -33,61 +31,61 @@ endif
 3rdparty_sources = \
     3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h \
     3rdparty/portable-file-dialogs/portable-file-dialogs.h \
+    3rdparty/zep/include/zep/buffer.h \
+    3rdparty/zep/include/zep/commands.h \
+    3rdparty/zep/include/zep/display.h \
+    3rdparty/zep/include/zep/editor.h \
+    3rdparty/zep/include/zep/filesystem.h \
+    3rdparty/zep/include/zep/gap_buffer.h \
+    3rdparty/zep/include/zep/imgui/console_imgui.h \
+    3rdparty/zep/include/zep/imgui/display_imgui.h \
+    3rdparty/zep/include/zep/imgui/editor_imgui.h \
+    3rdparty/zep/include/zep/imgui/usb_hid_keys.h \
+    3rdparty/zep/include/zep/mcommon/animation/timer.h \
+    3rdparty/zep/include/zep/mcommon/file/cpptoml.h \
+    3rdparty/zep/include/zep/mcommon/file/path.h \
+    3rdparty/zep/include/zep/mcommon/logger.h \
+    3rdparty/zep/include/zep/mcommon/math/math.h \
+    3rdparty/zep/include/zep/mcommon/string/murmur_hash.h \
+    3rdparty/zep/include/zep/mcommon/string/stringutils.h \
+    3rdparty/zep/include/zep/mcommon/threadpool.h \
+    3rdparty/zep/include/zep/mcommon/threadutils.h \
+    3rdparty/zep/include/zep/mode.h \
+    3rdparty/zep/include/zep/mode_search.h \
+    3rdparty/zep/include/zep/mode_standard.h \
+    3rdparty/zep/include/zep/mode_vim.h \
+    3rdparty/zep/include/zep/scroller.h \
+    3rdparty/zep/include/zep/splits.h \
+    3rdparty/zep/include/zep/syntax.h \
+    3rdparty/zep/include/zep/syntax_providers.h \
+    3rdparty/zep/include/zep/syntax_rainbow_brackets.h \
+    3rdparty/zep/include/zep/tab_window.h \
+    3rdparty/zep/include/zep/theme.h \
+    3rdparty/zep/include/zep/window.h \
+    3rdparty/zep/include/zep/zep_config.h \
+    3rdparty/zep/include/zep.h \
     3rdparty/zep/src/buffer.cpp \
-    3rdparty/zep/src/buffer.h \
     3rdparty/zep/src/commands.cpp \
-    3rdparty/zep/src/commands.h \
     3rdparty/zep/src/display.cpp \
-    3rdparty/zep/src/display.h \
     3rdparty/zep/src/editor.cpp \
-    3rdparty/zep/src/editor.h \
-    3rdparty/zep/src/filesystem.h \
-    3rdparty/zep/src/gap_buffer.h \
-    3rdparty/zep/src/imgui/console_imgui.h \
     3rdparty/zep/src/imgui/display_imgui.cpp \
-    3rdparty/zep/src/imgui/display_imgui.h \
     3rdparty/zep/src/imgui/editor_imgui.cpp \
-    3rdparty/zep/src/imgui/editor_imgui.h \
-    3rdparty/zep/src/imgui/usb_hid_keys.h \
     3rdparty/zep/src/mcommon/animation/timer.cpp \
-    3rdparty/zep/src/mcommon/animation/timer.h \
-    3rdparty/zep/src/mcommon/file/archive.cpp \
-    3rdparty/zep/src/mcommon/file/archive.h \
+    3rdparty/zep/src/mcommon/file/fnmatch.h \
     3rdparty/zep/src/mcommon/file/path.cpp \
-    3rdparty/zep/src/mcommon/file/path.h \
-    3rdparty/zep/src/mcommon/logger.h \
-    3rdparty/zep/src/mcommon/math/math.h \
-    3rdparty/zep/src/mcommon/string/murmur_hash.h \
     3rdparty/zep/src/mcommon/string/stringutils.cpp \
-    3rdparty/zep/src/mcommon/string/stringutils.h \
-    3rdparty/zep/src/mcommon/threadpool.h \
-    3rdparty/zep/src/mcommon/threadutils.h \
     3rdparty/zep/src/mode.cpp \
-    3rdparty/zep/src/mode.h \
     3rdparty/zep/src/mode_search.cpp \
-    3rdparty/zep/src/mode_search.h \
     3rdparty/zep/src/mode_standard.cpp \
-    3rdparty/zep/src/mode_standard.h \
     3rdparty/zep/src/mode_vim.cpp \
-    3rdparty/zep/src/mode_vim.h \
     3rdparty/zep/src/scroller.cpp \
-    3rdparty/zep/src/scroller.h \
     3rdparty/zep/src/splits.cpp \
-    3rdparty/zep/src/splits.h \
     3rdparty/zep/src/syntax.cpp \
-    3rdparty/zep/src/syntax.h \
     3rdparty/zep/src/syntax_providers.cpp \
-    3rdparty/zep/src/syntax_providers.h \
     3rdparty/zep/src/syntax_rainbow_brackets.cpp \
-    3rdparty/zep/src/syntax_rainbow_brackets.h \
     3rdparty/zep/src/tab_window.cpp \
-    3rdparty/zep/src/tab_window.h \
     3rdparty/zep/src/theme.cpp \
-    3rdparty/zep/src/theme.h \
     3rdparty/zep/src/window.cpp \
-    3rdparty/zep/src/window.h \
-    3rdparty/zep/src/zep.h \
-    3rdparty/zep/src/zep_config.h \
     $(NULL)
 
 EXTRA_DIST += $(___zepto8_DATA) zepto8.vcxproj
@@ -179,11 +177,11 @@ lua_ldflags += -lreadline
 endif
 
 libquickjs_a_SOURCES = \
-    quickjs/quickjs.c \
-    quickjs/libregexp.c \
-    quickjs/libunicode.c \
-    quickjs/cutils.c \
-    quickjs/libbf.c
+    quickjs/quickjs.c quickjs/quickjs.h \
+    quickjs/quickjs-atom.h quickjs/quickjs-opcode.h quickjs/list.h \
+    quickjs/libregexp.c quickjs/libregexp.h quickjs/libregexp-opcode.h \
+    quickjs/libunicode.c quickjs/libunicode.h quickjs/libunicode-table.h \
+    quickjs/cutils.c quickjs/cutils.h
 libquickjs_a_CPPFLAGS = \
     -Iquickjs -D_GNU_SOURCE -DCONFIG_VERSION=\"2019-08-18\" \
     $(AM_CPPFLAGS) $(AM_CXXFLAGS) \

@@ -22,11 +22,11 @@
 #include "zepto8.h"
 #include "editor.h"
 
-#include "3rdparty/zep/src/zep.h"
-#include "3rdparty/zep/src/mode_vim.h"
-#include "3rdparty/zep/src/mode_standard.h"
-#include "3rdparty/zep/src/filesystem.h"
-#include "3rdparty/zep/src/imgui/editor_imgui.h"
+#include "zep.h"
+#include "zep/mode_vim.h"
+#include "zep/mode_standard.h"
+#include "zep/filesystem.h"
+#include "zep/imgui/editor_imgui.h"
 
 #define FAKE_FILE_NAME "code.p8"
 
@@ -70,11 +70,19 @@ static std::set<std::string> pico8_identifiers =
     "function _update()\n if (btnp(\x97) or btnp(\x8e)) step = 0\n\n" \
     " if step < #lst then\n  step += 1\n end\nend\n\n" \
     "function _draw()\n local x = 28\n local y = 120\n\n map(0, 0, 0, 0, 16, 16)\nend\n\n" \
+    "--                 " \
+       "\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\n" \
     "--  !\"#$%&'()*+,-./0123456789:;<=>?\n" \
     "-- @ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_\n" \
     "-- `abcdefghijklmnopqrstuvwxyz{|}~\x7f\n" \
     "-- \x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d\x8e\x8f\n" \
-    "-- \x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\n"
+    "-- \x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9a\x9b\x9c\x9d\x9e\x9f\n" \
+    "-- \xa0\xa1\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xab\xac\xad\xae\xaf\n" \
+    "-- \xb0\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xbb\xbc\xbd\xbe\xbf\n" \
+    "-- \xc0\xc1\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xcb\xcc\xcd\xce\xcf\n" \
+    "-- \xd0\xd1\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xdb\xdc\xdd\xde\xdf\n" \
+    "-- \xe0\xe1\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xeb\xec\xed\xee\xef\n" \
+    "-- \xf0\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa\xfb\xfc\xfd\xfe\xff\n"
 
 class zep_filesystem : public Zep::IZepFileSystem
 {
@@ -89,6 +97,11 @@ public:
     virtual bool Write(const Zep::ZepPath& filePath, const void* pData, size_t size) override
     {
         return true;
+    }
+
+    virtual Zep::ZepPath GetSearchRoot(const Zep::ZepPath& start) const
+    {
+        return start;
     }
 
     virtual const Zep::ZepPath& GetWorkingDirectory() const override

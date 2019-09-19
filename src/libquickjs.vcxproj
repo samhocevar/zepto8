@@ -79,9 +79,6 @@
     <ClCompile Include="quickjs/cutils.c">
       <AdditionalOptions Condition="'$(Platform)'=='NX64'"></AdditionalOptions>
     </ClCompile>
-    <ClCompile Include="quickjs/libbf.c">
-      <AdditionalOptions Condition="'$(Platform)'=='NX64'"></AdditionalOptions>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="quickjs/quickjs.h" />

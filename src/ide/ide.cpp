@@ -104,7 +104,7 @@ void ide::tick_game(float seconds)
         atlas->TexUvScale = lol::vec2(1 / 128.f, 1 / 32.f);
         atlas->TexUvWhitePixel = lol::vec2(5 / 128.f, 0 / 32.f);
 
-        static ImWchar const char_ranges[] = { 0x20, 0x9a, 0 };
+        static ImWchar const char_ranges[] = { 0x10, 0x100, 0 };
         ImFontConfig config;
         config.FontData = ImGui::MemAlloc(1);
         config.FontDataSize = 1;
@@ -123,7 +123,7 @@ void ide::tick_game(float seconds)
         int const delta = m_scale / 2;
 
         // Printable ASCII chars
-        for (int ch = 0x20; ch < 0x80; ++ch)
+        for (int ch = 0x10; ch < 0x80; ++ch)
         {
             int x = ch % 0x20 * 4, y = ch / 0x20 * 6 - 6;
             m_font->AddGlyph(ch, delta, delta, 3 * m_scale + delta, 5 * m_scale + delta,
@@ -131,7 +131,7 @@ void ide::tick_game(float seconds)
         }
 
         // Double-width chars
-        for (int ch = 0x80; ch < 0x9a; ++ch)
+        for (int ch = 0x80; ch < 0x100; ++ch)
         {
             int x = ch % 0x10 * 8, y = ch / 0x10 * 6 + 2;
             m_font->AddGlyph(ch, delta, delta, 7 * m_scale + delta, 5 * m_scale + delta,
