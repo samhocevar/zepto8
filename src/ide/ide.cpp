@@ -80,6 +80,8 @@ void ide::tick_game(float seconds)
 
         char const *filename = "data/zepto8.ttf";
 
+        static ImWchar const char_ranges[] = { 0x10, 0x100, 0 };
+
         // Initialize BIOS
         for (auto const &file : lol::sys::get_path_list(filename))
         {
@@ -91,7 +93,7 @@ void ide::tick_game(float seconds)
             if (exists)
             {
                 auto &io = ImGui::GetIO();
-                m_fonts[m_scale] = io.Fonts->AddFontFromFileTTF(file.c_str(), 6.0f * m_scale);
+                m_fonts[m_scale] = io.Fonts->AddFontFromFileTTF(file.c_str(), 6.0f * m_scale, nullptr, char_ranges);
                 lol::gui::refresh_fonts();
                 break;
             }
@@ -104,7 +106,6 @@ void ide::tick_game(float seconds)
         atlas->TexUvScale = lol::vec2(1 / 128.f, 1 / 32.f);
         atlas->TexUvWhitePixel = lol::vec2(5 / 128.f, 0 / 32.f);
 
-        static ImWchar const char_ranges[] = { 0x10, 0x100, 0 };
         ImFontConfig config;
         config.FontData = ImGui::MemAlloc(1);
         config.FontDataSize = 1;
