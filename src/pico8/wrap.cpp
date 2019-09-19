@@ -90,6 +90,9 @@ static inline int dispatch(lua_State *l, R (T::*f)(A...),
     lua_remove(l, -1);
 #endif
 
+    // Store this for API functions that we don’t know yet how to wrap
+    that->m_sandbox_lua = l;
+
     // Call the API function with the loaded arguments. Some specialization
     // is needed when the wrapped function returns void.
     if constexpr (std::is_same<R, void>::value)

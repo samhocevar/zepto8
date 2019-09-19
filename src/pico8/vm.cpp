@@ -75,7 +75,7 @@ std::tuple<uint8_t *, size_t> vm::rom()
 void vm::runtime_error(std::string str)
 {
     // This function never returns
-    luaL_error(m_lua, str.c_str());
+    luaL_error(m_sandbox_lua, str.c_str());
 }
 
 int vm::panic_hook(lua_State* l)
@@ -169,10 +169,10 @@ void vm::api_run()
     ::memset(m_buttons, 0, sizeof(m_buttons));
 
     // Load cartridge code and call _z8.run_cart() on it
-    lua_getglobal(m_lua, "_z8");
-    lua_getfield(m_lua, -1, "run_cart");
-    lua_pushstring(m_lua, m_cart.get_lua().c_str());
-    lua_pcall(m_lua, 1, 0, 0);
+    lua_getglobal(m_sandbox_lua, "_z8");
+    lua_getfield(m_sandbox_lua, -1, "run_cart");
+    lua_pushstring(m_sandbox_lua, m_cart.get_lua().c_str());
+    lua_pcall(m_sandbox_lua, 1, 0, 0);
 }
 
 void vm::api_menuitem()
@@ -385,11 +385,11 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
     {
         // Perform a GC to avoid accounting for short lifespan objects.
         // Not sure about the performance cost of this.
-        lua_gc(m_lua, LUA_GCCOLLECT, 0);
+        lua_gc(m_sandbox_lua, LUA_GCCOLLECT, 0);
 
         // From the PICO-8 documentation:
-        int32_t bits = ((int)lua_gc(m_lua, LUA_GCCOUNT, 0) << 16)
-                     + ((int)lua_gc(m_lua, LUA_GCCOUNTB, 0) << 6);
+        int32_t bits = ((int)lua_gc(m_sandbox_lua, LUA_GCCOUNT, 0) << 16)
+                     + ((int)lua_gc(m_sandbox_lua, LUA_GCCOUNTB, 0) << 6);
         return fix32::frombits(bits);
     }
 
@@ -475,13 +475,13 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
 
 void vm::api_printh(/* FIXME: argument construction */)
 {
-    fprintf(stdout, "%s\n", lua_tostringorboolean(m_lua, 1));
+    fprintf(stdout, "%s\n", lua_tostringorboolean(m_sandbox_lua, 1));
     fflush(stdout);
 }
 
 void vm::api_extcmd(/* FIXME: argument construction */)
 {
-    char const *str = lua_tostringorboolean(m_lua, 1);
+    char const *str = lua_tostringorboolean(m_sandbox_lua, 1);
 
     if (strcmp("label", str) == 0
          || strcmp("screen", str) == 0

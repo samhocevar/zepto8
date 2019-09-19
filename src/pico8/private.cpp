@@ -27,17 +27,17 @@ using lol::msg;
 opt<bool> vm::private_cartdata()
 {
     // No argument given: we return whether there is data
-    if (lua_isnone(m_lua, 1))
+    if (lua_isnone(m_sandbox_lua, 1))
         return m_cartdata.size() > 0;
 
-    if (!lua_isstring(m_lua, 1))
+    if (!lua_isstring(m_sandbox_lua, 1))
     {
         // Nil or invalid argument given: get rid of cart data
         m_cartdata = "";
         return std::nullopt;
     }
 
-    m_cartdata = lua_tostring(m_lua, 1);
+    m_cartdata = lua_tostring(m_sandbox_lua, 1);
     msg::info("z8:stub:cartdata \"%s\"\n", m_cartdata.c_str());
     return false;
 }

@@ -150,6 +150,10 @@ private:
 
     void getaudio(int channel, void *buffer, int bytes);
 
+public:
+    // TODO: try to get rid of this
+    struct lua_State *m_sandbox_lua;
+
 private:
     struct lua_State *m_lua;
     cart m_cart;
