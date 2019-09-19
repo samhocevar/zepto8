@@ -40,7 +40,7 @@
   </ItemGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>.;3rdparty/zep/src;3rdparty/zep/m3rdparty;3rdparty/zep/src/mcommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;3rdparty/zep/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -51,7 +51,6 @@
     <ClCompile Include="3rdparty/zep/src/imgui/display_imgui.cpp" />
     <ClCompile Include="3rdparty/zep/src/imgui/editor_imgui.cpp" />
     <ClCompile Include="3rdparty/zep/src/mcommon/animation/timer.cpp" />
-    <ClCompile Include="3rdparty/zep/src/mcommon/file/archive.cpp" />
     <ClCompile Include="3rdparty/zep/src/mcommon/file/path.cpp" />
     <ClCompile Include="3rdparty/zep/src/mcommon/string/stringutils.cpp" />
     <ClCompile Include="3rdparty/zep/src/mode.cpp" />
