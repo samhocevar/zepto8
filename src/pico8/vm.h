@@ -35,6 +35,7 @@ using lol::u8vec4;
 
 template<typename T> using opt = std::optional<T>;
 template<typename... T> using var = std::variant<T...>;
+template<typename... T> using tup = std::tuple<T...>;
 
 class vm : z8::vm_base
 {
@@ -93,17 +94,17 @@ private:
     var<bool, int16_t> api_btnp(opt<int16_t> n, int16_t p);
 
     // Text
-    void api_cursor(uint8_t x, uint8_t y, opt<uint8_t> c);
+    tup<uint8_t, uint8_t> api_cursor(uint8_t x, uint8_t y, opt<uint8_t> c);
     void api_print(opt<std::string> str, opt<fix32> x, opt<fix32> y, opt<fix32> c);
 
     // Graphics
-    void api_camera(int16_t x, int16_t y);
+    tup<int16_t, int16_t> api_camera(int16_t x, int16_t y);
     void api_circ(int16_t x, int16_t y, int16_t r, opt<fix32> c);
     void api_circfill(int16_t x, int16_t y, int16_t r, opt<fix32> c);
     void api_clip(int16_t x, int16_t y, int16_t w, opt<int16_t> h);
     void api_cls(uint8_t c);
-    void api_color(uint8_t c);
-    void api_fillp(fix32 fillp);
+    uint8_t api_color(uint8_t c);
+    fix32 api_fillp(fix32 fillp);
     opt<var<int16_t, bool>> api_fget(opt<int16_t> n, opt<int16_t> f);
     void api_fset(opt<int16_t> n, opt<int16_t> f, opt<bool> b);
     void api_line(int16_t x0, opt<int16_t> opt_y0, opt<int16_t> opt_x1,
@@ -112,8 +113,8 @@ private:
                  opt<int16_t> in_cel_w, opt<int16_t> in_cel_h, int16_t layer);
     fix32 api_mget(int16_t x, int16_t y);
     void api_mset(int16_t x, int16_t y, uint8_t n);
-    void api_pal(opt<int16_t> c0, opt<int16_t> c1, uint8_t p);
-    void api_palt(opt<int16_t> c, opt<uint8_t> t);
+    opt<uint8_t> api_pal(opt<uint8_t> c0, opt<uint8_t> c1, uint8_t p);
+    opt<bool> api_palt(opt<uint8_t> c, opt<uint8_t> t);
     fix32 api_pget(int16_t x, int16_t y);
     void api_pset(int16_t x, int16_t y, opt<fix32> c);
     void api_rect(int16_t x0, int16_t y0, int16_t x1, int16_t y1, opt<fix32> c);

@@ -30,6 +30,7 @@ namespace z8::pico8
 template<typename T> static int lua_push(lua_State *l, T const &);
 
 template<> int lua_push(lua_State *l, bool const &x) { lua_pushboolean(l, x); return 1; }
+template<> int lua_push(lua_State *l, uint8_t const &x) { lua_pushnumber(l, x); return 1; }
 template<> int lua_push(lua_State *l, int16_t const &x) { lua_pushnumber(l, x); return 1; }
 template<> int lua_push(lua_State *l, fix32 const &x) { lua_pushnumber(l, x); return 1; }
 template<> int lua_push(lua_State *l, std::string const &s) { lua_pushlstring(l, s.c_str(), (int)s.size()); return 1; }
@@ -45,6 +46,13 @@ template<typename... T> int lua_push(lua_State *l, std::variant<T...> const &x)
 template<typename T> int lua_push(lua_State *l, std::optional<T> const &x)
 {
     return x ? lua_push(l, *x) : 0;
+}
+
+// Boxing an std::tuple pushes each value
+template<typename... T> int lua_push(lua_State *l, std::tuple<T...> const &t)
+{
+    std::apply([l](auto&&... x){ ((lua_push(l, x)), ...); }, t);
+    return (int)sizeof...(T);
 }
 
 // Get a standard type from the Lua stack

@@ -191,12 +191,15 @@ void vm::vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits)
 // Text
 //
 
-void vm::api_cursor(uint8_t x, uint8_t y, opt<uint8_t> c)
+tup<uint8_t, uint8_t> vm::api_cursor(uint8_t x, uint8_t y, opt<uint8_t> c)
 {
-    m_ram.draw_state.cursor.x = x;
-    m_ram.draw_state.cursor.y = y;
+    auto &ds = m_ram.draw_state;
+
+    std::swap(ds.cursor.x, x);
+    std::swap(ds.cursor.y, y);
     if (c)
-        m_ram.draw_state.pen = *c;
+        ds.pen = *c;
+    return std::make_tuple(x, y);
 }
 
 void vm::api_print(opt<std::string> str, opt<fix32> opt_x, opt<fix32> opt_y,
@@ -274,12 +277,14 @@ void vm::api_print(opt<std::string> str, opt<fix32> opt_x, opt<fix32> opt_y,
 // Graphics
 //
 
-void vm::api_camera(int16_t x, int16_t y)
+tup<int16_t, int16_t> vm::api_camera(int16_t x, int16_t y)
 {
     auto &ds = m_ram.draw_state;
 
+    auto prev = std::make_tuple(ds.camera.x(), ds.camera.y());
     ds.camera.set_x(x);
     ds.camera.set_y(y);
+    return prev;
 }
 
 void vm::api_circ(int16_t x, int16_t y, int16_t r, opt<fix32> c)
@@ -377,16 +382,23 @@ void vm::api_cls(uint8_t c)
     m_ram.draw_state.cursor.y = 0;
 }
 
-void vm::api_color(uint8_t c)
+uint8_t vm::api_color(uint8_t c)
 {
-    m_ram.draw_state.pen = c;
+    std::swap(c, m_ram.draw_state.pen);
+    return c;
 }
 
-void vm::api_fillp(fix32 fillp)
+fix32 vm::api_fillp(fix32 fillp)
 {
-    m_ram.draw_state.fillp[0] = fillp.bits() >> 16;
-    m_ram.draw_state.fillp[1] = fillp.bits() >> 24;
-    m_ram.draw_state.fillp_trans = (fillp.bits() >> 15) & 1;
+    auto &ds = m_ram.draw_state;
+
+    int32_t prev = (ds.fillp[0] << 16)
+                 | (ds.fillp[1] << 24)
+                 | ((ds.fillp_trans & 1) << 15);
+    ds.fillp[0] = fillp.bits() >> 16;
+    ds.fillp[1] = fillp.bits() >> 24;
+    ds.fillp_trans = (fillp.bits() >> 15) & 1;
+    return fix32::frombits(prev);
 }
 
 opt<var<int16_t, bool>> vm::api_fget(opt<int16_t> n, opt<int16_t> f)
@@ -526,7 +538,7 @@ void vm::api_mset(int16_t x, int16_t y, uint8_t n)
     m_ram.map[128 * y + x] = n;
 }
 
-void vm::api_pal(opt<int16_t> c0, opt<int16_t> c1, uint8_t p)
+opt<uint8_t> vm::api_pal(opt<uint8_t> c0, opt<uint8_t> c1, uint8_t p)
 {
     auto &ds = m_ram.draw_state;
 
@@ -542,23 +554,23 @@ void vm::api_pal(opt<int16_t> c0, opt<int16_t> c1, uint8_t p)
         ds.fillp[0] = 0;
         ds.fillp[1] = 0;
         ds.fillp_trans = 0;
+        return std::nullopt;
     }
     else
     {
+        uint8_t &data = ds.pal[p & 1][*c0 & 0xf];
+        uint8_t prev = data;
+
         if (p & 1)
-        {
-            ds.pal[1][*c0 & 0xf] = *c1 & 0xff;
-        }
+            data = *c1 & 0xff;
         else
-        {
-            // Transparency bit is preserved
-            ds.pal[p & 1][*c0 & 0xf] &= 0x10;
-            ds.pal[p & 1][*c0 & 0xf] |= *c1 & 0xf;
-        }
+            data = (data & 0x10) | (*c1 & 0xf); // Transparency bit is preserved
+
+        return prev;
     }
 }
 
-void vm::api_palt(opt<int16_t> c, opt<uint8_t> t)
+opt<bool> vm::api_palt(opt<uint8_t> c, opt<uint8_t> t)
 {
     auto &ds = m_ram.draw_state;
 
@@ -569,11 +581,14 @@ void vm::api_palt(opt<int16_t> c, opt<uint8_t> t)
             ds.pal[0][i] &= 0xf;
             ds.pal[0][i] |= i ? 0x00 : 0x10;
         }
+        return std::nullopt; // FIXME: check that this is the correct behaviour
     }
     else
     {
-        ds.pal[0][*c & 0xf] &= 0xf;
-        ds.pal[0][*c & 0xf] |= *t ? 0x10 : 0x00;
+        uint8_t &data = ds.pal[0][*c & 0xf];
+        auto prev = data & 0x10;
+        data = (data & 0xf) | (*t ? 0x10 : 0x00);
+        return prev;
     }
 }
 
