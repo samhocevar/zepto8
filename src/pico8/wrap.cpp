@@ -48,6 +48,7 @@ template<typename T> int lua_push(lua_State *l, std::optional<T> const &x)
 }
 
 // Get a standard type from the Lua stack
+template<typename T> static T lua_get(lua_State *l, int i);
 template<typename T> static void lua_get(lua_State *l, int i, T &);
 
 template<> void lua_get(lua_State *l, int i, fix32 &arg) { arg = lua_tonumber(l, i); }
@@ -99,7 +100,7 @@ static inline int dispatch(lua_State *l, R (T::*f)(A...),
 
 // Helper to create an index sequence from a member function’s signature
 template<typename T, typename R, typename... A>
-constexpr auto make_seq(R (T::*f)(A...))
+constexpr auto make_seq(R (T::*)(A...))
 {
     return std::index_sequence_for<A...>();
 }

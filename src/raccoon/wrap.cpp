@@ -66,14 +66,14 @@ static JSValue dispatch(JSContext *ctx, int argc, JSValueConst *argv,
     // Call the API function with the loaded arguments. Some specialization
     // is needed when the wrapped function returns void.
     if constexpr (std::is_same<R, void>::value)
-        return (that->*f)((IS < argc ? js_unbox<A>(ctx, argv[IS]) : A())...), JS_UNDEFINED;
+        return (that->*f)(((int)IS < argc ? js_unbox<A>(ctx, argv[IS]) : A())...), JS_UNDEFINED;
     else
-        return js_box(ctx, (that->*f)((IS < argc ? js_unbox<A>(ctx, argv[IS]) : A())...));
+        return js_box(ctx, (that->*f)(((int)IS < argc ? js_unbox<A>(ctx, argv[IS]) : A())...));
 }
 
 // Helper to create an index sequence from a member function’s signature
 template<typename T, typename R, typename... A>
-constexpr auto make_seq(R (T::*f)(A...))
+constexpr auto make_seq(R (T::*)(A...))
 {
     return std::index_sequence_for<A...>();
 }
