@@ -387,12 +387,12 @@ bool cart::load_p8(char const *filename)
     memcpy(&m_rom.map, map.data(), std::min(sizeof(m_rom.map), map.size()));
     if (map.size() > sizeof(m_rom.map))
     {
-        int map2_count = std::min(sizeof(m_rom.map2),
-                                  map.size() - sizeof(m_rom.map));
+        size_t map2_count = std::min(sizeof(m_rom.map2),
+                                     map.size() - sizeof(m_rom.map));
         // Use binary OR because some old versions of PICO-8 would store
         // a full gfx+gfx2 section AND a full map+map2 section, so we cannot
         // really decide which one is relevant.
-        for (int i = 0; i < map2_count; ++i)
+        for (size_t i = 0; i < map2_count; ++i)
             m_rom.map2[i] |= map[sizeof(m_rom.map) + i];
     }
 
@@ -584,8 +584,10 @@ std::vector<uint8_t> cart::get_bin() const
     auto const &code = get_compressed_code();
     ret.insert(ret.end(), code.begin(), code.end());
 
-    int max_len = (int)sizeof(m_rom.code);
-    msg::debug("compressed code length: %d/%d\n", (int)ret.size() - data_size, max_len);
+    int const rom_size = (int)sizeof(m_rom);
+    msg::debug("compressed code length: %d/%d\n",
+               (int)ret.size() - data_size, rom_size - data_size);
+    ret.resize(rom_size);
 
     ret.push_back(PICO8_VERSION);
 
