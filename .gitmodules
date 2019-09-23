@@ -17,6 +17,6 @@
 [submodule "src/3rdparty/zep"]
 	path = src/3rdparty/zep
 	url = ../fork-zep.git
-[submodule "src/quickjs"]
-	path = src/quickjs
+[submodule "src/3rdparty/quickjs"]
+	path = src/3rdparty/quickjs
 	url = ../fork-quickjs.git

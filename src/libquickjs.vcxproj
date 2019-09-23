@@ -67,21 +67,21 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="quickjs/quickjs.c">
+    <ClCompile Include="3rdparty/quickjs/quickjs.c">
       <AdditionalOptions Condition="'$(Platform)'=='NX64'"></AdditionalOptions>
     </ClCompile>
-    <ClCompile Include="quickjs/libregexp.c">
+    <ClCompile Include="3rdparty/quickjs/libregexp.c">
       <AdditionalOptions Condition="'$(Platform)'=='NX64'"></AdditionalOptions>
     </ClCompile>
-    <ClCompile Include="quickjs/libunicode.c">
+    <ClCompile Include="3rdparty/quickjs/libunicode.c">
       <AdditionalOptions Condition="'$(Platform)'=='NX64'"></AdditionalOptions>
     </ClCompile>
-    <ClCompile Include="quickjs/cutils.c">
+    <ClCompile Include="3rdparty/quickjs/cutils.c">
       <AdditionalOptions Condition="'$(Platform)'=='NX64'"></AdditionalOptions>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="quickjs/quickjs.h" />
+    <ClInclude Include="3rdparty/quickjs/quickjs.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

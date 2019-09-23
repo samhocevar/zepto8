@@ -19,10 +19,6 @@
 #include <fstream>
 #include <sstream>
 
-extern "C" {
-#include "quickjs/quickjs.h"
-}
-
 #include "zepto8.h"
 #include "player.h"
 #include "raccoon/vm.h"

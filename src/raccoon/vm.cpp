@@ -17,7 +17,7 @@
 #include <lol/engine.h>
 
 extern "C" {
-#include "quickjs/quickjs.h"
+#include "3rdparty/quickjs/quickjs.h"
 }
 
 #include "zepto8.h"

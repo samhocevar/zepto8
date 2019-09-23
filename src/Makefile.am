@@ -177,13 +177,16 @@ lua_ldflags += -lreadline
 endif
 
 libquickjs_a_SOURCES = \
-    quickjs/quickjs.c quickjs/quickjs.h \
-    quickjs/quickjs-atom.h quickjs/quickjs-opcode.h quickjs/list.h \
-    quickjs/libregexp.c quickjs/libregexp.h quickjs/libregexp-opcode.h \
-    quickjs/libunicode.c quickjs/libunicode.h quickjs/libunicode-table.h \
-    quickjs/cutils.c quickjs/cutils.h
+    3rdparty/quickjs/quickjs.c 3rdparty/quickjs/quickjs.h \
+    3rdparty/quickjs/quickjs-atom.h 3rdparty/quickjs/quickjs-opcode.h \
+    3rdparty/quickjs/list.h \
+    3rdparty/quickjs/libregexp.c 3rdparty/quickjs/libregexp.h \
+    3rdparty/quickjs/libregexp-opcode.h \
+    3rdparty/quickjs/libunicode.c 3rdparty/quickjs/libunicode.h \
+    3rdparty/quickjs/libunicode-table.h \
+    3rdparty/quickjs/cutils.c 3rdparty/quickjs/cutils.h
 libquickjs_a_CPPFLAGS = \
-    -Iquickjs -D_GNU_SOURCE -DCONFIG_VERSION=\"2019-08-18\" \
+    -I3rdparty/quickjs -D_GNU_SOURCE -DCONFIG_VERSION=\"2019-08-18\" \
     $(AM_CPPFLAGS) $(AM_CXXFLAGS) \
     -Wno-unused-parameter -Wno-sign-compare
 
