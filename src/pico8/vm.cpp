@@ -17,6 +17,7 @@
 #include <lol/engine.h>
 
 #include "pico8/vm.h"
+#include "bindings/lua.h"
 #include "bios.h"
 #include "z8lua.h"
 
@@ -37,7 +38,7 @@ vm::vm()
     lua_atpanic(m_lua, &vm::panic_hook);
     luaL_openlibs(m_lua);
 
-    install_lua_api();
+    bindings::lua::init(m_lua, this);
 
     // Automatically yield every 1000 instructions
     lua_sethook(m_lua, &vm::instruction_hook, LUA_MASKCOUNT, 1000);

@@ -19,11 +19,7 @@
 #include <optional>
 #include <variant>
 
-#include "zepto8.h"
-#include "pico8/vm.h"
-#include "pico8/z8lua.h"
-
-namespace z8::pico8
+namespace z8::bindings
 {
 
 // Push a standard type to the Lua stack
@@ -123,7 +119,7 @@ static int wrap(lua_State *l)
     return dispatch(l, FN, make_seq(FN));
 }
 
-class lua_bindings
+class lua
 {
 public:
     template<typename T>
@@ -137,7 +133,7 @@ public:
         lua_setglobal(l, "\x01");
 #endif
 
-        auto lib = T::api<lua_bindings>::get();
+        auto lib = T::template api<lua>::get();
         lib.push_back({});
 
         lua_pushglobaltable(l);
@@ -169,10 +165,5 @@ public:
     };
 };
 
-void vm::install_lua_api()
-{
-    lua_bindings::init(m_lua, this);
-}
-
-} // namespace z8::pico8
+} // namespace z8::bindings
 
