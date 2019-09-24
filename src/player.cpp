@@ -188,7 +188,7 @@ void player::tick_draw(float seconds, lol::Scene &scene)
     // Special mode where we render ourselves
     if (m_render)
     {
-        scene.get_renderer()->SetClearColor(lol::Color::black);
+        scene.get_renderer()->clear_color(lol::Color::black);
 
         float delta_x = 0.5f * (WINDOW_WIDTH - SCREEN_WIDTH);
         float delta_y = 0.5f * (WINDOW_HEIGHT - SCREEN_HEIGHT);
