@@ -123,77 +123,55 @@ static int wrap(lua_State *l)
     return dispatch(l, FN, make_seq(FN));
 }
 
-void vm::install_lua_api()
+class lua_bindings
 {
-    // Store a pointer to us in global state
+public:
+    template<typename T>
+    static void init(lua_State *l, T *that)
+    {
+        // Store a pointer to the caller in the global state
 #if HAVE_LUA_GETEXTRASPACE
-    *static_cast<vm**>(lua_getextraspace(m_lua)) = this;
+        *static_cast<vm**>(lua_getextraspace(l)) = that;
 #else
-    lua_pushlightuserdata(m_lua, this);
-    lua_setglobal(m_lua, "\x01");
+        lua_pushlightuserdata(l, that);
+        lua_setglobal(l, "\x01");
 #endif
 
-    static const luaL_Reg zepto8lib[] =
+        auto lib = T::api<lua_bindings>::get();
+        lib.push_back({});
+
+        lua_pushglobaltable(l);
+        luaL_setfuncs(l, lib.data(), 0);
+    }
+
+    template<auto FN> struct bind
     {
-        { "run",      &wrap<&vm::api_run> },
-        { "menuitem", &wrap<&vm::api_menuitem> },
-        { "reload",   &wrap<&vm::api_reload> },
-        { "peek",     &wrap<&vm::api_peek> },
-        { "peek2",    &wrap<&vm::api_peek2> },
-        { "peek4",    &wrap<&vm::api_peek4> },
-        { "poke",     &wrap<&vm::api_poke> },
-        { "poke2",    &wrap<&vm::api_poke2> },
-        { "poke4",    &wrap<&vm::api_poke4> },
-        { "memcpy",   &wrap<&vm::api_memcpy> },
-        { "memset",   &wrap<&vm::api_memset> },
-        { "stat",     &wrap<&vm::api_stat> },
-        { "printh",   &wrap<&vm::api_printh> },
-        { "extcmd",   &wrap<&vm::api_extcmd> },
-
-        { "_update_buttons", &wrap<&vm::api_update_buttons> },
-        { "btn",  &wrap<&vm::api_btn> },
-        { "btnp", &wrap<&vm::api_btnp> },
-
-        { "cursor", &wrap<&vm::api_cursor> },
-        { "print",  &wrap<&vm::api_print> },
-
-        { "camera",   &wrap<&vm::api_camera> },
-        { "circ",     &wrap<&vm::api_circ> },
-        { "circfill", &wrap<&vm::api_circfill> },
-        { "clip",     &wrap<&vm::api_clip> },
-        { "cls",      &wrap<&vm::api_cls> },
-        { "color",    &wrap<&vm::api_color> },
-        { "fillp",    &wrap<&vm::api_fillp> },
-        { "fget",     &wrap<&vm::api_fget> },
-        { "fset",     &wrap<&vm::api_fset> },
-        { "line",     &wrap<&vm::api_line> },
-        { "map",      &wrap<&vm::api_map> },
-        { "mget",     &wrap<&vm::api_mget> },
-        { "mset",     &wrap<&vm::api_mset> },
-        { "pal",      &wrap<&vm::api_pal> },
-        { "palt",     &wrap<&vm::api_palt> },
-        { "pget",     &wrap<&vm::api_pget> },
-        { "pset",     &wrap<&vm::api_pset> },
-        { "rect",     &wrap<&vm::api_rect> },
-        { "rectfill", &wrap<&vm::api_rectfill> },
-        { "sget",     &wrap<&vm::api_sget> },
-        { "sset",     &wrap<&vm::api_sset> },
-        { "spr",      &wrap<&vm::api_spr> },
-        { "sspr",     &wrap<&vm::api_sspr> },
-
-        { "music", &wrap<&vm::api_music> },
-        { "sfx",   &wrap<&vm::api_sfx> },
-
-        { "time", &wrap<&vm::api_time> },
-
-        { "__cartdata", &wrap<&vm::private_cartdata> },
-        { "__stub",     &wrap<&vm::private_stub> },
-
-        { nullptr, nullptr },
+        static int wrap(lua_State *l)
+        {
+            return dispatch(l, FN, make_seq(FN));
+        }
     };
 
-    lua_pushglobaltable(m_lua);
-    luaL_setfuncs(m_lua, zepto8lib, 0);
+    struct binding : luaL_Reg
+    {
+        binding()
+        {
+            name = nullptr;
+            func = nullptr;
+        }
+
+        template<auto FN>
+        binding(char const *str, bind<FN> b)
+        {
+            name = str;
+            func = &b.wrap;
+        }
+    };
+};
+
+void vm::install_lua_api()
+{
+    lua_bindings::init(m_lua, this);
 }
 
 } // namespace z8::pico8

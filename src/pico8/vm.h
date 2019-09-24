@@ -134,6 +134,73 @@ private:
     // Deprecated
     fix32 api_time();
 
+public:
+    // The API we export to extension languages
+    template<typename T> struct api
+    {
+        template<auto U> using bind = typename T::template bind<U>;
+
+        static auto get()
+        {
+            return std::vector<typename T::binding>
+            {
+                { "run",      bind<&vm::api_run>() },
+                { "menuitem", bind<&vm::api_menuitem>() },
+                { "reload",   bind<&vm::api_reload>() },
+                { "peek",     bind<&vm::api_peek>() },
+                { "peek2",    bind<&vm::api_peek2>() },
+                { "peek4",    bind<&vm::api_peek4>() },
+                { "poke",     bind<&vm::api_poke>() },
+                { "poke2",    bind<&vm::api_poke2>() },
+                { "poke4",    bind<&vm::api_poke4>() },
+                { "memcpy",   bind<&vm::api_memcpy>() },
+                { "memset",   bind<&vm::api_memset>() },
+                { "stat",     bind<&vm::api_stat>() },
+                { "printh",   bind<&vm::api_printh>() },
+                { "extcmd",   bind<&vm::api_extcmd>() },
+
+                { "_update_buttons", bind<&vm::api_update_buttons>() },
+                { "btn",  bind<&vm::api_btn>() },
+                { "btnp", bind<&vm::api_btnp>() },
+
+                { "cursor", bind<&vm::api_cursor>() },
+                { "print",  bind<&vm::api_print>() },
+
+                { "camera",   bind<&vm::api_camera>() },
+                { "circ",     bind<&vm::api_circ>() },
+                { "circfill", bind<&vm::api_circfill>() },
+                { "clip",     bind<&vm::api_clip>() },
+                { "cls",      bind<&vm::api_cls>() },
+                { "color",    bind<&vm::api_color>() },
+                { "fillp",    bind<&vm::api_fillp>() },
+                { "fget",     bind<&vm::api_fget>() },
+                { "fset",     bind<&vm::api_fset>() },
+                { "line",     bind<&vm::api_line>() },
+                { "map",      bind<&vm::api_map>() },
+                { "mget",     bind<&vm::api_mget>() },
+                { "mset",     bind<&vm::api_mset>() },
+                { "pal",      bind<&vm::api_pal>() },
+                { "palt",     bind<&vm::api_palt>() },
+                { "pget",     bind<&vm::api_pget>() },
+                { "pset",     bind<&vm::api_pset>() },
+                { "rect",     bind<&vm::api_rect>() },
+                { "rectfill", bind<&vm::api_rectfill>() },
+                { "sget",     bind<&vm::api_sget>() },
+                { "sset",     bind<&vm::api_sset>() },
+                { "spr",      bind<&vm::api_spr>() },
+                { "sspr",     bind<&vm::api_sspr>() },
+
+                { "music", bind<&vm::api_music>() },
+                { "sfx",   bind<&vm::api_sfx>() },
+
+                { "time", bind<&vm::api_time>() },
+
+                { "__cartdata", bind<&vm::private_cartdata>() },
+                { "__stub",     bind<&vm::private_stub>() },
+            };
+        }
+    };
+
 private:
     void install_lua_api();
 
