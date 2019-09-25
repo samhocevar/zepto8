@@ -8,6 +8,36 @@ local fillc = 0
 local bg = 1
 local fg = 7
 
+function codepoint(n)
+  local lut = {
+    9646, 9632, 9633, 8281, 8280, 8214, 9664, 9654,
+    12300, 12301, 165, 8226, 12289, 12290, 12443, 12444,
+    9750, -- change this one day
+    9608, 9618, 0x12.8049, 11015, 9617, 10045, 9679, 9829,
+    9737, 50883, 8962, 11013, 0x12.8528, 9834, 0x12.7358, 9670,
+    8230, 10145, 9733, 10711, 11014, 711, 8743, 10062,
+    9636, 9637, 12354, 12356, 12358, 12360, 12362, 12363,
+    12365, 12367, 12369, 12371, 12373, 12375, 12377, 12379,
+    12381, 12383, 12385, 12388, 12390, 12392, 12394, 12395,
+    12396, 12397, 12398, 12399, 12402, 12405, 12408, 12411,
+    12414, 12415, 12416, 12417, 12418, 12420, 12422, 12424,
+    12425, 12426, 12427, 12428, 12429, 12431, 12434, 12435,
+    12387, 12419, 12421, 12423, 12450, 12452, 12454, 12456,
+    12458, 12459, 12461, 12463, 12465, 12467, 12469, 12471,
+    12473, 12475, 12477, 12479, 12481, 12484, 12486, 12488,
+    12490, 12491, 12492, 12493, 12494, 12495, 12498, 12501,
+    12504, 12507, 12510, 12511, 12512, 12513, 12514, 12516,
+    12518, 12520, 12521, 12522, 12523, 12524, 12525, 12527,
+    12530, 12531, 12483, 12515, 12517, 12519, 9692, 9693
+  }
+  n = n<32 and lut[n-15] or n>126 and lut[n-110] or n
+  if n%1!=0 then -- handle codepoints >= 32767
+    local s=tostr(n,true)
+    return sub(s,5,6)..sub(s,8,11)
+  end
+  return n
+end
+
 local dx = { 1, 0, -1, 0,   1, 1, -1, -1,   1, 1, 0, 0 }
 local dy = { 0, 1, 0, -1,   -1, 1, 1, -1,   0, 1, 1, 0 }
 
@@ -66,13 +96,15 @@ function output(path,rev)
 end
 
 function dochar(n)
-  local ch = chr(n)
-  if band(n,0xdf)>=0x41 and band(n,0xdf)<=0x5a then n=bxor(n,0x20) end
+  -- swap uppercase and lowercase
+  local ch = chr(band(n,0xdf)>=0x41 and band(n,0xdf)<=0x5a and bxor(n,0x20) or n)
+
+  local cpt = codepoint(n)
   local w = 4 + 4*flr(n/128)
   local h = 6
 
-  printh('StartChar: u'..sub(tostr(n,1),3,6))
-  printh('Encoding: '..n..' '..n..' '..(n - 13))
+  printh('StartChar: '..cpt)
+  printh('Encoding: '..cpt..' '..cpt..' '..(n - 13))
   printh('Width: '..(w*mul))
   printh('VWidth: '..(6*mul))
   printh('GlyphClass: 2\nFlags: W\nLayerCount: 2\nFore\nSplineSet')
@@ -117,7 +149,7 @@ printh('Encoding: UnicodeBmp\n')
 printh('DisplaySize: -48')
 printh('AntiAlias: 1')
 printh('FitToEm: 0')
-printh('BeginChars: 65539 125')
+printh('BeginChars: 65539 256')
 for n=0x10,0xff do
   dochar(n)
 end
