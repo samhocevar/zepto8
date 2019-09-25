@@ -12,9 +12,9 @@ function codepoint(n)
   local lut = {
     9646, 9632, 9633, 8281, 8280, 8214, 9664, 9654,
     12300, 12301, 165, 8226, 12289, 12290, 12443, 12444,
-    9750, -- change this one day
-    9608, 9618, 0x12.8049, 11015, 9617, 10045, 9679, 9829,
-    9737, 50883, 8962, 11013, 0x12.8528, 9834, 0x12.7358, 9670,
+    9750, -- change this character one day
+    9608, 9618, '128049', 11015, 9617, 10045, 9679, 9829,
+    9737, 50883, 8962, 11013, '128528', 9834, '127358', 9670,
     8230, 10145, 9733, 10711, 11014, 711, 8743, 10062,
     9636, 9637, 12354, 12356, 12358, 12360, 12362, 12363,
     12365, 12367, 12369, 12371, 12373, 12375, 12377, 12379,
@@ -30,12 +30,7 @@ function codepoint(n)
     12518, 12520, 12521, 12522, 12523, 12524, 12525, 12527,
     12530, 12531, 12483, 12515, 12517, 12519, 9692, 9693
   }
-  n = n<32 and lut[n-15] or n>126 and lut[n-110] or n
-  if n%1!=0 then -- handle codepoints >= 32767
-    local s=tostr(n,true)
-    return sub(s,5,6)..sub(s,8,11)
-  end
-  return n
+  return n<32 and lut[n-15] or n>126 and lut[n-110] or n
 end
 
 local dx = { 1, 0, -1, 0,   1, 1, -1, -1,   1, 1, 0, 0 }
@@ -103,6 +98,9 @@ function dochar(n)
   local w = 4 + 4*flr(n/128)
   local h = 6
 
+  -- FIXME: chars after 0xffff are buggy for now
+  if cpt+0 != cpt then return end
+
   printh('StartChar: '..cpt)
   printh('Encoding: '..cpt..' '..cpt..' '..(n - 13))
   printh('Width: '..(w*mul))
@@ -126,7 +124,7 @@ function dochar(n)
 end
 
 printh('SplineFontDB: 3.0')
-printh('FontName: zepto8\nFullName: ZEPTO-8\nFamilyName: zepto8\nWeight: Book')
+printh('FontName: Zepto-8\nFullName: ZEPTO-8\nFamilyName: Zepto-8\nWeight: Book')
 printh('Copyright: Sam Hocevar\n')
 printh('Version: 1.0\n')
 printh('ItalicAngle: 0')
@@ -138,9 +136,9 @@ printh('PfmFamily: 81')
 printh('TTFWeight: 400\nTTFWidth: 5')
 printh('LineGap: 0\nVLineGap: 0\nPanose: 0 0 4 0 0 0 0 0 0 0\n')
 printh('OS2TypoAscent: 1000\nOS2TypoAOffset: 0\nOS2TypoDescent: -200\nOS2TypoDOffset: 0\nOS2TypoLinegap: 0')
-printh('OS2WinAscent: 1000\nOS2WinAOffset: 0\nOS2WinDescent: -200\nOS2WinDOffset: 0')
-printh('HheadAscent: 1000\nHheadAOffset: 0\nHheadDescent: -200\nHheadDOffset: 0')
-printh('OS2SubXSize: 400\nOS2SubYSize: 400\nOS2SubXOff: 0\nOS2SubYOff: 0')
+printh('OS2WinAscent: 1000\nOS2WinAOffset: 0\nOS2WinDescent: 200\nOS2WinDOffset: 0')
+printh('HheadAscent: 1000\nHheadAOffset: 0\nHheadDescent: 200\nHheadDOffset: 0')
+printh('OS2SubXSize: 400\nOS2SubYSize: 400\nOS2SubXOff: 0\nOS2SubYOff: -200')
 printh('OS2SupXSize: 400\nOS2SupYSize: 400\nOS2SupXOff: 0\nOS2SupYOff: 400')
 printh('OS2StrikeYSize: 40\nOS2StrikeYPos: 160')
 printh('OS2CapHeight: 1000\nOS2XHeight: 800')
