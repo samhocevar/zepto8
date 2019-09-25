@@ -36,7 +36,8 @@ ide::ide(player *player)
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.Fonts->AddFontDefault();
 
-    m_player = player;
+    player->get_texture(); // HACK: disable player rendering
+    m_vm = player->get_vm();
 
     m_ram_edit.OptShowAscii = m_rom_edit.OptShowAscii = false;
     m_ram_edit.OptUpperCaseHex = m_rom_edit.OptUpperCaseHex = false;
@@ -53,8 +54,8 @@ ide::~ide()
 void ide::apply_scale()
 {
     auto &style = ImGui::GetStyle();
-    style.WindowBorderSize = style.ChildBorderSize = style.PopupBorderSize = style.FrameBorderSize = style.TabBorderSize = m_scale;
-    style.FramePadding = lol::vec2(2 * m_scale);
+    style.WindowBorderSize = style.ChildBorderSize = style.PopupBorderSize = style.FrameBorderSize = style.TabBorderSize = (float)m_scale;
+    style.FramePadding = lol::vec2(2.f * m_scale);
     style.WindowRounding = style.ChildRounding = style.FrameRounding = style.ScrollbarRounding = style.TabRounding = 0.0f;
 
     // Useless
@@ -68,6 +69,22 @@ void ide::apply_scale()
 
     style.Colors[ImGuiCol_TitleBg]       = z8::palette::get(5);
     style.Colors[ImGuiCol_TitleBgActive] = z8::palette::get(8);
+}
+
+bool ide::init_draw()
+{
+    m_screen = std::make_shared<lol::Texture>(ivec2(128, 128), lol::PixelFormat::RGBA_8);
+    m_sprites = std::make_shared<lol::Texture>(ivec2(128, 128), lol::PixelFormat::RGBA_8);
+
+    return true;
+}
+
+bool ide::release_draw()
+{
+    m_screen.reset();
+    m_sprites.reset();
+
+    return true;
 }
 
 void ide::tick_game(float seconds)
@@ -354,7 +371,7 @@ void ide::render_windows()
         ImGui::SetNextWindowSize(lol::ivec2(512, 256), ImGuiCond_FirstUseEver);
         if (ImGui::Begin("ROM", &m_show.rom))
         {
-            auto rom = m_player->rom();
+            auto rom = m_vm->rom();
             m_rom_edit.DrawContents(std::get<0>(rom), std::get<1>(rom));
         }
         ImGui::End();
@@ -367,7 +384,7 @@ void ide::render_windows()
         ImGui::SetNextWindowSize(lol::ivec2(512, 246), ImGuiCond_FirstUseEver);
         if (ImGui::Begin("RAM", &m_show.ram))
         {
-            auto ram = m_player->ram();
+            auto ram = m_vm->ram();
             m_ram_edit.DrawContents(std::get<0>(ram), std::get<1>(ram));
         }
         ImGui::End();
@@ -381,7 +398,7 @@ void ide::render_windows()
         {
             lol::vec2 avail_size = ImGui::GetContentRegionAvail();
             float ratio = std::floor(std::max(1.f, std::min(avail_size.x / 128.f, avail_size.y / 128.f)));
-            ImGui::Image(m_player->get_texture(), ratio * lol::vec2(128.f),
+            ImGui::Image(m_screen.get(), ratio * lol::vec2(128.f),
                          lol::vec2(0.f), lol::vec2(1.f));
             ImGui::PushStyleColor(ImGuiCol_Button, z8::palette::get(z8::palette::black));
             ImGui::Button(u8"\u008b");
@@ -410,6 +427,11 @@ void ide::tick_draw(float seconds, lol::Scene &scene)
         pfd::open_file("Open File", ".", { "PICO-8 cartridges", "*.p8 *.p8.png", "All Files", "*" });
         m_commands[1] = false;
     }
+
+    std::vector<lol::u8vec4> buf(128 * 128);
+    m_vm->render(buf.data());
+    m_screen->Bind();
+    m_screen->SetData(buf.data());
 }
 
 } // namespace z8

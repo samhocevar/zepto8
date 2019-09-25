@@ -28,8 +28,10 @@ public:
     ide(player *player);
     virtual ~ide();
 
+    virtual bool init_draw() override;
     virtual void tick_game(float seconds) override;
     virtual void tick_draw(float seconds, lol::Scene &scene) override;
+    virtual bool release_draw() override;
 
 private:
     void apply_scale();
@@ -66,7 +68,9 @@ private:
     editor m_editor;
     MemoryEditor m_ram_edit, m_rom_edit;
 
-    player *m_player = nullptr;
+    std::shared_ptr<lol::Texture> m_screen, m_sprites;
+
+    std::shared_ptr<vm_base> m_vm;
     std::map<int, ImFont *> m_fonts;
 };
 

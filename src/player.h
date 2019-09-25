@@ -40,12 +40,12 @@ public:
     void load(char const *name);
     void run();
 
-    // HACK: if get_texture() is called, rendering is disabled
+    std::shared_ptr<vm_base> get_vm() { return m_vm; }
+
+    // HACK: if get_texture() is called, rendering is disabled (this
+    // is so that we do not overwrite the IDE screen)
     lol::Texture *get_texture();
     lol::Texture *get_font_texture();
-
-    std::tuple<uint8_t *, size_t> ram() { return m_vm->ram(); }
-    std::tuple<uint8_t *, size_t> rom() { return m_vm->rom(); }
 
 private:
     std::shared_ptr<vm_base> m_vm;
