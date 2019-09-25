@@ -119,7 +119,7 @@ public:
         lua_setglobal(l, "\x01");
 #endif
 
-        auto lib = T::template api<lua>::get();
+        auto lib = T::template api<lua>().data;
         lib.push_back({});
 
         lua_pushglobaltable(l);

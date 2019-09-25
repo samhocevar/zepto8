@@ -84,39 +84,36 @@ public:
     {
         template<auto U> using bind = typename T::template bind<U>;
 
-        static auto get()
+        std::vector<typename T::bind_desc> data =
         {
-            return std::vector<typename T::bind_desc>
-            {
-                { "read",     bind<&vm::api_read>() },
-                { "write",    bind<&vm::api_write>() },
+            { "read",     bind<&vm::api_read>() },
+            { "write",    bind<&vm::api_write>() },
 
-                { "palset",   bind<&vm::api_palset>() },
-                { "fget",     bind<&vm::api_fget>() },
-                { "fset",     bind<&vm::api_fset>() },
-                { "mget",     bind<&vm::api_mget>() },
-                { "mset",     bind<&vm::api_mset>() },
+            { "palset",   bind<&vm::api_palset>() },
+            { "fget",     bind<&vm::api_fget>() },
+            { "fset",     bind<&vm::api_fset>() },
+            { "mget",     bind<&vm::api_mget>() },
+            { "mset",     bind<&vm::api_mset>() },
 
-                { "cls",      bind<&vm::api_cls>() },
-                { "cam",      bind<&vm::api_cam>() },
-                { "map",      bind<&vm::api_map>() },
-                { "palm",     bind<&vm::api_palm>() },
-                { "palt",     bind<&vm::api_palt>() },
-                { "pget",     bind<&vm::api_pget>() },
-                { "pset",     bind<&vm::api_pset>() },
-                { "spr",      bind<&vm::api_spr>() },
-                { "rect",     bind<&vm::api_rect>() },
-                { "rectfill", bind<&vm::api_rectfill>() },
-                { "print",    bind<&vm::api_print>() },
+            { "cls",      bind<&vm::api_cls>() },
+            { "cam",      bind<&vm::api_cam>() },
+            { "map",      bind<&vm::api_map>() },
+            { "palm",     bind<&vm::api_palm>() },
+            { "palt",     bind<&vm::api_palt>() },
+            { "pget",     bind<&vm::api_pget>() },
+            { "pset",     bind<&vm::api_pset>() },
+            { "spr",      bind<&vm::api_spr>() },
+            { "rect",     bind<&vm::api_rect>() },
+            { "rectfill", bind<&vm::api_rectfill>() },
+            { "print",    bind<&vm::api_print>() },
 
-                { "rnd",      bind<&vm::api_rnd>() },
-                { "mid",      bind<&vm::api_mid>() },
-                { "mus",      bind<&vm::api_mus>() },
-                { "sfx",      bind<&vm::api_sfx>() },
-                { "btn",      bind<&vm::api_btn>() },
-                { "btnp",     bind<&vm::api_btnp>() },
-            };
-        }
+            { "rnd",      bind<&vm::api_rnd>() },
+            { "mid",      bind<&vm::api_mid>() },
+            { "mus",      bind<&vm::api_mus>() },
+            { "sfx",      bind<&vm::api_sfx>() },
+            { "btn",      bind<&vm::api_btn>() },
+            { "btnp",     bind<&vm::api_btnp>() },
+        };
     };
 
 private:
