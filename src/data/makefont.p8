@@ -3,6 +3,7 @@ version 17
 __lua__
 
 local mul = 200
+local glyphs = 0
 
 local fillc = 0
 local bg = 1
@@ -14,7 +15,7 @@ function codepoint(n)
     12300, 12301, 165, 8226, 12289, 12290, 12443, 12444,
     9750, -- change this character one day
     9608, 9618, '128049', 11015, 9617, 10045, 9679, 9829,
-    9737, 50883, 8962, 11013, '128528', 9834, '127358', 9670,
+    9737, '50883', 8962, 11013, '128528', 9834, '127358', 9670,
     8230, 10145, 9733, 10711, 11014, 711, 8743, 10062,
     9636, 9637, 12354, 12356, 12358, 12360, 12362, 12363,
     12365, 12367, 12369, 12371, 12373, 12375, 12377, 12379,
@@ -93,19 +94,19 @@ end
 function dochar(n)
   -- swap uppercase and lowercase
   local ch = chr(band(n,0xdf)>=0x41 and band(n,0xdf)<=0x5a and bxor(n,0x20) or n)
-
   local cpt = codepoint(n)
   local w = 4 + 4*flr(n/128)
   local h = 6
+  doglyph(ch, cpt, cpt, cpt, w, h)
+end
 
-  -- FIXME: chars after 0xffff are buggy for now
-  if cpt+0 != cpt then return end
-
-  printh('StartChar: '..cpt)
-  printh('Encoding: '..cpt..' '..cpt..' '..(n - 13))
+function doglyph(ch, name, enc1, enc2, w, h)
+  printh('StartChar: '..name)
+  printh('Encoding: '..enc1..' '..enc2..' '..glyphs)
   printh('Width: '..(w*mul))
   printh('VWidth: '..(6*mul))
   printh('GlyphClass: 2\nFlags: W\nLayerCount: 2\nFore\nSplineSet')
+  glyphs += 1
 
   rectfill(0,0,7,7,bg)
   print(ch,1,1,fg)
@@ -142,14 +143,16 @@ printh('OS2SubXSize: 400\nOS2SubYSize: 400\nOS2SubXOff: 0\nOS2SubYOff: -200')
 printh('OS2SupXSize: 400\nOS2SupYSize: 400\nOS2SupXOff: 0\nOS2SupYOff: 400')
 printh('OS2StrikeYSize: 40\nOS2StrikeYPos: 160')
 printh('OS2CapHeight: 1000\nOS2XHeight: 800')
-printh('GaspTable: 1 65535 2 0\n')
-printh('Encoding: UnicodeBmp\n')
+printh('GaspTable: 1 65535 2 0')
+printh('Encoding: UnicodeFull')
 printh('DisplaySize: -48')
 printh('AntiAlias: 1')
 printh('FitToEm: 0')
-printh('BeginChars: 65539 256')
-for n=0x10,0xff do
-  dochar(n)
-end
+
+printh('BeginChars: 1114112 '..(256 - 16 + 3))
+doglyph('0', '.notdef', '65536', -1, 4, 6)
+doglyph('0', 'space', '65537', -1, 4, 6)
+doglyph('', 'glyph1', '65538', -1, 0, 6)
+for n=16,255 do dochar(n) end
 printh('EndChars\nEndSplineFont')
 
