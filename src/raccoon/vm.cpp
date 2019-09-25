@@ -23,6 +23,7 @@ extern "C" {
 #include "zepto8.h"
 #include "raccoon/vm.h"
 #include "bios.h" // TODO: remove references to PICO-8 stuff
+#include "bindings/js.h"
 
 namespace z8::raccoon
 {
@@ -37,9 +38,8 @@ vm::vm()
 {
     m_rt = JS_NewRuntime();
     m_ctx = JS_NewContext(m_rt);
-    JS_SetContextOpaque(m_ctx, this);
 
-    js_wrap();
+    bindings::js::init(m_ctx, this);
 }
 
 vm::~vm()

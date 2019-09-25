@@ -105,20 +105,6 @@ static inline int dispatch(lua_State *l, R (T::*f)(A...),
         return lua_push(l, (that->*f)(lua_get<A>(l, IS + 1)...));
 }
 
-// Helper to create an index sequence from a member function’s signature
-template<typename T, typename R, typename... A>
-constexpr auto make_seq(R (T::*)(A...))
-{
-    return std::index_sequence_for<A...>();
-}
-
-// Helper to dispatch C++ functions to Lua C bindings
-template<auto FN>
-static int wrap(lua_State *l)
-{
-    return dispatch(l, FN, make_seq(FN));
-}
-
 class lua
 {
 public:
@@ -140,28 +126,32 @@ public:
         luaL_setfuncs(l, lib.data(), 0);
     }
 
+    // Helper to dispatch C++ functions to Lua C bindings
     template<auto FN> struct bind
     {
         static int wrap(lua_State *l)
         {
             return dispatch(l, FN, make_seq(FN));
         }
+
+        // Create an index sequence from a member function’s signature
+        template<typename T, typename R, typename... A>
+        static constexpr auto make_seq(R (T::*)(A...))
+        {
+            return std::index_sequence_for<A...>();
+        }
     };
 
-    struct binding : luaL_Reg
+    struct bind_desc : luaL_Reg
     {
-        binding()
-        {
-            name = nullptr;
-            func = nullptr;
-        }
+        bind_desc()
+          : luaL_Reg({ nullptr, nullptr })
+        {}
 
         template<auto FN>
-        binding(char const *str, bind<FN> b)
-        {
-            name = str;
-            func = &b.wrap;
-        }
+        bind_desc(char const *str, bind<FN> b)
+          : luaL_Reg({ str, &b.wrap })
+        {}
     };
 };
 

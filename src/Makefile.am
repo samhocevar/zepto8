@@ -139,7 +139,7 @@ libzepto8_a_SOURCES = \
     bios.cpp bios.h cart.cpp cart.h \
     analyzer.cpp analyzer.h lua53-parse.h \
     \
-    bindings/lua.h \
+    bindings/js.h bindings/lua.h \
     \
     pico8/vm.cpp pico8/vm.h \
     pico8/memory.h \
@@ -149,7 +149,7 @@ libzepto8_a_SOURCES = \
     \
     raccoon/vm.cpp raccoon/vm.h \
     raccoon/memory.h raccoon/font.h \
-    raccoon/wrap.cpp raccoon/api.cpp \
+    raccoon/api.cpp \
     $(NULL)
 
 EXTRA_DIST += libzepto8.vcxproj

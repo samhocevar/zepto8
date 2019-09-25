@@ -78,10 +78,10 @@
     <ClCompile Include="pico8\z8lua.cpp" />
     <ClCompile Include="raccoon\api.cpp" />
     <ClCompile Include="raccoon\vm.cpp" />
-    <ClCompile Include="raccoon\wrap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analyzer.h" />
+    <ClInclude Include="bindings/js.h" />
     <ClInclude Include="bindings/lua.h" />
     <ClInclude Include="cart.h" />
     <ClInclude Include="pico8\memory.h" />

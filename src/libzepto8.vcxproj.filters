@@ -25,15 +25,15 @@
     <ClCompile Include="raccoon\vm.cpp">
       <Filter>raccoon</Filter>
     </ClCompile>
-    <ClCompile Include="raccoon\wrap.cpp">
-      <Filter>raccoon</Filter>
-    </ClCompile>
     <ClCompile Include="pico8\z8lua.cpp">
       <Filter>pico8</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analyzer.h" />
+    <ClInclude Include="bindings\js.h">
+      <Filter>bindings</Filter>
+    </ClInclude>
     <ClInclude Include="bindings\lua.h">
       <Filter>bindings</Filter>
     </ClInclude>

@@ -23,9 +23,8 @@ extern "C" {
 }
 
 #include "zepto8.h"
-#include "raccoon/vm.h"
 
-namespace z8::raccoon
+namespace z8::bindings
 {
 
 // Convert a standard type to a JSValue
@@ -71,64 +70,52 @@ static JSValue dispatch(JSContext *ctx, int argc, JSValueConst *argv,
         return js_box(ctx, (that->*f)(((int)IS < argc ? js_unbox<A>(ctx, argv[IS]) : A())...));
 }
 
-// Helper to create an index sequence from a member function’s signature
-template<typename T, typename R, typename... A>
-constexpr auto make_seq(R (T::*)(A...))
+class js
 {
-    return std::index_sequence_for<A...>();
-}
+public:
+    template<typename T>
+    static void init(JSContext *ctx, T *that)
+    {
+        JS_SetContextOpaque(ctx, that);
 
-// Helper to dispatch C++ functions to JS C bindings
-template<auto FN>
-static JSValue wrap(JSContext *ctx, JSValueConst,
-                    int argc, JSValueConst *argv)
-{
-    return dispatch(ctx, argc, argv, FN, make_seq(FN));
-}
+        // FIXME: this should not be static, store it in "that" instead!
+        static auto lib = T::template api<js>::get();
 
-#define JS_DISPATCH_CFUNC_DEF(name, func) \
-    { name, JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE, JS_DEF_CFUNC, 0, \
-        { (uint8_t)make_seq(&vm::func).size(), JS_CFUNC_generic, { &wrap<&vm::func> } } \
+        // Add functions to global scope
+        auto global_obj = JS_GetGlobalObject(ctx);
+        JS_SetPropertyFunctionList(ctx, global_obj, lib.data(), (int)lib.size());
+        JS_FreeValue(ctx, global_obj);
     }
 
-void vm::js_wrap()
-{
-    static std::vector<JSCFunctionListEntry> const funcs =
+    // Helper to dispatch C++ functions to JavaScript C bindings
+    template<auto FN> struct bind
     {
-        JS_DISPATCH_CFUNC_DEF("read",     api_read),
-        JS_DISPATCH_CFUNC_DEF("write",    api_write),
+        static JSValue wrap(JSContext *ctx, JSValueConst,
+                            int argc, JSValueConst *argv)
+        {
+            return dispatch(ctx, argc, argv, FN, make_seq(FN));
+        }
 
-        JS_DISPATCH_CFUNC_DEF("palset",   api_palset),
-        JS_DISPATCH_CFUNC_DEF("fget",     api_fget),
-        JS_DISPATCH_CFUNC_DEF("fset",     api_fset),
-        JS_DISPATCH_CFUNC_DEF("mget",     api_mget),
-        JS_DISPATCH_CFUNC_DEF("mset",     api_mset),
+        size_t size = make_seq(FN).size();
 
-        JS_DISPATCH_CFUNC_DEF("cls",      api_cls),
-        JS_DISPATCH_CFUNC_DEF("cam",      api_cam),
-        JS_DISPATCH_CFUNC_DEF("map",      api_map),
-        JS_DISPATCH_CFUNC_DEF("palm",     api_palm),
-        JS_DISPATCH_CFUNC_DEF("palt",     api_palt),
-        JS_DISPATCH_CFUNC_DEF("pget",     api_pget),
-        JS_DISPATCH_CFUNC_DEF("pset",     api_pset),
-        JS_DISPATCH_CFUNC_DEF("spr",      api_spr),
-        JS_DISPATCH_CFUNC_DEF("rect",     api_rect),
-        JS_DISPATCH_CFUNC_DEF("rectfill", api_rectfill),
-        JS_DISPATCH_CFUNC_DEF("print",    api_print),
-
-        JS_DISPATCH_CFUNC_DEF("rnd",      api_rnd),
-        JS_DISPATCH_CFUNC_DEF("mid",      api_mid),
-        JS_DISPATCH_CFUNC_DEF("mus",      api_mus),
-        JS_DISPATCH_CFUNC_DEF("sfx",      api_sfx),
-        JS_DISPATCH_CFUNC_DEF("btn",      api_btn),
-        JS_DISPATCH_CFUNC_DEF("btnp",     api_btnp),
+        // Create an index sequence from a member function’s signature
+        template<typename T, typename R, typename... A>
+        static constexpr auto make_seq(R (T::*)(A...))
+        {
+            return std::index_sequence_for<A...>();
+        }
     };
 
-    // Add functions to global scope
-    auto global_obj = JS_GetGlobalObject(m_ctx);
-    JS_SetPropertyFunctionList(m_ctx, global_obj, funcs.data(), (int)funcs.size());
-    JS_FreeValue(m_ctx, global_obj);
-}
+    struct bind_desc : JSCFunctionListEntry
+    {
+        template<auto FN>
+        bind_desc(char const *str, bind<FN> b)
+          : JSCFunctionListEntry({ str,
+                JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE, JS_DEF_CFUNC, 0,
+                { (uint8_t)b.size, JS_CFUNC_generic, { &b.wrap } }})
+        {}
+    };
+};
 
-} // namespace z8::raccoon
+} // namespace z8::bindings
 

@@ -142,7 +142,7 @@ public:
 
         static auto get()
         {
-            return std::vector<typename T::binding>
+            return std::vector<typename T::bind_desc>
             {
                 { "run",      bind<&vm::api_run>() },
                 { "menuitem", bind<&vm::api_menuitem>() },
