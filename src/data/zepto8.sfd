@@ -37,7 +37,7 @@ OS2WinDescent: 200
 OS2WinDOffset: 0
 HheadAscent: 1000
 HheadAOffset: 0
-HheadDescent: 200
+HheadDescent: -200
 HheadDOffset: 0
 OS2SubXSize: 400
 OS2SubYSize: 400
