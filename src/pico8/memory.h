@@ -245,14 +245,14 @@ struct memory
 };
 
 // Check type sizes
-static_assert(sizeof(sfx) == 68, "z8::sfx has incorrect size");
+static_assert(sizeof(sfx) == 68, "pico8::sfx has incorrect size");
 
 // Check all section offsets and sizes
 #define static_check_section(name, offset, size) \
     static_assert(offsetof(memory, name) == offset, \
-                  "z8::memory::"#name" should have offset "#offset); \
+                  "pico8::memory::"#name" should have offset "#offset); \
     static_assert(sizeof(memory::name) == size, \
-                  "z8::memory::"#name" should have size "#size);
+                  "pico8::memory::"#name" should have size "#size);
 
 static_check_section(gfx,        0x0000, 0x2000);
 static_check_section(map2,       0x1000, 0x1000);
@@ -270,7 +270,7 @@ static_check_section(screen,     0x6000, 0x2000);
 #undef static_check_section
 
 // Final sanity check
-static_assert(sizeof(memory) == 0x8000, "z8::memory should have size 0x8000");
+static_assert(sizeof(memory) == 0x8000, "pico8::memory should have size 0x8000");
 
 }
 

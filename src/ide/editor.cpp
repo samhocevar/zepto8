@@ -21,6 +21,7 @@
 
 #include "zepto8.h"
 #include "editor.h"
+#include "pico8/pico8.h"
 
 #include "zep.h"
 #include "zep/mode_vim.h"
@@ -150,17 +151,17 @@ class zep_theme : public Zep::ZepTheme
 public:
     zep_theme()
     {
-        m_palette[Zep::ThemeColor::Text] = z8::palette::light_gray;
-        m_palette[Zep::ThemeColor::Normal] = z8::palette::light_gray;
-        m_palette[Zep::ThemeColor::Parenthesis] = z8::palette::light_gray;
-        m_palette[Zep::ThemeColor::Background] = z8::palette::dark_blue;
-        m_palette[Zep::ThemeColor::LineNumber] = z8::palette::orange;
-        m_palette[Zep::ThemeColor::CursorNormal] = z8::palette::red;
-        m_palette[Zep::ThemeColor::Comment] = z8::palette::indigo;
-        m_palette[Zep::ThemeColor::Keyword] = z8::palette::pink;
-        m_palette[Zep::ThemeColor::Identifier] = z8::palette::green;
-        m_palette[Zep::ThemeColor::Number] = z8::palette::blue;
-        m_palette[Zep::ThemeColor::String] = z8::palette::blue;
+        m_palette[Zep::ThemeColor::Text] = pico8::palette::light_gray;
+        m_palette[Zep::ThemeColor::Normal] = pico8::palette::light_gray;
+        m_palette[Zep::ThemeColor::Parenthesis] = pico8::palette::light_gray;
+        m_palette[Zep::ThemeColor::Background] = pico8::palette::dark_blue;
+        m_palette[Zep::ThemeColor::LineNumber] = pico8::palette::orange;
+        m_palette[Zep::ThemeColor::CursorNormal] = pico8::palette::red;
+        m_palette[Zep::ThemeColor::Comment] = pico8::palette::indigo;
+        m_palette[Zep::ThemeColor::Keyword] = pico8::palette::pink;
+        m_palette[Zep::ThemeColor::Identifier] = pico8::palette::green;
+        m_palette[Zep::ThemeColor::Number] = pico8::palette::blue;
+        m_palette[Zep::ThemeColor::String] = pico8::palette::blue;
     }
 
     virtual Zep::NVec4f GetColor(Zep::ThemeColor themeColor) const
@@ -168,7 +169,7 @@ public:
         auto it = m_palette.find(themeColor);
         if (it != m_palette.end())
         {
-            auto col = z8::palette::get(it->second);
+            auto col = pico8::palette::get(it->second);
             return Zep::NVec4f(col.r, col.g, col.b, col.a);
         }
         return Zep::ZepTheme::GetColor(themeColor);

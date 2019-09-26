@@ -17,6 +17,7 @@
 #include <lol/engine.h>
 
 #include "pico8/vm.h"
+#include "pico8/pico8.h"
 
 namespace z8::pico8
 {

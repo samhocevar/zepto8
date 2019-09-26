@@ -142,7 +142,7 @@ libzepto8_a_SOURCES = \
     bindings/js.h bindings/lua.h \
     \
     pico8/vm.cpp pico8/vm.h \
-    pico8/memory.h \
+    pico8/pico8.h pico8/memory.h \
     pico8/z8lua.cpp pico8/z8lua.h \
     pico8/private.cpp pico8/gfx.cpp \
     pico8/render.cpp pico8/sfx.cpp \

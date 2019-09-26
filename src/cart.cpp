@@ -20,6 +20,7 @@
 
 #include "zepto8.h"
 #include "cart.h"
+#include "pico8/pico8.h"
 
 #include <regex>
 
@@ -79,7 +80,7 @@ bool cart::load_png(char const *filename)
         for (int x = 0; x < LABEL_WIDTH; ++x)
         {
             lol::u8vec4 p = pixels[(y + LABEL_Y) * size.x + (x + LABEL_X)];
-            uint8_t c = z8::palette::best(p);
+            uint8_t c = palette::best(p);
             if (x & 1)
                 m_label[(y * LABEL_WIDTH + x) / 2] += c << 4;
             else

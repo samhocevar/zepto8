@@ -85,6 +85,7 @@
     <ClInclude Include="bindings/lua.h" />
     <ClInclude Include="cart.h" />
     <ClInclude Include="pico8\memory.h" />
+    <ClInclude Include="pico8\pico8.h" />
     <ClInclude Include="pico8\vm.h" />
     <ClInclude Include="pico8\z8lua.h" />
     <ClInclude Include="raccoon\font.h" />

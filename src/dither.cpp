@@ -22,6 +22,7 @@
 
 #include "zepto8.h"
 #include "splore.h"
+#include "pico8/pico8.h"
 
 #define DEPTH 512
 
@@ -35,7 +36,7 @@ void dither(char const *src, char const *out, bool hicolor, bool error_diffusion
     std::vector<uint8_t> indices;
 
     for (int i = 0; i < 16; ++i)
-        colors.push_back(palette::get(i).rgb);
+        colors.push_back(pico8::palette::get(i).rgb);
 
     // Fix gamma (kinda)
     for (auto &color : colors)
@@ -57,12 +58,12 @@ void dither(char const *src, char const *out, bool hicolor, bool error_diffusion
     for (int i = 0; i < 16; ++i)
     {
     printf("  d: %02x %02x %02x  f: %f %f %f\n",
-       palette::get8(i).r,
-       palette::get8(i).g,
-       palette::get8(i).b,
-       palette::get(i).r,
-       palette::get(i).g,
-       palette::get(i).b);
+       pico8::palette::get8(i).r,
+       pico8::palette::get8(i).g,
+       pico8::palette::get8(i).b,
+       pico8::palette::get(i).r,
+       pico8::palette::get(i).g,
+       pico8::palette::get(i).b);
     }
 #endif
 

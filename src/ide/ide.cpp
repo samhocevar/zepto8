@@ -20,6 +20,7 @@
 
 #include "zepto8.h"
 #include "ide/ide.h"
+#include "pico8/pico8.h"
 #include "3rdparty/portable-file-dialogs/portable-file-dialogs.h"
 
 #define CUSTOM_FONT 0
@@ -59,16 +60,16 @@ void ide::apply_scale()
     style.WindowRounding = style.ChildRounding = style.FrameRounding = style.ScrollbarRounding = style.TabRounding = 0.0f;
 
     // Useless
-    style.Colors[ImGuiCol_ChildBg] = z8::palette::get(5);
+    style.Colors[ImGuiCol_ChildBg] = pico8::palette::get(5);
 
-    style.Colors[ImGuiCol_Tab]          = z8::palette::get(0);
-    style.Colors[ImGuiCol_TabHovered]   = z8::palette::get(8);
-    style.Colors[ImGuiCol_TabActive]    = z8::palette::get(8);
-    style.Colors[ImGuiCol_TabUnfocused] = z8::palette::get(0);
-    style.Colors[ImGuiCol_TabUnfocusedActive] = z8::palette::get(0);
+    style.Colors[ImGuiCol_Tab]          = pico8::palette::get(0);
+    style.Colors[ImGuiCol_TabHovered]   = pico8::palette::get(8);
+    style.Colors[ImGuiCol_TabActive]    = pico8::palette::get(8);
+    style.Colors[ImGuiCol_TabUnfocused] = pico8::palette::get(0);
+    style.Colors[ImGuiCol_TabUnfocusedActive] = pico8::palette::get(0);
 
-    style.Colors[ImGuiCol_TitleBg]       = z8::palette::get(5);
-    style.Colors[ImGuiCol_TitleBgActive] = z8::palette::get(8);
+    style.Colors[ImGuiCol_TitleBg]       = pico8::palette::get(5);
+    style.Colors[ImGuiCol_TitleBgActive] = pico8::palette::get(8);
 }
 
 bool ide::init_draw()
@@ -188,7 +189,7 @@ void ide::render_app()
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, lol::vec2(3.f * m_scale));
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, z8::palette::get(5));
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, pico8::palette::get(5));
 
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(lol::vec2(viewport->Size.x, 0.f));
@@ -292,7 +293,7 @@ void ide::render_menu()
 void ide::render_toolbar()
 {
     // Play / Pause / Restart
-    ImGui::PushStyleColor(ImGuiCol_Button, z8::palette::get(z8::palette::red));
+    ImGui::PushStyleColor(ImGuiCol_Button, pico8::palette::get(pico8::palette::red));
     ImGui::Button("|>");
     ImGui::SameLine();
     ImGui::Button("||");
@@ -308,8 +309,8 @@ void ide::render_toolbar()
     for (int i = 0; i < 16; i++)
     {
         ImGui::PushID(i);
-        ImGui::PushStyleColor(ImGuiCol_Button, z8::palette::get(i));
-        ImGui::PushStyleColor(ImGuiCol_Text, z8::palette::get(i < 6 ? 7 : 0));
+        ImGui::PushStyleColor(ImGuiCol_Button, pico8::palette::get(i));
+        ImGui::PushStyleColor(ImGuiCol_Text, pico8::palette::get(i < 6 ? 7 : 0));
         ImGui::Button(lol::format("%2d", i).c_str());
         ImGui::SameLine();
         ImGui::PopStyleColor(2);
@@ -325,8 +326,8 @@ void ide::render_windows()
         ImGui::SetNextWindowSize(lol::ivec2(64, 32), ImGuiCond_FirstUseEver);
         ImGui::Begin("Music", &m_show.music);
         {
-            ImGui::TextColored(z8::palette::get(10), "stuff");
-            ImGui::TextColored(z8::palette::get(5), "more stuff\nlol!!!");
+            ImGui::TextColored(pico8::palette::get(10), "stuff");
+            ImGui::TextColored(pico8::palette::get(5), "more stuff\nlol!!!");
         }
         ImGui::End();
     }
@@ -357,7 +358,7 @@ void ide::render_windows()
         ImGui::SetNextWindowSize(lol::ivec2(480, 480), ImGuiCond_FirstUseEver);
         if (ImGui::Begin("Code", &m_show.code))
         {
-            ImGui::PushStyleColor(ImGuiCol_ChildBg, z8::palette::get(5));
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, pico8::palette::get(5));
             m_editor.render();
             ImGui::PopStyleColor(1);
         }
@@ -400,7 +401,7 @@ void ide::render_windows()
             float ratio = std::floor(std::max(1.f, std::min(avail_size.x / 128.f, avail_size.y / 128.f)));
             ImGui::Image(m_screen.get(), ratio * lol::vec2(128.f),
                          lol::vec2(0.f), lol::vec2(1.f));
-            ImGui::PushStyleColor(ImGuiCol_Button, z8::palette::get(z8::palette::black));
+            ImGui::PushStyleColor(ImGuiCol_Button, pico8::palette::get(pico8::palette::black));
             ImGui::Button(u8"\u008b");
             ImGui::SameLine();
             ImGui::Button(u8"\u0091");

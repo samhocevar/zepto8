@@ -41,6 +41,9 @@
     <ClInclude Include="pico8\memory.h">
       <Filter>pico8</Filter>
     </ClInclude>
+    <ClInclude Include="pico8\pico8.h">
+      <Filter>pico8</Filter>
+    </ClInclude>
     <ClInclude Include="pico8\vm.h">
       <Filter>pico8</Filter>
     </ClInclude>
