@@ -74,7 +74,7 @@ public:
         JS_SetContextOpaque(ctx, that);
 
         // FIXME: this should not be static, store it in "that" instead!
-        static auto lib = T::template api<js>().data;
+        static auto lib = typename T::template api<js>().data;
 
         // Add functions to global scope
         auto global_obj = JS_GetGlobalObject(ctx);

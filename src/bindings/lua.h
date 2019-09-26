@@ -96,7 +96,7 @@ public:
         lua_setglobal(l, "\x01");
 #endif
 
-        auto lib = T::template api<lua>().data;
+        auto lib = typename T::template api<lua>().data;
         lib.push_back({});
 
         lua_pushglobaltable(l);
