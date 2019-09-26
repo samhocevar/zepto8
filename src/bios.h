@@ -14,7 +14,7 @@
 
 #include <lol/engine.h>
 
-#include "cart.h"
+#include "pico8/cart.h"
 
 // The bios class
 // ——————————————

@@ -22,7 +22,10 @@
 namespace z8::bindings
 {
 
+//
 // Push a standard type to the Lua stack
+//
+
 template<typename T> static int lua_push(lua_State *l, T const &);
 
 template<> int lua_push(lua_State *l, bool const &x) { lua_pushboolean(l, x); return 1; }
@@ -51,7 +54,10 @@ template<typename... T> int lua_push(lua_State *l, std::tuple<T...> const &t)
     return (int)sizeof...(T);
 }
 
+//
 // Get a standard type from the Lua stack
+//
+
 template<typename T> static T lua_get(lua_State *l, int i);
 template<typename T> static void lua_get(lua_State *l, int i, T &);
 
@@ -59,13 +65,6 @@ template<> void lua_get(lua_State *l, int i, fix32 &arg) { arg = lua_tonumber(l,
 template<> void lua_get(lua_State *l, int i, bool &arg) { arg = (bool)lua_toboolean(l, i); }
 template<> void lua_get(lua_State *l, int i, uint8_t &arg) { arg = (uint8_t)lua_tonumber(l, i); }
 template<> void lua_get(lua_State *l, int i, int16_t &arg) { arg = (int16_t)lua_tonumber(l, i); }
-
-template<> void lua_get(lua_State *l, int i, std::string &arg)
-{
-    lua_pushtostr(l, i, false);
-    arg = lua_tostring(l, -1);
-    lua_pop(l, 1);
-}
 
 // Unboxing to std::optional checks for lua_isnone() first
 template<typename T> void lua_get(lua_State *l, int i, std::optional<T> &arg)
@@ -79,31 +78,9 @@ template<typename T> static T lua_get(lua_State *l, int i)
     T ret; lua_get(l, i, ret); return ret;
 }
 
-// Call a T::* member function with arguments pulled from the Lua stack,
-// and push the result to the Lua stack.
-template<typename T, typename R, typename... A, size_t... IS>
-static inline int dispatch(lua_State *l, R (T::*f)(A...),
-                           std::index_sequence<IS...>)
-{
-    // Retrieve “this” from the Lua state.
-#if HAVE_LUA_GETEXTRASPACE
-    T *that = *static_cast<T**>(lua_getextraspace(l));
-#else
-    lua_getglobal(l, "\x01");
-    T *that = (T *)lua_touserdata(l, -1);
-    lua_remove(l, -1);
-#endif
-
-    // Store this for API functions that we don’t know yet how to wrap
-    that->m_sandbox_lua = l;
-
-    // Call the API function with the loaded arguments. Some specialization
-    // is needed when the wrapped function returns void.
-    if constexpr (std::is_same<R, void>::value)
-        return (that->*f)(lua_get<A>(l, IS + 1)...), 0;
-    else
-        return lua_push(l, (that->*f)(lua_get<A>(l, IS + 1)...));
-}
+//
+// Lua binding mechanism
+//
 
 class lua
 {
@@ -153,6 +130,33 @@ public:
           : luaL_Reg({ str, &b.wrap })
         {}
     };
+
+private:
+    // Call a T::* member function with arguments pulled from the Lua stack,
+    // and push the result to the Lua stack.
+    template<typename T, typename R, typename... A, size_t... IS>
+    static inline int dispatch(lua_State *l, R (T::*f)(A...),
+                               std::index_sequence<IS...>)
+    {
+        // Retrieve “this” from the Lua state.
+    #if HAVE_LUA_GETEXTRASPACE
+        T *that = *static_cast<T**>(lua_getextraspace(l));
+    #else
+        lua_getglobal(l, "\x01");
+        T *that = (T *)lua_touserdata(l, -1);
+        lua_remove(l, -1);
+    #endif
+
+        // Store this for API functions that we don’t know yet how to wrap
+        that->m_sandbox_lua = l;
+
+        // Call the API function with the loaded arguments. Some specialization
+        // is needed when the wrapped function returns void.
+        if constexpr (std::is_same<R, void>::value)
+            return (that->*f)(lua_get<A>(l, IS + 1)...), 0;
+        else
+            return lua_push(l, (that->*f)(lua_get<A>(l, IS + 1)...));
+    }
 };
 
 } // namespace z8::bindings

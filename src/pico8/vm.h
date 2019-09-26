@@ -19,16 +19,13 @@
 
 #include "zepto8.h"
 #include "bios.h"
-#include "cart.h"
-#include "memory.h"
+#include "pico8/cart.h"
+#include "pico8/memory.h"
 #include "pico8/z8lua.h"
 
-namespace z8
-{
+namespace z8 { class player; }
 
-class player;
-
-namespace pico8
+namespace z8::pico8
 {
 
 using lol::u8vec4;
@@ -199,8 +196,6 @@ public:
     };
 
 private:
-    void install_lua_api();
-
     uint8_t get_pixel(int16_t x, int16_t y) const;
 
     uint32_t to_color_bits(opt<fix32> c);
@@ -258,7 +253,5 @@ private:
     int m_instructions;
 };
 
-} // namespace pico8
-
-} // namespace z8
+} // namespace z8::pico8
 

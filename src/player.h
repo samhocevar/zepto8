@@ -15,7 +15,7 @@
 #include <lol/engine.h>
 
 #include "zepto8.h"
-#include "cart.h"
+#include "pico8/cart.h"
 
 // The player class
 // ————————————————

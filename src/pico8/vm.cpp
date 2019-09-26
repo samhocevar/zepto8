@@ -24,6 +24,14 @@
 // FIXME: activate this one day, when we use Lua 5.3
 #define HAVE_LUA_GETEXTRASPACE 0
 
+// Binding specialisations specific to PICO-8
+template<> void z8::bindings::lua_get(lua_State *l, int i, std::string &arg)
+{
+    z8::pico8::lua_pushtostr(l, i, false);
+    arg = lua_tostring(l, -1);
+    lua_pop(l, 1);
+}
+
 namespace z8::pico8
 {
 
@@ -155,11 +163,6 @@ void vm::keyboard(char ch)
     m_keyboard.stop = (m_keyboard.stop + 1) % (int)sizeof(m_keyboard.chars);
 }
 
-void vm::private_stub(std::string str)
-{
-    msg::info("z8:stub:%s\n", str.c_str());
-}
-
 //
 // System
 //
@@ -178,7 +181,7 @@ void vm::api_run()
 
 void vm::api_menuitem()
 {
-    msg::info("z8:stub:menuitem\n");
+    private_stub("menuitem");
 }
 
 void vm::api_reload(int16_t in_dst, int16_t in_src, opt<int16_t> in_size)
@@ -488,7 +491,7 @@ void vm::api_extcmd(/* FIXME: argument construction */)
          || strcmp("screen", str) == 0
          || strcmp("rec", str) == 0
          || strcmp("video", str) == 0)
-        msg::info("z8:stub:extcmd(%s)\n", str);
+        private_stub(lol::format("extcmd(%s)\n", str));
 }
 
 //
@@ -550,5 +553,5 @@ fix32 vm::api_time()
     return (fix32)(double)m_timer.poll();
 }
 
-} // namespace z8
+} // namespace z8::pico8
 

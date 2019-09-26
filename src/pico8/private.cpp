@@ -24,6 +24,11 @@ namespace z8::pico8
 
 using lol::msg;
 
+void vm::private_stub(std::string str)
+{
+    msg::info("z8:stub:%s\n", str.c_str());
+}
+
 opt<bool> vm::private_cartdata()
 {
     // No argument given: we return whether there is data
@@ -38,9 +43,9 @@ opt<bool> vm::private_cartdata()
     }
 
     m_cartdata = lua_tostring(m_sandbox_lua, 1);
-    msg::info("z8:stub:cartdata \"%s\"\n", m_cartdata.c_str());
+    private_stub(lol::format("cartdata(\"%s\")", m_cartdata.c_str()));
     return false;
 }
 
-} // namespace z8
+} // namespace z8::pico8
 

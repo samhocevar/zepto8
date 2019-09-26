@@ -19,7 +19,7 @@
 #include "tao/pegtl.hpp"
 
 #include "zepto8.h"
-#include "cart.h"
+#include "pico8/cart.h"
 #include "pico8/pico8.h"
 
 #include <regex>
@@ -720,5 +720,5 @@ std::string cart::get_p8() const
     return ret;
 }
 
-} // namespace z8
+} // namespace z8::pico8
 

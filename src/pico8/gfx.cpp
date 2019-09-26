@@ -727,5 +727,5 @@ void vm::api_sspr(int16_t sx, int16_t sy, int16_t sw, int16_t sh,
     }
 }
 
-} // namespace z8
+} // namespace z8::pico8
 

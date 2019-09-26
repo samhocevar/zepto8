@@ -69,7 +69,7 @@
   <ItemGroup>
     <ClCompile Include="analyzer.cpp" />
     <ClCompile Include="bios.cpp" />
-    <ClCompile Include="cart.cpp" />
+    <ClCompile Include="pico8\cart.cpp" />
     <ClCompile Include="pico8\gfx.cpp" />
     <ClCompile Include="pico8\private.cpp" />
     <ClCompile Include="pico8\render.cpp" />
@@ -83,7 +83,7 @@
     <ClInclude Include="analyzer.h" />
     <ClInclude Include="bindings/js.h" />
     <ClInclude Include="bindings/lua.h" />
-    <ClInclude Include="cart.h" />
+    <ClInclude Include="pico8\cart.h" />
     <ClInclude Include="pico8\memory.h" />
     <ClInclude Include="pico8\pico8.h" />
     <ClInclude Include="pico8\vm.h" />

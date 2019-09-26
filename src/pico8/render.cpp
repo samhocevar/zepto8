@@ -120,5 +120,5 @@ void vm::print_ansi(lol::ivec2 term_size,
     fflush(stdout);
 }
 
-} // namespace z8
+} // namespace z8::pico8
 

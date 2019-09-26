@@ -3,7 +3,9 @@
   <ItemGroup>
     <ClCompile Include="analyzer.cpp" />
     <ClCompile Include="bios.cpp" />
-    <ClCompile Include="cart.cpp" />
+    <ClCompile Include="pico8\cart.cpp">
+      <Filter>pico8</Filter>
+    </ClCompile>
     <ClCompile Include="pico8\gfx.cpp">
       <Filter>pico8</Filter>
     </ClCompile>
@@ -37,7 +39,9 @@
     <ClInclude Include="bindings\lua.h">
       <Filter>bindings</Filter>
     </ClInclude>
-    <ClInclude Include="cart.h" />
+    <ClInclude Include="pico8\cart.h">
+      <Filter>pico8</Filter>
+    </ClInclude>
     <ClInclude Include="pico8\memory.h">
       <Filter>pico8</Filter>
     </ClInclude>

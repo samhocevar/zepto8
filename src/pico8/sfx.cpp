@@ -352,7 +352,7 @@ void vm::api_music(int16_t pattern, int16_t fade_len, int16_t mask)
     m_music.m_pattern = pattern;
     m_music.m_mask = mask & 0xf;
 
-    msg::info("z8:stub:music\n");
+    private_stub(lol::format("music(%d, %d, %d)", pattern, fade_len, mask));
 }
 
 void vm::api_sfx(int16_t sfx, opt<int16_t> in_chan, int16_t offset)
@@ -429,5 +429,5 @@ void vm::api_sfx(int16_t sfx, opt<int16_t> in_chan, int16_t offset)
     }
 }
 
-} // namespace z8
+} // namespace z8::pico8
 

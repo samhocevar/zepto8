@@ -77,5 +77,5 @@ private:
     int m_version;
 };
 
-} // namespace z8
+} // namespace z8::pico8
 

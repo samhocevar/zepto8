@@ -27,12 +27,18 @@ extern "C" {
 namespace z8::bindings
 {
 
+//
 // Convert a standard type to a JSValue
+//
+
 static JSValue js_box(JSContext *ctx, bool x) { return JS_NewBool(ctx, (int)x); }
 static JSValue js_box(JSContext *ctx, int x) { return JS_NewInt32(ctx, x); }
 static JSValue js_box(JSContext *ctx, double x) { return JS_NewFloat64(ctx, x); }
 
+//
 // Convert a JSValue to a standard type
+//
+
 template<typename T> static void js_unbox(JSContext *ctx, T &, JSValueConst jsval);
 
 template<> void js_unbox(JSContext *ctx, int &arg, JSValueConst jsval) { JS_ToInt32(ctx, &arg, jsval); }
@@ -55,20 +61,9 @@ template<typename T> static T js_unbox(JSContext *ctx, JSValueConst jsval)
     T ret; js_unbox(ctx, ret, jsval); return ret;
 }
 
-template<typename T, typename R, typename... A, size_t... IS>
-static JSValue dispatch(JSContext *ctx, int argc, JSValueConst *argv,
-                        R (T::*f)(A...), std::index_sequence<IS...>)
-{
-    // Retrieve “this” from the JS context.
-    T *that = (T *)JS_GetContextOpaque(ctx);
-
-    // Call the API function with the loaded arguments. Some specialization
-    // is needed when the wrapped function returns void.
-    if constexpr (std::is_same<R, void>::value)
-        return (that->*f)(((int)IS < argc ? js_unbox<A>(ctx, argv[IS]) : A())...), JS_UNDEFINED;
-    else
-        return js_box(ctx, (that->*f)(((int)IS < argc ? js_unbox<A>(ctx, argv[IS]) : A())...));
-}
+//
+// JavaScript binding mechanism
+//
 
 class js
 {
@@ -115,6 +110,22 @@ public:
                 { (uint8_t)b.size, JS_CFUNC_generic, { &b.wrap } }})
         {}
     };
+
+private:
+    template<typename T, typename R, typename... A, size_t... IS>
+    static JSValue dispatch(JSContext *ctx, int argc, JSValueConst *argv,
+                            R (T::*f)(A...), std::index_sequence<IS...>)
+    {
+        // Retrieve “this” from the JS context.
+        T *that = (T *)JS_GetContextOpaque(ctx);
+
+        // Call the API function with the loaded arguments. Some specialization
+        // is needed when the wrapped function returns void.
+        if constexpr (std::is_same<R, void>::value)
+            return (that->*f)(((int)IS < argc ? js_unbox<A>(ctx, argv[IS]) : A())...), JS_UNDEFINED;
+        else
+            return js_box(ctx, (that->*f)(((int)IS < argc ? js_unbox<A>(ctx, argv[IS]) : A())...));
+    }
 };
 
 } // namespace z8::bindings
