@@ -342,23 +342,9 @@ bool cart::load_p8(char const *filename)
     if (reader.m_version < 0)
         return false;
 
-    m_code = reader.m_code;
-
     // PICO-8 saves some symbols in the .p8 file as Emoji/Unicode characters
-    // but the runtime expects characters \x80 — \x99 instead.
-    static replacement const replaces[] =
-    {
-        { "█", "\x80" }, { "▒", "\x81" }, { "🐱", "\x82" }, { "⬇️", "\x83" },
-        { "░", "\x84" }, { "✽", "\x85" }, { "●", "\x86" }, { "♥", "\x87" },
-        { "☉", "\x88" }, { "웃", "\x89" }, { "⌂", "\x8a" }, { "⬅️", "\x8b" },
-        { "😐", "\x8c" }, { "♪", "\x8d" }, { "🅾️", "\x8e" }, { "◆", "\x8f" },
-        { "…", "\x90" }, { "➡️", "\x91" }, { "★", "\x92" }, { "⧗", "\x93" },
-        { "⬆️", "\x94" }, { "ˇ", "\x95" }, { "∧", "\x96" }, { "❎", "\x97" },
-        { "▤", "\x98" }, { "▥", "\x99" },
-    };
-
-    for (size_t i = 0; i < sizeof(replaces) / sizeof(*replaces); ++i)
-        m_code = replaces[i].replace(m_code);
+    // but the runtime expects 8-bit characters instead.
+    m_code = charset::encode(reader.m_code);
 
     memset(&m_rom, 0, sizeof(m_rom));
 

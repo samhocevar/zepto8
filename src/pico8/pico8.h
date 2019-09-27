@@ -14,6 +14,10 @@
 
 #include <lol/engine.h>
 
+#include <map>
+#include <string_view>
+#include <cuchar>
+
 // The PICO-8 definitions
 // ——————————————————————
 
@@ -23,7 +27,11 @@ namespace z8::pico8
 struct charset
 {
     static std::string decode(uint8_t ch);
-    static uint8_t encode(std::string const &str);
+    static std::string encode(std::string const &str);
+
+private:
+    static std::u32string const pico8_to_u32;
+    static std::map<char32_t, uint8_t> const u32_to_pico8;
 };
 
 struct palette
