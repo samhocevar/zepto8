@@ -16,6 +16,7 @@
 
 #include <lol/engine.h>
 
+#include "pico8/pico8.h"
 #include "pico8/vm.h"
 #include "bindings/lua.h"
 #include "bios.h"
@@ -503,7 +504,11 @@ void vm::api_printh(rich_string str, opt<std::string> filename, opt<bool> overwr
 {
     (void)filename;
     (void)overwrite;
-    fprintf(stdout, "%s\n", str.c_str());
+
+    std::string decoded;
+    for (uint8_t ch : str)
+        decoded += charset::decode(ch);
+    fprintf(stdout, "%s\n", decoded.c_str());
     fflush(stdout);
 }
 

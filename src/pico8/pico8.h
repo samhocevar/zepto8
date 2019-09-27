@@ -20,6 +20,12 @@
 namespace z8::pico8
 {
 
+struct charset
+{
+    static std::string decode(uint8_t ch);
+    static uint8_t encode(std::string const &str);
+};
+
 struct palette
 {
     enum
