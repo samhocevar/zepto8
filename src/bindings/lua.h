@@ -19,6 +19,10 @@
 #include <optional>
 #include <variant>
 
+#include "z8lua/lua.h"
+#include "z8lua/lauxlib.h"
+#include "z8lua/lualib.h"
+
 namespace z8::bindings
 {
 
@@ -65,6 +69,7 @@ template<> void lua_get(lua_State *l, int i, fix32 &arg) { arg = lua_tonumber(l,
 template<> void lua_get(lua_State *l, int i, bool &arg) { arg = (bool)lua_toboolean(l, i); }
 template<> void lua_get(lua_State *l, int i, uint8_t &arg) { arg = (uint8_t)lua_tonumber(l, i); }
 template<> void lua_get(lua_State *l, int i, int16_t &arg) { arg = (int16_t)lua_tonumber(l, i); }
+template<> void lua_get(lua_State *l, int n, std::string &arg) { if (lua_isstring(l, n)) arg = lua_tostring(l, n); }
 
 // Unboxing to std::optional checks for lua_isnone() first
 template<typename T> void lua_get(lua_State *l, int i, std::optional<T> &arg)

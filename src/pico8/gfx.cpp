@@ -202,7 +202,7 @@ tup<uint8_t, uint8_t> vm::api_cursor(uint8_t x, uint8_t y, opt<uint8_t> c)
     return std::make_tuple(x, y);
 }
 
-void vm::api_print(opt<std::string> str, opt<fix32> opt_x, opt<fix32> opt_y,
+void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
                    opt<fix32> c)
 {
     auto &ds = m_ram.draw_state;

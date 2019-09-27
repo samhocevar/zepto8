@@ -21,7 +21,7 @@
 #include "bios.h"
 #include "pico8/cart.h"
 #include "pico8/memory.h"
-#include "pico8/z8lua.h"
+#include "z8lua/lua.h"
 
 namespace z8 { class player; }
 
@@ -33,6 +33,8 @@ using lol::u8vec4;
 template<typename T> using opt = std::optional<T>;
 template<typename... T> using var = std::variant<T...>;
 template<typename... T> using tup = std::tuple<T...>;
+
+struct rich_string : public std::string {};
 
 class vm : z8::vm_base
 {
@@ -66,7 +68,7 @@ private:
     static void instruction_hook(struct lua_State *l, struct lua_Debug *ar);
 
     // Private methods (hidden from the user)
-    opt<bool> private_cartdata();
+    opt<bool> private_cartdata(opt<std::string> str);
     void private_stub(std::string str);
 
     // System
@@ -82,8 +84,8 @@ private:
     void api_memcpy(int16_t dst, int16_t src, int16_t size);
     void api_memset(int16_t dst, uint8_t val, int16_t size);
     var<bool, int16_t, fix32, std::string, std::nullptr_t> api_stat(int16_t id);
-    void api_printh();
-    void api_extcmd();
+    void api_printh(rich_string str, opt<std::string> filename, opt<bool> overwrite);
+    void api_extcmd(std::string cmd);
 
     // I/O
     void api_update_buttons();
@@ -92,7 +94,7 @@ private:
 
     // Text
     tup<uint8_t, uint8_t> api_cursor(uint8_t x, uint8_t y, opt<uint8_t> c);
-    void api_print(opt<std::string> str, opt<fix32> x, opt<fix32> y, opt<fix32> c);
+    void api_print(opt<rich_string> str, opt<fix32> x, opt<fix32> y, opt<fix32> c);
 
     // Graphics
     tup<int16_t, int16_t> api_camera(int16_t x, int16_t y);
@@ -250,7 +252,7 @@ private:
     m_channels[4];
 
     lol::timer m_timer;
-    int m_instructions;
+    int m_instructions = 0;
 };
 
 } // namespace z8::pico8

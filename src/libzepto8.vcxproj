@@ -75,7 +75,6 @@
     <ClCompile Include="pico8\render.cpp" />
     <ClCompile Include="pico8\sfx.cpp" />
     <ClCompile Include="pico8\vm.cpp" />
-    <ClCompile Include="pico8\z8lua.cpp" />
     <ClCompile Include="raccoon\api.cpp" />
     <ClCompile Include="raccoon\vm.cpp" />
   </ItemGroup>
@@ -87,7 +86,6 @@
     <ClInclude Include="pico8\memory.h" />
     <ClInclude Include="pico8\pico8.h" />
     <ClInclude Include="pico8\vm.h" />
-    <ClInclude Include="pico8\z8lua.h" />
     <ClInclude Include="raccoon\font.h" />
     <ClInclude Include="raccoon\memory.h" />
     <ClInclude Include="raccoon\vm.h" />

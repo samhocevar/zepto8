@@ -19,17 +19,40 @@
 #include "pico8/vm.h"
 #include "bindings/lua.h"
 #include "bios.h"
-#include "z8lua.h"
 
-// FIXME: activate this one day, when we use Lua 5.3
+// FIXME: activate this one day, when we use Lua 5.3 maybe?
 #define HAVE_LUA_GETEXTRASPACE 0
 
 // Binding specialisations specific to PICO-8
-template<> void z8::bindings::lua_get(lua_State *l, int i, std::string &arg)
+template<> void z8::bindings::lua_get(lua_State *l, int n,
+                                      z8::pico8::rich_string &arg)
 {
-    z8::pico8::lua_pushtostr(l, i, false);
-    arg = lua_tostring(l, -1);
-    lua_pop(l, 1);
+    if (lua_isnone(l, n))
+        arg.assign("[no value]");
+    else if (lua_isnil(l, n))
+        arg.assign("[nil]");
+    else if (lua_type(l, n) == LUA_TSTRING)
+        arg.assign(lua_tostring(l, n));
+    else if (lua_isnumber(l, n))
+    {
+        char buffer[20];
+        fix32 x = lua_tonumber(l, n);
+        int i = sprintf(buffer, "%.4f", (double)x);
+        // Remove trailing zeroes and comma
+        while (i > 2 && buffer[i - 1] == '0' && ::isdigit(buffer[i - 2]))
+            buffer[--i] = '\0';
+        if (i > 2 && buffer[i - 1] == '0' && buffer[i - 2] == '.')
+            buffer[i -= 2] = '\0';
+        arg.assign(buffer);
+    }
+    else if (lua_istable(l, n))
+        arg.assign("[table]");
+    else if (lua_isthread(l, n))
+        arg.assign("[thread]");
+    else if (lua_isfunction(l, n))
+        arg.assign("[function]");
+    else
+        arg.assign(lua_toboolean(l, n) ? "true" : "false");
 }
 
 namespace z8::pico8
@@ -38,7 +61,6 @@ namespace z8::pico8
 using lol::msg;
 
 vm::vm()
-  : m_instructions(0)
 {
     m_bios = std::make_unique<bios>();
 
@@ -477,21 +499,18 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
     return (int16_t)0;
 }
 
-void vm::api_printh(/* FIXME: argument construction */)
+void vm::api_printh(rich_string str, opt<std::string> filename, opt<bool> overwrite)
 {
-    fprintf(stdout, "%s\n", lua_tostringorboolean(m_sandbox_lua, 1));
+    (void)filename;
+    (void)overwrite;
+    fprintf(stdout, "%s\n", str.c_str());
     fflush(stdout);
 }
 
-void vm::api_extcmd(/* FIXME: argument construction */)
+void vm::api_extcmd(std::string cmd)
 {
-    char const *str = lua_tostringorboolean(m_sandbox_lua, 1);
-
-    if (strcmp("label", str) == 0
-         || strcmp("screen", str) == 0
-         || strcmp("rec", str) == 0
-         || strcmp("video", str) == 0)
-        private_stub(lol::format("extcmd(%s)\n", str));
+    if (cmd == "label" || cmd == "screen" || cmd == "rec" || cmd == "video")
+        private_stub(lol::format("extcmd(%s)\n", cmd.c_str()));
 }
 
 //
