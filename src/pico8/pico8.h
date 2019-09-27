@@ -26,7 +26,7 @@ namespace z8::pico8
 
 struct charset
 {
-    static std::string decode(uint8_t ch);
+    static std::string_view decode(uint8_t ch);
     static std::string encode(std::string const &str);
 
 private:

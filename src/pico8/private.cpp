@@ -27,34 +27,54 @@ namespace z8::pico8
 
 using lol::msg;
 
-// The whole PICO-8 charset (256 characters)
-static std::string const allchars = '\0' + std::string(
-    "\1\2\3\4\5\6\7\10\11\12\13\14\15\16\17▮■□⁙⁘‖◀▶「」¥•、。゛゜"
-    " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNO"
-    "PQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~○"
-    "█▒🐱⬇░✽●♥☉웃⌂⬅😐♪🅾◆…➡★⧗⬆ˇ∧❎▤▥あいうえおか"
-    "きくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよ"
-    "らりるれろわをんっゃゅょアイウエオカキクケコサシスセソタチツテト"
-    "ナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンッャュョ◜◝");
-
-// Map 8-bit PICO-8 characters to UTF-32 codepoints
-std::u32string const charset::pico8_to_u32 =
-    // The reinterpret_cast is required because of an old Visual Studio bug
-    reinterpret_cast<std::u32string const &>(
-        std::wstring_convert<std::codecvt_utf8<int32_t>, int32_t>().from_bytes(allchars));
-
-// Map UTF-32 codepoints to 8-bit PICO-8 characters
-std::map<char32_t, uint8_t> const charset::u32_to_pico8 = []()
+struct charset_data
 {
-    std::map<char32_t, uint8_t> ret;
-    for (int n = 0; n < 256; ++n)
-        ret[pico8_to_u32[n]] = n;
-    return ret;
-}();
+    static charset_data const &get()
+    {
+        static charset_data data {};
+        return data;
+    }
 
-std::string charset::decode(uint8_t ch)
+    // Map UTF-32 codepoints to 8-bit PICO-8 characters
+    std::map<char32_t, uint8_t> u32_to_pico8;
+
+    // Map 8-bit PICO-8 characters to UTF-32 codepoints
+    char32_t pico8_to_u32[256];
+
+    // Map 8-bit PICO-8 characters to UTF-8 string views
+    std::string_view pico8_to_u8[256];
+
+private:
+    charset_data()
+    {
+        char const *all_chars =
+            "\0\1\2\3\4\5\6\a\b\t\n\v\f\r\16\17▮■□⁙⁘‖◀▶「」¥•、。゛゜"
+            " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNO"
+            "PQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~○"
+            "█▒🐱⬇░✽●♥☉웃⌂⬅😐♪🅾◆…➡★⧗⬆ˇ∧❎▤▥あいうえおか"
+            "きくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよ"
+            "らりるれろわをんっゃゅょアイウエオカキクケコサシスセソタチツテト"
+            "ナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンッャュョ◜◝";
+
+        std::mbstate_t state {};
+        char const *p = all_chars;
+
+        for (int i = 0; i < 256; ++i)
+        {
+            char32_t ch32;
+            size_t len = i ? std::mbrtoc32(&ch32, p, 6, &state) : 1;
+            pico8_to_u32[i] = i ? ch32 : 0;
+            pico8_to_u8[i] = std::string_view(p, len);
+            p += len;
+
+            u32_to_pico8[ch32] = i;
+        }
+    }
+};
+
+std::string_view charset::decode(uint8_t ch)
 {
-    return "";
+    return charset_data::get().pico8_to_u8[ch];
 }
 
 std::string charset::encode(std::string const &str)
@@ -64,12 +84,14 @@ std::string charset::encode(std::string const &str)
     char const *p = str.c_str(), *end = p + str.size() + 1;
     char32_t ch32;
 
+    auto const &lut = charset_data::get().u32_to_pico8;
+
     while (size_t len = std::mbrtoc32(&ch32, p, end - p, &state))
     {
-        auto ch8 = u32_to_pico8.find(ch32);
-        if (len < 6 && ch8 != u32_to_pico8.end())
+        auto ch = lut.find(ch32);
+        if (len <= 6 && ch != lut.end())
         {
-            ret += ch8->second;
+            ret += ch->second;
             p += len;
         }
         else
