@@ -48,7 +48,7 @@ static std::set<std::string> pico8_identifiers =
     // Implemented in pico8lib (from z8lua)
     "max", "min", "mid", "ceil", "flr", "cos", "sin", "atan2", "sqrt",
     "abs", "sgn", "band", "bor", "bxor", "bnot", "shl", "shr", "lshr",
-    "rotl", "rotr", "tostr", "tonum", "srand", "rnd",
+    "rotl", "rotr", "tostr", "tonum", "srand", "rnd", "ord", "chr",
     // Implemented in the ZEPTO-8 VM
     "run", "menuitem", "reload", "peek", "peek4", "poke", "poke4",
     "memcpy", "memset", "stat", "printh", "extcmd", "_update_buttons",
