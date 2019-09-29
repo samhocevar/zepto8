@@ -29,6 +29,7 @@ public:
 
 private:
     std::unique_ptr<class editor_impl> m_impl;
+    float m_fontsize = 0.f;
 };
 
 } // namespace z8

@@ -279,10 +279,15 @@ void ide::render_menu()
                 ImGui::MenuItem("x1", nullptr, &z1, true);
                 ImGui::MenuItem("x2", nullptr, &z2, true);
                 ImGui::MenuItem("x3", nullptr, &z3, true);
-                m_scale = (z1 && m_scale != 1) ? 1
-                        : (z2 && m_scale != 2) ? 2
-                        : (z3 && m_scale != 3) ? 3
-                        : m_scale;
+                int scale = (z1 && m_scale != 1) ? 1
+                          : (z2 && m_scale != 2) ? 2
+                          : (z3 && m_scale != 3) ? 3
+                          : m_scale;
+                if (m_scale != scale)
+                {
+                    m_scale = scale;
+                    apply_scale();
+                }
                 ImGui::EndMenu();
             }
             ImGui::EndMenu();

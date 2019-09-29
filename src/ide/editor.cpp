@@ -203,6 +203,13 @@ editor::~editor()
 
 void editor::render()
 {
+    // Needs to be done in render() because it uses the current ImGui font size
+    if (m_fontsize != ImGui::GetFontSize())
+    {
+        m_fontsize = ImGui::GetFontSize();
+        m_impl->GetDisplay().InvalidateCharCache();
+    }
+
     m_impl->UpdateWindowState();
     m_impl->SetDisplayRegion(Zep::toNVec2f(ImGui::GetCursorScreenPos()),
                              Zep::toNVec2f(ImGui::GetContentRegionAvail()) + Zep::toNVec2f(ImGui::GetCursorScreenPos()));
