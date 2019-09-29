@@ -72,9 +72,14 @@ private:
     }
 };
 
-std::string_view charset::decode(uint8_t ch)
+std::string_view charset::p8_to_utf8(uint8_t ch)
 {
     return charset_data::get().pico8_to_u8[ch];
+}
+
+char32_t charset::p8_to_utf32(uint8_t ch)
+{
+    return charset_data::get().pico8_to_u32[ch];
 }
 
 std::string charset::encode(std::string const &str)

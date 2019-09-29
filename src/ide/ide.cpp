@@ -98,15 +98,19 @@ void ide::tick_game(float seconds)
 
         char const *filename = "data/zepto8.ttf";
 
-        static ImWchar const char_ranges[] =
+        // Mark all 256-char ranges covered by the PICO-8 charset
+        std::unordered_set<uint32_t> pico8_ranges;
+        for (uint16_t i = 0; i < 256; ++i)
+            pico8_ranges.insert(pico8::charset::p8_to_utf32((uint8_t)i) >> 8);
+
+        // Create an array of char ranges for AddFontFromFileTTF()
+        std::vector<ImWchar> char_ranges;
+        for (uint16_t c : pico8_ranges)
         {
-            0x20, 0x100, // ASCII
-            711, 712, 8214, 8215, 8226, 8227, 8230, 8231, 8280, 8282, 8743, 8744, 8962, 8963, 9608, 9609, 9617, 9619, 9632, 9634, 9636, 9638, 9646, 9647, 9654, 9655, 9664, 9665, 9670, 9671, 9675, 9676, 9679, 9680, 9692, 9694, 9733, 9734, 9737, 9738, 9829, 9830, 9834, 9835, 10045, 10046, 10062, 10063, 10145, 10146, 10711, 10712, 11013, 11016,
-            0x3000, 0x3100, // Kana
-            50883, 50884,
-            127358, 127359, 128049, 128050, 128528, 128529, // Emoji
-            0
-        };
+            char_ranges.push_back(c ? c * 256 : 1);
+            char_ranges.push_back(c * 256 + 256);
+        }
+        char_ranges.push_back(0);
 
         // Initialize BIOS
         for (auto const &file : lol::sys::get_path_list(filename))
@@ -119,7 +123,7 @@ void ide::tick_game(float seconds)
             if (exists)
             {
                 auto &io = ImGui::GetIO();
-                m_fonts[m_scale] = io.Fonts->AddFontFromFileTTF(file.c_str(), 6.0f * m_scale, nullptr, char_ranges);
+                m_fonts[m_scale] = io.Fonts->AddFontFromFileTTF(file.c_str(), 6.0f * m_scale, nullptr, char_ranges.data());
                 lol::gui::refresh_fonts();
                 break;
             }
