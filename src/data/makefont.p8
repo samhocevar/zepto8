@@ -154,5 +154,6 @@ doglyph('0', '.notdef', '65536', -1, 4, 6)
 doglyph('0', 'space', '65537', -1, 4, 6)
 doglyph('', 'glyph1', '65538', -1, 0, 6)
 for n=16,255 do dochar(n) end
+doglyph('', 'fe0f', '65039', '65039', 0, 6) -- u+fe0f
 printh('EndChars\nEndSplineFont')
 

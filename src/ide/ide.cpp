@@ -102,6 +102,8 @@ void ide::tick_game(float seconds)
         std::unordered_set<uint32_t> pico8_ranges;
         for (uint16_t i = 0; i < 256; ++i)
             pico8_ranges.insert(pico8::charset::p8_to_utf32((uint8_t)i) >> 8);
+        // Make sure we include the U+FE0F variation selector
+        pico8_ranges.insert(0xfe0f >> 8);
 
         // Create an array of char ranges for AddFontFromFileTTF()
         std::vector<ImWchar> char_ranges;
@@ -409,17 +411,11 @@ void ide::render_windows()
             ImGui::Image(m_screen.get(), ratio * lol::vec2(128.f),
                          lol::vec2(0.f), lol::vec2(1.f));
             ImGui::PushStyleColor(ImGuiCol_Button, pico8::palette::get(pico8::palette::black));
-            ImGui::Button(u8"\u008b");
-            ImGui::SameLine();
-            ImGui::Button(u8"\u0091");
-            ImGui::SameLine();
-            ImGui::Button(u8"\u0094");
-            ImGui::SameLine();
-            ImGui::Button(u8"\u0083");
-            ImGui::SameLine();
-            ImGui::Button(u8"\u008e");
-            ImGui::SameLine();
-            ImGui::Button(u8"\u0097");
+            for (auto ch : { "⬅️", "➡️", "⬆️", "⬇️", "🅾️", "❎" })
+            {
+                ImGui::Button(ch);
+                ImGui::SameLine();
+            }
             ImGui::PopStyleColor();
         }
         ImGui::End();

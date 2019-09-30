@@ -7488,5 +7488,17 @@ SplineSet
 EndSplineSet
 EndChar
 
+StartChar: fe0f
+Encoding: 65039 65039 243
+Width: 0
+VWidth: 1200
+GlyphClass: 2
+Flags: W
+LayerCount: 2
+Fore
+SplineSet
+EndSplineSet
+EndChar
+
 EndChars
 EndSplineFont
