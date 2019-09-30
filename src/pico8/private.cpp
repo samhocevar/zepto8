@@ -39,8 +39,9 @@ std::regex charset::match_utf8 = static_init();
 
 std::regex charset::static_init()
 {
-    static std::u32string utf32_chars;
-    static char const *utf8_chars =
+    std::wstring_convert<std::codecvt_utf8<int32_t>, int32_t> cvt;
+
+    static char const utf8_chars[] =
         "\0\1\2\3\4\5\6\a\b\t\n\v\f\r\16\17▮■□⁙⁘‖◀▶「」¥•、。゛゜"
         " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNO"
         "PQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~○"
@@ -48,34 +49,33 @@ std::regex charset::static_init()
         "きくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよ"
         "らりるれろわをんっゃゅょアイウエオカキクケコサシスセソタチツテト"
         "ナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンッャュョ◜◝";
+    static auto utf32_chars = cvt.from_bytes(utf8_chars, &utf8_chars[sizeof(utf8_chars)]);
 
-    utf32_chars.reserve(300); // for 256 chars + some U+FE0F selectors
-
-    std::mbstate_t state {};
-    char const *p = utf8_chars;
-
+    // Create all sorts of lookup tables for PICO-8 character conversions
+    char const *p8 = utf8_chars;
+    auto const *p32 = (char32_t const *)utf32_chars.data();
     for (int i = 0; i < 256; ++i)
     {
-        char32_t ch32 = 0;
-        size_t len = i ? std::mbrtoc32(&ch32, p, 6, &state) : 1;
-        utf32_chars += ch32;
-        if (ch32 == 0xfe0f)
+        size_t len = ((0xe5000000 >> ((*p8 >> 3) & 0x1e)) & 3) + 1;
+        if (*p32 == 0xfe0f)
         {
             // Oops! Previous char needed an emoji variation selector
             auto &s = pico8_to_utf8[--i];
             s = std::string_view(s.data(), s.length() + len);
             auto &s32 = pico8_to_utf32[i];
-            s32 = std::u32string_view(s32.data(), 2);
+            s32 = std::u32string_view(p32 - 1, 2);
         }
         else
         {
-            pico8_to_utf32[i] = std::u32string_view(&utf32_chars.back(), 1);
-            pico8_to_utf8[i] = std::string_view(p, len);
-            u32_to_pico8[ch32] = i;
+            pico8_to_utf32[i] = std::u32string_view(p32, 1);
+            pico8_to_utf8[i] = std::string_view(p8, len);
+            u32_to_pico8[*p32] = i;
         }
-        p += len;
+        p8 += len;
+        p32 += 1;
     }
 
+    // Build a regex that lets us do faster (maybe?) UTF-8 conversions
     std::string regex("^(\\0|");
     for (int i = 1; i < 256; ++i)
     {
