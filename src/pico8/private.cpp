@@ -17,8 +17,9 @@
 #include <lol/engine.h>
 
 #include <locale>
-#include <codecvt>
 #include <string>
+#include <codecvt>
+#include <cstring>
 
 #include "pico8/pico8.h"
 #include "pico8/vm.h"
@@ -34,7 +35,9 @@ std::u32string_view charset::pico8_to_utf32[256];
 // Map UTF-32 codepoints to 8-bit PICO-8 characters
 std::map<char32_t, uint8_t> u32_to_pico8;
 
-int charset::static_init()
+std::regex charset::match_utf8 = static_init();
+
+std::regex charset::static_init()
 {
     static std::u32string utf32_chars;
     static char const *utf8_chars =
@@ -73,25 +76,30 @@ int charset::static_init()
         p += len;
     }
 
-    return 0;
-}
+    std::string regex("^(\\0|");
+    for (int i = 1; i < 256; ++i)
+    {
+        auto s = pico8_to_utf8[i];
+        if (s.length() == 1 && ::strchr("^$\\.*+?()[]{}|", s[0]))
+            regex += '\\';
+        regex += s;
+        regex += i == 255 ? ')' : '|';
+    }
 
-int charset::unused = charset::static_init();
+    return std::regex(regex);
+}
 
 std::string charset::encode(std::string const &str)
 {
     std::string ret;
-    std::mbstate_t state {};
-    char const *p = str.c_str(), *end = p + str.size() + 1;
-    char32_t ch32;
 
-    while (size_t len = std::mbrtoc32(&ch32, p, end - p, &state))
+    for (auto p = str.begin(); p != str.end(); )
     {
-        auto ch = u32_to_pico8.find(ch32);
-        if (len <= 6 && ch != u32_to_pico8.end())
+        std::smatch(sm);
+        if (std::regex_search(p, str.end(), sm, match_utf8))
         {
-            ret += ch->second;
-            p += len;
+            ret += sm.str();
+            p += sm.length();
         }
         else
         {

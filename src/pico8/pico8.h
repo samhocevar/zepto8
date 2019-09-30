@@ -17,6 +17,7 @@
 #include <map>
 #include <string_view>
 #include <cuchar>
+#include <regex>
 
 // The PICO-8 definitions
 // ——————————————————————
@@ -35,8 +36,9 @@ struct charset
     static std::string encode(std::string const &str);
 
 private:
-    static int static_init();
-    static int unused;
+    static std::regex static_init();
+
+    static std::regex match_utf8;
 };
 
 struct palette
