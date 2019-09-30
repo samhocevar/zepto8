@@ -18,6 +18,7 @@
 
 #include <locale>
 #include <codecvt>
+#include <string>
 
 #include "pico8/pico8.h"
 #include "pico8/vm.h"
@@ -27,60 +28,55 @@ namespace z8::pico8
 
 using lol::msg;
 
-struct charset_data
+std::string_view charset::pico8_to_utf8[256];
+std::u32string_view charset::pico8_to_utf32[256];
+
+// Map UTF-32 codepoints to 8-bit PICO-8 characters
+std::map<char32_t, uint8_t> u32_to_pico8;
+
+int charset::static_init()
 {
-    static charset_data const &get()
+    static std::u32string utf32_chars;
+    static char const *utf8_chars =
+        "\0\1\2\3\4\5\6\a\b\t\n\v\f\r\16\17▮■□⁙⁘‖◀▶「」¥•、。゛゜"
+        " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNO"
+        "PQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~○"
+        "█▒🐱⬇️░✽●♥☉웃⌂⬅️😐♪🅾️◆…➡️★⧗⬆️ˇ∧❎▤▥あいうえおか"
+        "きくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよ"
+        "らりるれろわをんっゃゅょアイウエオカキクケコサシスセソタチツテト"
+        "ナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンッャュョ◜◝";
+
+    utf32_chars.reserve(300); // for 256 chars + some U+FE0F selectors
+
+    std::mbstate_t state {};
+    char const *p = utf8_chars;
+
+    for (int i = 0; i < 256; ++i)
     {
-        static charset_data data {};
-        return data;
-    }
-
-    // Map UTF-32 codepoints to 8-bit PICO-8 characters
-    std::map<char32_t, uint8_t> u32_to_pico8;
-
-    // Map 8-bit PICO-8 characters to UTF-32 codepoints
-    char32_t pico8_to_u32[256];
-
-    // Map 8-bit PICO-8 characters to UTF-8 string views
-    std::string_view pico8_to_u8[256];
-
-private:
-    charset_data()
-    {
-        char const *all_chars =
-            "\0\1\2\3\4\5\6\a\b\t\n\v\f\r\16\17▮■□⁙⁘‖◀▶「」¥•、。゛゜"
-            " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNO"
-            "PQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~○"
-            "█▒🐱⬇░✽●♥☉웃⌂⬅😐♪🅾◆…➡★⧗⬆ˇ∧❎▤▥あいうえおか"
-            "きくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよ"
-            "らりるれろわをんっゃゅょアイウエオカキクケコサシスセソタチツテト"
-            "ナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンッャュョ◜◝";
-
-        std::mbstate_t state {};
-        char const *p = all_chars;
-
-        for (int i = 0; i < 256; ++i)
+        char32_t ch32 = 0;
+        size_t len = i ? std::mbrtoc32(&ch32, p, 6, &state) : 1;
+        utf32_chars += ch32;
+        if (ch32 == 0xfe0f)
         {
-            char32_t ch32;
-            size_t len = i ? std::mbrtoc32(&ch32, p, 6, &state) : 1;
-            pico8_to_u32[i] = i ? ch32 : 0;
-            pico8_to_u8[i] = std::string_view(p, len);
-            p += len;
-
+            // Oops! Previous char needed an emoji variation selector
+            auto &s = pico8_to_utf8[--i];
+            s = std::string_view(s.data(), s.length() + len);
+            auto &s32 = pico8_to_utf32[i];
+            s32 = std::u32string_view(s32.data(), 2);
+        }
+        else
+        {
+            pico8_to_utf32[i] = std::u32string_view(&utf32_chars.back(), 1);
+            pico8_to_utf8[i] = std::string_view(p, len);
             u32_to_pico8[ch32] = i;
         }
+        p += len;
     }
-};
 
-std::string_view charset::p8_to_utf8(uint8_t ch)
-{
-    return charset_data::get().pico8_to_u8[ch];
+    return 0;
 }
 
-char32_t charset::p8_to_utf32(uint8_t ch)
-{
-    return charset_data::get().pico8_to_u32[ch];
-}
+int charset::unused = charset::static_init();
 
 std::string charset::encode(std::string const &str)
 {
@@ -89,12 +85,10 @@ std::string charset::encode(std::string const &str)
     char const *p = str.c_str(), *end = p + str.size() + 1;
     char32_t ch32;
 
-    auto const &lut = charset_data::get().u32_to_pico8;
-
     while (size_t len = std::mbrtoc32(&ch32, p, end - p, &state))
     {
-        auto ch = lut.find(ch32);
-        if (len <= 6 && ch != lut.end())
+        auto ch = u32_to_pico8.find(ch32);
+        if (len <= 6 && ch != u32_to_pico8.end())
         {
             ret += ch->second;
             p += len;

@@ -26,9 +26,17 @@ namespace z8::pico8
 
 struct charset
 {
-    static std::string_view p8_to_utf8(uint8_t ch);
-    static char32_t p8_to_utf32(uint8_t ch);
+    // Map 8-bit PICO-8 characters to UTF-32 codepoints
+    static std::u32string_view pico8_to_utf32[256];
+
+    // Map 8-bit PICO-8 characters to UTF-8 string views
+    static std::string_view pico8_to_utf8[256];
+
     static std::string encode(std::string const &str);
+
+private:
+    static int static_init();
+    static int unused;
 };
 
 struct palette

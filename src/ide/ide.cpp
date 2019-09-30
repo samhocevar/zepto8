@@ -100,10 +100,9 @@ void ide::tick_game(float seconds)
 
         // Mark all 256-char ranges covered by the PICO-8 charset
         std::unordered_set<uint32_t> pico8_ranges;
-        for (uint16_t i = 0; i < 256; ++i)
-            pico8_ranges.insert(pico8::charset::p8_to_utf32((uint8_t)i) >> 8);
-        // Make sure we include the U+FE0F variation selector
-        pico8_ranges.insert(0xfe0f >> 8);
+        for (int i = 0; i < 256; ++i)
+            for (char32_t ch : pico8::charset::pico8_to_utf32[i])
+                pico8_ranges.insert(ch >> 8);
 
         // Create an array of char ranges for AddFontFromFileTTF()
         std::vector<ImWchar> char_ranges;
