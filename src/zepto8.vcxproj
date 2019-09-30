@@ -65,8 +65,9 @@
     <ClCompile Include="3rdparty/zep/src/tab_window.cpp" />
     <ClCompile Include="3rdparty/zep/src/theme.cpp" />
     <ClCompile Include="3rdparty/zep/src/window.cpp" />
-    <ClCompile Include="ide/editor.cpp" />
     <ClCompile Include="ide/ide.cpp" />
+    <ClCompile Include="ide/memory-editor.cpp" />
+    <ClCompile Include="ide/text-editor.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="zepto8.cpp" />
   </ItemGroup>
@@ -106,8 +107,9 @@
     <ClInclude Include="3rdparty/zep/src/window.h" />
     <ClInclude Include="3rdparty/zep/src/zep.h" />
     <ClInclude Include="3rdparty/zep/src/zep_config.h" />
-    <ClInclude Include="ide/editor.h" />
     <ClInclude Include="ide/ide.h" />
+    <ClInclude Include="ide/memory-editor.h" />
+    <ClInclude Include="ide/text-editor.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="zepto8.h" />
   </ItemGroup>

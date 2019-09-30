@@ -40,9 +40,9 @@ ide::ide(player *player)
     player->get_texture(); // HACK: disable player rendering
     m_vm = player->get_vm();
 
-    m_ram_edit.OptShowAscii = m_rom_edit.OptShowAscii = false;
-    m_ram_edit.OptUpperCaseHex = m_rom_edit.OptUpperCaseHex = false;
-    m_ram_edit.OptShowOptions = m_rom_edit.OptShowOptions = false;
+    m_text_editor = std::make_unique<text_editor>();
+    m_ram_editor = std::make_unique<memory_editor>(m_vm->ram());
+    m_rom_editor = std::make_unique<memory_editor>(m_vm->rom());
 
     apply_scale();
 }
@@ -374,11 +374,7 @@ void ide::render_windows()
         ImGui::SetNextWindowDockID(m_dock.main, ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowSize(lol::ivec2(480, 480), ImGuiCond_FirstUseEver);
         if (ImGui::Begin("Code", &m_show.code))
-        {
-            ImGui::PushStyleColor(ImGuiCol_ChildBg, pico8::palette::get(5));
-            m_editor.render();
-            ImGui::PopStyleColor(1);
-        }
+            m_text_editor->render();
         ImGui::End();
     }
 
@@ -388,10 +384,7 @@ void ide::render_windows()
         ImGui::SetNextWindowPos(lol::ivec2(400, 450), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowSize(lol::ivec2(512, 256), ImGuiCond_FirstUseEver);
         if (ImGui::Begin("ROM", &m_show.rom))
-        {
-            auto rom = m_vm->rom();
-            m_rom_edit.DrawContents(std::get<0>(rom), std::get<1>(rom));
-        }
+            m_rom_editor->render();
         ImGui::End();
     }
 
@@ -401,10 +394,7 @@ void ide::render_windows()
         ImGui::SetNextWindowPos(lol::ivec2(60, 480), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowSize(lol::ivec2(512, 246), ImGuiCond_FirstUseEver);
         if (ImGui::Begin("RAM", &m_show.ram))
-        {
-            auto ram = m_vm->ram();
-            m_ram_edit.DrawContents(std::get<0>(ram), std::get<1>(ram));
-        }
+            m_ram_editor->render();
         ImGui::End();
     }
 

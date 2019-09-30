@@ -16,8 +16,8 @@
 
 #include "zepto8.h"
 #include "player.h"
-#include "ide/editor.h"
-#include "3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h"
+#include "ide/text-editor.h"
+#include "ide/memory-editor.h"
 
 namespace z8
 {
@@ -65,8 +65,8 @@ private:
     m_dock;
 
     int m_scale = 2;
-    editor m_editor;
-    MemoryEditor m_ram_edit, m_rom_edit;
+    std::unique_ptr<text_editor> m_text_editor;
+    std::unique_ptr<memory_editor> m_ram_editor, m_rom_editor;
 
     std::shared_ptr<lol::Texture> m_screen, m_sprites;
 

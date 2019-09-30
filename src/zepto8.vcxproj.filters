@@ -6,7 +6,10 @@
     <ClCompile Include="ide/ide.cpp">
       <Filter>ide</Filter>
     </ClCompile>
-    <ClCompile Include="ide/editor.cpp">
+    <ClCompile Include="ide/memory-editor.cpp">
+      <Filter>ide</Filter>
+    </ClCompile>
+    <ClCompile Include="ide/code-editor.cpp">
       <Filter>ide</Filter>
     </ClCompile>
     <ClCompile Include="3rdparty/zep/src/mcommon/file/archive.cpp">
@@ -82,7 +85,10 @@
     <ClInclude Include="ide/ide.h">
       <Filter>ide</Filter>
     </ClInclude>
-    <ClInclude Include="ide/editor.h">
+    <ClInclude Include="ide/memory-editor.h">
+      <Filter>ide</Filter>
+    </ClInclude>
+    <ClInclude Include="ide/code-editor.h">
       <Filter>ide</Filter>
     </ClInclude>
     <ClInclude Include="3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h">

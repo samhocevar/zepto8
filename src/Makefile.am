@@ -12,7 +12,8 @@ ___zepto8dir = $(datarootdir)/zepto8
 ___zepto8_SOURCES = \
     zepto8.cpp \
     ide/ide.cpp ide/ide.h \
-    ide/editor.cpp ide/editor.h \
+    ide/text-editor.cpp ide/text-editor.h \
+    ide/memory-editor.cpp ide/memory-editor.h \
     player.cpp player.h \
     $(3rdparty_sources) \
     $(NULL)

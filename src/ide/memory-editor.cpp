@@ -10,27 +10,35 @@
 //  See http://www.wtfpl.net/ for more details.
 //
 
-#pragma once
+#if HAVE_CONFIG_H
+#   include "config.h"
+#endif
 
 #include <lol/engine.h>
 
-#include <memory>
+#include "zepto8.h"
+#include "memory-editor.h"
+#include "pico8/pico8.h"
 
 namespace z8
 {
 
-class editor
+memory_editor::memory_editor(std::tuple<uint8_t *, size_t> area)
+  : m_area(area)
 {
-public:
-    editor();
-    ~editor();
+    m_editor.OptShowAscii = false;
+    m_editor.OptUpperCaseHex = false;
+    m_editor.OptShowOptions = false;
+}
 
-    void render();
+memory_editor::~memory_editor()
+{
+}
 
-private:
-    std::unique_ptr<class editor_impl> m_impl;
-    float m_fontsize = 0.f;
-};
+void memory_editor::render()
+{
+    m_editor.DrawContents(std::get<0>(m_area), std::get<1>(m_area));
+}
 
 } // namespace z8
 

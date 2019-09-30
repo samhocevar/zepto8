@@ -20,7 +20,7 @@
 #include <string>
 
 #include "zepto8.h"
-#include "editor.h"
+#include "ide/text-editor.h"
 #include "pico8/pico8.h"
 
 #include "zep.h"
@@ -182,7 +182,7 @@ private:
     std::map<Zep::ThemeColor, int> m_palette;
 };
 
-editor::editor()
+text_editor::text_editor()
   : m_impl(std::make_unique<editor_impl>())
 {
     //m_impl->SetMode(Zep::ZepMode_Standard::StaticName());
@@ -197,12 +197,14 @@ editor::editor()
     buffer->SetTheme(std::static_pointer_cast<Zep::ZepTheme, zep_theme>(std::make_shared<zep_theme>()));
 }
 
-editor::~editor()
+text_editor::~text_editor()
 {
 }
 
-void editor::render()
+void text_editor::render()
 {
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, pico8::palette::get(5));
+
     // Needs to be done in render() because it uses the current ImGui font size
     if (m_fontsize != ImGui::GetFontSize())
     {
@@ -215,6 +217,8 @@ void editor::render()
                              Zep::toNVec2f(ImGui::GetContentRegionAvail()) + Zep::toNVec2f(ImGui::GetCursorScreenPos()));
     m_impl->Display();
     m_impl->HandleInput();
+
+    ImGui::PopStyleColor(1);
 }
 
 } // namespace z8
