@@ -507,7 +507,7 @@ void vm::api_printh(rich_string str, opt<std::string> filename, opt<bool> overwr
 
     std::string decoded;
     for (uint8_t ch : str)
-        decoded += charset::pico8_to_utf8[ch];
+        decoded += charset::to_utf8[ch];
     fprintf(stdout, "%s\n", decoded.c_str());
     fflush(stdout);
 }

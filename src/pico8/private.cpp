@@ -33,10 +33,10 @@ namespace z8::pico8
 
 using lol::msg;
 
-std::string_view charset::pico8_to_utf8[256];
-std::u32string_view charset::pico8_to_utf32[256];
+std::string_view charset::to_utf8[256];
+std::u32string_view charset::to_utf32[256];
 
-static std::map<std::string, uint8_t> utf8_lut;
+static std::map<std::string, uint8_t> to_pico8;
 std::regex charset::utf8_regex = charset::static_init();
 
 std::regex charset::static_init()
@@ -60,9 +60,9 @@ std::regex charset::static_init()
     {
         size_t len32 = p32[1] == 0xfe0f ? 2 : 1;
         size_t len8 = ((0xe5000000 >> ((*p8 >> 3) & 0x1e)) & 3) + len32 * len32;
-        pico8_to_utf8[i] = std::string_view(p8, len8);
-        pico8_to_utf32[i] = std::u32string_view(p32, len32);
-        utf8_lut[std::string(p8, len8)] = i;
+        to_utf8[i] = std::string_view(p8, len8);
+        to_utf32[i] = std::u32string_view(p32, len32);
+        to_pico8[std::string(p8, len8)] = i;
         p8 += len8;
         p32 += len32;
     }
@@ -71,7 +71,7 @@ std::regex charset::static_init()
     std::string regex("(");
     for (int i = 16; i < 256; ++i)
     {
-        auto s = pico8_to_utf8[i];
+        auto s = to_utf8[i];
         if (s.length() > 1)
             regex += std::string(s) + '|';
     }
@@ -90,7 +90,7 @@ std::string charset::utf8_to_pico8(std::string const &str)
         if ((uint8_t)*p >= 0x10 &&
             std::regex_search(p, str.end(), sm, utf8_regex))
         {
-            ret += utf8_lut[sm.str()];
+            ret += to_pico8[sm.str()];
             p += sm.length();
         }
         else
@@ -99,6 +99,14 @@ std::string charset::utf8_to_pico8(std::string const &str)
         }
     }
 
+    return ret;
+}
+
+std::string charset::pico8_to_utf8(std::string const &str)
+{
+    std::string ret;
+    for (uint8_t ch : str)
+        ret += std::string(to_utf8[ch]);
     return ret;
 }
 
