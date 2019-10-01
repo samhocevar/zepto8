@@ -87,10 +87,11 @@ std::string charset::utf8_to_pico8(std::string const &str)
 
     for (auto p = str.begin(); p != str.end(); )
     {
-        if ((uint8_t)*p >= 0x10 &&
-            std::regex_search(p, str.end(), sm, utf8_regex))
+        // Control characters below 0x10 should not go through regex_search()
+        if ((uint8_t)*p > 0x10 && std::regex_search(p, str.end(), sm, utf8_regex))
         {
-            ret += to_pico8[sm.str()];
+            auto ch = to_pico8.find(sm.str());
+            ret += ch != to_pico8.end() ? ch->second : *p;
             p += sm.length();
         }
         else

@@ -22,7 +22,6 @@
 #include <streambuf>
 
 #include "zepto8.h"
-#include "pico8/pico8.h"
 #include "pico8/vm.h"
 #include "telnet.h"
 #include "splore.h"
@@ -195,7 +194,7 @@ int main(int argc, char **argv)
         }
         else if (run_mode == mode::top8)
         {
-            printf("%s", z8::pico8::charset::pico8_to_utf8(cart.get_p8()).c_str());
+            printf("%s", cart.get_p8().c_str());
         }
         else if (run_mode == mode::tobin)
         {

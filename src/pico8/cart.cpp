@@ -587,7 +587,7 @@ std::string cart::get_p8() const
     ret += lol::format("version %d\n", PICO8_VERSION);
 
     ret += "__lua__\n";
-    ret += get_code();
+    ret += z8::pico8::charset::pico8_to_utf8(get_code());
     if (ret.back() != '\n')
         ret += '\n';
 
