@@ -344,7 +344,7 @@ bool cart::load_p8(char const *filename)
 
     // PICO-8 saves some symbols in the .p8 file as Emoji/Unicode characters
     // but the runtime expects 8-bit characters instead.
-    m_code = charset::encode(reader.m_code);
+    m_code = charset::utf8_to_pico8(reader.m_code);
 
     memset(&m_rom, 0, sizeof(m_rom));
 

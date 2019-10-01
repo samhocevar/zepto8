@@ -14,6 +14,10 @@
 #   include "config.h"
 #endif
 
+// I know codecvt_utf8 is deprecated, but let’s hope C++ comes with a
+// replacement before they actually remove the feature.
+#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING 1
+
 #include <lol/engine.h>
 
 #include <locale>
@@ -32,10 +36,8 @@ using lol::msg;
 std::string_view charset::pico8_to_utf8[256];
 std::u32string_view charset::pico8_to_utf32[256];
 
-// Map UTF-32 codepoints to 8-bit PICO-8 characters
-std::map<char32_t, uint8_t> u32_to_pico8;
-
-std::regex charset::match_utf8 = static_init();
+static std::map<std::string, uint8_t> utf8_lut;
+std::regex charset::utf8_regex = charset::static_init();
 
 std::regex charset::static_init()
 {
@@ -56,49 +58,39 @@ std::regex charset::static_init()
     auto const *p32 = (char32_t const *)utf32_chars.data();
     for (int i = 0; i < 256; ++i)
     {
-        size_t len = ((0xe5000000 >> ((*p8 >> 3) & 0x1e)) & 3) + 1;
-        if (*p32 == 0xfe0f)
-        {
-            // Oops! Previous char needed an emoji variation selector
-            auto &s = pico8_to_utf8[--i];
-            s = std::string_view(s.data(), s.length() + len);
-            auto &s32 = pico8_to_utf32[i];
-            s32 = std::u32string_view(p32 - 1, 2);
-        }
-        else
-        {
-            pico8_to_utf32[i] = std::u32string_view(p32, 1);
-            pico8_to_utf8[i] = std::string_view(p8, len);
-            u32_to_pico8[*p32] = i;
-        }
-        p8 += len;
-        p32 += 1;
+        size_t len32 = p32[1] == 0xfe0f ? 2 : 1;
+        size_t len8 = ((0xe5000000 >> ((*p8 >> 3) & 0x1e)) & 3) + len32 * len32;
+        pico8_to_utf8[i] = std::string_view(p8, len8);
+        pico8_to_utf32[i] = std::u32string_view(p32, len32);
+        utf8_lut[std::string(p8, len8)] = i;
+        p8 += len8;
+        p32 += len32;
     }
 
     // Build a regex that lets us do faster (maybe?) UTF-8 conversions
-    std::string regex("^(\\0|");
-    for (int i = 1; i < 256; ++i)
+    std::string regex("(");
+    for (int i = 16; i < 256; ++i)
     {
         auto s = pico8_to_utf8[i];
-        if (s.length() == 1 && ::strchr("^$\\.*+?()[]{}|", s[0]))
-            regex += '\\';
-        regex += s;
-        regex += i == 255 ? ')' : '|';
+        if (s.length() > 1)
+            regex += std::string(s) + '|';
     }
+    regex += ".)";
 
     return std::regex(regex);
 }
 
-std::string charset::encode(std::string const &str)
+std::string charset::utf8_to_pico8(std::string const &str)
 {
     std::string ret;
+    std::smatch sm;
 
     for (auto p = str.begin(); p != str.end(); )
     {
-        std::smatch(sm);
-        if (std::regex_search(p, str.end(), sm, match_utf8))
+        if ((uint8_t)*p >= 0x10 &&
+            std::regex_search(p, str.end(), sm, utf8_regex))
         {
-            ret += sm.str();
+            ret += utf8_lut[sm.str()];
             p += sm.length();
         }
         else

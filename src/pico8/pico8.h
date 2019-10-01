@@ -33,12 +33,12 @@ struct charset
     // Map 8-bit PICO-8 characters to UTF-8 string views
     static std::string_view pico8_to_utf8[256];
 
-    static std::string encode(std::string const &str);
+    // Encode an UTF-8 string into a string of 8-bit PICO-8 characters
+    static std::string utf8_to_pico8(std::string const &str);
 
 private:
     static std::regex static_init();
-
-    static std::regex match_utf8;
+    static std::regex utf8_regex;
 };
 
 struct palette
