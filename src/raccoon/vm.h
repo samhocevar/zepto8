@@ -31,11 +31,13 @@ public:
     vm();
     virtual ~vm();
 
-    virtual void load(char const *name);
+    virtual void load(std::string const &file);
     virtual void run();
     virtual bool step(float seconds);
 
     virtual void render(lol::u8vec4 *screen) const;
+
+    virtual std::string const &get_code() const;
 
     virtual std::function<void(void *, int)> get_streamer(int channel);
 

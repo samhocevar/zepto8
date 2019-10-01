@@ -109,7 +109,7 @@ player::~player()
     scene.PopCamera(m_scenecam);
 }
 
-void player::load(char const *name)
+void player::load(std::string const &name)
 {
     m_vm->load(name);
 }

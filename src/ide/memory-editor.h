@@ -22,9 +22,10 @@ namespace z8
 class memory_editor
 {
 public:
-    memory_editor(std::tuple<uint8_t *, size_t> area);
+    memory_editor();
     ~memory_editor();
 
+    void attach(std::tuple<uint8_t *, size_t> area);
     void render();
 
 private:

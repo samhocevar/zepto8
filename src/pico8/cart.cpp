@@ -34,7 +34,7 @@ using lol::PixelFormat;
 
 using namespace tao;
 
-bool cart::load(char const *filename)
+bool cart::load(std::string const &filename)
 {
     if (load_p8(filename) || load_png(filename))
     {
@@ -51,7 +51,7 @@ bool cart::load(char const *filename)
 static uint8_t const *compress_lut = nullptr;
 static char const *decompress_lut = "\n 0123456789abcdefghijklmnopqrstuvwxyz!#%(){}[]<>+=/*:;.,~_";
 
-bool cart::load_png(char const *filename)
+bool cart::load_png(std::string const &filename)
 {
     // Open cartridge as PNG image
     lol::image img;
@@ -316,7 +316,7 @@ private:
     char const *m_str;
 };
 
-bool cart::load_p8(char const *filename)
+bool cart::load_p8(std::string const &filename)
 {
     std::string s;
     lol::File f;

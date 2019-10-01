@@ -9,12 +9,6 @@
     <ClCompile Include="ide/memory-editor.cpp">
       <Filter>ide</Filter>
     </ClCompile>
-    <ClCompile Include="ide/code-editor.cpp">
-      <Filter>ide</Filter>
-    </ClCompile>
-    <ClCompile Include="3rdparty/zep/src/mcommon/file/archive.cpp">
-      <Filter>3rdparty\zep\mcommon\file</Filter>
-    </ClCompile>
     <ClCompile Include="3rdparty/zep/src/mcommon/file/path.cpp">
       <Filter>3rdparty\zep\mcommon\file</Filter>
     </ClCompile>
@@ -78,6 +72,9 @@
     <ClCompile Include="3rdparty/zep/src/window.cpp">
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
+    <ClCompile Include="ide/text-editor.cpp">
+      <Filter>ide</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="player.h" />
@@ -86,9 +83,6 @@
       <Filter>ide</Filter>
     </ClInclude>
     <ClInclude Include="ide/memory-editor.h">
-      <Filter>ide</Filter>
-    </ClInclude>
-    <ClInclude Include="ide/code-editor.h">
       <Filter>ide</Filter>
     </ClInclude>
     <ClInclude Include="3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h">
@@ -195,6 +189,9 @@
     </ClInclude>
     <ClInclude Include="3rdparty/zep/src/zep_config.h">
       <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="ide/text-editor.h">
+      <Filter>ide</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

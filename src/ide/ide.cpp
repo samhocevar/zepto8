@@ -28,7 +28,7 @@
 namespace z8
 {
 
-ide::ide(player *player)
+ide::ide()
 {
     lol::gui::init();
 
@@ -37,12 +37,9 @@ ide::ide(player *player)
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.Fonts->AddFontDefault();
 
-    player->get_texture(); // HACK: disable player rendering
-    m_vm = player->get_vm();
-
     m_text_editor = std::make_unique<text_editor>();
-    m_ram_editor = std::make_unique<memory_editor>(m_vm->ram());
-    m_rom_editor = std::make_unique<memory_editor>(m_vm->rom());
+    m_ram_editor = std::make_unique<memory_editor>();
+    m_rom_editor = std::make_unique<memory_editor>();
 
     apply_scale();
 }
@@ -50,6 +47,20 @@ ide::ide(player *player)
 ide::~ide()
 {
     lol::gui::shutdown();
+}
+
+void ide::load(std::string const &name)
+{
+    m_player = new z8::player(lol::ivec2(128), lol::ends_with(name, ".rcn.json"));
+    m_player->get_texture(); // HACK: disable player rendering
+    m_player->load(name);
+    m_player->run();
+
+    m_vm = m_player->get_vm();
+
+    m_text_editor->attach(m_vm);
+    m_ram_editor->attach(m_vm->ram());
+    m_rom_editor->attach(m_vm->rom());
 }
 
 void ide::apply_scale()

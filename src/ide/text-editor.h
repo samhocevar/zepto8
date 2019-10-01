@@ -15,6 +15,7 @@
 #include <lol/engine.h>
 
 #include <memory>
+#include <string>
 
 namespace z8
 {
@@ -25,10 +26,12 @@ public:
     text_editor();
     ~text_editor();
 
+    void attach(std::shared_ptr<z8::vm_base> vm);
     void render();
 
 private:
     std::unique_ptr<class editor_impl> m_impl;
+    std::shared_ptr<z8::vm_base> m_vm;
     float m_fontsize = 0.f;
 };
 

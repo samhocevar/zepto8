@@ -29,7 +29,7 @@
 #include "zep/filesystem.h"
 #include "zep/imgui/editor_imgui.h"
 
-#define FAKE_FILE_NAME "code.p8"
+#define BUFFER_NAME "code.p8"
 
 namespace z8
 {
@@ -88,35 +88,14 @@ static std::set<std::string> pico8_identifiers =
 class zep_filesystem : public Zep::IZepFileSystem
 {
 public:
-    virtual std::string Read(const Zep::ZepPath& filePath) override
-    {
-        if (filePath == FAKE_FILE_NAME)
-            return TEST_TEXT;
-        return "";
-    }
-
-    virtual bool Write(const Zep::ZepPath& filePath, const void* pData, size_t size) override
-    {
-        return true;
-    }
-
-    virtual Zep::ZepPath GetSearchRoot(const Zep::ZepPath& start) const
-    {
-        return start;
-    }
-
-    virtual const Zep::ZepPath& GetWorkingDirectory() const override
-    {
-        return m_cwd;
-    }
-
-    virtual void SetWorkingDirectory(const Zep::ZepPath& path) override
-    {
-    }
-
+    virtual std::string Read(const Zep::ZepPath& filePath) override { return ""; }
+    virtual bool Write(const Zep::ZepPath& filePath, const void* pData, size_t size) override { return true; }
+    virtual Zep::ZepPath GetSearchRoot(const Zep::ZepPath& start) const { return start; }
+    virtual const Zep::ZepPath& GetWorkingDirectory() const override { return m_cwd; }
+    virtual void SetWorkingDirectory(const Zep::ZepPath& path) override { }
     virtual bool IsDirectory(const Zep::ZepPath& path) const override { return false; }
     virtual bool IsReadOnly(const Zep::ZepPath& path) const override { return false; }
-    virtual bool Exists(const Zep::ZepPath& path) const override { return path == FAKE_FILE_NAME; }
+    virtual bool Exists(const Zep::ZepPath& path) const override { return path == BUFFER_NAME; }
 
     // A callback API for scaning
     virtual void ScanDirectory(const Zep::ZepPath& path, std::function<bool(const Zep::ZepPath& path, bool& dont_recurse)> fnScan) const override
@@ -144,6 +123,8 @@ public:
 
     virtual ~editor_impl()
     {}
+
+    Zep::ZepBuffer *m_buffer;
 };
 
 class zep_theme : public Zep::ZepTheme
@@ -191,14 +172,18 @@ text_editor::text_editor()
         return std::make_shared<Zep::ZepSyntax>(*pBuffer, pico8_keywords, pico8_identifiers);
     }));
 
-    m_impl->InitWithFileOrDir(FAKE_FILE_NAME);
-
-    auto* buffer = m_impl->GetFileBuffer(FAKE_FILE_NAME);
-    buffer->SetTheme(std::static_pointer_cast<Zep::ZepTheme, zep_theme>(std::make_shared<zep_theme>()));
+    m_impl->m_buffer = m_impl->InitWithText(BUFFER_NAME, "");
+    m_impl->m_buffer->SetTheme(std::static_pointer_cast<Zep::ZepTheme, zep_theme>(std::make_shared<zep_theme>()));
 }
 
 text_editor::~text_editor()
 {
+}
+
+void text_editor::attach(std::shared_ptr<z8::vm_base> vm)
+{
+    m_vm = vm;
+    m_impl->m_buffer->SetText(m_vm->get_code());
 }
 
 void text_editor::render()

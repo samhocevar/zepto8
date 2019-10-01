@@ -37,7 +37,7 @@ public:
     virtual void tick_game(float seconds) override;
     virtual void tick_draw(float seconds, lol::Scene &scene) override;
 
-    void load(char const *name);
+    void load(std::string const &name);
     void run();
 
     std::shared_ptr<vm_base> get_vm() { return m_vm; }

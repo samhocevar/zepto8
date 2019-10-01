@@ -33,7 +33,7 @@ public:
     cart()
     {}
 
-    bool load(char const *filename);
+    bool load(std::string const &filename);
 
     memory const &get_rom() const
     {
@@ -68,8 +68,8 @@ public:
     lol::image get_png() const;
 
 private:
-    bool load_png(char const *filename);
-    bool load_p8(char const *filename);
+    bool load_png(std::string const &filename);
+    bool load_p8(std::string const &filename);
 
     memory m_rom;
     std::vector<uint8_t> m_label;

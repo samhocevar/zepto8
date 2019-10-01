@@ -46,7 +46,7 @@ vm::~vm()
 {
 }
 
-void vm::load(char const *file)
+void vm::load(std::string const &file)
 {
     std::string s;
     lol::File f;
@@ -66,7 +66,7 @@ void vm::load(char const *file)
     if (s.length() == 0)
         return;
 
-    JSValue bin = JS_ParseJSON(m_ctx, s.c_str(), s.length(), file);
+    JSValue bin = JS_ParseJSON(m_ctx, s.c_str(), s.length(), file.c_str());
     if (JS_IsException(bin))
     {
         dump_error(m_ctx);
@@ -132,7 +132,7 @@ void vm::load(char const *file)
                 for (int j = 0; tmp[j] && tmp[j + 1] && offset < sizeof(raccoon::memory); j += 2)
                 {
                     char str[3] = { tmp[j], tmp[j + 1], '\0' };
-                    m_rom[offset++] = std::strtoul(str, nullptr, 16);
+                    m_rom[offset++] = (int)std::strtoul(str, nullptr, 16);
                 }
                 JS_FreeCString(m_ctx, tmp);
                 JS_FreeValue(m_ctx, val);
@@ -216,6 +216,11 @@ void vm::render(lol::u8vec4 *screen) const
         *screen++ = lut[p].a;
         *screen++ = lut[p].b;
     }
+}
+
+std::string const &vm::get_code() const
+{
+    return m_code;
 }
 
 std::function<void(void *, int)> vm::get_streamer(int channel)

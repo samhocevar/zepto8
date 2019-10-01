@@ -23,8 +23,8 @@
 namespace z8
 {
 
-memory_editor::memory_editor(std::tuple<uint8_t *, size_t> area)
-  : m_area(area)
+memory_editor::memory_editor()
+  : m_area({ nullptr, 0 })
 {
     m_editor.OptShowAscii = false;
     m_editor.OptUpperCaseHex = false;
@@ -33,6 +33,11 @@ memory_editor::memory_editor(std::tuple<uint8_t *, size_t> area)
 
 memory_editor::~memory_editor()
 {
+}
+
+void memory_editor::attach(std::tuple<uint8_t *, size_t> area)
+{
+    m_area = area;
 }
 
 void memory_editor::render()

@@ -25,13 +25,15 @@ namespace z8
 class ide : public lol::WorldEntity
 {
 public:
-    ide(player *player);
+    ide();
     virtual ~ide();
 
     virtual bool init_draw() override;
     virtual void tick_game(float seconds) override;
     virtual void tick_draw(float seconds, lol::Scene &scene) override;
     virtual bool release_draw() override;
+
+    void load(std::string const &name);
 
 private:
     void apply_scale();
@@ -65,6 +67,7 @@ private:
     m_dock;
 
     int m_scale = 2;
+    player *m_player; // FIXME: this reference should disappear because player is a lol::entity
     std::unique_ptr<text_editor> m_text_editor;
     std::unique_ptr<memory_editor> m_ram_editor, m_rom_editor;
 

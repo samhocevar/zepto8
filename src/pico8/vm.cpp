@@ -93,6 +93,11 @@ vm::~vm()
     lua_close(m_lua);
 }
 
+std::string const &vm::get_code() const
+{
+    return m_cart.get_code();
+}
+
 std::tuple<uint8_t *, size_t> vm::ram()
 {
     return std::make_tuple(&m_ram[0], sizeof(m_ram));
@@ -135,7 +140,7 @@ void vm::instruction_hook(lua_State *l, lua_Debug *)
         lua_yield(l, 0);
 }
 
-void vm::load(char const *name)
+void vm::load(std::string const &name)
 {
     m_cart.load(name);
 }

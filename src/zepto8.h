@@ -14,6 +14,7 @@
 
 #include <lol/engine.h>
 
+#include <string>
 #include <cstddef>
 
 // The ZEPTO-8 types
@@ -42,11 +43,14 @@ public:
     vm_base() = default;
     virtual ~vm_base() = default;
 
-    virtual void load(char const *name) = 0;
+    virtual void load(std::string const &name) = 0;
     virtual void run() = 0;
     virtual bool step(float seconds) = 0;
 
     virtual void render(lol::u8vec4 *screen) const = 0;
+
+    // Code
+    virtual std::string const &get_code() const = 0;
 
     // Audio streaming
     virtual std::function<void(void *, int)> get_streamer(int channel) = 0;

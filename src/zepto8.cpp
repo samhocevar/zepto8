@@ -45,13 +45,11 @@ int main(int argc, char **argv)
     lol::ivec2 win_size(1280, 768);
     lol::Application app("zepto-8", win_size, 60.0f);
 
-    auto player = new z8::player(win_size, argc >= 2 && lol::ends_with(argv[1], ".rcn.json"));
-    auto ide = new z8::ide(player);
+    auto ide = new z8::ide();
 
     if (argc >= 2)
     {
-        player->load(argv[1]);
-        player->run();
+        ide->load(argv[1]);
     }
 
     app.Run();
