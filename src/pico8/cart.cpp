@@ -58,7 +58,7 @@ bool cart::load_png(std::string const &filename)
     img.load(filename);
     ivec2 size = img.size();
 
-    if (size.x * size.y < (int)sizeof(m_rom) + 1)
+    if (size.x * size.y != (int)sizeof(m_rom) + 1)
         return false;
 
     u8vec4 const *pixels = img.lock<PixelFormat::RGBA_8>();
