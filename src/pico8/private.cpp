@@ -36,6 +36,7 @@ using lol::msg;
 std::string_view charset::to_utf8[256];
 std::u32string_view charset::to_utf32[256];
 
+static uint8_t multibyte_start[256];
 static std::map<std::string, uint8_t> to_pico8;
 std::regex charset::utf8_regex = charset::static_init();
 
@@ -56,6 +57,7 @@ std::regex charset::static_init()
     // Create all sorts of lookup tables for PICO-8 character conversions
     char const *p8 = utf8_chars;
     auto const *p32 = (char32_t const *)utf32_chars.data();
+    std::string regex("(");
     for (int i = 0; i < 256; ++i)
     {
         size_t len32 = p32[1] == 0xfe0f ? 2 : 1;
@@ -63,19 +65,18 @@ std::regex charset::static_init()
         to_utf8[i] = std::string_view(p8, len8);
         to_utf32[i] = std::u32string_view(p32, len32);
         to_pico8[std::string(p8, len8)] = i;
+
+        // Build a regex that lets us do faster (maybe?) UTF-8 conversions
+        if (len8 > 1)
+        {
+            multibyte_start[(uint8_t)*p8] = 1;
+            regex += std::string(p8, len8) + '|';
+        }
+
         p8 += len8;
         p32 += len32;
     }
-
-    // Build a regex that lets us do faster (maybe?) UTF-8 conversions
-    std::string regex("(");
-    for (int i = 16; i < 256; ++i)
-    {
-        auto s = to_utf8[i];
-        if (s.length() > 1)
-            regex += std::string(s) + '|';
-    }
-    regex += ".)";
+    regex += ')'; // Fall back to an empty match on purpose
 
     return std::regex(regex);
 }
@@ -87,11 +88,12 @@ std::string charset::utf8_to_pico8(std::string const &str)
 
     for (auto p = str.begin(); p != str.end(); )
     {
-        // Control characters below 0x10 should not go through regex_search()
-        if ((uint8_t)*p > 0x10 && std::regex_search(p, str.end(), sm, utf8_regex))
+        // Only pass known start characters through the expensive regex
+        if (multibyte_start[(uint8_t)*p]
+             && std::regex_search(p, str.end(), sm, utf8_regex)
+             && sm.length() > 1)
         {
-            auto ch = to_pico8.find(sm.str());
-            ret += ch != to_pico8.end() ? ch->second : *p;
+            ret += to_pico8[sm.str()];
             p += sm.length();
         }
         else
