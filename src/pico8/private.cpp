@@ -44,6 +44,10 @@ std::regex charset::static_init()
 {
     std::wstring_convert<std::codecvt_utf8<int32_t>, int32_t> cvt;
 
+    // The complete PICO-8 charmap, from 0 to 255. We cannot just store
+    // codepoints because some emoji glyphs are combinations of several
+    // codepoints, e.g. ⬇️ is U+2B07 (down arrow) + U+FE0F (variation
+    // selector-16).
     static char const utf8_chars[] =
         "\0\1\2\3\4\5\6\a\b\t\n\v\f\r\16\17▮■□⁙⁘‖◀▶「」¥•、。゛゜"
         " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNO"

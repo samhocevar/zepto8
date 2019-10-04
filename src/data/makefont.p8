@@ -9,6 +9,8 @@ local fillc = 0
 local bg = 1
 local fg = 7
 
+local colors = { [4]='ddffdd', [8]='ddddff' }
+
 function codepoint(n)
   local lut = {
     9646, 9632, 9633, 8281, 8280, 8214, 9664, 9654,
@@ -97,7 +99,7 @@ function dochar(n)
   local cpt = codepoint(n)
   local w = 4 + 4*flr(n/128)
   local h = 6
-  doglyph(ch, cpt, cpt, cpt, w, h)
+  doglyph(ch, 'g'..cpt, cpt, cpt, w, h)
 end
 
 function doglyph(ch, name, enc1, enc2, w, h)
@@ -121,7 +123,9 @@ function doglyph(ch, name, enc1, enc2, w, h)
     end
   end
 
-  printh('EndSplineSet\nEndChar\n')
+  printh('EndSplineSet')
+  if colors[w] then printh('Colour: '..colors[w]) end
+  printh('EndChar\n')
 end
 
 printh('SplineFontDB: 3.0')
