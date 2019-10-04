@@ -51,15 +51,16 @@ OS2StrikeYSize: 40
 OS2StrikeYPos: 160
 OS2CapHeight: 1000
 OS2XHeight: 800
+Lookup: 1 0 0 "lut1" {"lut1-1"} [' RQD' ('DFLT' <'dflt'> 'hang' <'dflt'> 'kana' <'dflt'> 'latn' <'dflt'>)] 
 GaspTable: 1 65535 2 0
 Encoding: UnicodeFull
 DisplaySize: -48
 AntiAlias: 1
 FitToEm: 0
-BeginChars: 1114112 243
+BeginChars: 1114112 253
 StartChar: .notdef
 Encoding: 65536 -1 0
-Width: 800
+Width: 1600
 VWidth: 1200
 GlyphClass: 2
 Flags: W
@@ -67,56 +68,61 @@ LayerCount: 2
 Fore
 SplineSet
 0 0 m 1,0,-1
- 0 1000 l 1,1,-1
- 600 1000 l 1,2,-1
- 600 0 l 1,3,-1
+ 0 200 l 1,1,-1
+ 200 200 l 1,2,-1
+ 200 0 l 1,3,-1
  0 0 l 1,0,-1
-200 200 m 1,0,-1
- 400 200 l 1,1,-1
- 400 800 l 1,2,-1
- 200 800 l 1,3,-1
- 200 200 l 1,0,-1
-EndSplineSet
-Colour: ddffdd
-EndChar
-
-StartChar: space
-Encoding: 65537 -1 1
-Width: 800
-VWidth: 1200
-GlyphClass: 2
-Flags: W
-LayerCount: 2
-Fore
-SplineSet
-0 0 m 1,0,-1
+0 400 m 1,0,-1
+ 0 600 l 1,1,-1
+ 200 600 l 1,2,-1
+ 200 400 l 1,3,-1
+ 0 400 l 1,0,-1
+0 800 m 1,0,-1
  0 1000 l 1,1,-1
- 600 1000 l 1,2,-1
- 600 0 l 1,3,-1
- 0 0 l 1,0,-1
-200 200 m 1,0,-1
- 400 200 l 1,1,-1
- 400 800 l 1,2,-1
+ 200 1000 l 1,2,-1
  200 800 l 1,3,-1
- 200 200 l 1,0,-1
+ 0 800 l 1,0,-1
+400 0 m 1,0,-1
+ 400 200 l 1,1,-1
+ 600 200 l 1,2,-1
+ 600 0 l 1,3,-1
+ 400 0 l 1,0,-1
+400 800 m 1,0,-1
+ 400 1000 l 1,1,-1
+ 600 1000 l 1,2,-1
+ 600 800 l 1,3,-1
+ 400 800 l 1,0,-1
+800 0 m 1,0,-1
+ 800 200 l 1,1,-1
+ 1000 200 l 1,2,-1
+ 1000 0 l 1,3,-1
+ 800 0 l 1,0,-1
+800 800 m 1,0,-1
+ 800 1000 l 1,1,-1
+ 1000 1000 l 1,2,-1
+ 1000 800 l 1,3,-1
+ 800 800 l 1,0,-1
+1200 0 m 1,0,-1
+ 1200 200 l 1,1,-1
+ 1400 200 l 1,2,-1
+ 1400 0 l 1,3,-1
+ 1200 0 l 1,0,-1
+1200 400 m 1,0,-1
+ 1200 600 l 1,1,-1
+ 1400 600 l 1,2,-1
+ 1400 400 l 1,3,-1
+ 1200 400 l 1,0,-1
+1200 800 m 1,0,-1
+ 1200 1000 l 1,1,-1
+ 1400 1000 l 1,2,-1
+ 1400 800 l 1,3,-1
+ 1200 800 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
-EndChar
-
-StartChar: glyph1
-Encoding: 65538 -1 2
-Width: 0
-VWidth: 1200
-GlyphClass: 2
-Flags: W
-LayerCount: 2
-Fore
-SplineSet
-EndSplineSet
+Colour: ccffff
 EndChar
 
 StartChar: g9646
-Encoding: 9646 9646 3
+Encoding: 9646 9646 1
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -130,11 +136,11 @@ SplineSet
  600 0 l 1,3,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g9632
-Encoding: 9632 9632 4
+Encoding: 9632 9632 2
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -148,11 +154,11 @@ SplineSet
  600 200 l 1,3,-1
  0 200 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g9633
-Encoding: 9633 9633 5
+Encoding: 9633 9633 3
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -171,11 +177,11 @@ SplineSet
  200 600 l 1,3,-1
  200 400 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g8281
-Encoding: 8281 8281 6
+Encoding: 8281 8281 4
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -209,11 +215,11 @@ SplineSet
  600 600 l 1,3,-1
  400 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g8280
-Encoding: 8280 8280 7
+Encoding: 8280 8280 5
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -242,11 +248,11 @@ SplineSet
  600 600 l 1,3,-1
  400 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g8214
-Encoding: 8214 8214 8
+Encoding: 8214 8214 6
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -265,11 +271,11 @@ SplineSet
  600 200 l 1,3,-1
  400 200 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g9664
-Encoding: 9664 9664 9
+Encoding: 9664 9664 7
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -291,11 +297,11 @@ SplineSet
  200 400 l 1,11,-1
  0 400 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g9654
-Encoding: 9654 9654 10
+Encoding: 9654 9654 8
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -317,11 +323,11 @@ SplineSet
  200 0 l 1,11,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g12300
-Encoding: 12300 12300 11
+Encoding: 12300 12300 9
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -337,11 +343,11 @@ SplineSet
  200 200 l 1,5,-1
  0 200 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g12301
-Encoding: 12301 12301 12
+Encoding: 12301 12301 10
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -357,11 +363,11 @@ SplineSet
  600 0 l 1,5,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g165
-Encoding: 165 165 13
+Encoding: 165 165 11
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -391,11 +397,11 @@ SplineSet
  200 200 l 1,19,-1
  0 200 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g8226
-Encoding: 8226 8226 14
+Encoding: 8226 8226 12
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -409,11 +415,11 @@ SplineSet
  400 400 l 1,3,-1
  200 400 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g12289
-Encoding: 12289 12289 15
+Encoding: 12289 12289 13
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -432,11 +438,11 @@ SplineSet
  400 0 l 1,3,-1
  200 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g12290
-Encoding: 12290 12290 16
+Encoding: 12290 12290 14
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -450,11 +456,11 @@ SplineSet
  400 0 l 1,3,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g12443
-Encoding: 12443 12443 17
+Encoding: 12443 12443 15
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -473,11 +479,11 @@ SplineSet
  600 600 l 1,3,-1
  400 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g12444
-Encoding: 12444 12444 18
+Encoding: 12444 12444 16
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -506,11 +512,11 @@ SplineSet
  600 600 l 1,3,-1
  400 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g32
-Encoding: 32 32 19
+Encoding: 32 32 17
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -519,11 +525,11 @@ LayerCount: 2
 Fore
 SplineSet
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g33
-Encoding: 33 33 20
+Encoding: 33 33 18
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -542,11 +548,11 @@ SplineSet
  400 400 l 1,3,-1
  200 400 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g34
-Encoding: 34 34 21
+Encoding: 34 34 19
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -565,11 +571,11 @@ SplineSet
  600 600 l 1,3,-1
  400 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g35
-Encoding: 35 35 22
+Encoding: 35 35 20
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -596,11 +602,11 @@ SplineSet
  200 600 l 1,3,-1
  200 400 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g36
-Encoding: 36 36 23
+Encoding: 36 36 21
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -626,11 +632,11 @@ SplineSet
  200 200 l 1,15,-1
  0 200 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g37
-Encoding: 37 37 24
+Encoding: 37 37 22
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -664,11 +670,11 @@ SplineSet
  600 600 l 1,3,-1
  400 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g38
-Encoding: 38 38 25
+Encoding: 38 38 23
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -688,11 +694,11 @@ SplineSet
  600 0 l 1,9,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g39
-Encoding: 39 39 26
+Encoding: 39 39 24
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -711,11 +717,11 @@ SplineSet
  400 800 l 1,3,-1
  200 800 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g40
-Encoding: 40 40 27
+Encoding: 40 40 25
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -739,11 +745,11 @@ SplineSet
  400 800 l 1,3,-1
  200 800 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g41
-Encoding: 41 41 28
+Encoding: 41 41 26
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -767,11 +773,11 @@ SplineSet
  600 200 l 1,3,-1
  400 200 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g42
-Encoding: 42 42 29
+Encoding: 42 42 27
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -813,11 +819,11 @@ SplineSet
  600 800 l 1,3,-1
  400 800 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g43
-Encoding: 43 43 30
+Encoding: 43 43 28
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -839,11 +845,11 @@ SplineSet
  200 400 l 1,11,-1
  0 400 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g44
-Encoding: 44 44 31
+Encoding: 44 44 29
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -862,11 +868,11 @@ SplineSet
  400 200 l 1,3,-1
  200 200 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g45
-Encoding: 45 45 32
+Encoding: 45 45 30
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -880,11 +886,11 @@ SplineSet
  600 400 l 1,3,-1
  0 400 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g46
-Encoding: 46 46 33
+Encoding: 46 46 31
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -898,11 +904,11 @@ SplineSet
  400 0 l 1,3,-1
  200 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g47
-Encoding: 47 47 34
+Encoding: 47 47 32
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -926,11 +932,11 @@ SplineSet
  600 800 l 1,3,-1
  400 800 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g48
-Encoding: 48 48 35
+Encoding: 48 48 33
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -949,11 +955,11 @@ SplineSet
  200 800 l 1,3,-1
  200 200 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g49
-Encoding: 49 49 36
+Encoding: 49 49 34
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -973,11 +979,11 @@ SplineSet
  600 0 l 1,9,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g50
-Encoding: 50 50 37
+Encoding: 50 50 35
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -999,11 +1005,11 @@ SplineSet
  600 0 l 1,11,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g51
-Encoding: 51 51 38
+Encoding: 51 51 36
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1025,11 +1031,11 @@ SplineSet
  600 0 l 1,11,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g52
-Encoding: 52 52 39
+Encoding: 52 52 37
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1049,11 +1055,11 @@ SplineSet
  400 400 l 1,9,-1
  0 400 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g53
-Encoding: 53 53 40
+Encoding: 53 53 38
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1075,11 +1081,11 @@ SplineSet
  600 0 l 1,11,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g54
-Encoding: 54 54 41
+Encoding: 54 54 39
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1100,11 +1106,11 @@ SplineSet
  200 400 l 1,3,-1
  200 200 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g55
-Encoding: 55 55 42
+Encoding: 55 55 40
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1120,11 +1126,11 @@ SplineSet
  400 800 l 1,5,-1
  0 800 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g56
-Encoding: 56 56 43
+Encoding: 56 56 41
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1148,11 +1154,11 @@ SplineSet
  200 800 l 1,3,-1
  200 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g57
-Encoding: 57 57 44
+Encoding: 57 57 42
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1173,11 +1179,11 @@ SplineSet
  200 800 l 1,3,-1
  200 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g58
-Encoding: 58 58 45
+Encoding: 58 58 43
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1196,11 +1202,11 @@ SplineSet
  400 600 l 1,3,-1
  200 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g59
-Encoding: 59 59 46
+Encoding: 59 59 44
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1224,11 +1230,11 @@ SplineSet
  400 600 l 1,3,-1
  200 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g60
-Encoding: 60 60 47
+Encoding: 60 60 45
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1262,11 +1268,11 @@ SplineSet
  600 800 l 1,3,-1
  400 800 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g61
-Encoding: 61 61 48
+Encoding: 61 61 46
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1285,11 +1291,11 @@ SplineSet
  600 600 l 1,3,-1
  0 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g62
-Encoding: 62 62 49
+Encoding: 62 62 47
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1323,11 +1329,11 @@ SplineSet
  600 400 l 1,3,-1
  400 400 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g63
-Encoding: 63 63 50
+Encoding: 63 63 48
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1350,11 +1356,11 @@ SplineSet
  400 0 l 1,3,-1
  200 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g64
-Encoding: 64 64 51
+Encoding: 64 64 49
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1383,11 +1389,11 @@ SplineSet
  600 400 l 1,3,-1
  400 400 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g65
-Encoding: 65 65 52
+Encoding: 65 65 50
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1410,11 +1416,11 @@ SplineSet
  200 800 l 1,3,-1
  200 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g66
-Encoding: 66 66 53
+Encoding: 66 66 51
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1440,11 +1446,11 @@ SplineSet
  600 0 l 1,15,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g67
-Encoding: 67 67 54
+Encoding: 67 67 52
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1468,11 +1474,11 @@ SplineSet
  600 800 l 1,3,-1
  200 800 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g68
-Encoding: 68 68 55
+Encoding: 68 68 53
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1492,11 +1498,11 @@ SplineSet
  600 0 l 1,9,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g69
-Encoding: 69 69 56
+Encoding: 69 69 54
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1518,11 +1524,11 @@ SplineSet
  600 0 l 1,11,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g70
-Encoding: 70 70 57
+Encoding: 70 70 55
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1542,11 +1548,11 @@ SplineSet
  200 0 l 1,9,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g71
-Encoding: 71 71 58
+Encoding: 71 71 56
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1569,11 +1575,11 @@ SplineSet
  600 800 l 1,3,-1
  200 800 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g72
-Encoding: 72 72 59
+Encoding: 72 72 57
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1595,11 +1601,11 @@ SplineSet
  200 0 l 1,11,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g73
-Encoding: 73 73 60
+Encoding: 73 73 58
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1621,11 +1627,11 @@ SplineSet
  600 0 l 1,11,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g74
-Encoding: 74 74 61
+Encoding: 74 74 59
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1645,11 +1651,11 @@ SplineSet
  400 0 l 1,9,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g75
-Encoding: 75 75 62
+Encoding: 75 75 60
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1677,11 +1683,11 @@ SplineSet
  600 600 l 1,3,-1
  400 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g76
-Encoding: 76 76 63
+Encoding: 76 76 61
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1697,11 +1703,11 @@ SplineSet
  600 0 l 1,5,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g77
-Encoding: 77 77 64
+Encoding: 77 77 62
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1719,11 +1725,11 @@ SplineSet
  200 0 l 1,7,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g78
-Encoding: 78 78 65
+Encoding: 78 78 63
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1744,11 +1750,11 @@ SplineSet
  600 0 l 1,3,-1
  400 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g79
-Encoding: 79 79 66
+Encoding: 79 79 64
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1771,11 +1777,11 @@ SplineSet
  400 800 l 1,5,-1
  200 800 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g80
-Encoding: 80 80 67
+Encoding: 80 80 65
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1796,11 +1802,11 @@ SplineSet
  200 800 l 1,3,-1
  200 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g81
-Encoding: 81 81 68
+Encoding: 81 81 66
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1830,11 +1836,11 @@ SplineSet
  600 400 l 1,3,-1
  400 400 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g82
-Encoding: 82 82 69
+Encoding: 82 82 67
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1861,11 +1867,11 @@ SplineSet
  600 0 l 1,3,-1
  400 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g83
-Encoding: 83 83 70
+Encoding: 83 83 68
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1893,11 +1899,11 @@ SplineSet
  600 800 l 1,3,-1
  200 800 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g84
-Encoding: 84 84 71
+Encoding: 84 84 69
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1915,11 +1921,11 @@ SplineSet
  200 800 l 1,7,-1
  0 800 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g85
-Encoding: 85 85 72
+Encoding: 85 85 70
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1940,11 +1946,11 @@ SplineSet
  600 0 l 1,5,-1
  200 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g86
-Encoding: 86 86 73
+Encoding: 86 86 71
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1966,11 +1972,11 @@ SplineSet
  200 200 l 1,11,-1
  0 200 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g87
-Encoding: 87 87 74
+Encoding: 87 87 72
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -1988,11 +1994,11 @@ SplineSet
  600 0 l 1,7,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g88
-Encoding: 88 88 75
+Encoding: 88 88 73
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2026,11 +2032,11 @@ SplineSet
  600 600 l 1,3,-1
  400 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g89
-Encoding: 89 89 76
+Encoding: 89 89 74
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2052,11 +2058,11 @@ SplineSet
  600 0 l 1,11,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g90
-Encoding: 90 90 77
+Encoding: 90 90 75
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2084,11 +2090,11 @@ SplineSet
  400 400 l 1,3,-1
  200 400 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g91
-Encoding: 91 91 78
+Encoding: 91 91 76
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2106,11 +2112,11 @@ SplineSet
  400 0 l 1,7,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g92
-Encoding: 92 92 79
+Encoding: 92 92 77
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2134,11 +2140,11 @@ SplineSet
  600 0 l 1,3,-1
  400 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g93
-Encoding: 93 93 80
+Encoding: 93 93 78
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2156,11 +2162,11 @@ SplineSet
  600 0 l 1,7,-1
  200 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g94
-Encoding: 94 94 81
+Encoding: 94 94 79
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2184,11 +2190,11 @@ SplineSet
  600 600 l 1,3,-1
  400 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g95
-Encoding: 95 95 82
+Encoding: 95 95 80
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2202,11 +2208,11 @@ SplineSet
  600 0 l 1,3,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g96
-Encoding: 96 96 83
+Encoding: 96 96 81
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2225,11 +2231,11 @@ SplineSet
  600 600 l 1,3,-1
  400 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g97
-Encoding: 97 97 84
+Encoding: 97 97 82
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2252,11 +2258,11 @@ SplineSet
  200 600 l 1,3,-1
  200 400 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g98
-Encoding: 98 98 85
+Encoding: 98 98 83
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2276,11 +2282,11 @@ SplineSet
  600 0 l 1,9,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g99
-Encoding: 99 99 86
+Encoding: 99 99 84
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2298,11 +2304,11 @@ SplineSet
  600 0 l 1,7,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g100
-Encoding: 100 100 87
+Encoding: 100 100 85
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2325,11 +2331,11 @@ SplineSet
  600 200 l 1,3,-1
  400 200 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g101
-Encoding: 101 101 88
+Encoding: 101 101 86
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2349,11 +2355,11 @@ SplineSet
  600 0 l 1,9,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g102
-Encoding: 102 102 89
+Encoding: 102 102 87
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2371,11 +2377,11 @@ SplineSet
  200 0 l 1,7,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g103
-Encoding: 103 103 90
+Encoding: 103 103 88
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2395,11 +2401,11 @@ SplineSet
  600 0 l 1,9,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g104
-Encoding: 104 104 91
+Encoding: 104 104 89
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2421,11 +2427,11 @@ SplineSet
  200 0 l 1,11,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g105
-Encoding: 105 105 92
+Encoding: 105 105 90
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2447,11 +2453,11 @@ SplineSet
  600 0 l 1,11,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g106
-Encoding: 106 106 93
+Encoding: 106 106 91
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2471,11 +2477,11 @@ SplineSet
  400 0 l 1,9,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g107
-Encoding: 107 107 94
+Encoding: 107 107 92
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2503,11 +2509,11 @@ SplineSet
  600 600 l 1,3,-1
  400 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g108
-Encoding: 108 108 95
+Encoding: 108 108 93
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2523,11 +2529,11 @@ SplineSet
  600 0 l 1,5,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g109
-Encoding: 109 109 96
+Encoding: 109 109 94
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2545,11 +2551,11 @@ SplineSet
  200 0 l 1,7,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g110
-Encoding: 110 110 97
+Encoding: 110 110 95
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2570,11 +2576,11 @@ SplineSet
  600 0 l 1,3,-1
  400 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g111
-Encoding: 111 111 98
+Encoding: 111 111 96
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2597,11 +2603,11 @@ SplineSet
  400 600 l 1,5,-1
  200 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g112
-Encoding: 112 112 99
+Encoding: 112 112 97
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2622,11 +2628,11 @@ SplineSet
  200 600 l 1,3,-1
  200 400 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g113
-Encoding: 113 113 100
+Encoding: 113 113 98
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2656,11 +2662,11 @@ SplineSet
  600 400 l 1,3,-1
  400 400 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g114
-Encoding: 114 114 101
+Encoding: 114 114 99
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2687,11 +2693,11 @@ SplineSet
  600 0 l 1,3,-1
  400 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g115
-Encoding: 115 115 102
+Encoding: 115 115 100
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2720,11 +2726,11 @@ SplineSet
  600 200 l 1,3,-1
  400 200 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g116
-Encoding: 116 116 103
+Encoding: 116 116 101
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2742,11 +2748,11 @@ SplineSet
  200 600 l 1,7,-1
  0 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g117
-Encoding: 117 117 104
+Encoding: 117 117 102
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2767,11 +2773,11 @@ SplineSet
  600 0 l 1,5,-1
  200 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g118
-Encoding: 118 118 105
+Encoding: 118 118 103
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2793,11 +2799,11 @@ SplineSet
  200 200 l 1,11,-1
  0 200 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g119
-Encoding: 119 119 106
+Encoding: 119 119 104
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2815,11 +2821,11 @@ SplineSet
  600 0 l 1,7,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g120
-Encoding: 120 120 107
+Encoding: 120 120 105
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2853,11 +2859,11 @@ SplineSet
  600 600 l 1,3,-1
  400 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g121
-Encoding: 121 121 108
+Encoding: 121 121 106
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2879,11 +2885,11 @@ SplineSet
  600 0 l 1,11,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g122
-Encoding: 122 122 109
+Encoding: 122 122 107
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2906,11 +2912,11 @@ SplineSet
  400 600 l 1,5,-1
  0 600 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g123
-Encoding: 123 123 110
+Encoding: 123 123 108
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2932,11 +2938,11 @@ SplineSet
  200 400 l 1,11,-1
  0 400 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g124
-Encoding: 124 124 111
+Encoding: 124 124 109
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2950,11 +2956,11 @@ SplineSet
  400 0 l 1,3,-1
  200 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g125
-Encoding: 125 125 112
+Encoding: 125 125 110
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2976,11 +2982,11 @@ SplineSet
  400 0 l 1,11,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g126
-Encoding: 126 126 113
+Encoding: 126 126 111
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -2998,11 +3004,11 @@ SplineSet
  200 200 l 1,7,-1
  0 200 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g9675
-Encoding: 9675 9675 114
+Encoding: 9675 9675 112
 Width: 800
 VWidth: 1200
 GlyphClass: 2
@@ -3031,11 +3037,11 @@ SplineSet
  600 400 l 1,3,-1
  400 400 l 1,0,-1
 EndSplineSet
-Colour: ddffdd
+Colour: ccffcc
 EndChar
 
 StartChar: g9608
-Encoding: 9608 9608 115
+Encoding: 9608 9608 113
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3049,11 +3055,11 @@ SplineSet
  1400 0 l 1,3,-1
  0 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g9618
-Encoding: 9618 9618 116
+Encoding: 9618 9618 114
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3152,11 +3158,11 @@ SplineSet
  1400 800 l 1,3,-1
  1200 800 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g128049
-Encoding: 128049 128049 117
+Encoding: 128049 128049 115
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3186,11 +3192,11 @@ SplineSet
  200 200 l 1,19,-1
  0 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g11015
-Encoding: 11015 11015 118
+Encoding: 11015 11015 116
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3221,11 +3227,12 @@ SplineSet
  400 800 l 1,7,-1
  400 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Substitution2: "lut1-1" tmp1
+Colour: ccffff
 EndChar
 
 StartChar: g9617
-Encoding: 9617 9617 119
+Encoding: 9617 9617 117
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3284,11 +3291,11 @@ SplineSet
  1400 600 l 1,3,-1
  1200 600 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g10045
-Encoding: 10045 10045 120
+Encoding: 10045 10045 118
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3310,11 +3317,11 @@ SplineSet
  800 200 l 1,11,-1
  200 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g9679
-Encoding: 9679 9679 121
+Encoding: 9679 9679 119
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3340,11 +3347,11 @@ SplineSet
  400 200 l 1,15,-1
  200 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g9829
-Encoding: 9829 9829 122
+Encoding: 9829 9829 120
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3370,11 +3377,11 @@ SplineSet
  400 400 l 1,15,-1
  200 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g9737
-Encoding: 9737 9737 123
+Encoding: 9737 9737 121
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3409,11 +3416,11 @@ SplineSet
  600 800 l 1,3,-1
  600 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g50883
-Encoding: 50883 50883 124
+Encoding: 50883 50883 122
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3439,11 +3446,11 @@ SplineSet
  400 400 l 1,15,-1
  200 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g8962
-Encoding: 8962 8962 125
+Encoding: 8962 8962 123
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3478,11 +3485,11 @@ SplineSet
  800 400 l 1,3,-1
  800 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g11013
-Encoding: 11013 11013 126
+Encoding: 11013 11013 124
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3513,11 +3520,12 @@ SplineSet
  400 600 l 1,7,-1
  400 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Substitution2: "lut1-1" tmp2
+Colour: ccffff
 EndChar
 
 StartChar: g128528
-Encoding: 128528 128528 127
+Encoding: 128528 128528 125
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3546,11 +3554,11 @@ SplineSet
  1000 800 l 1,3,-1
  1000 600 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g9834
-Encoding: 9834 9834 128
+Encoding: 9834 9834 126
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3568,11 +3576,11 @@ SplineSet
  800 0 l 1,7,-1
  200 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g127358
-Encoding: 127358 127358 129
+Encoding: 127358 127358 127
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3604,11 +3612,12 @@ SplineSet
  800 400 l 1,3,-1
  600 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Substitution2: "lut1-1" tmp3
+Colour: ccffff
 EndChar
 
 StartChar: g9670
-Encoding: 9670 9670 130
+Encoding: 9670 9670 128
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3638,11 +3647,11 @@ SplineSet
  400 400 l 1,19,-1
  200 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g8230
-Encoding: 8230 8230 131
+Encoding: 8230 8230 129
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3671,11 +3680,11 @@ SplineSet
  1400 400 l 1,3,-1
  1200 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g10145
-Encoding: 10145 10145 132
+Encoding: 10145 10145 130
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3706,11 +3715,12 @@ SplineSet
  400 800 l 1,7,-1
  400 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Substitution2: "lut1-1" tmp4
+Colour: ccffff
 EndChar
 
 StartChar: g9733
-Encoding: 9733 9733 133
+Encoding: 9733 9733 131
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3740,11 +3750,11 @@ SplineSet
  200 400 l 1,19,-1
  0 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g10711
-Encoding: 10711 10711 134
+Encoding: 10711 10711 132
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3774,11 +3784,11 @@ SplineSet
  1200 0 l 1,19,-1
  200 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g11014
-Encoding: 11014 11014 135
+Encoding: 11014 11014 133
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3809,11 +3819,12 @@ SplineSet
  400 600 l 1,7,-1
  400 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Substitution2: "lut1-1" tmp5
+Colour: ccffff
 EndChar
 
 StartChar: g711
-Encoding: 711 711 136
+Encoding: 711 711 134
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3852,11 +3863,11 @@ SplineSet
  1400 400 l 1,3,-1
  1200 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g8743
-Encoding: 8743 8743 137
+Encoding: 8743 8743 135
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3900,11 +3911,11 @@ SplineSet
  1400 200 l 1,3,-1
  1200 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g10062
-Encoding: 10062 10062 138
+Encoding: 10062 10062 136
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3951,11 +3962,11 @@ SplineSet
  800 800 l 1,3,-1
  800 600 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g9636
-Encoding: 9636 9636 139
+Encoding: 9636 9636 137
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -3979,11 +3990,11 @@ SplineSet
  1400 800 l 1,3,-1
  0 800 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g9637
-Encoding: 9637 9637 140
+Encoding: 9637 9637 138
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4012,11 +4023,11 @@ SplineSet
  1400 0 l 1,3,-1
  1200 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12354
-Encoding: 12354 12354 141
+Encoding: 12354 12354 139
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4056,11 +4067,11 @@ SplineSet
  1200 0 l 1,3,-1
  1000 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12356
-Encoding: 12356 12356 142
+Encoding: 12356 12356 140
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4094,11 +4105,11 @@ SplineSet
  1200 200 l 1,3,-1
  1000 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12358
-Encoding: 12358 12358 143
+Encoding: 12358 12358 141
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4124,11 +4135,11 @@ SplineSet
  1000 0 l 1,3,-1
  600 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12360
-Encoding: 12360 12360 144
+Encoding: 12360 12360 142
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4170,11 +4181,11 @@ SplineSet
  1200 200 l 1,3,-1
  1000 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12362
-Encoding: 12362 12362 145
+Encoding: 12362 12362 143
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4222,11 +4233,11 @@ SplineSet
  1400 800 l 1,3,-1
  1200 800 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12363
-Encoding: 12363 12363 146
+Encoding: 12363 12363 144
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4265,11 +4276,11 @@ SplineSet
  1400 600 l 1,3,-1
  1200 600 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12365
-Encoding: 12365 12365 147
+Encoding: 12365 12365 145
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4301,11 +4312,11 @@ SplineSet
  1000 0 l 1,3,-1
  400 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12367
-Encoding: 12367 12367 148
+Encoding: 12367 12367 146
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4339,11 +4350,11 @@ SplineSet
  1200 800 l 1,3,-1
  800 800 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12369
-Encoding: 12369 12369 149
+Encoding: 12369 12369 147
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4375,11 +4386,11 @@ SplineSet
  1000 0 l 1,3,-1
  800 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12371
-Encoding: 12371 12371 150
+Encoding: 12371 12371 148
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4408,11 +4419,11 @@ SplineSet
  1000 600 l 1,3,-1
  800 600 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12373
-Encoding: 12373 12373 151
+Encoding: 12373 12373 149
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4442,11 +4453,11 @@ SplineSet
  800 400 l 1,9,-1
  200 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12375
-Encoding: 12375 12375 152
+Encoding: 12375 12375 150
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4470,11 +4481,11 @@ SplineSet
  1200 200 l 1,3,-1
  1000 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12377
-Encoding: 12377 12377 153
+Encoding: 12377 12377 151
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4500,11 +4511,11 @@ SplineSet
  600 600 l 1,15,-1
  200 600 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12379
-Encoding: 12379 12379 154
+Encoding: 12379 12379 152
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4535,11 +4546,11 @@ SplineSet
  1000 0 l 1,3,-1
  400 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12381
-Encoding: 12381 12381 155
+Encoding: 12381 12381 153
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4570,11 +4581,11 @@ SplineSet
  1400 0 l 1,3,-1
  800 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12383
-Encoding: 12383 12383 156
+Encoding: 12383 12383 154
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4611,11 +4622,11 @@ SplineSet
  1200 400 l 1,3,-1
  800 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12385
-Encoding: 12385 12385 157
+Encoding: 12385 12385 155
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4645,11 +4656,11 @@ SplineSet
  400 600 l 1,19,-1
  0 600 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12388
-Encoding: 12388 12388 158
+Encoding: 12388 12388 156
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4683,11 +4694,11 @@ SplineSet
  1400 400 l 1,3,-1
  1200 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12390
-Encoding: 12390 12390 159
+Encoding: 12390 12390 157
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4715,11 +4726,11 @@ SplineSet
  1000 0 l 1,3,-1
  800 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12392
-Encoding: 12392 12392 160
+Encoding: 12392 12392 158
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4750,11 +4761,11 @@ SplineSet
  1200 600 l 1,5,-1
  600 600 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12394
-Encoding: 12394 12394 161
+Encoding: 12394 12394 159
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4800,11 +4811,11 @@ SplineSet
  1400 0 l 1,3,-1
  1200 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12395
-Encoding: 12395 12395 162
+Encoding: 12395 12395 160
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4835,11 +4846,11 @@ SplineSet
  1400 0 l 1,3,-1
  800 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12396
-Encoding: 12396 12396 163
+Encoding: 12396 12396 161
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4885,11 +4896,11 @@ SplineSet
  1400 0 l 1,5,-1
  1000 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12397
-Encoding: 12397 12397 164
+Encoding: 12397 12397 162
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4932,11 +4943,11 @@ SplineSet
  1400 0 l 1,5,-1
  1000 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12398
-Encoding: 12398 12398 165
+Encoding: 12398 12398 163
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -4979,11 +4990,11 @@ SplineSet
  1400 200 l 1,3,-1
  1200 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12399
-Encoding: 12399 12399 166
+Encoding: 12399 12399 164
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5021,11 +5032,11 @@ SplineSet
  1400 0 l 1,3,-1
  1200 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12402
-Encoding: 12402 12402 167
+Encoding: 12402 12402 165
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5055,11 +5066,11 @@ SplineSet
  1200 200 l 1,7,-1
  1000 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12405
-Encoding: 12405 12405 168
+Encoding: 12405 12405 166
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5100,11 +5111,11 @@ SplineSet
  1400 0 l 1,3,-1
  1200 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12408
-Encoding: 12408 12408 169
+Encoding: 12408 12408 167
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5143,11 +5154,11 @@ SplineSet
  1400 0 l 1,3,-1
  1200 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12411
-Encoding: 12411 12411 170
+Encoding: 12411 12411 168
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5187,11 +5198,11 @@ SplineSet
  1400 0 l 1,3,-1
  1000 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12414
-Encoding: 12414 12414 171
+Encoding: 12414 12414 169
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5226,11 +5237,11 @@ SplineSet
  1200 0 l 1,3,-1
  1000 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12415
-Encoding: 12415 12415 172
+Encoding: 12415 12415 170
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5265,11 +5276,11 @@ SplineSet
  1000 0 l 1,3,-1
  800 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12416
-Encoding: 12416 12416 173
+Encoding: 12416 12416 171
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5312,11 +5323,11 @@ SplineSet
  1400 600 l 1,3,-1
  1200 600 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12417
-Encoding: 12417 12417 174
+Encoding: 12417 12417 172
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5360,11 +5371,11 @@ SplineSet
  1400 200 l 1,3,-1
  1200 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12418
-Encoding: 12418 12418 175
+Encoding: 12418 12418 173
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5400,11 +5411,11 @@ SplineSet
  1400 200 l 1,3,-1
  1200 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12420
-Encoding: 12420 12420 176
+Encoding: 12420 12420 174
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5437,11 +5448,11 @@ SplineSet
  800 0 l 1,3,-1
  600 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12422
-Encoding: 12422 12422 177
+Encoding: 12422 12422 175
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5480,11 +5491,11 @@ SplineSet
  1400 400 l 1,3,-1
  1200 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12424
-Encoding: 12424 12424 178
+Encoding: 12424 12424 176
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5513,11 +5524,11 @@ SplineSet
  1200 0 l 1,3,-1
  1000 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12425
-Encoding: 12425 12425 179
+Encoding: 12425 12425 177
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5545,11 +5556,11 @@ SplineSet
  800 800 l 1,3,-1
  600 800 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12426
-Encoding: 12426 12426 180
+Encoding: 12426 12426 178
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5578,11 +5589,11 @@ SplineSet
  1200 200 l 1,3,-1
  1000 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12427
-Encoding: 12427 12427 181
+Encoding: 12427 12427 179
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5613,11 +5624,11 @@ SplineSet
  800 400 l 1,15,-1
  400 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12428
-Encoding: 12428 12428 182
+Encoding: 12428 12428 180
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5652,11 +5663,11 @@ SplineSet
  1000 600 l 1,7,-1
  800 600 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12429
-Encoding: 12429 12429 183
+Encoding: 12429 12429 181
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5690,11 +5701,11 @@ SplineSet
  1200 0 l 1,3,-1
  800 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12431
-Encoding: 12431 12431 184
+Encoding: 12431 12431 182
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5745,11 +5756,11 @@ SplineSet
  1400 400 l 1,3,-1
  1200 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12434
-Encoding: 12434 12434 185
+Encoding: 12434 12434 183
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5784,11 +5795,11 @@ SplineSet
  1400 600 l 1,3,-1
  1000 600 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12435
-Encoding: 12435 12435 186
+Encoding: 12435 12435 184
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5823,11 +5834,11 @@ SplineSet
  1400 200 l 1,3,-1
  1200 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12387
-Encoding: 12387 12387 187
+Encoding: 12387 12387 185
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5851,11 +5862,11 @@ SplineSet
  1000 200 l 1,3,-1
  800 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12419
-Encoding: 12419 12419 188
+Encoding: 12419 12419 186
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5888,11 +5899,11 @@ SplineSet
  600 0 l 1,3,-1
  400 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12421
-Encoding: 12421 12421 189
+Encoding: 12421 12421 187
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5923,11 +5934,11 @@ SplineSet
  1000 200 l 1,3,-1
  800 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12423
-Encoding: 12423 12423 190
+Encoding: 12423 12423 188
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5955,11 +5966,11 @@ SplineSet
  1000 0 l 1,3,-1
  400 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12450
-Encoding: 12450 12450 191
+Encoding: 12450 12450 189
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -5990,11 +6001,11 @@ SplineSet
  1000 400 l 1,3,-1
  800 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12452
-Encoding: 12452 12452 192
+Encoding: 12452 12452 190
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6015,11 +6026,11 @@ SplineSet
  1200 800 l 1,3,-1
  800 800 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12454
-Encoding: 12454 12454 193
+Encoding: 12454 12454 191
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6049,11 +6060,11 @@ SplineSet
  1000 200 l 1,3,-1
  800 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12456
-Encoding: 12456 12456 194
+Encoding: 12456 12456 192
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6075,11 +6086,11 @@ SplineSet
  1200 0 l 1,11,-1
  200 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12458
-Encoding: 12458 12458 195
+Encoding: 12458 12458 193
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6110,11 +6121,11 @@ SplineSet
  600 600 l 1,15,-1
  200 600 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12459
-Encoding: 12459 12459 196
+Encoding: 12459 12459 194
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6145,11 +6156,11 @@ SplineSet
  400 600 l 1,15,-1
  200 600 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12461
-Encoding: 12461 12461 197
+Encoding: 12461 12461 195
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6179,11 +6190,11 @@ SplineSet
  600 200 l 1,19,-1
  200 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12463
-Encoding: 12463 12463 198
+Encoding: 12463 12463 196
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6216,11 +6227,11 @@ SplineSet
  1000 200 l 1,3,-1
  800 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12465
-Encoding: 12465 12465 199
+Encoding: 12465 12465 197
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6250,11 +6261,11 @@ SplineSet
  800 0 l 1,3,-1
  600 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12467
-Encoding: 12467 12467 200
+Encoding: 12467 12467 198
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6272,11 +6283,11 @@ SplineSet
  1200 0 l 1,7,-1
  200 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12469
-Encoding: 12469 12469 201
+Encoding: 12469 12469 199
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6311,11 +6322,11 @@ SplineSet
  1000 0 l 1,3,-1
  800 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12471
-Encoding: 12471 12471 202
+Encoding: 12471 12471 200
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6354,11 +6365,11 @@ SplineSet
  1400 200 l 1,3,-1
  1000 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12473
-Encoding: 12473 12473 203
+Encoding: 12473 12473 201
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6391,11 +6402,11 @@ SplineSet
  1200 0 l 1,3,-1
  1000 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12475
-Encoding: 12475 12475 204
+Encoding: 12475 12475 202
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6426,11 +6437,11 @@ SplineSet
  1200 0 l 1,3,-1
  600 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12477
-Encoding: 12477 12477 205
+Encoding: 12477 12477 203
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6464,11 +6475,11 @@ SplineSet
  1200 400 l 1,3,-1
  1000 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12479
-Encoding: 12479 12479 206
+Encoding: 12479 12479 204
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6503,11 +6514,11 @@ SplineSet
  1000 400 l 1,3,-1
  800 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12481
-Encoding: 12481 12481 207
+Encoding: 12481 12481 205
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6538,11 +6549,11 @@ SplineSet
  600 0 l 1,3,-1
  400 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12484
-Encoding: 12484 12484 208
+Encoding: 12484 12484 206
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6581,11 +6592,11 @@ SplineSet
  1400 600 l 1,3,-1
  1200 600 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12486
-Encoding: 12486 12486 209
+Encoding: 12486 12486 207
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6613,11 +6624,11 @@ SplineSet
  1000 800 l 1,3,-1
  400 800 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12488
-Encoding: 12488 12488 210
+Encoding: 12488 12488 208
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6640,11 +6651,11 @@ SplineSet
  1200 200 l 1,3,-1
  1000 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12490
-Encoding: 12490 12490 211
+Encoding: 12490 12490 209
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6671,11 +6682,11 @@ SplineSet
  600 0 l 1,3,-1
  400 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12491
-Encoding: 12491 12491 212
+Encoding: 12491 12491 210
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6694,11 +6705,11 @@ SplineSet
  1000 600 l 1,3,-1
  400 600 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12492
-Encoding: 12492 12492 213
+Encoding: 12492 12492 211
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6726,11 +6737,11 @@ SplineSet
  800 400 l 1,3,-1
  600 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12493
-Encoding: 12493 12493 214
+Encoding: 12493 12493 212
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6764,11 +6775,11 @@ SplineSet
  1400 200 l 1,3,-1
  1200 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12494
-Encoding: 12494 12494 215
+Encoding: 12494 12494 213
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6797,11 +6808,11 @@ SplineSet
  1200 600 l 1,3,-1
  1000 600 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12495
-Encoding: 12495 12495 216
+Encoding: 12495 12495 214
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6835,11 +6846,11 @@ SplineSet
  1400 0 l 1,3,-1
  1200 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12498
-Encoding: 12498 12498 217
+Encoding: 12498 12498 215
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6867,11 +6878,11 @@ SplineSet
  1200 600 l 1,3,-1
  800 600 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12501
-Encoding: 12501 12501 218
+Encoding: 12501 12501 216
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6897,11 +6908,11 @@ SplineSet
  1000 200 l 1,3,-1
  800 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12504
-Encoding: 12504 12504 219
+Encoding: 12504 12504 217
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6940,11 +6951,11 @@ SplineSet
  1400 200 l 1,3,-1
  1200 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12507
-Encoding: 12507 12507 220
+Encoding: 12507 12507 218
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -6988,11 +6999,11 @@ SplineSet
  1400 0 l 1,3,-1
  1200 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12510
-Encoding: 12510 12510 221
+Encoding: 12510 12510 219
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7028,11 +7039,11 @@ SplineSet
  1000 400 l 1,3,-1
  800 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12511
-Encoding: 12511 12511 222
+Encoding: 12511 12511 220
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7056,11 +7067,11 @@ SplineSet
  1200 800 l 1,3,-1
  400 800 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12512
-Encoding: 12512 12512 223
+Encoding: 12512 12512 221
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7095,11 +7106,11 @@ SplineSet
  1200 200 l 1,7,-1
  1000 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12513
-Encoding: 12513 12513 224
+Encoding: 12513 12513 222
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7143,11 +7154,11 @@ SplineSet
  1400 800 l 1,3,-1
  1200 800 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12514
-Encoding: 12514 12514 225
+Encoding: 12514 12514 223
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7178,11 +7189,11 @@ SplineSet
  1400 0 l 1,3,-1
  800 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12516
-Encoding: 12516 12516 226
+Encoding: 12516 12516 224
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7221,11 +7232,11 @@ SplineSet
  1200 400 l 1,3,-1
  1000 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12518
-Encoding: 12518 12518 227
+Encoding: 12518 12518 225
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7250,11 +7261,11 @@ SplineSet
  1200 800 l 1,5,-1
  600 800 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12520
-Encoding: 12520 12520 228
+Encoding: 12520 12520 226
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7280,11 +7291,11 @@ SplineSet
  1000 0 l 1,15,-1
  200 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12521
-Encoding: 12521 12521 229
+Encoding: 12521 12521 227
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7310,11 +7321,11 @@ SplineSet
  1000 0 l 1,3,-1
  600 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12522
-Encoding: 12522 12522 230
+Encoding: 12522 12522 228
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7338,11 +7349,11 @@ SplineSet
  1200 200 l 1,3,-1
  1000 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12523
-Encoding: 12523 12523 231
+Encoding: 12523 12523 229
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7373,11 +7384,11 @@ SplineSet
  1400 200 l 1,3,-1
  1200 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12524
-Encoding: 12524 12524 232
+Encoding: 12524 12524 230
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7398,11 +7409,11 @@ SplineSet
  1200 200 l 1,3,-1
  800 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12525
-Encoding: 12525 12525 233
+Encoding: 12525 12525 231
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7421,11 +7432,11 @@ SplineSet
  400 800 l 1,3,-1
  400 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12527
-Encoding: 12527 12527 234
+Encoding: 12527 12527 232
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7453,11 +7464,11 @@ SplineSet
  1000 200 l 1,3,-1
  800 200 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12530
-Encoding: 12530 12530 235
+Encoding: 12530 12530 233
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7482,11 +7493,11 @@ SplineSet
  1000 0 l 1,3,-1
  600 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12531
-Encoding: 12531 12531 236
+Encoding: 12531 12531 234
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7520,11 +7531,11 @@ SplineSet
  1000 400 l 1,3,-1
  800 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12483
-Encoding: 12483 12483 237
+Encoding: 12483 12483 235
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7558,11 +7569,11 @@ SplineSet
  1000 400 l 1,3,-1
  800 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12515
-Encoding: 12515 12515 238
+Encoding: 12515 12515 236
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7591,11 +7602,11 @@ SplineSet
  600 0 l 1,3,-1
  400 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12517
-Encoding: 12517 12517 239
+Encoding: 12517 12517 237
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7615,11 +7626,11 @@ SplineSet
  1000 0 l 1,9,-1
  200 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g12519
-Encoding: 12519 12519 240
+Encoding: 12519 12519 238
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7641,11 +7652,11 @@ SplineSet
  800 0 l 1,11,-1
  200 0 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g9692
-Encoding: 9692 9692 241
+Encoding: 9692 9692 239
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7684,11 +7695,11 @@ SplineSet
  1400 400 l 1,3,-1
  1000 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: g9693
-Encoding: 9693 9693 242
+Encoding: 9693 9693 240
 Width: 1600
 VWidth: 1200
 GlyphClass: 2
@@ -7727,19 +7738,142 @@ SplineSet
  1400 400 l 1,3,-1
  1000 400 l 1,0,-1
 EndSplineSet
-Colour: ddddff
+Colour: ccffff
 EndChar
 
 StartChar: fe0f
-Encoding: 65039 65039 243
+Encoding: 65039 65039 241
 Width: 0
 VWidth: 1200
 GlyphClass: 2
 Flags: W
 LayerCount: 2
+Colour: ccffcc
+EndChar
+
+StartChar: tmp1
+Encoding: 65538 -1 242
+Width: 800
+VWidth: 1200
+GlyphClass: 2
+Flags: W
+LayerCount: 2
 Fore
-SplineSet
-EndSplineSet
+Refer: 0 -1 N 1 0 0 1 0 0 2
+Colour: ffddbb
+EndChar
+
+StartChar: var1
+Encoding: 65539 -1 243
+AltUni2: 002b07.00fe0f.0
+Width: 1600
+VWidth: 1200
+GlyphClass: 2
+Flags: W
+LayerCount: 2
+Fore
+Refer: 116 11015 N 1 0 0 1 0 0 2
+Colour: ffddff
+EndChar
+
+StartChar: tmp2
+Encoding: 65540 -1 244
+Width: 800
+VWidth: 1200
+GlyphClass: 2
+Flags: W
+LayerCount: 2
+Fore
+Refer: 0 -1 N 1 0 0 1 0 0 2
+Colour: ffddbb
+EndChar
+
+StartChar: var2
+Encoding: 65541 -1 245
+AltUni2: 002b05.00fe0f.0
+Width: 1600
+VWidth: 1200
+GlyphClass: 2
+Flags: W
+LayerCount: 2
+Fore
+Refer: 124 11013 N 1 0 0 1 0 0 2
+Colour: ffddff
+EndChar
+
+StartChar: tmp3
+Encoding: 65542 -1 246
+Width: 800
+VWidth: 1200
+GlyphClass: 2
+Flags: W
+LayerCount: 2
+Fore
+Refer: 0 -1 N 1 0 0 1 0 0 2
+Colour: ffddbb
+EndChar
+
+StartChar: var3
+Encoding: 65543 -1 247
+AltUni2: 01f17e.00fe0f.0
+Width: 1600
+VWidth: 1200
+GlyphClass: 2
+Flags: W
+LayerCount: 2
+Fore
+Refer: 127 127358 N 1 0 0 1 0 0 2
+Colour: ffddff
+EndChar
+
+StartChar: tmp4
+Encoding: 65544 -1 248
+Width: 800
+VWidth: 1200
+GlyphClass: 2
+Flags: W
+LayerCount: 2
+Fore
+Refer: 0 -1 N 1 0 0 1 0 0 2
+Colour: ffddbb
+EndChar
+
+StartChar: var4
+Encoding: 65545 -1 249
+AltUni2: 0027a1.00fe0f.0
+Width: 1600
+VWidth: 1200
+GlyphClass: 2
+Flags: W
+LayerCount: 2
+Fore
+Refer: 130 10145 N 1 0 0 1 0 0 2
+Colour: ffddff
+EndChar
+
+StartChar: tmp5
+Encoding: 65546 -1 250
+Width: 800
+VWidth: 1200
+GlyphClass: 2
+Flags: W
+LayerCount: 2
+Fore
+Refer: 0 -1 N 1 0 0 1 0 0 2
+Colour: ffddbb
+EndChar
+
+StartChar: var5
+Encoding: 65547 -1 251
+AltUni2: 002b06.00fe0f.0
+Width: 1600
+VWidth: 1200
+GlyphClass: 2
+Flags: W
+LayerCount: 2
+Fore
+Refer: 133 11014 N 1 0 0 1 0 0 2
+Colour: ffddff
 EndChar
 
 EndChars

@@ -9,7 +9,17 @@ local fillc = 0
 local bg = 1
 local fg = 7
 
-local colors = { [4]='ddffdd', [8]='ddddff' }
+fe0f = {
+  { 11015,    '002b07' },
+  { 11013,    '002b05' },
+  { '127358', '01f17e' },
+  { 10145,    '0027a1' },
+  { 11014,    '002b06' },
+}
+
+function fe0f_id(n)
+  for i=1,#fe0f do if fe0f[i][1]==n then return i end end return 0
+end
 
 function codepoint(n)
   local lut = {
@@ -36,6 +46,7 @@ function codepoint(n)
   return n<32 and lut[n-15] or n>126 and lut[n-110] or n
 end
 
+-- helper tables for path tracing
 local dx = { 1, 0, -1, 0,   1, 1, -1, -1,   1, 1, 0, 0 }
 local dy = { 0, 1, 0, -1,   -1, 1, 1, -1,   0, 1, 1, 0 }
 
@@ -102,29 +113,46 @@ function dochar(n)
   doglyph(ch, 'g'..cpt, cpt, cpt, w, h)
 end
 
-function doglyph(ch, name, enc1, enc2, w, h)
+dict = {}
+
+function doglyph(ch, name, enc1, enc2, w, h, ref, extra)
   printh('StartChar: '..name)
   printh('Encoding: '..enc1..' '..enc2..' '..glyphs)
+  if extra then printh(extra) end
   printh('Width: '..(w*mul))
   printh('VWidth: '..(6*mul))
-  printh('GlyphClass: 2\nFlags: W\nLayerCount: 2\nFore\nSplineSet')
+  printh('GlyphClass: 2\nFlags: W\nLayerCount: 2')
+  dict[enc2] = glyphs
   glyphs += 1
+  color = extra and 'ffddff' or ref and 'ffddbb' or w<=4 and 'ccffcc' or 'ccffff'
 
-  rectfill(0,0,7,7,bg)
-  print(ch,1,1,fg)
-  ffill(0,0)
-  while true do
-    local sx,sy = finddot()
-    if not sx then break end
-    path,visited = trace(sx,sy)
-    output(path,pget(sx,sy)!=fg)
-    for _,p in pairs(visited) do
-      ffill(p[1],p[2])
+  if ref then
+    printh('Fore\nRefer: '..(ref!=-1 and dict[ref] or 0)..' '..ref..' N 1 0 0 1 0 0 2')
+  elseif ch then
+    printh('Fore\nSplineSet')
+    rectfill(0,0,7,7,bg)
+    if #ch>0 then
+      print(ch,1,1,fg)
+    else
+      fillp(0x5a5a.8)
+      rect(1,1,7,5,fg)
+      fillp()
     end
+    ffill(0,0)
+    while true do
+      local sx,sy = finddot()
+      if not sx then break end
+      path,visited = trace(sx,sy)
+      output(path,pget(sx,sy)!=fg)
+      for _,p in pairs(visited) do
+        ffill(p[1],p[2])
+      end
+    end
+    printh('EndSplineSet')
   end
 
-  printh('EndSplineSet')
-  if colors[w] then printh('Colour: '..colors[w]) end
+  if fe0f_id(enc2)>0 then printh('Substitution2: "lut1-1" tmp'..fe0f_id(enc2)) end
+  printh('Colour: '..color)
   printh('EndChar\n')
 end
 
@@ -147,17 +175,29 @@ printh('OS2SubXSize: 400\nOS2SubYSize: 400\nOS2SubXOff: 0\nOS2SubYOff: -200')
 printh('OS2SupXSize: 400\nOS2SupYSize: 400\nOS2SupXOff: 0\nOS2SupYOff: 400')
 printh('OS2StrikeYSize: 40\nOS2StrikeYPos: 160')
 printh('OS2CapHeight: 1000\nOS2XHeight: 800')
+printh([[Lookup: 1 0 0 "lut1" {"lut1-1"} [' RQD' ('DFLT' <'dflt'> 'hang' <'dflt'> 'kana' <'dflt'> 'latn' <'dflt'>)] ]])
 printh('GaspTable: 1 65535 2 0')
 printh('Encoding: UnicodeFull')
 printh('DisplaySize: -48')
 printh('AntiAlias: 1')
 printh('FitToEm: 0')
 
-printh('BeginChars: 1114112 '..(256 - 16 + 3))
-doglyph('0', '.notdef', '65536', -1, 4, 6)
-doglyph('0', 'space', '65537', -1, 4, 6)
-doglyph('', 'glyph1', '65538', -1, 0, 6)
+printh('BeginChars: 1114112 '..(256 - 16 + 3 + 2 * #fe0f))
+
+-- the undefined glyph
+doglyph('', '.notdef', '65536', -1, 8, 6) -- undefined glyph
+
+-- all printable chars
 for n=16,255 do dochar(n) end
-doglyph('', 'fe0f', '65039', '65039', 0, 6) -- u+fe0f
+
+-- handle the fact that we want u+2b07 to be an undefined glyph,
+-- but u+2b07 u+fe0f to be defined. we use a substitution table
+-- and the variation selector feature to achieve that.
+doglyph(nil, 'fe0f', '65039', '65039', 0, 6) -- u+fe0f, zero-width
+for i=1,#fe0f do
+  doglyph(nil, 'tmp'..i, '655'..(36+i*2), -1, 4, 6, -1)
+  doglyph(nil, 'var'..i, '655'..(37+i*2), -1, 8, 6, fe0f[i][1], 'AltUni2: '..fe0f[i][2]..'.00fe0f.0')
+end
+
 printh('EndChars\nEndSplineFont')
 
