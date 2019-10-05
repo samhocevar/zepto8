@@ -16,7 +16,6 @@
 
 #include <map>
 #include <string_view>
-#include <cuchar>
 #include <regex>
 
 // The PICO-8 definitions

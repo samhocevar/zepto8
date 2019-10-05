@@ -42,7 +42,11 @@ std::regex charset::utf8_regex = charset::static_init();
 
 std::regex charset::static_init()
 {
+#if _WIN32 // Work around a Visual Studio CRT bug
     std::wstring_convert<std::codecvt_utf8<int32_t>, int32_t> cvt;
+#else
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> cvt;
+#endif
 
     // The complete PICO-8 charmap, from 0 to 255. We cannot just store
     // codepoints because some emoji glyphs are combinations of several
