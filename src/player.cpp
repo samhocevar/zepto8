@@ -28,8 +28,7 @@ namespace z8
 
 using lol::msg;
 
-player::player(lol::ivec2 window_size,
-               bool is_raccoon)
+player::player(bool is_raccoon)
   : m_input_map
     {
         { lol::input::key::SC_Left, 0 },
@@ -70,7 +69,6 @@ player::player(lol::ivec2 window_size,
     // Create an ortho camera
     m_scenecam = new lol::Camera();
     m_scenecam->SetView(lol::mat4(1.f));
-    m_scenecam->SetProjection(lol::mat4::ortho(0.f, (float)window_size.x, 0.f, (float)window_size.y, -100.f, 100.f));
     lol::Scene& scene = lol::Scene::GetScene();
     scene.PushCamera(m_scenecam);
     lol::Ticker::Ref(m_scenecam);
@@ -123,6 +121,12 @@ void player::tick_game(float seconds)
 {
     lol::WorldEntity::tick_game(seconds);
 
+    // Aspect ratio
+    m_win_size = lol::Video::GetSize();
+    m_scale = (float)std::min(m_win_size.x / SCREEN_WIDTH, m_win_size.y / SCREEN_HEIGHT);
+    m_screen_pos = ivec2((lol::vec2(m_win_size) - lol::vec2(SCREEN_WIDTH * m_scale, SCREEN_HEIGHT * m_scale)) / 2.f);
+    m_scenecam->SetProjection(lol::mat4::ortho(0.f, (float)m_win_size.x, 0.f, (float)m_win_size.y, -100.f, 100.f));
+
     auto mouse = lol::input::mouse();
     auto keyboard = lol::input::keyboard();
 
@@ -138,14 +142,12 @@ void player::tick_game(float seconds)
         m_vm->keyboard('\x7f');
 
     // Mouse events
-    lol::ivec2 mousepos((int)mouse->axis(lol::input::axis::ScreenX),
-                        (int)mouse->axis(lol::input::axis::ScreenY));
+    lol::ivec2 mouse_pos((int)mouse->axis(lol::input::axis::ScreenX),
+                         (int)mouse->axis(lol::input::axis::ScreenY));
     int buttons = (mouse->button(lol::input::button::BTN_Left) ? 1 : 0)
                 + (mouse->button(lol::input::button::BTN_Right) ? 2 : 0)
                 + (mouse->button(lol::input::button::BTN_Middle) ? 4 : 0);
-    m_vm->mouse(lol::ivec2(mousepos.x - (WINDOW_WIDTH - SCREEN_WIDTH) / 2,
-                           WINDOW_HEIGHT - 1 - mousepos.y - (WINDOW_HEIGHT - SCREEN_HEIGHT) / 2) / 4,
-                buttons);
+    m_vm->mouse(mouse_pos - m_screen_pos, buttons);
 
     // Keyboard events
     for (auto ch : keyboard->text())
@@ -190,11 +192,7 @@ void player::tick_draw(float seconds, lol::Scene &scene)
     if (m_render)
     {
         scene.get_renderer()->clear_color(lol::Color::black);
-
-        float delta_x = 0.5f * (WINDOW_WIDTH - SCREEN_WIDTH);
-        float delta_y = 0.5f * (WINDOW_HEIGHT - SCREEN_HEIGHT);
-        float scale = (float)SCREEN_WIDTH / 128;
-        scene.AddTile(m_tile, 0, lol::vec3(delta_x, delta_y, 10.f), lol::vec2(scale), 0.f);
+        scene.AddTile(m_tile, 0, lol::vec3((float)m_screen_pos.x, (float)m_screen_pos.y, 10.f), lol::vec2(m_scale), 0.f);
     }
 }
 

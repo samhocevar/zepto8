@@ -42,12 +42,12 @@ int main(int argc, char **argv)
         }
     }
 
-    lol::ivec2 win_size(z8::WINDOW_WIDTH, z8::WINDOW_HEIGHT);
+    lol::ivec2 win_size(144 * 3, 144 * 3);
     lol::Application app("zepto-8", win_size, 60.0f);
 
     bool is_raccoon = argc >= 2 && lol::ends_with(argv[1], ".rcn.json");
 
-    z8::player *player = new z8::player(win_size, is_raccoon);
+    z8::player *player = new z8::player(is_raccoon);
 
     if (argc >= 2)
     {

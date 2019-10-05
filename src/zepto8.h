@@ -100,17 +100,8 @@ enum
 
 enum
 {
-    // FIXME: this should be a runtime setting
-    DISPLAY_SCALE = 3,
-};
-
-enum
-{
-    SCREEN_WIDTH = 128 * DISPLAY_SCALE,
-    SCREEN_HEIGHT = 128 * DISPLAY_SCALE,
-
-    WINDOW_WIDTH = 144 * DISPLAY_SCALE,
-    WINDOW_HEIGHT = 144 * DISPLAY_SCALE,
+    SCREEN_WIDTH = 128,
+    SCREEN_HEIGHT = 128,
 };
 
 enum

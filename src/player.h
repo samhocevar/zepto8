@@ -31,7 +31,7 @@ using lol::u8vec4;
 class player : public lol::WorldEntity
 {
 public:
-    player(ivec2 window_size, bool is_raccoon = false);
+    player(bool is_raccoon = false);
     virtual ~player();
 
     virtual void tick_game(float seconds) override;
@@ -52,7 +52,14 @@ private:
 
     std::map<lol::input::key, int> m_input_map;
     array<u8vec4> m_screen;
+
+    // Video
     bool m_render = true;
+    lol::ivec2 m_win_size;
+    lol::ivec2 m_screen_pos;
+    float m_scale;
+
+    // Audio
     int m_streams[4];
 
     lol::Camera *m_scenecam;
