@@ -152,9 +152,8 @@ void vm::run()
     for (int i = 0; i < 16; ++i)
         m_ram.palmod[i] = i;
 
-    eval_buf(m_ctx, m_code, "<cart>", JS_EVAL_TYPE_GLOBAL);
-
-    std::string code =
+    // Load the mini JS api
+    std::string js_api =
         "min = Math.min;\n"
         "max = Math.max;\n"
         "sin = Math.sin;\n"
@@ -165,7 +164,12 @@ void vm::run()
         "ceil = Math.ceil;\n"
         "sign = Math.sign;\n"
         "sqrt = Math.sqrt;\n"
-        "r = rnd; p = pset; c = cls; b = btn;\n"
+        "r = rnd; p = pset; c = cls; b = btn;\n";
+    eval_buf(m_ctx, js_api, "<js_api>", JS_EVAL_TYPE_GLOBAL);
+
+    eval_buf(m_ctx, m_code, "<load_cart>", JS_EVAL_TYPE_GLOBAL);
+
+    std::string code =
         "if (typeof init != 'undefined') init();\n";
     eval_buf(m_ctx, code, "<run_code>", JS_EVAL_TYPE_GLOBAL);
 }
