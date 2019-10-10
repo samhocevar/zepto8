@@ -76,6 +76,17 @@ template<int W, int H>
 class u4mat2
 {
 public:
+    inline uint8_t safe_get(int x, int y) const
+    {
+        return (x >= 0 && y >= 0 && x < W && y < H) ? get(x,y) : 0;
+    }
+
+    inline void safe_set(int x, int y, uint8_t c)
+    {
+        if (x >= 0 && y >= 0 && x < W && y < H)
+            set(x, y, c);
+    }
+
     inline uint8_t get(int x, int y) const
     {
         ASSERT(x >= 0 && x < W && y >= 0 && y < H);

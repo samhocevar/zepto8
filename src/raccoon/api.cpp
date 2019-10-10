@@ -40,16 +40,12 @@ void vm::api_palset(int n, int r, int g, int b)
 
 void vm::api_pset(int x, int y, int c)
 {
-    if (x < 0 || x >= 128 || y < 0 || y >= 64)
-        return;
-    m_ram.screen.set(x, y, c & 15);
+    m_ram.screen.safe_set(x, y, c & 15);
 }
 
 int vm::api_pget(int x, int y)
 {
-    if (x < 0 || x >= 128 || y < 0 || y >= 64)
-        return 0;
-    return m_ram.screen.get(x, y);
+    return m_ram.screen.safe_get(x, y);
 }
 
 void vm::api_palm(int c0, int c1)
@@ -135,7 +131,7 @@ void vm::api_map(int celx, int cely, int sx, int sy, int celw, int celh)
             if (m_ram.palmod[c] & 0x80)
                 continue;
             c = m_ram.palmod[c] & 0xf;
-            m_ram.screen.set(startx + dx, starty + dy, c);
+            m_ram.screen.safe_set(startx + dx, starty + dy, c);
         }
     }
 }
@@ -183,7 +179,7 @@ void vm::api_spr(int n, int x, int y,
 {
     x -= m_ram.camera.x;
     y -= m_ram.camera.y;
-    int sx = n % 16 * 8, sy = n / 16 * 8;
+    int sx = n % 16 * 8, sy = n / 16 * 8 % 128;
     int sw = w.has_value() ? (int)(w.value() * 8) : 8;
     int sh = h.has_value() ? (int)(h.value() * 8) : 8;
     int flip_x = fx.has_value() && fx.value();
@@ -220,7 +216,7 @@ void vm::api_print(int x, int y, std::string str, int c)
         for (int dx = 0; dx < 3; ++dx)
         for (int dy = 0; dy < 7; ++dy)
             if (data & (1 << (dx * 8 + dy)))
-                m_ram.screen.set(x + dx, y + dy, c);
+                m_ram.screen.safe_set(x + dx, y + dy, c);
         if (data & 0xff0000)
             x += 4;
         else if (data & 0xff00)
