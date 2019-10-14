@@ -167,10 +167,10 @@ text_editor::text_editor()
   : m_impl(std::make_unique<editor_impl>())
 {
     //m_impl->SetMode(Zep::ZepMode_Standard::StaticName());
-    m_impl->RegisterSyntaxFactory({".p8"}, Zep::tSyntaxFactory([](Zep::ZepBuffer* pBuffer)
+    m_impl->RegisterSyntaxFactory({".p8"}, Zep::SyntaxProvider { "p8", Zep::tSyntaxFactory([](Zep::ZepBuffer* pBuffer)
     {
         return std::make_shared<Zep::ZepSyntax>(*pBuffer, pico8_keywords, pico8_identifiers);
-    }));
+    })});
 
     m_impl->m_buffer = m_impl->InitWithText(BUFFER_NAME, "");
     m_impl->m_buffer->SetTheme(std::static_pointer_cast<Zep::ZepTheme, zep_theme>(std::make_shared<zep_theme>()));

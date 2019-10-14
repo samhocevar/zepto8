@@ -48,12 +48,11 @@
     <ClCompile Include="3rdparty/zep/src/commands.cpp" />
     <ClCompile Include="3rdparty/zep/src/display.cpp" />
     <ClCompile Include="3rdparty/zep/src/editor.cpp" />
-    <ClCompile Include="3rdparty/zep/src/imgui/display_imgui.cpp" />
-    <ClCompile Include="3rdparty/zep/src/imgui/editor_imgui.cpp" />
     <ClCompile Include="3rdparty/zep/src/mcommon/animation/timer.cpp" />
     <ClCompile Include="3rdparty/zep/src/mcommon/file/path.cpp" />
     <ClCompile Include="3rdparty/zep/src/mcommon/string/stringutils.cpp" />
     <ClCompile Include="3rdparty/zep/src/mode.cpp" />
+    <ClCompile Include="3rdparty/zep/src/mode_repl.cpp" />
     <ClCompile Include="3rdparty/zep/src/mode_search.cpp" />
     <ClCompile Include="3rdparty/zep/src/mode_standard.cpp" />
     <ClCompile Include="3rdparty/zep/src/mode_vim.cpp" />

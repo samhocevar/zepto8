@@ -69,13 +69,12 @@ endif
     3rdparty/zep/src/commands.cpp \
     3rdparty/zep/src/display.cpp \
     3rdparty/zep/src/editor.cpp \
-    3rdparty/zep/src/imgui/display_imgui.cpp \
-    3rdparty/zep/src/imgui/editor_imgui.cpp \
     3rdparty/zep/src/mcommon/animation/timer.cpp \
     3rdparty/zep/src/mcommon/file/fnmatch.h \
     3rdparty/zep/src/mcommon/file/path.cpp \
     3rdparty/zep/src/mcommon/string/stringutils.cpp \
     3rdparty/zep/src/mode.cpp \
+    3rdparty/zep/src/mode_repl.cpp \
     3rdparty/zep/src/mode_search.cpp \
     3rdparty/zep/src/mode_standard.cpp \
     3rdparty/zep/src/mode_vim.cpp \

@@ -21,16 +21,13 @@
     <ClCompile Include="3rdparty/zep/src/display.cpp">
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
-    <ClCompile Include="3rdparty/zep/src/imgui/display_imgui.cpp">
-      <Filter>3rdparty\zep\imgui</Filter>
-    </ClCompile>
     <ClCompile Include="3rdparty/zep/src/editor.cpp">
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
-    <ClCompile Include="3rdparty/zep/src/imgui/editor_imgui.cpp">
-      <Filter>3rdparty\zep\imgui</Filter>
-    </ClCompile>
     <ClCompile Include="3rdparty/zep/src/mode.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/mode_repl.cpp">
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
     <ClCompile Include="3rdparty/zep/src/mode_search.cpp">
