@@ -149,6 +149,18 @@ void player::tick_game(float seconds)
                 + (mouse->button(lol::input::button::BTN_Middle) ? 4 : 0);
     m_vm->mouse(mouse_pos - m_screen_pos, buttons);
 
+    // Joystick events
+    if (auto joy = lol::input::joystick(0))
+    {
+        m_vm->button(0, joy->button(lol::input::button::BTN_DpadLeft));
+        m_vm->button(1, joy->button(lol::input::button::BTN_DpadRight));
+        m_vm->button(2, joy->button(lol::input::button::BTN_DpadUp));
+        m_vm->button(3, joy->button(lol::input::button::BTN_DpadDown));
+        m_vm->button(4, joy->button(lol::input::button::BTN_A));
+        m_vm->button(5, joy->button(lol::input::button::BTN_B));
+        m_vm->button(6, joy->button(lol::input::button::BTN_Start));
+    }
+
     // Keyboard events
     for (auto ch : keyboard->text())
     {
