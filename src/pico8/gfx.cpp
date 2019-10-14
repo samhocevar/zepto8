@@ -483,6 +483,7 @@ void vm::api_line(int16_t x0, opt<int16_t> opt_y0, opt<int16_t> opt_x1,
     }
 }
 
+// Tested on PICO-8 1.1.12c: fractional part of all arguments is ignored.
 void vm::api_map(int16_t cel_x, int16_t cel_y, int16_t sx, int16_t sy,
                  opt<int16_t> in_cel_w, opt<int16_t> in_cel_h, int16_t layer)
 {
