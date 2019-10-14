@@ -494,14 +494,24 @@ void vm::api_map(int16_t cel_x, int16_t cel_y, int16_t sx, int16_t sy,
     // PICO-8 documentation: “If cel_w and cel_h are not specified,
     // defaults to 128,32”.
     bool no_size = !in_cel_w && !in_cel_h;
-    int16_t cel_w = no_size ? 128 : *in_cel_w;
-    int16_t cel_h = no_size ? 32 : *in_cel_h;
+    int16_t src_w = (no_size ? 128 : *in_cel_w) * 8;
+    int16_t src_h = (no_size ? 32 : *in_cel_h) * 8;
+    int16_t src_x = cel_x * 8;
+    int16_t src_y = cel_y * 8;
 
-    for (int16_t dy = 0; dy < cel_h * 8; ++dy)
-    for (int16_t dx = 0; dx < cel_w * 8; ++dx)
+    // Clamp to screen
+    src_x += std::max(-sx, 0);
+    src_y += std::max(-sy, 0);
+    sx += std::max(-sx, 0);
+    sy += std::max(-sy, 0);
+    src_w -= std::max(src_w + sx - 128, 0);
+    src_h -= std::max(src_h + sy - 128, 0);
+
+    for (int16_t dy = 0; dy < src_h; ++dy)
+    for (int16_t dx = 0; dx < src_w; ++dx)
     {
-        int16_t cx = cel_x + dx / 8;
-        int16_t cy = cel_y + dy / 8;
+        int16_t cx = (src_x + dx) / 8;
+        int16_t cy = (src_y + dy) / 8;
         if (cx < 0 || cx >= 128 || cy < 0 || cy >= 64)
             continue;
 
@@ -512,7 +522,8 @@ void vm::api_map(int16_t cel_x, int16_t cel_y, int16_t sx, int16_t sy,
 
         if (sprite)
         {
-            int col = getspixel(sprite % 16 * 8 + dx % 8, sprite / 16 * 8 + dy % 8);
+            int col = getspixel(sprite % 16 * 8 + (src_x + dx) % 8,
+                                sprite / 16 * 8 + (src_y + dy) % 8);
             if ((ds.pal[0][col] & 0x10) == 0)
             {
                 uint32_t color_bits = (ds.pal[0][col] & 0xf) << 16;
