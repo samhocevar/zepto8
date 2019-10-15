@@ -209,9 +209,6 @@ private:
     void hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits);
     void vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits);
 
-    uint8_t getspixel(int16_t x, int16_t y);
-    void setspixel(int16_t x, int16_t y, uint8_t color);
-
     void getaudio(int channel, void *buffer, int bytes);
 
 public:
