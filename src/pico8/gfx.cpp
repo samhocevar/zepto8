@@ -350,13 +350,11 @@ void vm::api_clip(int16_t x, int16_t y, int16_t w, opt<int16_t> h)
 {
     int16_t x1 = 0, y1 = 0, x2 = 128, y2 = 128;
 
-    // XXX: there were rendering issues with Hyperspace by J.Fry when the
-    // code only checked for a first argument (instead of 4th) because we
-    // were called using clip"" instead of clip().
+    // All three arguments are required for the non-default behaviour
     if (h)
     {
-        x2 = std::min(x2, (int16_t)(x1 + w));
-        y2 = std::min(y2, (int16_t)(y1 + *h));
+        x2 = std::min(x2, (int16_t)(x + w));
+        y2 = std::min(y2, (int16_t)(y + *h));
         x1 = std::max(x1, x);
         y1 = std::max(y1, y);
     }
