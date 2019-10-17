@@ -45,7 +45,7 @@ private:
 struct note
 {
     uint8_t key() const;
-    float volume() const;
+    uint8_t volume() const;
     uint8_t effect() const;
     uint8_t instrument() const;
 

@@ -70,9 +70,9 @@ inline uint8_t note::key() const
     return b[0] & 0x3f;
 }
 
-inline float note::volume() const
+inline uint8_t note::volume() const
 {
-    return ((b[1] >> 1) & 0x7) / 7.f;
+    return (b[1] >> 1) & 0x7;
 }
 
 inline uint8_t note::effect() const
@@ -231,7 +231,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         int const next_note_id = (int)lol::floor(next_offset);
 
         uint8_t key = sfx.notes[note_id].key();
-        float volume = sfx.notes[note_id].volume();
+        float volume = sfx.notes[note_id].volume() / 7.f;
         float freq = key_to_freq(key);
 
         if (volume == 0.f)
@@ -316,7 +316,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         else if (next_note_id != note_id)
         {
             m_channels[chan].m_prev_key = sfx.notes[note_id].key();
-            m_channels[chan].m_prev_vol = sfx.notes[note_id].volume();
+            m_channels[chan].m_prev_vol = sfx.notes[note_id].volume() / 7.f;
         }
     }
 
