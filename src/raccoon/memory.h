@@ -27,6 +27,40 @@
 namespace z8::raccoon
 {
 
+struct snd_reg
+{
+    uint8_t on_off     : 1;
+    uint8_t period     : 7;
+    uint8_t envelope   : 2;
+    uint8_t instrument : 6;
+    uint8_t offset     : 2;
+    uint8_t pitch      : 6;
+    uint8_t effect     : 5;
+    uint8_t volume     : 3;
+};
+
+struct sfx
+{
+    uint8_t period;
+    uint8_t envelope   : 2;
+    uint8_t instrument : 6;
+    struct
+    {
+        uint8_t padding : 2;
+        uint8_t pitch   : 6;
+        uint8_t effect  : 5;
+        uint8_t volume  : 3;
+    }
+    notes[32];
+};
+
+struct track
+{
+    uint8_t flag    : 1;
+    uint8_t has_sfx : 1;
+    uint8_t sfx     : 6;
+};
+
 struct memory
 {
     u4mat2<128, 96> sprites;
@@ -35,20 +69,21 @@ struct memory
     lol::u8vec3 palette[16];
 
     uint8_t flags[192];
-    uint8_t sound[64 * (8 + 8 + 32 * 16) / 8];
-    uint8_t music[64 * (4 * 6 + 2 + 6) / 8];
+    sfx sound[64];
+    track music[64][4];
 
+    uint8_t padding1[0x0590];
     union
     {
         uint8_t end_of_rom;
-        uint8_t padding1[0x155e];
+        uint8_t padding2[0x0fce];
     };
 
     lol::i16vec2 camera;
-    uint8_t soundreg[16];
+    snd_reg soundreg[4];
     uint8_t palmod[16];
 
-    uint8_t padding2[6];
+    uint8_t padding3[6];
 
     uint32_t gamepad[2];
     u4mat2<128, 128> screen;
@@ -79,7 +114,7 @@ static_check_section(palette,    0x3800,   0x30);
 static_check_section(flags,      0x3830,   0xc0);
 static_check_section(sound,      0x38f0, 0x1080);
 static_check_section(music,      0x4970,  0x100);
-static_check_section(end_of_rom, 0x4a70,    0x1);
+static_check_section(end_of_rom, 0x5000,    0x1);
 static_check_section(camera,     0x5fce,    0x4);
 static_check_section(soundreg,   0x5fd2,   0x10);
 static_check_section(palmod,     0x5fe2,   0x10);
