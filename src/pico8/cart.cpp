@@ -408,14 +408,10 @@ bool cart::load_p8(std::string const &filename)
             // We read unaligned data; must realign it if j is odd
             ins = (j & 1) ? ins & 0xfffff : ins >> 4;
 
-            uint16_t dst = ((ins & 0x3f000) >> 4)  // pitch
-                         | ((ins & 0x00400) >> 10) // instrument (part 1)
-                         | ((ins & 0x00300) << 6)  // instrument (part 2)
-                         | ((ins & 0x00070) >> 3)  // volume
-                         | ((ins & 0x0000f) << 4); // effect
-
-            m_rom.sfx[i].notes[j][0] = dst >> 8;
-            m_rom.sfx[i].notes[j][1] = dst & 0x00ff;
+            m_rom.sfx[i].notes[j].key = (ins & 0x3f000) >> 12;
+            m_rom.sfx[i].notes[j].instrument = (ins & 0x700) >> 8;
+            m_rom.sfx[i].notes[j].volume = (ins & 0x70) >> 4;
+            m_rom.sfx[i].notes[j].effect = ins & 0xf;
         }
 
         m_rom.sfx[i].editor_mode = sfx[i * (4 + 32 * 5 / 2) + 0];

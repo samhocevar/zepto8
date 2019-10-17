@@ -219,8 +219,8 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
             for (int16_t dy = 0; dy < 5; ++dy)
                 for (int16_t dx = 0; dx < w; ++dx)
                 {
-                    int16_t screen_x = (int16_t)x - ds.camera.x() + dx;
-                    int16_t screen_y = (int16_t)y - ds.camera.y() + dy;
+                    int16_t screen_x = (int16_t)x - ds.camera.x + dx;
+                    int16_t screen_y = (int16_t)y - ds.camera.y + dy;
 
                     if (m_bios->get_spixel(font_x + dx, font_y + dy))
                         set_pixel(screen_x, screen_y, color_bits);
@@ -265,18 +265,18 @@ tup<int16_t, int16_t> vm::api_camera(int16_t x, int16_t y)
 {
     auto &ds = m_ram.draw_state;
 
-    auto prev = std::make_tuple(ds.camera.x(), ds.camera.y());
-    ds.camera.set_x(x);
-    ds.camera.set_y(y);
-    return prev;
+    auto prev = ds.camera;
+    ds.camera.x = x;
+    ds.camera.y = y;
+    return std::make_tuple(prev.x, prev.y);
 }
 
 void vm::api_circ(int16_t x, int16_t y, int16_t r, opt<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
-    x -= ds.camera.x();
-    y -= ds.camera.y();
+    x -= ds.camera.x;
+    y -= ds.camera.y;
     uint32_t color_bits = to_color_bits(c);
 
     for (int16_t dx = r, dy = 0, err = 0; dx >= dy; )
@@ -306,8 +306,8 @@ void vm::api_circfill(int16_t x, int16_t y, int16_t r, opt<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
-    x -= ds.camera.x();
-    y -= ds.camera.y();
+    x -= ds.camera.x;
+    y -= ds.camera.y;
     uint32_t color_bits = to_color_bits(c);
 
     for (int16_t dx = r, dy = 0, err = 0; dx >= dy; )
@@ -425,8 +425,8 @@ void vm::api_line(int16_t x0, opt<int16_t> opt_y0, opt<int16_t> opt_x1,
     {
         x1 = x0;
         y1 = *opt_y0;
-        x0 = ds.polyline.x();
-        y0 = ds.polyline.y();
+        x0 = ds.polyline.x;
+        y0 = ds.polyline.y;
     }
     else
     {
@@ -435,11 +435,11 @@ void vm::api_line(int16_t x0, opt<int16_t> opt_y0, opt<int16_t> opt_x1,
     }
 
     // Store polyline state
-    ds.polyline.set_x(x1);
-    ds.polyline.set_y(y1);
+    ds.polyline.x = x1;
+    ds.polyline.y = y1;
 
-    x0 -= ds.camera.x(); y0 -= ds.camera.y();
-    x1 -= ds.camera.x(); y1 -= ds.camera.y();
+    x0 -= ds.camera.x; y0 -= ds.camera.y;
+    x1 -= ds.camera.x; y1 -= ds.camera.y;
 
     uint32_t color_bits = to_color_bits(c);
 
@@ -471,8 +471,8 @@ void vm::api_map(int16_t cel_x, int16_t cel_y, int16_t sx, int16_t sy,
 {
     auto &ds = m_ram.draw_state;
 
-    sx -= ds.camera.x();
-    sy -= ds.camera.y();
+    sx -= ds.camera.x;
+    sy -= ds.camera.y;
 
     // PICO-8 documentation: “If cel_w and cel_h are not specified,
     // defaults to 128,32”.
@@ -592,8 +592,8 @@ fix32 vm::api_pget(int16_t x, int16_t y)
 
     /* pget() is affected by camera() and by clip() */
     // FIXME: "and by clip()"? wut?
-    x -= ds.camera.x();
-    y -= ds.camera.y();
+    x -= ds.camera.x;
+    y -= ds.camera.y;
     return get_pixel(x, y);
 }
 
@@ -601,8 +601,8 @@ void vm::api_pset(int16_t x, int16_t y, opt<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
-    x -= ds.camera.x();
-    y -= ds.camera.y();
+    x -= ds.camera.x;
+    y -= ds.camera.y;
     uint32_t color_bits = to_color_bits(c);
     set_pixel(x, y, color_bits);
 }
@@ -611,10 +611,10 @@ void vm::api_rect(int16_t x0, int16_t y0, int16_t x1, int16_t y1, opt<fix32> c)
 {
     auto &ds = m_ram.draw_state;
 
-    x0 -= ds.camera.x();
-    y0 -= ds.camera.y();
-    x1 -= ds.camera.x();
-    y1 -= ds.camera.y();
+    x0 -= ds.camera.x;
+    y0 -= ds.camera.y;
+    x1 -= ds.camera.x;
+    y1 -= ds.camera.y;
     uint32_t color_bits = to_color_bits(c);
 
     if (x0 > x1)
@@ -638,10 +638,10 @@ void vm::api_rectfill(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
 {
     auto &ds = m_ram.draw_state;
 
-    x0 -= ds.camera.x();
-    y0 -= ds.camera.y();
-    x1 -= ds.camera.x();
-    y1 -= ds.camera.y();
+    x0 -= ds.camera.x;
+    y0 -= ds.camera.y;
+    x1 -= ds.camera.x;
+    y1 -= ds.camera.y;
     uint32_t color_bits = to_color_bits(c);
 
     if (y0 > y1)
@@ -669,8 +669,8 @@ void vm::api_spr(int16_t n, int16_t x, int16_t y, opt<fix32> w,
 {
     auto &ds = m_ram.draw_state;
 
-    x -= ds.camera.x();
-    y -= ds.camera.y();
+    x -= ds.camera.x;
+    y -= ds.camera.y;
 
     int16_t w8 = w ? (int16_t)(*w * fix32(8.0)) : 8;
     int16_t h8 = h ? (int16_t)(*h * fix32(8.0)) : 8;
@@ -695,8 +695,8 @@ void vm::api_sspr(int16_t sx, int16_t sy, int16_t sw, int16_t sh,
 {
     auto &ds = m_ram.draw_state;
 
-    dx -= ds.camera.x();
-    dy -= ds.camera.y();
+    dx -= ds.camera.x;
+    dy -= ds.camera.y;
     int16_t dw = in_dw ? *in_dw : sw;
     int16_t dh = in_dh ? *in_dh : sh;
 

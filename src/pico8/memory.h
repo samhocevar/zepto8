@@ -22,47 +22,22 @@
 // handful accessors for higher level information.
 // For instance:
 //  - "memory[x]" accesses the xth byte in memory
-//  - "memory.sfx[3].effect(6)" gets the effect of the 6th note of the 3rd SFX
+//  - "memory.sfx[3].notes[6].effect" gets the effect of the 6th note of the 3rd SFX
 //  - "memory.gpio_pin[2] is the 2nd GPIO pin
 
 namespace z8::pico8
 {
 
-// Store a point with unaligned 16-bit coordinates
-struct point
-{
-    inline int16_t x() const { return (int16_t)(b[0] | (b[1] << 8)); }
-    inline int16_t y() const { return (int16_t)(b[2] | (b[3] << 8)); }
-    inline void set_x(int16_t v) { b[0] = (uint8_t)v; b[1] = (uint8_t)(v >> 8); }
-    inline void set_y(int16_t v) { b[2] = (uint8_t)v; b[3] = (uint8_t)(v >> 8); }
-
-private:
-    uint8_t b[4];
-};
-
-// Use uint8_t[2] instead of uint16_t so that 1-byte aligned storage
-// is still possible.
+// Use uint16_t instead of uint8_t because note::instrument overlaps two bytes.
 struct note
 {
-    uint8_t key() const;
-    uint8_t volume() const;
-    uint8_t effect() const;
-    uint8_t instrument() const;
-
-    inline uint8_t &operator[](int n)
-    {
-        ASSERT(n >= 0 && n < 2);
-        return b[n];
-    }
-
-    inline uint8_t const &operator[](int n) const
-    {
-        ASSERT(n >= 0 && n < 2);
-        return b[n];
-    }
-
-private:
-    uint8_t b[2];
+    uint16_t key : 6;
+    uint16_t instrument : 3;
+    uint16_t volume : 3;
+    // FIXME: there is an actual extra bit for the effect but I don’t
+    // know what it’s for: PICO-8 documentation says 0…7, not 0…15
+    // Update: maybe this is used for the new SFX instrument feature?
+    uint16_t effect : 4;
 };
 
 struct sfx
@@ -117,7 +92,7 @@ struct draw_state
     cursor;
 
     // 0x5f28—0x5f2c: camera coordinates
-    point camera;
+    lol::i16vec2 camera;
 
     // 0x5f2c: screen mode (double width, etc.)
     uint8_t screen_mode;
@@ -141,7 +116,7 @@ struct draw_state
     uint8_t undocumented3[7];
 
     // 0x5f3c—0x5f40: polyline current point coordinates
-    point polyline;
+    lol::i16vec2 polyline;
 };
 
 struct hw_state
@@ -242,6 +217,8 @@ struct memory
           : (mode & 0xfe) == 2 ? y / 2 : y;
         return screen.get(x, y);
     }
+
+    ~memory() {}
 };
 
 // Check type sizes

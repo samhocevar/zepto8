@@ -65,29 +65,6 @@ static std::string key_to_name(float key)
 }
 #endif
 
-inline uint8_t note::key() const
-{
-    return b[0] & 0x3f;
-}
-
-inline uint8_t note::volume() const
-{
-    return (b[1] >> 1) & 0x7;
-}
-
-inline uint8_t note::effect() const
-{
-    // FIXME: there is an actual extra bit for the effect but I don’t
-    // know what it’s for: PICO-8 documentation says 0…7, not 0…15
-    // Update: maybe this is used for the new SFX instrument feature?
-    return (b[1] >> 4) & 0x7;
-}
-
-inline uint8_t note::instrument() const
-{
-    return ((b[1] << 2) & 0x4) | (b[0] >> 6);
-}
-
 uint8_t song::flags() const
 {
     return (data[0] >> 7) | ((data[1] >> 6) & 0x2)
@@ -230,8 +207,8 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         int const note_id = (int)lol::floor(offset);
         int const next_note_id = (int)lol::floor(next_offset);
 
-        uint8_t key = sfx.notes[note_id].key();
-        float volume = sfx.notes[note_id].volume() / 7.f;
+        uint8_t key = sfx.notes[note_id].key;
+        float volume = sfx.notes[note_id].volume / 7.f;
         float freq = key_to_freq(key);
 
         if (volume == 0.f)
@@ -241,7 +218,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         }
         else
         {
-            int const fx = sfx.notes[note_id].effect();
+            int const fx = sfx.notes[note_id].effect;
 
             // Apply effect, if any
             switch (fx)
@@ -286,13 +263,13 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
                     int const m = (speed <= 8 ? 32 : 16) / (fx == FX_ARP_FAST ? 4 : 8);
                     int const n = (int)(m * 7.5f * offset / offset_per_second);
                     int const arp_note = (note_id & ~3) | (n & 3);
-                    freq = key_to_freq(sfx.notes[arp_note].key());
+                    freq = key_to_freq(sfx.notes[arp_note].key);
                     break;
                 }
             }
 
             // Play note
-            float waveform = get_waveform(sfx.notes[note_id].instrument(), phi);
+            float waveform = get_waveform(sfx.notes[note_id].instrument, phi);
 
             int16_t sample = (int16_t)(32767.99f * volume * waveform);
 
@@ -315,8 +292,8 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         }
         else if (next_note_id != note_id)
         {
-            m_channels[chan].m_prev_key = sfx.notes[note_id].key();
-            m_channels[chan].m_prev_vol = sfx.notes[note_id].volume() / 7.f;
+            m_channels[chan].m_prev_key = sfx.notes[note_id].key;
+            m_channels[chan].m_prev_vol = sfx.notes[note_id].volume / 7.f;
         }
     }
 
