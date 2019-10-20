@@ -142,12 +142,14 @@ void player::tick_game(float seconds)
         m_vm->keyboard('\x7f');
 
     // Mouse events
-    lol::ivec2 mouse_pos((int)mouse->axis(lol::input::axis::ScreenX),
-                         (int)mouse->axis(lol::input::axis::ScreenY));
+    lol::vec2 mouse_pos(mouse->axis(lol::input::axis::ScreenX),
+                        mouse->axis(lol::input::axis::ScreenY));
+    int mx = (int)((mouse_pos.x - m_screen_pos.x) / m_scale);
+    int my = 127 - (int)((mouse_pos.y - m_screen_pos.y) / m_scale);
     int buttons = (mouse->button(lol::input::button::BTN_Left) ? 1 : 0)
                 + (mouse->button(lol::input::button::BTN_Right) ? 2 : 0)
                 + (mouse->button(lol::input::button::BTN_Middle) ? 4 : 0);
-    m_vm->mouse(mouse_pos - m_screen_pos, buttons);
+    m_vm->mouse(lol::ivec2(mx, my), buttons);
 
     // Joystick events
     if (auto joy = lol::input::joystick(0))
