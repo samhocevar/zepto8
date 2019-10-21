@@ -47,7 +47,7 @@ int main(int argc, char **argv)
 
     bool is_raccoon = argc >= 2 && lol::ends_with(argv[1], ".rcn.json");
 
-    z8::player *player = new z8::player(is_raccoon);
+    z8::player *player = new z8::player(false, is_raccoon);
 
     if (argc >= 2)
     {

@@ -28,8 +28,9 @@ namespace z8
 
 using lol::msg;
 
-player::player(bool is_raccoon)
-  : m_input_map
+player::player(bool is_embedded, bool is_raccoon)
+  : m_embedded(is_embedded),
+    m_input_map
     {
         { lol::input::key::SC_Left, 0 },
         { lol::input::key::SC_Right, 1 },
@@ -156,20 +157,23 @@ void player::tick_game(float seconds)
         m_vm->button(6, joy->button(lol::input::button::BTN_Start));
     }
 
-    // Keyboard events as buttons
-    for (auto const &k : m_input_map)
-        m_vm->button(k.second, keyboard->key(k.first));
+    if (!m_embedded)
+    {
+        // Keyboard events as buttons
+        for (auto const &k : m_input_map)
+            m_vm->button(k.second, keyboard->key(k.first));
 
-    // Keyboard events as text
-    if (keyboard->key_pressed(lol::input::key::SC_Return))
-        m_vm->text('\r');
-    if (keyboard->key_pressed(lol::input::key::SC_Backspace))
-        m_vm->text('\x08');
-    if (keyboard->key_pressed(lol::input::key::SC_Delete))
-        m_vm->text('\x7f');
+        // Keyboard events as text
+        if (keyboard->key_pressed(lol::input::key::SC_Return))
+            m_vm->text('\r');
+        if (keyboard->key_pressed(lol::input::key::SC_Backspace))
+            m_vm->text('\x08');
+        if (keyboard->key_pressed(lol::input::key::SC_Delete))
+            m_vm->text('\x7f');
 
-    for (auto ch : keyboard->text())
-        m_vm->text(ch);
+        for (auto ch : keyboard->text())
+            m_vm->text(ch);
+    }
 
     // Step the VM
     m_vm->step(seconds);
@@ -178,9 +182,6 @@ void player::tick_game(float seconds)
 void player::tick_draw(float seconds, lol::Scene &scene)
 {
     lol::WorldEntity::tick_draw(seconds, scene);
-
-    // Render the VM screen to our buffer
-    m_vm->render(m_screen.data());
 
 #if 0
     if (m_vm->m_bios) // FIXME: PICO-8 specific
@@ -198,14 +199,16 @@ void player::tick_draw(float seconds, lol::Scene &scene)
     }
 #endif
 
-    // Blit buffer to the texture
-    // FIXME: move this to some kind of memory viewer class?
-    m_tile->GetTexture()->Bind();
-    m_tile->GetTexture()->SetData(m_screen.data());
-
-    // Special mode where we render ourselves
-    if (m_render)
+    if (!m_embedded)
     {
+        // Render the VM screen to our buffer
+        m_vm->render(m_screen.data());
+
+        // Blit buffer to the texture
+        // FIXME: move this to some kind of memory viewer class?
+        m_tile->GetTexture()->Bind();
+        m_tile->GetTexture()->SetData(m_screen.data());
+
         scene.get_renderer()->clear_color(lol::Color::black);
         scene.AddTile(m_tile, 0, lol::vec3((float)m_screen_pos.x, (float)m_screen_pos.y, 10.f), lol::vec2(m_scale), 0.f);
     }
@@ -213,7 +216,6 @@ void player::tick_draw(float seconds, lol::Scene &scene)
 
 lol::Texture *player::get_texture()
 {
-    m_render = false; // Someone else wants to render us
     return m_tile ? m_tile->GetTexture() : nullptr;
 }
 

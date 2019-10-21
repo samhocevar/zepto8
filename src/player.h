@@ -31,7 +31,7 @@ using lol::u8vec4;
 class player : public lol::WorldEntity
 {
 public:
-    player(bool is_raccoon = false);
+    player(bool is_embedded = false, bool is_raccoon = false);
     virtual ~player();
 
     virtual void tick_game(float seconds) override;
@@ -54,7 +54,7 @@ private:
     array<u8vec4> m_screen;
 
     // Video
-    bool m_render = true;
+    bool m_embedded = false;
     lol::ivec2 m_win_size;
     lol::ivec2 m_screen_pos;
     float m_scale;

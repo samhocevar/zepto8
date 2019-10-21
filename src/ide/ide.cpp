@@ -51,7 +51,7 @@ ide::~ide()
 
 void ide::load(std::string const &name)
 {
-    m_player = new z8::player(lol::ends_with(name, ".rcn.json"));
+    m_player = new z8::player(true, lol::ends_with(name, ".rcn.json"));
     m_player->get_texture(); // HACK: disable player rendering
     m_player->load(name);
     m_player->run();
