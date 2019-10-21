@@ -85,14 +85,18 @@ struct draw_state
     uint8_t pen;
 
     // 0x5f26—0x5f28: text cursor coordinates
-    struct
-    {
-        uint8_t x, y;
-    }
-    cursor;
+#if __GNUC__
+    struct { uint8_t x, y; } cursor;
+#else
+    lol::u8vec2 cursor;
+#endif
 
     // 0x5f28—0x5f2c: camera coordinates
+#if __GNUC__
+    struct { int16_t x, y; } camera;
+#else
     lol::i16vec2 camera;
+#endif
 
     // 0x5f2c: screen mode (double width, etc.)
     uint8_t screen_mode;
@@ -116,7 +120,11 @@ struct draw_state
     uint8_t undocumented3[7];
 
     // 0x5f3c—0x5f40: polyline current point coordinates
+#if __GNUC__
+    struct { int16_t x, y; } polyline;
+#else
     lol::i16vec2 polyline;
+#endif
 };
 
 struct hw_state
