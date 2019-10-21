@@ -63,7 +63,10 @@ private:
     int m_streams[4];
 
     lol::Camera *m_scenecam;
-    lol::TileSet *m_tile, *m_font_tile;
+    lol::TileSet *m_tile;
+#if 0
+    lol::TileSet *m_font_tile;
+#endif
 };
 
 } // namespace z8

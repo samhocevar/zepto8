@@ -66,11 +66,6 @@ static std::set<std::string> pico8_identifiers =
 };
 
 #define TEST_TEXT \
-    "-- pico-8 syntax test\n-- by sam\n\n" \
-    "function _init()\n cls()\n step = 1\n tmp = rnd(17)\n lst = {\"lol\"}\nend\n\n" \
-    "function _update()\n if (btnp(\x97) or btnp(\x8e)) step = 0\n\n" \
-    " if step < #lst then\n  step += 1\n end\nend\n\n" \
-    "function _draw()\n local x = 28\n local y = 120\n\n map(0, 0, 0, 0, 16, 16)\nend\n\n" \
     "--                 " \
        "\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\n" \
     "--  !\"#$%&'()*+,-./0123456789:;<=>?\n" \

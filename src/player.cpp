@@ -86,9 +86,11 @@ player::player(bool is_raccoon)
     img->unlock(img->lock<lol::PixelFormat::RGBA_8>()); // ensure RGBA_8 is present
     m_tile = lol::TileSet::create("tile", new lol::image(*img), lol::ivec2(128, 128), lol::ivec2(1, 1));
 
+#if 0
     img = new lol::image(lol::ivec2(128, 32));
     img->unlock(img->lock<lol::PixelFormat::RGBA_8>()); // ensure RGBA_8 is present
     m_font_tile = lol::TileSet::create("font", new lol::image(*img), lol::ivec2(128, 32), lol::ivec2(1, 1));
+#endif
 
     /* Allocate memory */
     m_screen.resize(128 * 128);
@@ -97,7 +99,9 @@ player::player(bool is_raccoon)
 player::~player()
 {
     lol::TileSet::destroy(m_tile);
+#if 0
     lol::TileSet::destroy(m_font_tile);
+#endif
 
     for (int i = 0; i < 4; ++i)
         lol::audio::stop_streaming(i);
@@ -178,6 +182,7 @@ void player::tick_draw(float seconds, lol::Scene &scene)
     // Render the VM screen to our buffer
     m_vm->render(m_screen.data());
 
+#if 0
     if (m_vm->m_bios) // FIXME: PICO-8 specific
     {
         // Render the font
@@ -191,6 +196,7 @@ void player::tick_draw(float seconds, lol::Scene &scene)
         m_font_tile->GetTexture()->Bind();
         m_font_tile->GetTexture()->SetData(data);
     }
+#endif
 
     // Blit buffer to the texture
     // FIXME: move this to some kind of memory viewer class?
@@ -211,10 +217,12 @@ lol::Texture *player::get_texture()
     return m_tile ? m_tile->GetTexture() : nullptr;
 }
 
+#if 0
 lol::Texture *player::get_font_texture()
 {
     return m_font_tile ? m_font_tile->GetTexture() : nullptr;
 }
+#endif
 
 } // namespace z8
 
