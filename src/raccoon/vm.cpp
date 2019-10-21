@@ -199,7 +199,7 @@ void vm::mouse(lol::ivec2 coords, int buttons)
 {
 }
 
-void vm::keyboard(char ch)
+void vm::text(char ch)
 {
 }
 

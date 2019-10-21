@@ -24,6 +24,19 @@
 namespace z8::pico8
 {
 
+enum
+{
+    PICO8_VERSION = 16,
+};
+
+enum
+{
+    LABEL_WIDTH = 128,
+    LABEL_HEIGHT = 128,
+    LABEL_X = 16,
+    LABEL_Y = 24,
+};
+
 struct charset
 {
     // Convert between UTF-8 strings and 8-bit PICO-8 strings

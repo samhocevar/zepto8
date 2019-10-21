@@ -130,22 +130,11 @@ void player::tick_game(float seconds)
     auto mouse = lol::input::mouse();
     auto keyboard = lol::input::keyboard();
 
-    // Update button states
-    for (auto const &k : m_input_map)
-        m_vm->button(k.second, keyboard->key(k.first));
-
-    if (keyboard->key_pressed(lol::input::key::SC_Return))
-        m_vm->keyboard('\r');
-    if (keyboard->key_pressed(lol::input::key::SC_Backspace))
-        m_vm->keyboard('\x08');
-    if (keyboard->key_pressed(lol::input::key::SC_Delete))
-        m_vm->keyboard('\x7f');
-
     // Mouse events
     lol::vec2 mouse_pos(mouse->axis(lol::input::axis::ScreenX),
                         mouse->axis(lol::input::axis::ScreenY));
     int mx = (int)((mouse_pos.x - m_screen_pos.x) / m_scale);
-    int my = 127 - (int)((mouse_pos.y - m_screen_pos.y) / m_scale);
+    int my = SCREEN_HEIGHT - 1 - (int)((mouse_pos.y - m_screen_pos.y) / m_scale);
     int buttons = (mouse->button(lol::input::button::BTN_Left) ? 1 : 0)
                 + (mouse->button(lol::input::button::BTN_Right) ? 2 : 0)
                 + (mouse->button(lol::input::button::BTN_Middle) ? 4 : 0);
@@ -163,14 +152,20 @@ void player::tick_game(float seconds)
         m_vm->button(6, joy->button(lol::input::button::BTN_Start));
     }
 
-    // Keyboard events
+    // Keyboard events as buttons
+    for (auto const &k : m_input_map)
+        m_vm->button(k.second, keyboard->key(k.first));
+
+    // Keyboard events as text
+    if (keyboard->key_pressed(lol::input::key::SC_Return))
+        m_vm->text('\r');
+    if (keyboard->key_pressed(lol::input::key::SC_Backspace))
+        m_vm->text('\x08');
+    if (keyboard->key_pressed(lol::input::key::SC_Delete))
+        m_vm->text('\x7f');
+
     for (auto ch : keyboard->text())
-    {
-        // Convert uppercase characters to special glyphs
-        if (ch >= 'A' && ch <= 'Z')
-            ch = '\x80' + (ch - 'A');
-        m_vm->keyboard(ch);
-    }
+        m_vm->text(ch);
 
     // Step the VM
     m_vm->step(seconds);

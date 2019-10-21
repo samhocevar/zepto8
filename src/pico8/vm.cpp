@@ -185,8 +185,11 @@ void vm::mouse(lol::ivec2 coords, int buttons)
     m_mouse.b = (double)buttons;
 }
 
-void vm::keyboard(char ch)
+void vm::text(char ch)
 {
+    // Convert uppercase characters to special glyphs
+    if (ch >= 'A' && ch <= 'Z')
+        ch = '\x80' + (ch - 'A');
     m_keyboard.chars[m_keyboard.stop] = ch;
     m_keyboard.stop = (m_keyboard.stop + 1) % (int)sizeof(m_keyboard.chars);
 }

@@ -43,7 +43,7 @@ public:
 
     virtual void button(int index, int state);
     virtual void mouse(lol::ivec2 coords, int buttons);
-    virtual void keyboard(char ch);
+    virtual void text(char ch);
 
     virtual std::tuple<uint8_t *, size_t> ram();
     virtual std::tuple<uint8_t *, size_t> rom();

@@ -58,7 +58,7 @@ public:
     // IO
     virtual void button(int index, int state) = 0;
     virtual void mouse(lol::ivec2 coords, int buttons) = 0;
-    virtual void keyboard(char ch) = 0;
+    virtual void text(char ch) = 0;
 
     // Memory (TODO: switch to std::span one day…)
     virtual std::tuple<uint8_t *, size_t> ram() = 0;
@@ -106,21 +106,8 @@ public:
 
 enum
 {
-    PICO8_VERSION = 16,
-};
-
-enum
-{
     SCREEN_WIDTH = 128,
     SCREEN_HEIGHT = 128,
-};
-
-enum
-{
-    LABEL_WIDTH = 128,
-    LABEL_HEIGHT = 128,
-    LABEL_X = 16,
-    LABEL_Y = 24,
 };
 
 }
