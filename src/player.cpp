@@ -29,8 +29,7 @@ namespace z8
 using lol::msg;
 
 player::player(bool is_embedded, bool is_raccoon)
-  : m_embedded(is_embedded),
-    m_input_map
+  : m_input_map
     {
         { lol::input::key::SC_Left, 0 },
         { lol::input::key::SC_Right, 1 },
@@ -56,7 +55,8 @@ player::player(bool is_embedded, bool is_raccoon)
         { lol::input::key::SC_A, 12 },
         { lol::input::key::SC_Q, 13 },
         { lol::input::key::SC_Tab, 13 },
-    }
+    },
+    m_embedded(is_embedded)
 {
     // FIXME: find a way to use std::make_shared here on MSVC
     if (is_raccoon)

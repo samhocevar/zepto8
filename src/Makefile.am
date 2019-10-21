@@ -21,7 +21,7 @@ ___zepto8_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
                      -I3rdparty/zep/include \
                      $(AM_CPPFLAGS)
-___zepto8_LDFLAGS = $(static_libs) -lstdc++fs -ldl $(AM_LDFLAGS)
+___zepto8_LDFLAGS = $(static_libs) $(AM_LDFLAGS)
 ___zepto8_DEPENDENCIES = $(static_libs) @LOL_DEPS@
 ___zepto8_DATA = bios.p8 unz8.p8
 if LOL_USE_EMSCRIPTEN
@@ -189,7 +189,7 @@ libquickjs_a_SOURCES = \
     3rdparty/quickjs/cutils.c 3rdparty/quickjs/cutils.h
 libquickjs_a_CPPFLAGS = \
     -I3rdparty/quickjs -D_GNU_SOURCE -DCONFIG_VERSION=\"2019-08-18\" \
-    $(AM_CPPFLAGS) $(AM_CXXFLAGS) \
+    $(AM_CPPFLAGS) $(AM_CFLAGS) \
     -Wno-unused-parameter -Wno-sign-compare
 
 EXTRA_DIST += libquickjs.vcxproj
