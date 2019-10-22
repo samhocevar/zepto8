@@ -323,11 +323,11 @@ void ide::render_toolbar()
 {
     // Play / Pause / Restart
     ImGui::PushStyleColor(ImGuiCol_Button, pico8::palette::get(pico8::palette::red));
-    ImGui::Button("|>");
+    ImGui::Button("▶");
     ImGui::SameLine();
-    ImGui::Button("||");
+    ImGui::Button("‖");
     ImGui::SameLine();
-    ImGui::Button("()");
+    ImGui::Button("□");
     ImGui::SameLine();
     ImGui::PopStyleColor();
 

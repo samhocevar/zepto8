@@ -192,11 +192,18 @@ void text_editor::render()
         m_impl->GetDisplay().InvalidateCharCache();
     }
 
+    if (ImGui::IsWindowFocused())
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        io.WantCaptureKeyboard = true;
+        io.WantTextInput = true;
+        m_impl->HandleInput();
+    }
+
     m_impl->UpdateWindowState();
     m_impl->SetDisplayRegion(Zep::toNVec2f(ImGui::GetCursorScreenPos()),
                              Zep::toNVec2f(ImGui::GetContentRegionAvail()) + Zep::toNVec2f(ImGui::GetCursorScreenPos()));
     m_impl->Display();
-    m_impl->HandleInput();
 
     ImGui::PopStyleColor(1);
 }
