@@ -17,6 +17,7 @@
 #include <lol/engine.h>
 
 #include "pico8/vm.h"
+#include "synth.h"
 
 namespace z8::pico8
 {
@@ -24,18 +25,6 @@ namespace z8::pico8
 #define DEBUG_EXPORT_WAV 0
 
 using lol::msg;
-
-enum
-{
-    INST_TRIANGLE   = 0, // Triangle signal
-    INST_TILTED_SAW = 1, // Slanted triangle
-    INST_SAW        = 2, // Sawtooth
-    INST_SQUARE     = 3, // Square signal
-    INST_PULSE      = 4, // Asymmetric square signal
-    INST_ORGAN      = 5, // Some triangle stuff again
-    INST_NOISE      = 6,
-    INST_PHASER     = 7,
-};
 
 enum
 {
@@ -94,62 +83,6 @@ vm::channel::channel()
     exports[this] = fopen(lol::format("/tmp/zepto8_%d.wav", count++).c_str(), "w+");
     fwrite(header, 44, 1, exports[this]);
 #endif
-}
-
-static float get_waveform(int instrument, float advance)
-{
-    float t = lol::fmod(advance, 1.f);
-    float ret = 0.f;
-
-    // Multipliers were measured from WAV exports. Waveforms are
-    // inferred from those exports by guessing what the original
-    // equations could be.
-    switch (instrument)
-    {
-        case INST_TRIANGLE:
-            return 0.354f * (lol::abs(4.f * t - 2.0f) - 1.0f);
-        case INST_TILTED_SAW:
-        {
-            static float const a = 0.9f;
-            ret = t < a ? 2.f * t / a - 1.f
-                        : 2.f * (1.f - t) / (1.f - a) - 1.f;
-            return ret * 0.406f;
-        }
-        case INST_SAW:
-            return 0.653f * (t < 0.5f ? t : t - 1.f);
-        case INST_SQUARE:
-            return t < 0.5f ? 0.25f : -0.25f;
-        case INST_PULSE:
-            return t < 0.33333333f ? 0.25f : -0.25f;
-        case INST_ORGAN:
-            ret = t < 0.5f ? 3.f - lol::abs(24.f * t - 6.f)
-                           : 1.f - lol::abs(16.f * t - 12.f);
-            return ret * 0.111111111f;
-        case INST_NOISE:
-        {
-            // Spectral analysis indicates this is some kind of brown noise,
-            // but losing almost 10dB per octave. I thought using Perlin noise
-            // would be fun, but it’s definitely not accurate.
-            //
-            // This may help us create a correct filter:
-            // http://www.firstpr.com.au/dsp/pink-noise/
-            static lol::perlin_noise<1> noise;
-            for (float m = 1.75f, d = 1.f; m <= 128; m *= 2.25f, d *= 0.75f)
-                ret += d * noise.eval(lol::vec_t<float, 1>(m * advance));
-            return ret * 0.4f;
-        }
-        case INST_PHASER:
-        {   // This one has a subfrequency of freq/128 that appears
-            // to modulate two signals using a triangle wave
-            // FIXME: amplitude seems to be affected, too
-            float k = lol::abs(2.f * lol::fmod(advance / 128.f, 1.f) - 1.f);
-            float u = lol::fmod(t + 0.5f * k, 1.0f);
-            ret = lol::abs(4.f * u - 2.f) - lol::abs(8.f * t - 4.f);
-            return ret * 0.166666666f;
-        }
-    }
-
-    return 0.0f;
 }
 
 std::function<void(void *, int)> vm::get_streamer(int ch)
@@ -269,7 +202,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
             }
 
             // Play note
-            float waveform = get_waveform(sfx.notes[note_id].instrument, phi);
+            float waveform = synth::waveform(sfx.notes[note_id].instrument, phi);
 
             int16_t sample = (int16_t)(32767.99f * volume * waveform);
 
@@ -384,25 +317,22 @@ void vm::api_sfx(int16_t sfx, opt<int16_t> in_chan, int16_t offset)
                    chan = i;
         }
 
-        // Play this sound!
-        if (chan != -1)
-        {
-            // Stop any channel playing the same sfx
-            for (int i = 0; i < 4; ++i)
-                if (m_channels[i].m_sfx == sfx)
-                    m_channels[i].m_sfx = -1;
+        // Stop any channel playing the same sfx
+        for (int i = 0; i < 4; ++i)
+            if (m_channels[i].m_sfx == sfx)
+                m_channels[i].m_sfx = -1;
 
-            m_channels[chan].m_sfx = sfx;
-            m_channels[chan].m_offset = std::max(0.f, (float)offset);
-            m_channels[chan].m_phi = 0.f;
-            m_channels[chan].m_can_loop = true;
-            // Playing an instrument starting with the note C-2 and the
-            // slide effect causes no noticeable pitch variation in PICO-8,
-            // so I assume this is the default value for “previous key”.
-            m_channels[chan].m_prev_key = 24;
-            // There is no default value for “previous volume”.
-            m_channels[chan].m_prev_vol = 0.f;
-        }
+        // Play this sound!
+        m_channels[chan].m_sfx = sfx;
+        m_channels[chan].m_offset = std::max(0.f, (float)offset);
+        m_channels[chan].m_phi = 0.f;
+        m_channels[chan].m_can_loop = true;
+        // Playing an instrument starting with the note C-2 and the
+        // slide effect causes no noticeable pitch variation in PICO-8,
+        // so I assume this is the default value for “previous key”.
+        m_channels[chan].m_prev_key = 24;
+        // There is no default value for “previous volume”.
+        m_channels[chan].m_prev_vol = 0.f;
     }
 }
 

@@ -110,5 +110,5 @@ enum
     SCREEN_HEIGHT = 128,
 };
 
-}
+} // namespace z8
 

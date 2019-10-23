@@ -27,6 +27,7 @@
     <ClCompile Include="raccoon\vm.cpp">
       <Filter>raccoon</Filter>
     </ClCompile>
+    <ClCompile Include="synth.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analyzer.h" />
@@ -54,6 +55,7 @@
     <ClInclude Include="raccoon\vm.h">
       <Filter>raccoon</Filter>
     </ClInclude>
+    <ClInclude Include="synth.h" />
     <ClInclude Include="zepto8.h" />
     <ClInclude Include="raccoon\font.h">
       <Filter>raccoon</Filter>

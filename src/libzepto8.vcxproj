@@ -77,6 +77,7 @@
     <ClCompile Include="pico8\vm.cpp" />
     <ClCompile Include="raccoon\api.cpp" />
     <ClCompile Include="raccoon\vm.cpp" />
+    <ClCompile Include="synth.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analyzer.h" />
@@ -89,6 +90,7 @@
     <ClInclude Include="raccoon\font.h" />
     <ClInclude Include="raccoon\memory.h" />
     <ClInclude Include="raccoon\vm.h" />
+    <ClInclude Include="synth.h" />
     <ClInclude Include="zepto8.h" />
   </ItemGroup>
   <ItemGroup>
