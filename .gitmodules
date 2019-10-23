@@ -3,20 +3,20 @@
 	url = ../../lolengine/lol.git
 [submodule "wiki"]
 	path = wiki
-	url = ../zepto8.wiki.git
+	url = ../../samhocevar/zepto8.wiki.git
 [submodule "src/z8lua"]
 	path = src/z8lua
-	url = ../z8lua.git
+	url = ../../samhocevar/z8lua.git
 	branch = zepto8
 [submodule "src/3rdparty/imgui-club"]
 	path = src/3rdparty/imgui-club
-	url = ../fork-imgui-club.git
+	url = ../../samhocevar/fork-imgui-club.git
 [submodule "src/3rdparty/portable-file-dialogs"]
 	path = src/3rdparty/portable-file-dialogs
-	url = ../portable-file-dialogs.git
+	url = ../../samhocevar/portable-file-dialogs.git
 [submodule "src/3rdparty/zep"]
 	path = src/3rdparty/zep
-	url = ../fork-zep.git
+	url = ../../samhocevar/fork-zep.git
 [submodule "src/3rdparty/quickjs"]
 	path = src/3rdparty/quickjs
-	url = ../fork-quickjs.git
+	url = ../../samhocevar/fork-quickjs.git
