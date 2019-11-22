@@ -28,6 +28,7 @@
       <Filter>raccoon</Filter>
     </ClCompile>
     <ClCompile Include="synth.cpp" />
+    <ClCompile Include="vm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analyzer.h" />

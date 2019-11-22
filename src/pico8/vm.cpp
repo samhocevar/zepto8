@@ -98,6 +98,11 @@ std::string const &vm::get_code() const
     return m_cart.get_code();
 }
 
+u4mat2<128, 128> const &vm::get_screen() const
+{
+    return m_ram.screen;
+}
+
 std::tuple<uint8_t *, size_t> vm::ram()
 {
     return std::make_tuple(&m_ram[0], sizeof(m_ram));

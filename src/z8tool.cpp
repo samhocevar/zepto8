@@ -23,6 +23,7 @@
 
 #include "zepto8.h"
 #include "pico8/vm.h"
+#include "raccoon/vm.h"
 #include "telnet.h"
 #include "splore.h"
 #include "dither.h"
@@ -219,16 +220,20 @@ int main(int argc, char **argv)
     }
     else if (run_mode == mode::run || run_mode == mode::headless)
     {
-        z8::pico8::vm vm;
-        vm.load(in);
-        vm.run();
+        std::unique_ptr<z8::vm_base> vm;
+        if (lol::ends_with(in, ".rcn.json"))
+            vm.reset((z8::vm_base *)new z8::raccoon::vm());
+        else
+            vm.reset((z8::vm_base *)new z8::pico8::vm());
+        vm->load(in);
+        vm->run();
         for (bool running = true; running; )
         {
             lol::timer t;
-            running = vm.step(1.f / 60.f);
+            running = vm->step(1.f / 60.f);
             if (run_mode == mode::run)
             {
-                vm.print_ansi();
+                vm->print_ansi(lol::ivec2(128, 64), nullptr);
                 t.wait(1.f / 60.f);
             }
         }

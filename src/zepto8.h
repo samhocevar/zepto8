@@ -32,43 +32,6 @@ namespace pico8
 using lol::u8vec4;
 
 //
-// The generic VM interface
-//
-
-class vm_base
-{
-    friend class player;
-
-public:
-    vm_base() = default;
-    virtual ~vm_base() = default;
-
-    virtual void load(std::string const &name) = 0;
-    virtual void run() = 0;
-    virtual bool step(float seconds) = 0;
-
-    virtual void render(lol::u8vec4 *screen) const = 0;
-
-    // Code
-    virtual std::string const &get_code() const = 0;
-
-    // Audio streaming
-    virtual std::function<void(void *, int)> get_streamer(int channel) = 0;
-
-    // IO
-    virtual void button(int index, int state) = 0;
-    virtual void mouse(lol::ivec2 coords, int buttons) = 0;
-    virtual void text(char ch) = 0;
-
-    // Memory (TODO: switch to std::span one day…)
-    virtual std::tuple<uint8_t *, size_t> ram() = 0;
-    virtual std::tuple<uint8_t *, size_t> rom() = 0;
-
-protected:
-    std::unique_ptr<pico8::bios> m_bios; // TODO: get rid of this
-};
-
-//
 // A simple 4-bit 2D array
 //
 
@@ -102,6 +65,52 @@ public:
     }
 
     uint8_t data[H][W / 2];
+};
+
+//
+// The generic VM interface
+//
+
+class vm_base
+{
+    friend class player;
+
+public:
+    vm_base() = default;
+    virtual ~vm_base() = default;
+
+    virtual void load(std::string const &name) = 0;
+    virtual void run() = 0;
+    virtual bool step(float seconds) = 0;
+
+    // Rendering
+    virtual void render(lol::u8vec4 *screen) const = 0;
+    virtual u4mat2<128, 128> const &get_screen() const = 0;
+    virtual int get_ansi_color(uint8_t c) const = 0;
+    // FIXME: get_ansi_color() should be get_rgb(), and render()
+    // should be removed in favour of a generic function that
+    // uses get_rgb() too.
+
+    void print_ansi(lol::ivec2 term_size = lol::ivec2(128, 64),
+                    uint8_t const *prev_screen = nullptr) const;
+
+    // Code
+    virtual std::string const &get_code() const = 0;
+
+    // Audio streaming
+    virtual std::function<void(void *, int)> get_streamer(int channel) = 0;
+
+    // IO
+    virtual void button(int index, int state) = 0;
+    virtual void mouse(lol::ivec2 coords, int buttons) = 0;
+    virtual void text(char ch) = 0;
+
+    // Memory (TODO: switch to std::span one day…)
+    virtual std::tuple<uint8_t *, size_t> ram() = 0;
+    virtual std::tuple<uint8_t *, size_t> rom() = 0;
+
+protected:
+    std::unique_ptr<pico8::bios> m_bios; // TODO: get rid of this
 };
 
 enum

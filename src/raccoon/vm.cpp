@@ -222,9 +222,40 @@ void vm::render(lol::u8vec4 *screen) const
     }
 }
 
+int vm::get_ansi_color(uint8_t c) const
+{
+    // FIXME: this is the PICO-8 palette for now
+    static int const ansi_palette[] =
+    {
+         16, // 000000 → 000000
+         17, // 1d2b53 → 00005f
+         89, // 7e2553 → 87005f
+         29, // 008751 → 00875f
+        131, // ab5236 → ab5236
+        240, // 5f574f → 5f5f5f
+        251, // c2c3c7 → c6c6c6
+        230, // fff1e8 → ffffdf
+        197, // ff004d → ff005f
+        214, // ffa300 → ffaf00
+        220, // ffec27 → ffdf00
+         47, // 00e436 → 00ff5f
+         39, // 29adff → 00afff
+        103, // 83769c → 8787af
+        211, // ff77a8 → f787af
+        223, // ffccaa → ffdfaf
+    };
+
+    return ansi_palette[c & 15];
+}
+
 std::string const &vm::get_code() const
 {
     return m_code;
+}
+
+u4mat2<128, 128> const &vm::get_screen() const
+{
+    return m_ram.screen;
 }
 
 std::function<void(void *, int)> vm::get_streamer(int channel)

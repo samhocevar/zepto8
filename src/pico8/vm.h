@@ -49,6 +49,8 @@ public:
     virtual bool step(float seconds);
 
     virtual std::string const &get_code() const;
+    virtual u4mat2<128, 128> const &get_screen() const;
+    virtual int get_ansi_color(uint8_t c) const;
 
     virtual void render(lol::u8vec4 *screen) const;
 
@@ -60,9 +62,6 @@ public:
 
     virtual std::tuple<uint8_t *, size_t> ram();
     virtual std::tuple<uint8_t *, size_t> rom();
-
-    void print_ansi(lol::ivec2 term_size = lol::ivec2(128, 128),
-                    uint8_t const *prev_screen = nullptr) const;
 
 private:
     void runtime_error(std::string str);

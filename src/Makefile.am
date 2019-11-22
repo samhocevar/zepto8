@@ -136,6 +136,7 @@ EXTRA_DIST += z8lua.vcxproj
 
 libzepto8_a_SOURCES = \
     zepto8.h \
+    vm.cpp \
     bios.cpp bios.h \
     synth.cpp synth.h \
     analyzer.cpp analyzer.h lua53-parse.h \

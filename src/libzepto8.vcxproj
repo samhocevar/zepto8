@@ -78,6 +78,7 @@
     <ClCompile Include="raccoon\api.cpp" />
     <ClCompile Include="raccoon\vm.cpp" />
     <ClCompile Include="synth.cpp" />
+    <ClCompile Include="vm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analyzer.h" />

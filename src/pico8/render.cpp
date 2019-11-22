@@ -45,8 +45,7 @@ void vm::render(lol::u8vec4 *screen) const
     }
 }
 
-void vm::print_ansi(lol::ivec2 term_size,
-                    uint8_t const *prev_screen) const
+int vm::get_ansi_color(uint8_t c) const
 {
     static int const ansi_palette[] =
     {
@@ -68,56 +67,8 @@ void vm::print_ansi(lol::ivec2 term_size,
         223, // ffccaa → ffdfaf
     };
 
-    printf("\x1b[?25l"); // hide cursor
-
-    auto &ds = m_ram.draw_state;
-
-    for (int y = 0; y < 2 * lol::min(64, term_size.y); y += 2)
-    {
-        if (prev_screen && !memcmp(m_ram.screen.data[y],
-                                   &prev_screen[y * 64], 128))
-            continue;
-
-        printf("\x1b[%d;1H", y / 2 + 1);
-
-        int oldfg = -1, oldbg = -1;
-
-        for (int x = 0; x < lol::min(128, term_size.x); ++x)
-        {
-            uint8_t fg = m_ram.screen.get(x, y);
-            uint8_t bg = m_ram.screen.get(x, y + 1);
-            char const *glyph = "▀";
-
-            if (fg < bg)
-            {
-                std::swap(fg, bg);
-                glyph = "▄";
-            }
-
-            if (fg == oldfg)
-            {
-                if (bg != oldbg)
-                    printf("\x1b[48;5;%dm", ansi_palette[ds.pal[1][bg]]);
-            }
-            else
-            {
-                if (bg == oldbg)
-                    printf("\x1b[38;5;%dm", ansi_palette[ds.pal[1][fg]]);
-                else
-                    printf("\x1b[38;5;%d;48;5;%dm", ansi_palette[ds.pal[1][fg]], ansi_palette[ds.pal[1][bg]]);
-            }
-
-            printf("%s", glyph);
-
-            oldfg = fg;
-            oldbg = bg;
-        }
-
-        printf("\x1b[0m\x1b[K"); // reset properties and clear to end of line
-    }
-
-    printf("\x1b[?25h"); // show cursor
-    fflush(stdout);
+    // FIXME: support the extended palette!
+    return ansi_palette[m_ram.draw_state.pal[1][c & 0xf] & 0xf];
 }
 
 } // namespace z8::pico8

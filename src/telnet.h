@@ -23,6 +23,7 @@
 
 #include "zepto8.h"
 #include "pico8/vm.h"
+#include "raccoon/vm.h"
 
 // The telnet class
 // ————————————————
@@ -40,18 +41,22 @@ struct telnet
     {
         disable_echo();
 
-        pico8::vm vm;
-        vm.load(cart);
-        vm.run();
+        std::unique_ptr<z8::vm_base> vm;
+        if (lol::ends_with(cart, ".rcn.json"))
+            vm.reset((z8::vm_base *)new raccoon::vm());
+        else
+            vm.reset((z8::vm_base *)new pico8::vm());
+        vm->load(cart);
+        vm->run();
 
-        auto const &ram = vm.ram();
+        auto const &ram = vm->ram();
 
         while (true)
         {
             lol::timer t;
 
             for (int i = 0; i < 16; ++i)
-                vm.button(i, 0);
+                vm->button(i, 0);
 
             for (;;)
             {
@@ -64,34 +69,34 @@ struct telnet
                     /* For now, Escape quits */
                     case 0x1b: return;
 
-                    case 0x144: vm.button(0, 1); break; // left
-                    case 0x143: vm.button(1, 1); break; // right
-                    case 0x141: vm.button(2, 1); break; // up
-                    case 0x142: vm.button(3, 1); break; // down
+                    case 0x144: vm->button(0, 1); break; // left
+                    case 0x143: vm->button(1, 1); break; // right
+                    case 0x141: vm->button(2, 1); break; // up
+                    case 0x142: vm->button(3, 1); break; // down
                     case 'z': case 'Z':
                     case 'c': case 'C':
-                    case 'n': case 'N': vm.button(4, 1); break;
+                    case 'n': case 'N': vm->button(4, 1); break;
                     case 'x': case 'X':
                     case 'v': case 'V':
-                    case 'm': case 'M': vm.button(5, 1); break;
-                    case '\r': case '\n': vm.button(6, 1); break;
-                    case 's': case 'S': vm.button(8, 1); break;
-                    case 'f': case 'F': vm.button(9, 1); break;
-                    case 'e': case 'E': vm.button(10, 1); break;
-                    case 'd': case 'D': vm.button(11, 1); break;
-                    case 'a': case 'A': vm.button(12, 1); break;
+                    case 'm': case 'M': vm->button(5, 1); break;
+                    case '\r': case '\n': vm->button(6, 1); break;
+                    case 's': case 'S': vm->button(8, 1); break;
+                    case 'f': case 'F': vm->button(9, 1); break;
+                    case 'e': case 'E': vm->button(10, 1); break;
+                    case 'd': case 'D': vm->button(11, 1); break;
+                    case 'a': case 'A': vm->button(12, 1); break;
                     case '\t':
-                    case 'q': case 'Q': vm.button(13, 1); break;
+                    case 'q': case 'Q': vm->button(13, 1); break;
                     default:
                         lol::msg::info("Got unknown key %02x\n", key);
                         break;
                 }
             }
 
-            vm.step(1.f / 60.f);
+            vm->step(1.f / 60.f);
 
-            vm.print_ansi(m_term_size,
-                          m_screen.count() ? m_screen.data() : nullptr);
+            vm->print_ansi(m_term_size,
+                           m_screen.count() ? m_screen.data() : nullptr);
 
             // FIXME: PICO-8 specific
             m_screen.resize(0x2000);
