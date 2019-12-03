@@ -1,5 +1,5 @@
 pico-8 cartridge // http://www.pico-8.com
-version 17
+version 18
 __lua__
 
 local mul = 200
@@ -8,6 +8,28 @@ local glyphs = 0
 local fillc = 0
 local bg = 1
 local fg = 7
+
+-- for old PICO-8 versions
+if not chr then
+  local l1 = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+  local l2 = "█▒🐱⬇️░✽●♥☉웃⌂⬅️😐♪🅾️◆…➡️★⧗⬆️ˇ∧❎▤▥"
+  function chr(n)
+    return n < 32 and "" or n < 128 and sub(l1,n-31,n-31) or sub(l2,n-127,n-127)
+  end
+end
+
+-- override printh
+old_printh, buffer, printh = printh, "", function(s)
+  buffer = buffer..s..'\n'
+end
+
+function _init()
+  -- will be done at the end
+  old_printh(buffer, 'font.sfd', true)
+  cursor(0, 64)
+  color(7)
+  print('font written to file.')
+end
 
 fe0f = {
   { 11015,    '002b07' },
@@ -124,13 +146,13 @@ function doglyph(ch, name, enc1, enc2, w, h, ref, extra)
   printh('GlyphClass: 2\nFlags: W\nLayerCount: 2')
   dict[enc2] = glyphs
   glyphs += 1
-  color = extra and 'ffddff' or ref and 'ffddbb' or w<=4 and 'ccffcc' or 'ccffff'
+  col = extra and 'ffddff' or ref and 'ffddbb' or w<=4 and 'ccffcc' or 'ccffff'
 
   if ref then
     printh('Fore\nRefer: '..(ref!=-1 and dict[ref] or 0)..' '..ref..' N 1 0 0 1 0 0 2')
   elseif ch then
     printh('Fore\nSplineSet')
-    rectfill(0,0,7,7,bg)
+    rectfill(0,0,8,6,bg)
     if #ch>0 then
       print(ch,1,1,fg)
     else
@@ -152,7 +174,7 @@ function doglyph(ch, name, enc1, enc2, w, h, ref, extra)
   end
 
   if fe0f_id(enc2)>0 then printh('Substitution2: "lut1-1" tmp'..fe0f_id(enc2)) end
-  printh('Colour: '..color)
+  printh('Colour: '..col)
   printh('EndChar\n')
 end
 
