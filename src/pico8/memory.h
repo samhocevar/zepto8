@@ -257,5 +257,5 @@ static_check_section(screen,     0x6000, 0x2000);
 // Final sanity check
 static_assert(sizeof(memory) == 0x8000, "pico8::memory should have size 0x8000");
 
-}
 
+}

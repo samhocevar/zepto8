@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -58,19 +58,23 @@ bool cart::load_png(std::string const &filename)
     img.load(filename);
     ivec2 size = img.size();
 
-    if (size.x * size.y != (int)sizeof(m_rom) + 1)
+    if (size.x * size.y != 160 * 205)
         return false;
 
     u8vec4 const *pixels = img.lock<PixelFormat::RGBA_8>();
 
     // Retrieve cartridge data from lower image bits
-    uint8_t version = 0;
-    for (int n = 0; n < (int)sizeof(m_rom) + 1; ++n)
+    std::vector<uint8_t> bytes(sizeof(m_rom) + 5);
+    for (int n = 0; n < (int)bytes.size(); ++n)
     {
         u8vec4 p = pixels[n] * 64;
-        uint8_t byte = p.a + p.r / 4 + p.g / 16 + p.b / 64;
-        (n < (int)sizeof(m_rom) ? m_rom[n] : version) = byte;
+        bytes[n] = p.a + p.r / 4 + p.g / 16 + p.b / 64;
     }
+
+    memcpy(&m_rom, bytes.data(), sizeof(m_rom));
+    uint8_t const *vbytes = bytes.data() + sizeof(m_rom);
+    int version = vbytes[0];
+    int minor = (vbytes[1] << 24) | (vbytes[2] << 16) | (vbytes[3] << 8) | vbytes[4];
 
     // Retrieve label from image pixels
     if (size.x >= LABEL_WIDTH + LABEL_X && size.y >= LABEL_HEIGHT + LABEL_Y)
@@ -133,7 +137,7 @@ bool cart::load_png(std::string const &filename)
     // Remove possible trailing zeroes
     m_code.resize(strlen(m_code.c_str()));
 
-    msg::debug("version: %d code: %d\n", version, (int)m_code.length());
+    msg::debug("version: %d.%d code: %d chars\n", version, minor, (int)m_code.length());
 
     // Invalidate code cache
     m_lua.resize(0);
