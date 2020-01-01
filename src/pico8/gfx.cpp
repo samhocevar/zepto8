@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -166,7 +166,10 @@ void vm::vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits)
         uint8_t p = (x & 1) ? color << 4 : color;
 
         for (int16_t y = y1; y <= y2; ++y)
-            m_ram.screen.data[y][x] = (m_ram.screen.data[y][x] & mask) | p;
+        {
+            auto &data = m_ram.screen.data[y][x / 2];
+            data = (data & mask) | p;
+        }
     }
 }
 
