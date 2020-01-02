@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2017—2018 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2017—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -76,8 +76,8 @@ std::string encode59(std::vector<uint8_t> const &v)
     // This should not happen because we are inside a string and nothing
     // needs to be parsed, but apparently the PICO-8 parser starts parsing
     // stuff after "]]" even if inside "[=[".
-    ret = std::regex_replace(ret, std::regex("]]\n"), "XXX_1");
-    ret = std::regex_replace(ret, std::regex("]]"), "XXX_2");
+    ret = std::regex_replace(ret, std::regex("\\]\\]\n"), "XXX_1");
+    ret = std::regex_replace(ret, std::regex("\\]\\]"), "XXX_2");
 
     // Workaround for another bug that messes with the parser
     // reported for 1.1.11g: https://www.lexaloffle.com/bbs/?tid=32155

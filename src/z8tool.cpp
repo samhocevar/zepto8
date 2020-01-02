@@ -20,6 +20,10 @@
 #include <sstream>
 #include <iostream>
 #include <streambuf>
+#if _MSC_VER
+#include <io.h>
+#include <fcntl.h>
+#endif
 
 #include "zepto8.h"
 #include "pico8/vm.h"
@@ -251,9 +255,12 @@ int main(int argc, char **argv)
     else if (run_mode == mode::compress)
     {
         std::vector<uint8_t> input;
+#if _MSC_VER
+        _setmode(_fileno(stdin), _O_BINARY);
+#endif
         for (uint8_t ch : std::vector<char>{ std::istreambuf_iterator<char>(std::cin),
                                              std::istreambuf_iterator<char>() })
-        input.push_back(ch);
+            input.push_back(ch);
 
         // Compress input buffer
         std::vector<uint8_t> output = z8::compress(input);
