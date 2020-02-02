@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -118,8 +118,8 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         // Speed must be 1—255 otherwise the SFX is invalid
         int const speed = lol::max(1, (int)sfx.speed);
 
-        float offset = m_channels[chan].m_offset;
-        float phi = m_channels[chan].m_phi;
+        float const offset = m_channels[chan].m_offset;
+        float const phi = m_channels[chan].m_phi;
 
         // PICO-8 exports instruments as 22050 Hz WAV files with 183 samples
         // per speed unit per note, so this is how much we should advance

@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2017—2019 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2017—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -43,11 +43,11 @@ float synth::waveform(int instrument, float advance)
         case INST_SQUARE:
             return t < 0.5f ? 0.25f : -0.25f;
         case INST_PULSE:
-            return t < 0.33333333f ? 0.25f : -0.25f;
+            return t < 1.f / 3 ? 0.25f : -0.25f;
         case INST_ORGAN:
             ret = t < 0.5f ? 3.f - lol::abs(24.f * t - 6.f)
                            : 1.f - lol::abs(16.f * t - 12.f);
-            return ret * 0.111111111f;
+            return ret / 9.f;
         case INST_NOISE:
         {
             // Spectral analysis indicates this is some kind of brown noise,
@@ -68,7 +68,7 @@ float synth::waveform(int instrument, float advance)
             float k = lol::abs(2.f * lol::fmod(advance / 128.f, 1.f) - 1.f);
             float u = lol::fmod(t + 0.5f * k, 1.0f);
             ret = lol::abs(4.f * u - 2.f) - lol::abs(8.f * t - 4.f);
-            return ret * 0.166666666f;
+            return ret / 6.f;
         }
     }
 
