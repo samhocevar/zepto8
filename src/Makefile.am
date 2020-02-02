@@ -42,8 +42,10 @@ endif
     3rdparty/zep/include/zep/imgui/display_imgui.h \
     3rdparty/zep/include/zep/imgui/editor_imgui.h \
     3rdparty/zep/include/zep/imgui/usb_hid_keys.h \
+    3rdparty/zep/include/zep/line_widgets.h \
     3rdparty/zep/include/zep/mcommon/animation/timer.h \
     3rdparty/zep/include/zep/mcommon/file/cpptoml.h \
+    3rdparty/zep/include/zep/mcommon/file/fnmatch.h \
     3rdparty/zep/include/zep/mcommon/file/path.h \
     3rdparty/zep/include/zep/mcommon/logger.h \
     3rdparty/zep/include/zep/mcommon/math/math.h \
@@ -69,8 +71,8 @@ endif
     3rdparty/zep/src/commands.cpp \
     3rdparty/zep/src/display.cpp \
     3rdparty/zep/src/editor.cpp \
+    3rdparty/zep/src/line_widgets.cpp \
     3rdparty/zep/src/mcommon/animation/timer.cpp \
-    3rdparty/zep/src/mcommon/file/fnmatch.h \
     3rdparty/zep/src/mcommon/file/path.cpp \
     3rdparty/zep/src/mcommon/string/stringutils.cpp \
     3rdparty/zep/src/mode.cpp \
@@ -184,6 +186,7 @@ libquickjs_a_SOURCES = \
     3rdparty/quickjs/quickjs.c 3rdparty/quickjs/quickjs.h \
     3rdparty/quickjs/quickjs-atom.h 3rdparty/quickjs/quickjs-opcode.h \
     3rdparty/quickjs/list.h \
+    3rdparty/quickjs/libbf.c 3rdparty/quickjs/libbf.h \
     3rdparty/quickjs/libregexp.c 3rdparty/quickjs/libregexp.h \
     3rdparty/quickjs/libregexp-opcode.h \
     3rdparty/quickjs/libunicode.c 3rdparty/quickjs/libunicode.h \

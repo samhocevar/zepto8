@@ -70,6 +70,9 @@
     <ClCompile Include="3rdparty/quickjs/quickjs.c">
       <AdditionalOptions Condition="'$(Platform)'=='NX64'"></AdditionalOptions>
     </ClCompile>
+    <ClCompile Include="3rdparty/quickjs/libbf.c">
+      <AdditionalOptions Condition="'$(Platform)'=='NX64'"></AdditionalOptions>
+    </ClCompile>
     <ClCompile Include="3rdparty/quickjs/libregexp.c">
       <AdditionalOptions Condition="'$(Platform)'=='NX64'"></AdditionalOptions>
     </ClCompile>
