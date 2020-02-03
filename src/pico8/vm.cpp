@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -456,7 +456,7 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
                     : fix32((int)m_channels[id & 3].m_offset);
 
     if (id == 24)
-        return fix32(m_music.m_pattern);
+        return fix32(m_music.pattern);
 
     if (id == 25 || id == 26)
         return (int16_t)0;

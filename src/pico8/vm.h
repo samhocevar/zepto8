@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -227,11 +227,13 @@ private:
     struct { fix32 x, y, b; } m_mouse;
     struct { int start = 0, stop = 0; char chars[256]; } m_keyboard;
 
-    // Audio
+    // Audio states: one music and four audio channels
     struct music
     {
-        int m_pattern = -1;
-        uint8_t m_mask = -1;
+        int16_t pattern = -1;
+        int8_t master = -1;
+        uint8_t mask = 0xf;
+        uint8_t speed = 0;
     }
     m_music;
 

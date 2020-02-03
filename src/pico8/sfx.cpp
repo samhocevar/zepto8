@@ -249,20 +249,51 @@ void vm::api_music(int16_t pattern, int16_t fade_len, int16_t mask)
     if (pattern < -1 || pattern > 63)
         return;
 
-    if (pattern == -1 && m_music.m_pattern >= 0)
+    if (pattern == -1 && m_music.pattern >= 0)
     {
         // Stop playing the current song
         for (int i = 0; i < 4; ++i)
-            if (m_music.m_mask & (1 << i))
+            if (m_music.mask & (1 << i))
                 m_channels[i].m_sfx = -1;
-        m_music.m_pattern = -1;
+        m_music.pattern = -1;
         return;
     }
 
-    m_music.m_pattern = pattern;
-    m_music.m_mask = mask & 0xf;
+    // Find music speed; it’s the speed of the fastest sfx
+    m_music.master = m_music.speed = -1;
+    for (int i = 0; i < 4; ++i)
+    {
+        int n = m_ram.song[pattern].sfx(i);
+        if (n >= 64)
+            continue;
 
-    private_stub(lol::format("music(%d, %d, %d)", pattern, fade_len, mask));
+        auto &sfx = m_ram.sfx[n & 0x3f];
+        if (m_music.master == -1 || m_music.speed > sfx.speed)
+        {
+            m_music.master = i;
+            m_music.speed = sfx.speed;
+        }
+    }
+
+    m_music.pattern = pattern;
+    m_music.mask = mask ? mask & 0xf : 0xf;
+
+    for (int i = 0; i < 4; ++i)
+    {
+        if (((1 << i) & m_music.mask) == 0)
+            continue;
+
+        int n = m_ram.song[pattern].sfx(i);
+        if (n >= 64)
+            continue;
+
+        m_channels[i].m_sfx = n;
+        m_channels[i].m_offset = 0.f;
+        m_channels[i].m_phi = 0.f;
+        m_channels[i].m_can_loop = false;
+        m_channels[i].m_prev_key = 24;
+        m_channels[i].m_prev_vol = 0.f;
+    }
 }
 
 void vm::api_sfx(int16_t sfx, opt<int16_t> in_chan, int16_t offset)

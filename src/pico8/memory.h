@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -28,7 +28,7 @@
 namespace z8::pico8
 {
 
-// Use uint16_t instead of uint8_t because note::instrument overlaps two bytes.
+// We use uint16_t instead of uint8_t because note::instrument overlaps two bytes.
 struct note
 {
     uint16_t key : 6;
@@ -56,7 +56,7 @@ struct sfx
 
 struct song
 {
-    // The four song channels that should play
+    // The four song channels that should play, 0…63 (each msb holds a flag)
     uint8_t data[4];
 
     // Accessors for data transformation
@@ -151,7 +151,8 @@ struct memory
 
             struct
             {
-                 // These accessors allow to access map2
+                 // These accessors allow to access map2 as if it was
+                 // located after map.
                  inline uint8_t &operator[](int n)
                  {
                      ASSERT(n >= 0 && n < (int)(sizeof(memory::map) + sizeof(memory::map2)));
