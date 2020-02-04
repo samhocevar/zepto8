@@ -268,13 +268,16 @@ void vm::api_music(int16_t pattern, int16_t fade_len, int16_t mask)
     if (pattern < -1 || pattern > 63)
         return;
 
-    if (pattern == -1 && m_music.pattern >= 0)
+    if (pattern == -1)
     {
-        // Stop playing the current song
-        for (int i = 0; i < 4; ++i)
-            if (m_music.mask & (1 << i))
-                m_channels[i].m_sfx = -1;
-        m_music.pattern = -1;
+        if (m_music.pattern >= 0)
+        {
+            // Stop playing the current song
+            for (int i = 0; i < 4; ++i)
+                if (m_music.mask & (1 << i))
+                    m_channels[i].m_sfx = -1;
+            m_music.pattern = -1;
+        }
         return;
     }
 
