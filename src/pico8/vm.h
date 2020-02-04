@@ -114,7 +114,7 @@ private:
     fix32 api_mget(int16_t x, int16_t y);
     void api_mset(int16_t x, int16_t y, uint8_t n);
     opt<uint8_t> api_pal(opt<uint8_t> c0, opt<uint8_t> c1, uint8_t p);
-    opt<bool> api_palt(opt<uint8_t> c, opt<uint8_t> t);
+    opt<bool> api_palt(opt<uint8_t> c, opt<bool> t);
     fix32 api_pget(int16_t x, int16_t y);
     void api_pset(int16_t x, int16_t y, opt<fix32> c);
     void api_rect(int16_t x0, int16_t y0, int16_t x1, int16_t y1, opt<fix32> c);

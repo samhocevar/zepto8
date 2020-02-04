@@ -567,7 +567,7 @@ opt<uint8_t> vm::api_pal(opt<uint8_t> c0, opt<uint8_t> c1, uint8_t p)
     }
 }
 
-opt<bool> vm::api_palt(opt<uint8_t> c, opt<uint8_t> t)
+opt<bool> vm::api_palt(opt<uint8_t> c, opt<bool> t)
 {
     auto &ds = m_ram.draw_state;
 
