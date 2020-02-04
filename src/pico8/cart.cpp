@@ -696,9 +696,10 @@ std::string cart::get_p8() const
             ret += "__music__\n";
 
         auto const &song = m_rom.song[line];
-        ret += lol::format("%02x %02x%02x%02x%02x\n", song.flags(),
-                                   song.sfx(0), song.sfx(1),
-                                   song.sfx(2), song.sfx(3));
+        int const flags = song.start | (song.loop << 1) | (song.stop << 2) | (song.mode << 3);
+        ret += lol::format("%02x %02x%02x%02x%02x\n", flags,
+                           song.sfx(0), song.sfx(1),
+                           song.sfx(2), song.sfx(3));
     }
 
     ret += '\n';

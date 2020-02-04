@@ -230,10 +230,12 @@ private:
     // Audio states: one music and four audio channels
     struct music
     {
+        int16_t count = 0;
         int16_t pattern = -1;
         int8_t master = -1;
         uint8_t mask = 0xf;
         uint8_t speed = 0;
+        float offset = 0;
     }
     m_music;
 

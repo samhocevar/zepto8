@@ -456,10 +456,13 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
                     : fix32((int)m_channels[id & 3].m_offset);
 
     if (id == 24)
-        return fix32(m_music.pattern);
+        return int16_t(m_music.pattern);
 
-    if (id == 25 || id == 26)
-        return (int16_t)0;
+    if (id == 25)
+        return int16_t(m_music.count);
+
+    if (id == 26)
+        return int16_t(m_music.offset * m_music.speed);
 
     if (id >= 30 && id <= 36)
     {

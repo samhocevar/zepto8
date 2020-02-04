@@ -54,12 +54,6 @@ static std::string key_to_name(float key)
 }
 #endif
 
-uint8_t song::flags() const
-{
-    return (data[0] >> 7) | ((data[1] >> 6) & 0x2)
-        | ((data[2] >> 5) & 0x4) | ((data[3] >> 4) & 0x8);
-}
-
 uint8_t song::sfx(int n) const
 {
     ASSERT(n >= 0 && n <= 3);
@@ -105,6 +99,31 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
 
     for (int i = 0; i < samples; ++i)
     {
+        // Advance music using the master channel
+        if (chan == m_music.master && m_music.pattern != -1)
+        {
+            float const offset_per_second = 22050.f / (183.f * m_music.speed);
+            float const offset_per_sample = offset_per_second / samples_per_second;
+            m_music.offset += offset_per_sample;
+            if (m_music.offset >= 32.f)
+            {
+                int16_t next_pattern = m_music.pattern + 1;
+                int16_t next_count = m_music.count + 1;
+                if (m_ram.song[m_music.pattern].stop)
+                {
+                    next_pattern = -1;
+                    next_count = m_music.count;
+                }
+                else if (m_ram.song[m_music.pattern].loop)
+                    while (--next_pattern > 0 && !m_ram.song[next_pattern].start)
+                        ;
+
+                // FIXME: this is a very inelegant hack, don’t use api_music()
+                api_music(next_pattern, 0, m_music.mask);
+                m_music.count = next_count;
+            }
+        }
+
         if (m_channels[chan].m_sfx == -1)
         {
             buffer[i] = 0;
@@ -264,19 +283,21 @@ void vm::api_music(int16_t pattern, int16_t fade_len, int16_t mask)
     for (int i = 0; i < 4; ++i)
     {
         int n = m_ram.song[pattern].sfx(i);
-        if (n >= 64)
+        if (n & 0x40)
             continue;
 
         auto &sfx = m_ram.sfx[n & 0x3f];
         if (m_music.master == -1 || m_music.speed > sfx.speed)
         {
             m_music.master = i;
-            m_music.speed = sfx.speed;
+            m_music.speed = lol::max(1, (int)sfx.speed);
         }
     }
 
+    m_music.count = 0;
     m_music.pattern = pattern;
     m_music.mask = mask ? mask & 0xf : 0xf;
+    m_music.offset = 0;
 
     for (int i = 0; i < 4; ++i)
     {
@@ -284,7 +305,7 @@ void vm::api_music(int16_t pattern, int16_t fade_len, int16_t mask)
             continue;
 
         int n = m_ram.song[pattern].sfx(i);
-        if (n >= 64)
+        if (n & 0x40)
             continue;
 
         m_channels[i].m_sfx = n;

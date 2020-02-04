@@ -56,11 +56,25 @@ struct sfx
 
 struct song
 {
-    // The four song channels that should play, 0…63 (each msb holds a flag)
-    uint8_t data[4];
+    union
+    {
+        struct
+        {
+            uint8_t sfx0  : 7;
+            uint8_t start : 1;
+            uint8_t sfx1  : 7;
+            uint8_t loop  : 1;
+            uint8_t sfx2  : 7;
+            uint8_t stop  : 1;
+            uint8_t sfx3  : 7;
+            uint8_t mode  : 1;
+        };
 
-    // Accessors for data transformation
-    uint8_t flags() const;
+        // The four song channels that should play, 0…63 (each msb holds a flag)
+        uint8_t data[4];
+    };
+
+    // Accessor for data transformation
     uint8_t sfx(int n) const;
 };
 
