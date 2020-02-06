@@ -107,7 +107,7 @@ public:
         bind_desc(char const *str, bind<FN> b)
           : JSCFunctionListEntry({ str,
                 JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE, JS_DEF_CFUNC, 0,
-                { (uint8_t)b.size, JS_CFUNC_generic, { &b.wrap } }})
+                { { (uint8_t)b.size, JS_CFUNC_generic, { &b.wrap } } } })
         {}
     };
 

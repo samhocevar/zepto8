@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -443,7 +443,8 @@ void ide::tick_draw(float seconds, lol::Scene &scene)
     }
 
     std::vector<lol::u8vec4> buf(128 * 128);
-    m_vm->render(buf.data());
+    if (m_vm)
+        m_vm->render(buf.data());
     m_screen->Bind();
     m_screen->SetData(buf.data());
 }
