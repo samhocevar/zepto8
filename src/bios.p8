@@ -90,7 +90,9 @@ do
         if n >= 0 and n < 64 then poke4(0x5e00 + 4 * n, x) end
     end
 
-    local match = string.match
+    _z8.match = string.match
+    _z8.load = load
+
     local gsub = string.gsub
     local __cartdata = __cartdata
 
@@ -108,7 +110,7 @@ do
         end
         -- PICO-8 documentation: legal characters are a..z, 0..9 and underscore (_)
         -- PICO-8 changelog: allow '-' in cartdat() names
-        if match(s, '[^-abcdefghijklmnopqrstuvwxyz0123456789_]') then
+        if _z8.match(s, '[^-abcdefghijklmnopqrstuvwxyz0123456789_]') then
             print('cart data id: bad char')
             abort()
             return false
@@ -119,8 +121,6 @@ do
     function _z8.strlen(s)
         return #gsub(s, '[\128-\255]', 'XX')
     end
-
-    _z8.load = load
 
     -- Stubs for unimplemented functions
     local function stub(s)
@@ -269,7 +269,7 @@ function _z8.boot_sequence()
                           for j=0,#logo-1 do pset(j%42,6+j/42,sub(logo,j+1,j+1)=='#'and 7) end
                           local a = {0,0,12,0,0,0,13,7,11,0,14,7,7,7,10,0,15,7,9,0,0,0,8,0,0}
                           for j=0,#a-1 do pset(41+j%5,2+j/5,a[j+1]) end end,
-        [45] = function() color(6) print("\n\n\nzepto-8 0.0.0 beta") end,
+        [45] = function() color(6) print("\n\n\nzepto-8 0.0.0 alpha") end,
         [50] = function() print("(c) 2016-20 sam hocevar et al.\n") end,
         [52] = function() print("type help for help\n") end,
     }
@@ -282,8 +282,8 @@ end
 function _z8.prompt()
     -- activate project
     poke(0x5f2d, 1)
-    local caret = 0
-    local cmd = ""
+    local history = {}
+    local cmd, caret = "", 0
     local start_y = peek(0x5f27)
     while true do
         local exec = false
@@ -307,10 +307,31 @@ function _z8.prompt()
                 caret += 1
             end
         end
+        -- left/right/up/down handled by buttons instead of keys (FIXME)
         if btnp(0) then
             caret = max(caret - 1, 0)
         elseif btnp(1) then
             caret = min(caret + 1, #cmd)
+        elseif btnp(2) and #history > 0 then
+            if not history_pos then
+                history_pos = #history + 1
+            end
+            if history_pos == #history + 1 then
+                cmd_bak = cmd
+            end
+            if history_pos > 1 then
+                history_pos -= 1
+                cmd = history[history_pos]
+                caret = #cmd
+            end
+        elseif btnp(3) and #history > 0 then
+            if not history_pos then
+                cmd, caret = "", 0
+            elseif history_pos <= #history then
+                history_pos += 1
+                cmd = history[history_pos] or cmd_bak
+                caret = #cmd
+            end
         end
         -- fixme: print() behaves slightly differently when
         -- scrolling in the command prompt
@@ -319,15 +340,18 @@ function _z8.prompt()
             cursor(0, start_y)
             rectfill(0, start_y, 127, start_y + 5, 0)
             color(14)
-            if cmd == 'help' then
+            if _z8.match(cmd, '^ *$') then
+                -- empty line
+            elseif cmd == 'help' then
                 print('no help yet lol')
             else
                 print('syntax error')
             end
             start_y = peek(0x5f27)
-            caret = 0
             flip()
-            cmd = ""
+            if (#cmd > 0 and cmd != history[#history]) add(history, cmd)
+            history_pos = nil
+            cmd, caret = "", 0
         else
             local pen = peek(0x5f25)
             rectfill(0, start_y, (_z8.strlen(cmd) + 3) * 4, start_y + 5, 0)
