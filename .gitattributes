@@ -13,7 +13,11 @@
 *.cs    text
 
 # Vim doesn't like CRLF, even on Windows.
+# Same for autoconf/automake
 *.vim text eol=lf
+*.m4  text eol=lf
+*.ac  text eol=lf
+*.in  text eol=lf
 
 # This is Windows-specific and should always have CRLF, or
 # Visual Studio may misbehave.
