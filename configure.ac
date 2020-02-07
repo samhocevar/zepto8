@@ -32,6 +32,10 @@ ac_cv_have_readline=no
 AC_CHECK_LIB(readline, rl_callback_handler_install, [ac_cv_have_readline=yes])
 AM_CONDITIONAL(HAVE_READLINE, test "${ac_cv_have_readline}" != "no")
 
+ac_cv_have_openssl=no
+AC_CHECK_LIB(ssl, OPENSSL_init, [ac_cv_have_openssl=yes])
+AM_CONDITIONAL(HAVE_OPENSSL, test "${ac_cv_have_openssl}" != "no")
+
 dnl
 dnl  Inherit all Lol Engine checks
 dnl

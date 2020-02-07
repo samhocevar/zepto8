@@ -18,8 +18,6 @@
 
 #include "player.h"
 
-#include "3rdparty/cpp-httplib/httplib.h"
-
 #include "zepto8.h"
 #include "pico8/vm.h"
 #include "pico8/pico8.h"
