@@ -90,10 +90,10 @@ do
         if n >= 0 and n < 64 then poke4(0x5e00 + 4 * n, x) end
     end
 
+    _z8.gsub = string.gsub
     _z8.match = string.match
-    _z8.load = load
+    _z8.load_code = load
 
-    local gsub = string.gsub
     local __cartdata = __cartdata
 
     function cartdata(s)
@@ -119,7 +119,7 @@ do
     end
 
     function _z8.strlen(s)
-        return #gsub(s, '[\128-\255]', 'XX')
+        return #_z8.gsub(s, '[\128-\255]', 'XX')
     end
 
     -- Stubs for unimplemented functions
@@ -221,7 +221,7 @@ function _z8.run_cart(cart_code)
         -- executed, and nothing will work. This is also PICO-8’s behaviour.
         -- The code has to be appended as a string because the functions
         -- may be stored in local variables.
-        local code, ex = _z8.load(cart_code..glue_code)
+        local code, ex = _z8.load_code(cart_code..glue_code)
         if not code then
           color(14) print('syntax error')
           color(6) print(ex)
@@ -342,6 +342,16 @@ function _z8.prompt()
             color(14)
             if _z8.match(cmd, '^ *$') then
                 -- empty line
+            elseif _z8.match(cmd, '^ *load[ |(]') then
+                local arg = _z8.gsub(cmd, '^ *load *', '')
+                if _z8.match(arg, '^#') then
+                    print('download '..arg)
+                    __download(arg)
+                else
+                    print('load '..arg)
+                    __load(arg)
+                end
+                print('loaded')
             elseif cmd == 'help' then
                 print('no help yet lol')
             else

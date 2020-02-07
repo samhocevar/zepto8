@@ -21,6 +21,8 @@
 #include "bindings/lua.h"
 #include "bios.h"
 
+#include <httplib.h>
+
 // FIXME: activate this one day, when we use Lua 5.3 maybe?
 #define HAVE_LUA_GETEXTRASPACE 0
 
@@ -140,9 +142,50 @@ void vm::instruction_hook(lua_State *l, lua_Debug *)
 
     // The value 135000 was found using trial and error, but it causes
     // side effects in lots of cases. Use 300000 instead.
+    // FIXME: this is because we do not consider system costs, see
+    // https://pico-8.fandom.com/wiki/CPU for more information
     that->m_instructions += 1000;
     if (that->m_instructions >= 300000)
         lua_yield(l, 0);
+}
+
+bool vm::private_download(std::string name)
+{
+    // Load cart from a URL
+    std::string host_name = "www.lexaloffle.com";
+    std::string url = "/bbs/cpost_lister3.php?nfo=1&version=000112bw&lid=" + name.substr(1);
+
+    httplib::Client client(host_name);
+    client.set_follow_location(true);
+
+    auto res = client.Get(url.c_str());
+    if (!res || res->status != 200)
+        return false;
+
+    std::map<std::string, std::string> data;
+    for (auto& line : lol::split(res->body, '\n'))
+    {
+        size_t delim = line.find(':');
+        if (delim != std::string::npos)
+            data[line.substr(0, delim)] = line.substr(delim + 1);
+    }
+
+    if (data["lid"].size() == 0)
+        return false;
+
+    url = "/bbs/get_cart.php?cat=7&lid=" + data["lid"];
+    res = client.Get(url.c_str());
+    if (!res || res->status != 200)
+        return false;
+
+    return true;
+}
+
+bool vm::private_load(std::string name)
+{
+    // Load cart from a file
+    private_stub(lol::format("load(%s)", name.c_str()));
+    return true;
 }
 
 void vm::load(std::string const &name)

@@ -19,7 +19,7 @@ ___zepto8_SOURCES = \
     $(NULL)
 ___zepto8_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
-                     -I3rdparty/zep/include \
+                     -I3rdparty/zep/include -I3rdparty/cpp-httplib \
                      $(AM_CPPFLAGS)
 ___zepto8_LDFLAGS = $(static_libs) $(AM_LDFLAGS)
 ___zepto8_DEPENDENCIES = $(static_libs) @LOL_DEPS@
@@ -30,6 +30,7 @@ ___zepto8_LDFLAGS += --preload-file bios.p8 --preload-file data/zepto8.ttf \
 endif
 
 3rdparty_sources = \
+    3rdparty/cpp-httplib/httplib.h \
     3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h \
     3rdparty/portable-file-dialogs/portable-file-dialogs.h \
     3rdparty/zep/include/zep/buffer.h \
