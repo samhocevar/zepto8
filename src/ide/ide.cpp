@@ -32,6 +32,12 @@ ide::ide()
 {
     lol::gui::init();
 
+    pfd::message("Warning: pre-alpha software",
+                 "The zepto-8 IDE is not a functional piece of software yet, "
+                 "it is a mere proof of concept. You should not expect any of "
+                 "its features to work properly. Thank you for your understanding.",
+                 pfd::choice::ok, pfd::icon::info);
+
     // Enable docking
     auto &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
