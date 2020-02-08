@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -54,6 +54,8 @@ private:
     void js_wrap();
 
 private:
+    void api_dprint(std::string s);
+
     int api_read(int p);
     void api_write(int p, int x);
     void api_palset(int n, int r, int g, int b);
@@ -90,6 +92,8 @@ public:
 
         std::vector<typename T::bind_desc> data =
         {
+            { "dprint",   bind<&vm::api_dprint>() },
+
             { "read",     bind<&vm::api_read>() },
             { "write",    bind<&vm::api_write>() },
 
