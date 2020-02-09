@@ -151,7 +151,7 @@ void vm::instruction_hook(lua_State *l, lua_Debug *)
 
 bool vm::private_download(std::string name)
 {
-    // Load cart from a URL
+    // Load cart info from a URL
     std::string host_name = "www.lexaloffle.com";
     std::string url = "/bbs/cpost_lister3.php?nfo=1&version=000112bw&lid=" + name.substr(1);
 
@@ -170,15 +170,46 @@ bool vm::private_download(std::string name)
             data[line.substr(0, delim)] = line.substr(delim + 1);
     }
 
-    if (data["lid"].size() == 0)
+    auto const& lid = data["lid"];
+    auto const& mid = data["mid"];
+    if (lid.size() == 0 || lid.size() == 0)
         return false;
 
-    url = "/bbs/get_cart.php?cat=7&lid=" + data["lid"];
+    // Write cart info
+    lol::File file;
+#if _WIN32
+    std::string cache_dir = lol::sys::getenv("APPDATA");
+#else
+    std::string cache_dir = lol::sys::getenv("HOME") + "/.lexaloffle";
+#endif
+    cache_dir += "/pico-8/bbs/";
+    cache_dir += (mid[0] >= '1' && mid[0] <= '9') ? mid.substr(0, 1) : "carts";
+    std::string nfo_path = cache_dir + "/" + mid + ".nfo";
+    std::string cart_path = cache_dir + "/" + lid + ".p8.png";
+
+    file.Open(nfo_path, lol::FileAccess::Write);
+    if (file.IsValid())
+    {
+        file.Write(res->body);
+        file.Close();
+    }
+
+    // Download cart
+    url = "/bbs/get_cart.php?cat=7&lid=" + lid;
     res = client.Get(url.c_str());
     if (!res || res->status != 200)
         return false;
 
-    return true;
+    // Save cart
+    file.Open(cart_path, lol::FileAccess::Write, true);
+    if (file.IsValid())
+    {
+        file.Write(res->body);
+        file.Close();
+    }
+
+    // Load cart
+    return m_cart.load(cart_path);
 }
 
 bool vm::private_load(std::string name)

@@ -276,10 +276,35 @@ function _z8.boot_sequence()
 
     for step=0,54 do if boot[step] then boot[step]() end flip() end
 
-    _z8.loop = cocreate(_z8.prompt)
+    _z8.loop = cocreate(_z8.shell)
 end
 
-function _z8.prompt()
+local function eval(cmd)
+    color(14)
+    if _z8.match(cmd, '^ *$') then
+        -- empty line
+    elseif _z8.match(cmd, '^ *run *$') then
+        run()
+    elseif _z8.match(cmd, '^ *load[ |(]') then
+        local arg = _z8.gsub(cmd, '^ *load *', '')
+        local task = __load
+        if _z8.match(arg, '^#') then
+            print('downloading '..arg)
+            task = __download
+        end
+        if task(arg) then
+            print('ok')
+        else
+            print('failed')
+        end
+    elseif cmd == 'help' then
+        print('no help yet lol')
+    else
+        print('syntax error')
+    end
+end
+
+function _z8.shell()
     -- activate project
     poke(0x5f2d, 1)
     local history = {}
@@ -339,24 +364,7 @@ function _z8.prompt()
             start_y = start_y + 6
             cursor(0, start_y)
             rectfill(0, start_y, 127, start_y + 5, 0)
-            color(14)
-            if _z8.match(cmd, '^ *$') then
-                -- empty line
-            elseif _z8.match(cmd, '^ *load[ |(]') then
-                local arg = _z8.gsub(cmd, '^ *load *', '')
-                if _z8.match(arg, '^#') then
-                    print('download '..arg)
-                    __download(arg)
-                else
-                    print('load '..arg)
-                    __load(arg)
-                end
-                print('loaded')
-            elseif cmd == 'help' then
-                print('no help yet lol')
-            else
-                print('syntax error')
-            end
+            eval(cmd)
             start_y = peek(0x5f27)
             flip()
             if (#cmd > 0 and cmd != history[#history]) add(history, cmd)
