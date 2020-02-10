@@ -43,7 +43,7 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
-  <Import Project="$(LolDir)\build\msbuild\lol.config.props" />
+  <Import Project="$(LolDir)\build\msbuild\lol.props" />
   <PropertyGroup Label="Configuration">
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -54,12 +54,6 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
-  <ImportGroup Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(LolDir)\build\msbuild\lol.vars.props" />
-  </ImportGroup>
-  <PropertyGroup Label="UserMacros" />
-  <Import Project="$(LolDir)\build\msbuild\lol.rules.props" />
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -86,8 +80,4 @@
   <ItemGroup>
     <ClInclude Include="3rdparty/quickjs/quickjs.h" />
   </ItemGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(LolDir)\build\msbuild\lolfx.targets" />
-  </ImportGroup>
 </Project>

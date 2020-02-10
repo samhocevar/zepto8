@@ -38,6 +38,12 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{948C0C9A-2C25-41D9-BF1B-92B14A8C061B}</ProjectGuid>
+    <ConfigurationType>Application</ConfigurationType>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(LolDir)\build\msbuild\lol.props" />
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -54,6 +60,8 @@
   <ItemGroup>
     <ClInclude Include="player.h" />
   </ItemGroup>
+  <Import Project="$(LolDir)\build\msbuild\lol-core.props" />
+  <Import Project="$(LolDir)\build\msbuild\lol-lua.props" />
   <ItemGroup>
     <ProjectReference Include="libquickjs.vcxproj">
       <Project>{5168dfab-3b54-4caa-8654-da760bc53b74}</Project>
@@ -64,31 +72,5 @@
     <ProjectReference Include="libzepto8.vcxproj">
       <Project>{9ae29931-c72e-43df-805b-27e4ddfbb582}</Project>
     </ProjectReference>
-    <ProjectReference Include="$(LolDir)\src\lol-core.vcxproj">
-      <Project>{9e62f2fe-3408-4eae-8238-fd84238ceeda}</Project>
-    </ProjectReference>
-    <ProjectReference Include="$(LolDir)\src\3rdparty\lol-lua.vcxproj">
-      <Project>{d84021ca-b233-4e0f-8a52-071b83bbccc4}</Project>
-    </ProjectReference>
   </ItemGroup>
-  <PropertyGroup Label="Globals">
-    <ProjectGuid>{948C0C9A-2C25-41D9-BF1B-92B14A8C061B}</ProjectGuid>
-    <ConfigurationType>Application</ConfigurationType>
-    <Keyword>Win32Proj</Keyword>
-  </PropertyGroup>
-  <Import Project="$(LolDir)\build\msbuild\lol.config.props" />
-  <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(LolDir)\build\msbuild\lolfx.props" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(LolDir)\build\msbuild\lol.vars.props" />
-  </ImportGroup>
-  <PropertyGroup Label="UserMacros" />
-  <Import Project="$(LolDir)\build\msbuild\lol.rules.props" />
-  <ItemDefinitionGroup />
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(LolDir)\build\msbuild\lolfx.targets" />
-  </ImportGroup>
 </Project>

@@ -38,6 +38,12 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{dc847af8-ff9c-4f24-ae83-b86fc5c6777d}</ProjectGuid>
+    <ConfigurationType>Application</ConfigurationType>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(LolDir)\build\msbuild\lol.props" />
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -53,21 +59,6 @@
       <Project>{141365e7-f8f3-4d95-b8db-1a093f92f436}</Project>
     </ProjectReference>
   </ItemGroup>
-  <PropertyGroup Label="Globals">
-    <ProjectGuid>{dc847af8-ff9c-4f24-ae83-b86fc5c6777d}</ProjectGuid>
-    <ConfigurationType>Application</ConfigurationType>
-    <Keyword>Win32Proj</Keyword>
-  </PropertyGroup>
-  <Import Project="$(LolDir)\build\msbuild\lol.config.props" />
-  <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(LolDir)\build\msbuild\lolfx.props" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(LolDir)\build\msbuild\lol.vars.props" />
-  </ImportGroup>
-  <PropertyGroup Label="UserMacros" />
-  <Import Project="$(LolDir)\build\msbuild\lol.rules.props" />
   <ItemDefinitionGroup>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -75,8 +66,4 @@
       <Profile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</Profile>
     </Link>
   </ItemDefinitionGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(LolDir)\build\msbuild\lolfx.targets" />
-  </ImportGroup>
 </Project>
