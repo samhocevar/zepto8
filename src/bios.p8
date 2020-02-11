@@ -175,7 +175,11 @@ table, debug, string, io, coroutine = nil
 --
 function _z8.reset_state()
     -- These variables are global but can be overridden
-    ⬅️, ➡️, ⬆️, ⬇️, 🅾️, ❎, ◆ = 0, 1, 2, 3, 4, 5, 6
+    ⬅️, ➡️, ⬆️, ⬇️, 🅾️, ❎ = 0, 1, 2, 3, 4, 5
+
+    █, ▒, 🐱, ░, ✽, ●, ♥, ☉, 웃, ⌂, 😐, ♪, ◆, …, ★, ⧗, ˇ, ∧, ▤, ▥ = 0, 0x5a5a,
+    0x511f, 0x7d7d, 0xb81d, 0xf99f, 0x51bf, 0xb5bf, 0x999f, 0xb11f, 0xa0e0,
+    0x9b3f, 0xb1bf, 0xf5ff, 0xb15f, 0x1b1f, 0xf5bf, 0x7adf, 0x0f0f, 0x5555
 
     -- From the PICO-8 documentation:
     -- “The draw state is reset each time a program is run. This is equivalent to calling:
