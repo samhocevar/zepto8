@@ -48,10 +48,6 @@
     <ClCompile>
       <AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
-    <Link>
-      <AdditionalDependencies>libssl.lib;libcrypto.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(LolDir)/external/openssl-1.1.1d/lib/x86_64-msvc;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="player.cpp" />

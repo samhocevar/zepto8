@@ -30,7 +30,6 @@ ___zepto8_LDFLAGS += --preload-file bios.p8 --preload-file data/zepto8.ttf \
 endif
 
 3rdparty_sources = \
-    3rdparty/cpp-httplib/httplib.h \
     3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h \
     3rdparty/portable-file-dialogs/portable-file-dialogs.h \
     3rdparty/zep/include/zep/buffer.h \
@@ -156,15 +155,14 @@ libzepto8_a_SOURCES = \
     raccoon/memory.h raccoon/font.h \
     raccoon/api.cpp \
     $(NULL)
-libzepto8_a_CPPFLAGS = $(ssl_cppflags) \
-                       -I3rdparty/cpp-httplib \
-                       $(AM_CPPFLAGS)
+libzepto8_a_CPPFLAGS = $(ssl_cppflags) $(AM_CPPFLAGS)
 
 EXTRA_DIST += libzepto8.vcxproj
 
 ssl_cppflags =
 ssl_ldflags =
 if HAVE_OPENSSL
+# FIXME: move this to Lol Engine
 ssl_cppflags += -DCPPHTTPLIB_OPENSSL_SUPPORT
 ssl_ldflags += -lssl
 endif

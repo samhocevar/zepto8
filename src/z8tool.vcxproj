@@ -49,10 +49,6 @@
       <AdditionalIncludeDirectories>.;zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>GZ8;Z_SOLO;NO_GZIP;HAVE_MEMCPY;local=;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <Link>
-      <AdditionalDependencies>libssl.lib;libcrypto.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(LolDir)/external/openssl-1.1.1d/lib/x86_64-msvc;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="z8tool.cpp" />

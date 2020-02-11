@@ -20,6 +20,3 @@
 [submodule "quickjs"]
 	path = src/3rdparty/quickjs
 	url = ../../samhocevar/fork-quickjs.git
-[submodule "cpp-httplib"]
-	path = src/3rdparty/cpp-httplib
-	url = ../../samhocevar/fork-cpp-httplib.git
