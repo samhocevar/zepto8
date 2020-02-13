@@ -177,7 +177,7 @@ libz8lua_a_SOURCES = \
     3rdparty/z8lua/lzio.c 3rdparty/z8lua/lctype.c 3rdparty/z8lua/lauxlib.c \
     3rdparty/z8lua/lbaselib.c 3rdparty/z8lua/lcorolib.c 3rdparty/z8lua/ltablib.c \
     3rdparty/z8lua/lstrlib.c 3rdparty/z8lua/lpico8lib.c 3rdparty/z8lua/linit.c \
-    3rdparty/z8lua/ldblib.c \
+    3rdparty/z8lua/ldblib.c 3rdparty/z8lua/eris.c \
     \
     3rdparty/z8lua/fix32.h 3rdparty/z8lua/lapi.h 3rdparty/z8lua/lauxlib.h \
     3rdparty/z8lua/lcode.h 3rdparty/z8lua/lctype.h 3rdparty/z8lua/ldebug.h \
@@ -187,7 +187,7 @@ libz8lua_a_SOURCES = \
     3rdparty/z8lua/lstate.h 3rdparty/z8lua/lstring.h 3rdparty/z8lua/ltable.h \
     3rdparty/z8lua/ltests.h 3rdparty/z8lua/ltm.h 3rdparty/z8lua/luaconf.h \
     3rdparty/z8lua/lua.h 3rdparty/z8lua/lualib.h 3rdparty/z8lua/lundump.h \
-    3rdparty/z8lua/lvm.h 3rdparty/z8lua/lzio.h
+    3rdparty/z8lua/lvm.h 3rdparty/z8lua/lzio.h 3rdparty/z8lua/eris.h
 libz8lua_a_CPPFLAGS = $(lua_cflags) $(AM_CPPFLAGS) $(AM_CXXFLAGS)
 
 lua_cflags = -xc++ -I3rdparty/z8lua -DLUA_USE_POSIX -DLUA_USE_STRTODHEX
