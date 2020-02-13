@@ -17,7 +17,7 @@ This tool does a lot of things.
 
 Compress any file:
 
-    # cat file | z8tool --compress
+    # z8tool --compress <file
 
 This will output a base59 string that can be decompressed by
 [unz8](https://github.com/samhocevar/zepto8/blob/master/src/unz8). The
