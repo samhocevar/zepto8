@@ -240,11 +240,19 @@ bool vm::step(float seconds)
 {
     UNUSED(seconds);
 
+    bool ret = false;
     lua_getglobal(m_lua, "_z8");
     lua_getfield(m_lua, -1, "tick");
-    lua_pcall(m_lua, 0, 1, 0);
-
-    bool ret = (int)lua_tonumber(m_lua, -1) >= 0;
+    int status = lua_pcall(m_lua, 0, 1, 0);
+    if (status != LUA_OK)
+    {
+        char const *message = lua_tostring(m_lua, -1);
+        msg::error("error %d in main loop: %s\n", status, message);
+    }
+    else
+    {
+        ret = (int)lua_tonumber(m_lua, -1) >= 0;
+    }
     lua_pop(m_lua, 1);
     lua_remove(m_lua, -1);
 
