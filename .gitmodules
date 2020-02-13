@@ -5,7 +5,7 @@
 	path = wiki
 	url = ../../samhocevar/zepto8.wiki.git
 [submodule "z8lua"]
-	path = src/z8lua
+	path = src/3rdparty/z8lua
 	url = ../../samhocevar/z8lua.git
 	branch = zepto8
 [submodule "imgui-club"]

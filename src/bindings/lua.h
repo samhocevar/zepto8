@@ -19,9 +19,9 @@
 #include <optional>
 #include <variant>
 
-#include "z8lua/lua.h"
-#include "z8lua/lauxlib.h"
-#include "z8lua/lualib.h"
+#include "3rdparty/z8lua/lua.h"
+#include "3rdparty/z8lua/lauxlib.h"
+#include "3rdparty/z8lua/lualib.h"
 
 namespace z8::bindings
 {

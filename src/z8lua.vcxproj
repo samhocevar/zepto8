@@ -52,7 +52,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="z8lua/lua.c" />
+    <ClCompile Include="3rdparty/z8lua/lua.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="libz8lua.vcxproj">

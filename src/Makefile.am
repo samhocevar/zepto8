@@ -128,7 +128,7 @@ EXTRA_DIST += zlib/deflate.c zlib/trees.c
 EXTRA_DIST += z8tool.vcxproj
 
 ___z8lua_SOURCES = \
-    z8lua/lua.c dummy.cpp \
+    3rdparty/z8lua/lua.c dummy.cpp \
     $(NULL)
 ___z8lua_CPPFLAGS = -xc++ -Iz8lua $(lua_cflags) $(AM_CPPFLAGS) $(AM_CXXFLAGS)
 ___z8lua_LDFLAGS = libz8lua.a $(lua_ldflags)
@@ -168,23 +168,29 @@ ssl_ldflags += -lssl
 endif
 
 libz8lua_a_SOURCES = \
-    z8lua/lapi.c z8lua/lcode.c z8lua/ldebug.c z8lua/ldo.c z8lua/ldump.c \
-    z8lua/lfunc.c z8lua/lgc.c z8lua/llex.c z8lua/lmem.c z8lua/lobject.c \
-    z8lua/lopcodes.c z8lua/lparser.c z8lua/lstate.c z8lua/lstring.c \
-    z8lua/ltable.c z8lua/ltm.c z8lua/lundump.c z8lua/lvm.c z8lua/lzio.c \
-    z8lua/lctype.c z8lua/lauxlib.c z8lua/lbaselib.c z8lua/lcorolib.c \
-    z8lua/ltablib.c z8lua/lstrlib.c z8lua/lpico8lib.c z8lua/linit.c \
-    z8lua/ldblib.c \
+    3rdparty/z8lua/lapi.c 3rdparty/z8lua/lcode.c 3rdparty/z8lua/ldebug.c \
+    3rdparty/z8lua/ldo.c 3rdparty/z8lua/ldump.c 3rdparty/z8lua/lfunc.c \
+    3rdparty/z8lua/lgc.c 3rdparty/z8lua/llex.c 3rdparty/z8lua/lmem.c \
+    3rdparty/z8lua/lobject.c 3rdparty/z8lua/lopcodes.c 3rdparty/z8lua/lparser.c \
+    3rdparty/z8lua/lstate.c 3rdparty/z8lua/lstring.c 3rdparty/z8lua/ltable.c \
+    3rdparty/z8lua/ltm.c 3rdparty/z8lua/lundump.c 3rdparty/z8lua/lvm.c \
+    3rdparty/z8lua/lzio.c 3rdparty/z8lua/lctype.c 3rdparty/z8lua/lauxlib.c \
+    3rdparty/z8lua/lbaselib.c 3rdparty/z8lua/lcorolib.c 3rdparty/z8lua/ltablib.c \
+    3rdparty/z8lua/lstrlib.c 3rdparty/z8lua/lpico8lib.c 3rdparty/z8lua/linit.c \
+    3rdparty/z8lua/ldblib.c \
     \
-    z8lua/fix32.h z8lua/lapi.h z8lua/lauxlib.h z8lua/lcode.h z8lua/lctype.h \
-    z8lua/ldebug.h z8lua/ldo.h z8lua/lfunc.h z8lua/lgc.h z8lua/llex.h \
-    z8lua/llimits.h z8lua/lmem.h z8lua/lobject.h z8lua/lopcodes.h \
-    z8lua/lparser.h z8lua/lstate.h z8lua/lstring.h z8lua/ltable.h \
-    z8lua/ltests.h z8lua/ltm.h z8lua/luaconf.h z8lua/lua.h z8lua/lualib.h \
-    z8lua/lundump.h z8lua/lvm.h z8lua/lzio.h
+    3rdparty/z8lua/fix32.h 3rdparty/z8lua/lapi.h 3rdparty/z8lua/lauxlib.h \
+    3rdparty/z8lua/lcode.h 3rdparty/z8lua/lctype.h 3rdparty/z8lua/ldebug.h \
+    3rdparty/z8lua/ldo.h 3rdparty/z8lua/lfunc.h 3rdparty/z8lua/lgc.h \
+    3rdparty/z8lua/llex.h 3rdparty/z8lua/llimits.h 3rdparty/z8lua/lmem.h \
+    3rdparty/z8lua/lobject.h 3rdparty/z8lua/lopcodes.h 3rdparty/z8lua/lparser.h \
+    3rdparty/z8lua/lstate.h 3rdparty/z8lua/lstring.h 3rdparty/z8lua/ltable.h \
+    3rdparty/z8lua/ltests.h 3rdparty/z8lua/ltm.h 3rdparty/z8lua/luaconf.h \
+    3rdparty/z8lua/lua.h 3rdparty/z8lua/lualib.h 3rdparty/z8lua/lundump.h \
+    3rdparty/z8lua/lvm.h 3rdparty/z8lua/lzio.h
 libz8lua_a_CPPFLAGS = $(lua_cflags) $(AM_CPPFLAGS) $(AM_CXXFLAGS)
 
-lua_cflags = -xc++ -Iz8lua -DLUA_USE_POSIX -DLUA_USE_STRTODHEX
+lua_cflags = -xc++ -I3rdparty/z8lua -DLUA_USE_POSIX -DLUA_USE_STRTODHEX
 lua_ldflags =
 if HAVE_READLINE
 lua_cflags += -DLUA_USE_READLINE

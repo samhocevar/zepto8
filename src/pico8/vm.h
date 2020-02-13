@@ -21,7 +21,7 @@
 #include "bios.h"
 #include "pico8/cart.h"
 #include "pico8/memory.h"
-#include "z8lua/lua.h"
+#include "3rdparty/z8lua/lua.h"
 
 namespace z8 { class player; }
 
