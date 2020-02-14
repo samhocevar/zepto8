@@ -19,12 +19,21 @@ __lua__
 --
 __z8_stopped = false
 __z8_load_code = load
+__z8_persist_delay = 0
 
 
 -- Backward compatibility for old PICO-8 versions
 -- PICO-8 documentation: t() aliased to time()
 t = time
 mapdraw = map
+
+-- These variables can be used for button names
+⬅️, ➡️, ⬆️, ⬇️, 🅾️, ❎ = 0, 1, 2, 3, 4, 5
+
+-- These variables encode fillp patterns
+█, ▒, 🐱, ░, ✽, ●, ♥, ☉, 웃, ⌂, 😐, ♪, ◆, …, ★, ⧗, ˇ, ∧, ▤, ▥ = 0, 0x5a5a,
+0x511f, 0x7d7d, 0xb81d, 0xf99f, 0x51bf, 0xb5bf, 0x999f, 0xb11f, 0xa0e0,
+0x9b3f, 0xb1bf, 0xf5ff, 0xb15f, 0x1b1f, 0xf5bf, 0x7adf, 0x0f0f, 0x5555
 
 
 --
@@ -183,13 +192,6 @@ end
 -- Utility functions
 --
 function __z8_reset_state()
-    -- These variables are global but can be overridden
-    ⬅️, ➡️, ⬆️, ⬇️, 🅾️, ❎ = 0, 1, 2, 3, 4, 5
-
-    █, ▒, 🐱, ░, ✽, ●, ♥, ☉, 웃, ⌂, 😐, ♪, ◆, …, ★, ⧗, ˇ, ∧, ▤, ▥ = 0, 0x5a5a,
-    0x511f, 0x7d7d, 0xb81d, 0xf99f, 0x51bf, 0xb5bf, 0x999f, 0xb11f, 0xa0e0,
-    0x9b3f, 0xb1bf, 0xf5ff, 0xb15f, 0x1b1f, 0xf5bf, 0x7adf, 0x0f0f, 0x5555
-
     -- From the PICO-8 documentation:
     -- “The draw state is reset each time a program is run. This is equivalent to calling:
     -- clip() camera() pal() color(6)”
@@ -246,8 +248,6 @@ function __z8_run_cart(cart_code)
         code()
     end)
 end
-
-__z8_persist_delay = 0
 
 function __z8_tick()
     if (costatus(__z8_loop) == "dead") return -1

@@ -128,7 +128,15 @@ void vm::private_stub(std::string str)
 
 bool vm::private_is_api(std::string str)
 {
-    return api::functions.find(str) != api::functions.end();
+    // Find str in function list
+    if (api::functions.find(str) != api::functions.end())
+        return true;
+
+    // Find str in special glyphs
+    if (str.size() == 1 && uint8_t(str[0]) >= 0x80 && uint8_t(str[0]) < 0x80 + 26)
+        return true;
+
+    return false;
 }
 
 opt<bool> vm::private_cartdata(opt<std::string> str)
