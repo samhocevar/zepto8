@@ -176,13 +176,19 @@ function persist(cr)
     eris.settings("path", true)
     local t = {[_ENV]=1, [error]=2}
     for i=1,#perms do t[_ENV[perms[i]]] = i+2 end
-    return eris.persist(t, cr)
+    collectgarbage('stop')
+    local ret = eris.persist(t, cr)
+    collectgarbage('restart')
+    return ret
 end
 
 function unpersist(s)
     local t = {_ENV, error}
     for i=1,#perms do add(t, _ENV[perms[i]]) end
-    return eris.unpersist(t, s)
+    collectgarbage('stop')
+    local ret = eris.unpersist(t, s)
+    collectgarbage('restart')
+    return ret
 end
 
 
