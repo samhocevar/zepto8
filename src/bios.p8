@@ -43,12 +43,11 @@ local __cartdata = __cartdata
 --  coroutine.[create|resume|status|yield]() was removed in 0.1.3 but added
 --  in 0.1.6 as coroutine(), cocreate(), coresume(), costatus() and yield()
 --  respectively.
+-- The debug library is not needed either, but we need trace()
 cocreate = coroutine.create
 coresume = coroutine.resume
 costatus = coroutine.status
 yield = coroutine.yield
-
--- The debug library is not needed either, but we need trace()
 trace = debug.traceback
 
 function stop()
