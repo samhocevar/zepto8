@@ -84,18 +84,6 @@ function del(a, v)
     end
 end
 
--- Use the new peek4() and poke4() functions
--- FIXME: implement these in C++ to avoid messing with CPU cycles
-function dget(n)
-    n = tonumber(n)
-    return n >= 0 and n < 64 and peek4(0x5e00 + 4 * n) or 0
-end
-
-function dset(n, x)
-    n = tonumber(n)
-    if n >= 0 and n < 64 then poke4(0x5e00 + 4 * n, x) end
-end
-
 function cartdata(s)
     if __cartdata() then
         print('cartdata() can only be called once')

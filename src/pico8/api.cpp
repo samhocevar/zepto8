@@ -42,19 +42,17 @@ std::set<std::string> api::functions =
     "abs", "sgn", "band", "bor", "bxor", "bnot", "shl", "shr", "lshr",
     "rotl", "rotr", "tostr", "tonum", "srand", "rnd", "ord", "chr",
     // Implemented in the ZEPTO-8 VM
-    "run", "menuitem", "reload", "peek", "peek2", "peek4", "poke",
-    "poke2", "poke4", "memcpy", "memset", "stat", "printh", "extcmd",
-    "_update_buttons", "btn", "btnp", "cursor", "camera", "circ",
-    "circfill", "clip", "cls", "color", "fillp", "fget", "fset", "line",
-    "map", "mget", "mset", "pal", "palt", "pget", "pset", "rect",
-    "rectfill", "sget", "sset", "spr", "sspr", "music", "sfx", "time",
+    "run", "menuitem", "reload", "dget", "dset", "peek", "peek2", "peek4",
+    "poke", "poke2", "poke4", "memcpy", "memset", "stat", "printh", "extcmd",
+    "_update_buttons", "btn", "btnp", "cursor", "camera", "circ", "circfill",
+    "clip", "cls", "color", "fillp", "fget", "fset", "line", "map", "mget",
+    "mset", "pal", "palt", "pget", "pset", "rect", "rectfill", "sget", "sset",
+    "spr", "sspr", "music", "sfx", "time",
     // Implemented in the ZEPTO-8 BIOS
     "cocreate", "coresume", "costatus", "yield", "trace", "stop",
     "count", "add", "sub", "foreach", "all", "del", "t", "dget",
     "dset", "cartdata", "load", "save", "info", "abort", "folder",
     "resume", "reboot", "dir", "ls", "flip", "mapdraw",
-    // Not implemented but we should!
-    "assert", "getmetatable", "setmetatable",
 };
 
 } // namespace z8::pico8

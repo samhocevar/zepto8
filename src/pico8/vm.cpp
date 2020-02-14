@@ -342,6 +342,19 @@ void vm::api_reload(int16_t in_dst, int16_t in_src, opt<int16_t> in_size)
     ::memset(&m_ram[dst], 0, size);
 }
 
+fix32 vm::api_dget(int16_t n)
+{
+    // FIXME: cannot be used before cartdata()
+    return n >= 0 && n < 64 ? api_peek4(0x5e00 + 4 * n) : fix32(0);
+}
+
+void vm::api_dset(int16_t n, fix32 x)
+{
+    // FIXME: cannot be used before cartdata()
+    if (n >= 0 && n < 64)
+        api_poke4(0x5e00 + 4 * n, x);
+}
+
 int16_t vm::api_peek(int16_t addr)
 {
     // Note: peek() is the same as peek(0)

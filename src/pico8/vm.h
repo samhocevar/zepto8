@@ -79,6 +79,8 @@ private:
     void api_run();
     void api_menuitem();
     void api_reload(int16_t in_dst, int16_t in_src, opt<int16_t> in_size);
+    fix32 api_dget(int16_t addr);
+    void api_dset(int16_t addr, fix32 val);
     int16_t api_peek(int16_t addr);
     int16_t api_peek2(int16_t addr);
     fix32 api_peek4(int16_t addr);
@@ -148,6 +150,8 @@ public:
             { "run",      bind<&vm::api_run>() },
             { "menuitem", bind<&vm::api_menuitem>() },
             { "reload",   bind<&vm::api_reload>() },
+            { "dget",     bind<&vm::api_dget>() },
+            { "dset",     bind<&vm::api_dset>() },
             { "peek",     bind<&vm::api_peek>() },
             { "peek2",    bind<&vm::api_peek2>() },
             { "peek4",    bind<&vm::api_peek4>() },
