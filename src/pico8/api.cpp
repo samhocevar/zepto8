@@ -32,17 +32,20 @@ std::set<std::string> api::keywords =
 
 std::set<std::string> api::functions =
 {
+    // Implemented in Lua (mostly baselib)
+    "assert", "getmetatable", "ipairs", "load", "next", "pairs", "print",
+    "rawequal", "rawlen", "rawget", "rawset", "setmetatable", "type",
     // Implemented in pico8lib (from z8lua)
     "max", "min", "mid", "ceil", "flr", "cos", "sin", "atan2", "sqrt",
     "abs", "sgn", "band", "bor", "bxor", "bnot", "shl", "shr", "lshr",
     "rotl", "rotr", "tostr", "tonum", "srand", "rnd", "ord", "chr",
     // Implemented in the ZEPTO-8 VM
-    "run", "menuitem", "reload", "peek", "peek4", "poke", "poke4",
-    "memcpy", "memset", "stat", "printh", "extcmd", "_update_buttons",
-    "btn", "btnp", "cursor", "print", "camera", "circ", "circfill",
-    "clip", "cls", "color", "fillp", "fget", "fset", "line", "map",
-    "mget", "mset", "pal", "palt", "pget", "pset", "rect", "rectfill",
-    "sget", "sset", "spr", "sspr", "music", "sfx", "time",
+    "run", "menuitem", "reload", "peek", "peek2", "peek4", "poke",
+    "poke2", "poke4", "memcpy", "memset", "stat", "printh", "extcmd",
+    "_update_buttons", "btn", "btnp", "cursor", "print", "camera",
+    "circ", "circfill", "clip", "cls", "color", "fillp", "fget", "fset",
+    "line", "map", "mget", "mset", "pal", "palt", "pget", "pset", "rect",
+    "rectfill", "sget", "sset", "spr", "sspr", "music", "sfx", "time",
     // Implemented in the ZEPTO-8 BIOS
     "cocreate", "coresume", "costatus", "yield", "trace", "stop",
     "count", "add", "sub", "foreach", "all", "del", "t", "dget",

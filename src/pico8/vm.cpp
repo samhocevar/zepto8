@@ -241,8 +241,7 @@ bool vm::step(float seconds)
     UNUSED(seconds);
 
     bool ret = false;
-    lua_getglobal(m_lua, "_z8");
-    lua_getfield(m_lua, -1, "tick");
+    lua_getglobal(m_lua, "__z8_tick");
     int status = lua_pcall(m_lua, 0, 1, 0);
     if (status != LUA_OK)
     {
@@ -254,7 +253,6 @@ bool vm::step(float seconds)
         ret = (int)lua_tonumber(m_lua, -1) >= 0;
     }
     lua_pop(m_lua, 1);
-    lua_remove(m_lua, -1);
 
     m_instructions = 0;
     return ret;
@@ -290,9 +288,8 @@ void vm::api_run()
     // Initialise VM state (TODO: check what else to init)
     ::memset(m_buttons, 0, sizeof(m_buttons));
 
-    // Load cartridge code and call _z8.run_cart() on it
-    lua_getglobal(m_sandbox_lua, "_z8");
-    lua_getfield(m_sandbox_lua, -1, "run_cart");
+    // Load cartridge code and call __z8_run_cart() on it
+    lua_getglobal(m_sandbox_lua, "__z8_run_cart");
     lua_pushstring(m_sandbox_lua, m_cart.get_lua().c_str());
     lua_pcall(m_sandbox_lua, 1, 0, 0);
 }

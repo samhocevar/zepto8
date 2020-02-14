@@ -15,165 +15,156 @@ __lua__
 
 
 --
--- Private object -- should be refactored in a better way
+-- Private things
 --
-_z8 = {
-    stopped=false
-}
+__z8_stopped = false
+__z8_load_code = load
+
+
+-- Backward compatibility for old PICO-8 versions
+-- PICO-8 documentation: t() aliased to time()
+t = time
+mapdraw = map
 
 
 --
--- Aliases for PICO-8 compatibility
+-- Save these functions because they are needed by some of our public functions
+-- but will not be propagated to the cart through _ENV.
 --
-do
-    -- According to https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0 :
-    --  coroutine.[create|resume|status|yield]() was removed in 0.1.3 but added
-    --  in 0.1.6 as coroutine(), cocreate(), coresume(), costatus() and yield()
-    --  respectively.
-    cocreate = coroutine.create
-    coresume = coroutine.resume
-    costatus = coroutine.status
-    yield = coroutine.yield
+local error = error
+local insert = table.insert
+local remove = table.remove
+local ipairs = ipairs
+local tonumber = tonumber
+local __cartdata = __cartdata
 
-    -- The debug library is not needed either, but we need trace()
-    trace = debug.traceback
 
-    local error = error
-    function stop() _z8.stopped = true error() end
+-- According to https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0 :
+--  coroutine.[create|resume|status|yield]() was removed in 0.1.3 but added
+--  in 0.1.6 as coroutine(), cocreate(), coresume(), costatus() and yield()
+--  respectively.
+cocreate = coroutine.create
+coresume = coroutine.resume
+costatus = coroutine.status
+yield = coroutine.yield
 
-    function assert(cond, msg)
-        if not cond then
-            color(14) print("assertion failed:")
-            color(6) print(msg or "assert()")
-            stop()
+-- The debug library is not needed either, but we need trace()
+trace = debug.traceback
+
+function stop()
+    __z8_stopped = true
+    error()
+end
+
+function assert(cond, msg)
+    if not cond then
+        color(14) print("assertion failed:")
+        color(6) print(msg or "assert()")
+        stop()
+    end
+end
+
+function count(a) return a != nil and #a or 0 end
+function add(a, x) if a != nil then insert(a, x) end return x end
+sub = string.sub
+
+function foreach(a, f)
+    if a != nil then for k, v in ipairs(a) do f(v) end end
+end
+
+function all(a)
+    local i, n = 0, a != nil and #a or 0
+    return function() i = i + 1 if i <= n then return a[i] end end
+end
+
+function del(a, v)
+    if a != nil then
+        for k, v2 in ipairs(a) do
+            if v == v2 then remove(a, k) return k end
         end
     end
+end
 
-    -- use closure so that we don’t need “table” later
-    local insert = table.insert
-    local remove = table.remove
+-- Use the new peek4() and poke4() functions
+-- FIXME: implement these in C++ to avoid messing with CPU cycles
+function dget(n)
+    n = tonumber(n)
+    return n >= 0 and n < 64 and peek4(0x5e00 + 4 * n) or 0
+end
 
-    function count(a) return a != nil and #a or 0 end
-    function add(a, x) if a != nil then insert(a, x) end return x end
-    sub = string.sub
+function dset(n, x)
+    n = tonumber(n)
+    if n >= 0 and n < 64 then poke4(0x5e00 + 4 * n, x) end
+end
 
-    local ipairs = ipairs
-    function foreach(a, f)
-        if a != nil then for k, v in ipairs(a) do f(v) end end
+function cartdata(s)
+    if __cartdata() then
+        print('cartdata() can only be called once')
+        abort()
+        return false
     end
-
-    function all(a)
-        local i, n = 0, a != nil and #a or 0
-        return function() i = i + 1 if i <= n then return a[i] end end
+    -- PICO-8 documentation: id is a string up to 64 characters long
+    if #s == 0 or #s > 64 then
+        print('cart data id too long')
+        abort()
+        return false
     end
-
-    function del(a, v)
-        if a != nil then
-            for k, v2 in ipairs(a) do
-                if v == v2 then remove(a, k) return k end
-            end
-        end
+    -- PICO-8 documentation: legal characters are a..z, 0..9 and underscore (_)
+    -- PICO-8 changelog: allow '-' in cartdat() names
+    if string.match(s, '[^-abcdefghijklmnopqrstuvwxyz0123456789_]') then
+        print('cart data id: bad char')
+        abort()
+        return false
     end
+    return __cartdata(s)
+end
 
-    -- PICO-8 documentation: t() aliased to time()
-    t = time
+function __z8_strlen(s)
+    return #string.gsub(s, '[\128-\255]', 'XX')
+end
 
-    -- Use the new peek4() and poke4() functions
-    local tonumber = tonumber
-    function dget(n)
-        n = tonumber(n)
-        return n >= 0 and n < 64 and peek4(0x5e00 + 4 * n) or 0
-    end
+-- Stubs for unimplemented functions
+local function stub(s)
+    return function(a) __stub(s.."("..(a and '"'..tostr(a)..'"' or "")..")") end
+end
+load = stub("load")
+save = stub("save")
+info = stub("info")
+abort = stub("abort")
+folder = stub("folder")
+resume = stub("resume")
+reboot = stub("reboot")
+dir = stub("dir")
+ls = dir
 
-    function dset(n, x)
-        n = tonumber(n)
-        if n >= 0 and n < 64 then poke4(0x5e00 + 4 * n, x) end
-    end
-
-    _z8.gsub = string.gsub
-    _z8.match = string.match
-    _z8.load_code = load
-
-    local __cartdata = __cartdata
-
-    function cartdata(s)
-        if __cartdata() then
-            print('cartdata() can only be called once')
-            abort()
-            return false
-        end
-        -- PICO-8 documentation: id is a string up to 64 characters long
-        if #s == 0 or #s > 64 then
-            print('cart data id too long')
-            abort()
-            return false
-        end
-        -- PICO-8 documentation: legal characters are a..z, 0..9 and underscore (_)
-        -- PICO-8 changelog: allow '-' in cartdat() names
-        if _z8.match(s, '[^-abcdefghijklmnopqrstuvwxyz0123456789_]') then
-            print('cart data id: bad char')
-            abort()
-            return false
-        end
-        return __cartdata(s)
-    end
-
-    function _z8.strlen(s)
-        return #_z8.gsub(s, '[\128-\255]', 'XX')
-    end
-
-    -- Stubs for unimplemented functions
-    local function stub(s)
-        return function(a) __stub(s.."("..(a and '"'..tostr(a)..'"' or "")..")") end
-    end
-    load = stub("load")
-    save = stub("save")
-    info = stub("info")
-    abort = stub("abort")
-    folder = stub("folder")
-    resume = stub("resume")
-    reboot = stub("reboot")
-    dir = stub("dir")
-    ls = dir
-
-    -- All flip() does for now is yield so that the C++ VM gets a chance
-    -- to draw something even if Lua is in an infinite loop
-    function flip()
-        _update_buttons()
-        yield()
-    end
-
-    -- Backward compatibility for old PICO-8 versions
-    mapdraw = map
+-- All flip() does for now is yield so that the C++ VM gets a chance
+-- to draw something even if Lua is in an infinite loop
+function flip()
+    _update_buttons()
+    yield()
 end
 
 
 --
+-- Create a private environment for the cartridge, using a whitelist logic
 -- According to https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0 :
 --  _G global table has been removed.
 --
-_G = nil
-
-
---
--- Hide these functions from lbaselib
--- Must keep: assert, getmetatable, load, pairs, print, rawequal, rawlen,
--- rawget, rawset, setmetatable, type
---
-collectgarbage, dofile, error, ipairs, loadfile, loadstring, next, pcall,
-select, tonumber, tostring, xpcall = nil
-
-
---
--- Hide these modules, they should not be accessible
---
-table, debug, string, io, coroutine = nil
+function create_env()
+    local t = {}
+    for k,v in pairs(_ENV) do
+        if __is_api(k) then
+            t[k] = v
+        end
+    end
+    return t;
+end
 
 
 --
 -- Utility functions
 --
-function _z8.reset_state()
+function __z8_reset_state()
     -- These variables are global but can be overridden
     ⬅️, ➡️, ⬆️, ⬇️, 🅾️, ❎ = 0, 1, 2, 3, 4, 5
 
@@ -188,11 +179,11 @@ function _z8.reset_state()
     clip() camera() pal() color(6) fillp()
 end
 
-function _z8.reset_cartdata()
+function __z8_reset_cartdata()
     __cartdata(nil)
 end
 
-function _z8.run_cart(cart_code)
+function __z8_run_cart(cart_code)
     local glue_code = [[--
         if (_init) _init()
         if _update or _update60 or _draw then
@@ -211,36 +202,37 @@ function _z8.run_cart(cart_code)
         end
     ]]
 
-    _z8.loop = cocreate(function()
+    __z8_loop = cocreate(function()
 
         -- First reload cart into memory
         memset(0, 0, 0x8000)
         reload()
 
-        _z8.reset_state()
-        _z8.reset_cartdata()
+        __z8_reset_state()
+        __z8_reset_cartdata()
 
         -- Load cart and run the user-provided functions. Note that if the
         -- cart code returns before the end, our added code will not be
         -- executed, and nothing will work. This is also PICO-8’s behaviour.
         -- The code has to be appended as a string because the functions
         -- may be stored in local variables.
-        local code, ex = _z8.load_code(cart_code..glue_code)
+        local code, ex = __z8_load_code(cart_code..glue_code)
         if not code then
-          color(14) print('syntax error')
-          color(6) print(ex)
-          error()
+            color(14) print('syntax error')
+            color(6) print(ex)
+            error()
         end
 
         -- Run cart code
+        local _ENV = create_env()
         code()
     end)
 end
 
-function _z8.tick()
-    if (costatus(_z8.loop) == "dead") return -1
-    ret, err = coresume(_z8.loop)
-    if _z8.stopped then _z8.stopped = false -- FIXME: what now?
+function __z8_tick()
+    if (costatus(__z8_loop) == "dead") return -1
+    ret, err = coresume(__z8_loop)
+    if __z8_stopped then __z8_stopped = false -- FIXME: what now?
     elseif not ret then printh(tostr(err))
     end
     return 0
@@ -250,8 +242,8 @@ end
 --
 -- Splash sequence
 --
-function _z8.boot_sequence()
-    _z8.reset_state()
+function __z8_boot_sequence()
+    __z8_reset_state()
 
     local boot =
     {
@@ -280,19 +272,19 @@ function _z8.boot_sequence()
 
     for step=0,54 do if boot[step] then boot[step]() end flip() end
 
-    _z8.loop = cocreate(_z8.shell)
+    __z8_loop = cocreate(__z8_shell)
 end
 
-local function eval(cmd)
+local function do_command(cmd)
     color(14)
-    if _z8.match(cmd, '^ *$') then
+    if string.match(cmd, '^ *$') then
         -- empty line
-    elseif _z8.match(cmd, '^ *run *$') then
+    elseif string.match(cmd, '^ *run *$') then
         run()
-    elseif _z8.match(cmd, '^ *load[ |(]') then
-        local arg = _z8.gsub(cmd, '^ *load *', '')
+    elseif string.match(cmd, '^ *load[ |(]') then
+        local arg = string.gsub(cmd, '^ *load *', '')
         local task = __load
-        if _z8.match(arg, '^#') then
+        if string.match(arg, '^#') then
             print('downloading '..arg)
             task = __download
         end
@@ -308,7 +300,7 @@ local function eval(cmd)
     end
 end
 
-function _z8.shell()
+function __z8_shell()
     -- activate project
     poke(0x5f2d, 1)
     local history = {}
@@ -368,7 +360,7 @@ function _z8.shell()
             start_y = start_y + 6
             cursor(0, start_y)
             rectfill(0, start_y, 127, start_y + 5, 0)
-            eval(cmd)
+            do_command(cmd)
             start_y = peek(0x5f27)
             flip()
             if (#cmd > 0 and cmd != history[#history]) add(history, cmd)
@@ -376,7 +368,7 @@ function _z8.shell()
             cmd, caret = "", 0
         else
             local pen = peek(0x5f25)
-            rectfill(0, start_y, (_z8.strlen(cmd) + 3) * 4, start_y + 5, 0)
+            rectfill(0, start_y, (__z8_strlen(cmd) + 3) * 4, start_y + 5, 0)
             color(7)
             print('> ', 0, start_y, 7)
             print(cmd, 8, start_y, 7)
@@ -396,7 +388,7 @@ end
 -- Initialise the VM
 --
 srand(0)
-_z8.loop = cocreate(_z8.boot_sequence)
+__z8_loop = cocreate(__z8_boot_sequence)
 
 
 __gfx__

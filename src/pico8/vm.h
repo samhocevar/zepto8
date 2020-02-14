@@ -70,6 +70,7 @@ private:
 
     // Private methods (hidden from the user)
     opt<bool> private_cartdata(opt<std::string> str);
+    bool private_is_api(std::string str);
     bool private_download(std::string str);
     bool private_load(std::string str);
     void private_stub(std::string str);
@@ -197,6 +198,7 @@ public:
 
             { "__cartdata", bind<&vm::private_cartdata>() },
             { "__download", bind<&vm::private_download>() },
+            { "__is_api",   bind<&vm::private_is_api>() },
             { "__load",     bind<&vm::private_load>() },
             { "__stub",     bind<&vm::private_stub>() },
         };

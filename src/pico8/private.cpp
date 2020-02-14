@@ -126,6 +126,11 @@ void vm::private_stub(std::string str)
     msg::info("z8:stub:%s\n", str.c_str());
 }
 
+bool vm::private_is_api(std::string str)
+{
+    return api::functions.find(str) != api::functions.end();
+}
+
 opt<bool> vm::private_cartdata(opt<std::string> str)
 {
     // No argument given: we return whether there is data
