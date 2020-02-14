@@ -86,7 +86,7 @@ private:
 
 public:
     // The API we export to extension languages
-    template<typename T> struct api
+    template<typename T> struct exported_api
     {
         template<auto U> using bind = typename T::template bind<U>;
 

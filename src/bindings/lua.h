@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -101,7 +101,7 @@ public:
         lua_setglobal(l, "\x01");
 #endif
 
-        auto lib = typename T::template api<lua>().data;
+        auto lib = typename T::template exported_api<lua>().data;
         lib.push_back({});
 
         lua_pushglobaltable(l);

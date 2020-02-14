@@ -150,6 +150,7 @@ libzepto8_a_SOURCES = \
     pico8/cart.cpp pico8/cart.h \
     pico8/private.cpp pico8/gfx.cpp \
     pico8/render.cpp pico8/sfx.cpp \
+    pico8/api.cpp \
     \
     raccoon/vm.cpp raccoon/vm.h \
     raccoon/memory.h raccoon/font.h \

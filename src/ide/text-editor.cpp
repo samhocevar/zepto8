@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -33,37 +33,6 @@
 
 namespace z8
 {
-
-// This is the list from Lua’s luaX_tokens
-static std::set<std::string> pico8_keywords =
-{
-    "and", "break", "do", "else", "elseif",
-    "end", "false", "for", "function", "goto", "if",
-    "in", "local", "nil", "not", "or", "repeat",
-    "return", "then", "true", "until", "while",
-};
-
-static std::set<std::string> pico8_identifiers =
-{
-    // Implemented in pico8lib (from z8lua)
-    "max", "min", "mid", "ceil", "flr", "cos", "sin", "atan2", "sqrt",
-    "abs", "sgn", "band", "bor", "bxor", "bnot", "shl", "shr", "lshr",
-    "rotl", "rotr", "tostr", "tonum", "srand", "rnd", "ord", "chr",
-    // Implemented in the ZEPTO-8 VM
-    "run", "menuitem", "reload", "peek", "peek4", "poke", "poke4",
-    "memcpy", "memset", "stat", "printh", "extcmd", "_update_buttons",
-    "btn", "btnp", "cursor", "print", "camera", "circ", "circfill",
-    "clip", "cls", "color", "fillp", "fget", "fset", "line", "map",
-    "mget", "mset", "pal", "palt", "pget", "pset", "rect", "rectfill",
-    "sget", "sset", "spr", "sspr", "music", "sfx", "time",
-    // Implemented in the ZEPTO-8 BIOS
-    "cocreate", "coresume", "costatus", "yield", "trace", "stop",
-    "count", "add", "sub", "foreach", "all", "del", "t", "dget",
-    "dset", "cartdata", "load", "save", "info", "abort", "folder",
-    "resume", "reboot", "dir", "ls", "flip", "mapdraw",
-    // Not implemented but we should!
-    "assert", "getmetatable", "setmetatable",
-};
 
 #define TEST_TEXT \
     "--                 " \
@@ -164,7 +133,7 @@ text_editor::text_editor()
     //m_impl->SetMode(Zep::ZepMode_Standard::StaticName());
     m_impl->RegisterSyntaxFactory({".p8"}, Zep::SyntaxProvider { "p8", Zep::tSyntaxFactory([](Zep::ZepBuffer* pBuffer)
     {
-        return std::make_shared<Zep::ZepSyntax>(*pBuffer, pico8_keywords, pico8_identifiers);
+        return std::make_shared<Zep::ZepSyntax>(*pBuffer, pico8::api::keywords, pico8::api::functions);
     })});
 
     m_impl->m_buffer = m_impl->InitWithText(BUFFER_NAME, "");

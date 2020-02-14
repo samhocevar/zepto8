@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -74,7 +74,7 @@ public:
         JS_SetContextOpaque(ctx, that);
 
         // FIXME: this should not be static, store it in "that" instead!
-        static auto lib = typename T::template api<js>().data;
+        static auto lib = typename T::template exported_api<js>().data;
 
         // Add functions to global scope
         auto global_obj = JS_GetGlobalObject(ctx);

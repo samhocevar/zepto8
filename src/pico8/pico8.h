@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -15,6 +15,7 @@
 #include <lol/engine.h>
 
 #include <map>
+#include <set>
 #include <string_view>
 #include <regex>
 
@@ -35,6 +36,12 @@ enum
     LABEL_HEIGHT = 128,
     LABEL_X = 16,
     LABEL_Y = 24,
+};
+
+struct api
+{
+    static std::set<std::string> functions;
+    static std::set<std::string> keywords;
 };
 
 struct charset
