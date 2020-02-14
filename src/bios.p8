@@ -150,7 +150,7 @@ end
 -- According to https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0 :
 --  _G global table has been removed.
 --
-function create_env()
+function create_sandbox()
     local t = {}
     for k,v in pairs(_ENV) do
         if __is_api(k) then
@@ -158,6 +158,31 @@ function create_env()
         end
     end
     return t;
+end
+
+
+--
+-- Handle persistence using eris
+--
+local perms = {}
+for k,v in pairs(_ENV) do
+    if type(v) == 'function' and __is_api(k) then
+        add(perms, k)
+    end
+end
+table.sort(perms)
+
+function persist(cr)
+    eris.settings("path", true)
+    local t = {[_ENV]=1, [error]=2}
+    for i=1,#perms do t[_ENV[perms[i]]] = i+2 end
+    return eris.persist(t, cr)
+end
+
+function unpersist(s)
+    local t = {_ENV, error}
+    for i=1,#perms do add(t, _ENV[perms[i]]) end
+    return eris.unpersist(t, s)
 end
 
 
@@ -216,7 +241,8 @@ function __z8_run_cart(cart_code)
         -- executed, and nothing will work. This is also PICO-8’s behaviour.
         -- The code has to be appended as a string because the functions
         -- may be stored in local variables.
-        local code, ex = __z8_load_code(cart_code..glue_code)
+        local code, ex = __z8_load_code(cart_code..glue_code, nil, nil,
+                                        create_sandbox())
         if not code then
             color(14) print('syntax error')
             color(6) print(ex)
@@ -224,16 +250,28 @@ function __z8_run_cart(cart_code)
         end
 
         -- Run cart code
-        local _ENV = create_env()
         code()
     end)
 end
 
+__z8_persist_delay = 0
+
 function __z8_tick()
     if (costatus(__z8_loop) == "dead") return -1
     ret, err = coresume(__z8_loop)
+    -- XXX: test eris persistence
+    __z8_persist_delay += 1
+    if __z8_persist_delay > 30 and btnp(13) then
+        __z8_persist_delay = 0
+        if backup then
+            __z8_loop = unpersist(backup)
+        else
+            backup = persist(__z8_loop)
+        end
+    end
     if __z8_stopped then __z8_stopped = false -- FIXME: what now?
-    elseif not ret then printh(tostr(err))
+    -- FIXME: I use __stub because printh() prints nothing in Visual Studio
+    elseif not ret then __stub(tostr(err))
     end
     return 0
 end
