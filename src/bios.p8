@@ -41,8 +41,7 @@ mapdraw = map
 -- but will not be propagated to the cart through _ENV.
 --
 local error = error
-local insert = table.insert
-local remove = table.remove
+local table = table -- for insert and remove
 local ipairs = ipairs
 local tonumber = tonumber
 local __cartdata = __cartdata
@@ -73,7 +72,7 @@ function assert(cond, msg)
 end
 
 function count(a) return a != nil and #a or 0 end
-function add(a, x) if a != nil then insert(a, x) end return x end
+function add(a, x) if a != nil then table.insert(a, x) end return x end
 sub = string.sub
 
 function foreach(a, f)
@@ -88,7 +87,7 @@ end
 function del(a, v)
     if a != nil then
         for k, v2 in ipairs(a) do
-            if v == v2 then remove(a, k) return k end
+            if v == v2 then table.remove(a, k) return v end
         end
     end
 end
