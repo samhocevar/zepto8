@@ -149,70 +149,96 @@ void vm::instruction_hook(lua_State *l, lua_Debug *)
         lua_yield(l, 0);
 }
 
-bool vm::private_download(std::string name)
+tup<bool, bool, std::string> vm::private_download(opt<std::string> str)
 {
     // Load cart info from a URL
-    std::string host_name = "https://www.lexaloffle.com";
-    std::string url = "/bbs/cpost_lister3.php?nfo=1&version=000112bw&lid=" + name.substr(1);
+    std::string host = "https://www.lexaloffle.com";
 
-    lol::net::http::client client;
-    client.get(host_name + url);
-    while (client.get_status() == lol::net::http::status::pending)
-        ; // spinlock
+    if (str)
+        download_state.step = 0;
 
-    if (client.get_status() != lol::net::http::status::success)
-        return false;
-
-    std::map<std::string, std::string> data;
-    for (auto& line : lol::split(client.get_result(), '\n'))
+    switch (download_state.step)
     {
-        size_t delim = line.find(':');
-        if (delim != std::string::npos)
-            data[line.substr(0, delim)] = line.substr(delim + 1);
-    }
+    case 0:
+        // Step 0: start downloading cart info
+        download_state.client.get(host + "/bbs/cpost_lister3.php?nfo=1&version=000112bw&lid=" + str->substr(1));
+        download_state.step = 1;
+        break;
+    case 1:
+        // Step 1: wait while downloading
+        if (download_state.client.get_status() != lol::net::http::status::pending)
+            download_state.step = 2;
+        break;
+    case 2: {
+        // Step 2: bail out if errors, save cart info, start downloading cart
+        if (download_state.client.get_status() != lol::net::http::status::success)
+            return std::make_tuple(true, false, std::string("error downloading info"));
 
-    auto const& lid = data["lid"];
-    auto const& mid = data["mid"];
-    if (lid.size() == 0 || lid.size() == 0)
-        return false;
+        std::map<std::string, std::string> data;
+        for (auto& line : lol::split(download_state.client.get_result(), '\n'))
+        {
+            size_t delim = line.find(':');
+            if (delim != std::string::npos)
+                data[line.substr(0, delim)] = line.substr(delim + 1);
+        }
 
-    // Write cart info
-    lol::File file;
+        auto const& lid = data["lid"];
+        auto const& mid = data["mid"];
+        if (lid.size() == 0 || lid.size() == 0)
+            return std::make_tuple(true, false, std::string("error in data"));
+
+        // Write cart info
+        lol::File file;
 #if _WIN32
-    std::string cache_dir = lol::sys::getenv("APPDATA");
+        std::string cache_dir = lol::sys::getenv("APPDATA");
 #else
-    std::string cache_dir = lol::sys::getenv("HOME") + "/.lexaloffle";
+        std::string cache_dir = lol::sys::getenv("HOME") + "/.lexaloffle";
 #endif
-    cache_dir += "/pico-8/bbs/";
-    cache_dir += (mid[0] >= '1' && mid[0] <= '9') ? mid.substr(0, 1) : "carts";
-    std::string nfo_path = cache_dir + "/" + mid + ".nfo";
-    std::string cart_path = cache_dir + "/" + lid + ".p8.png";
+        cache_dir += "/pico-8/bbs/";
+        cache_dir += (mid[0] >= '1' && mid[0] <= '9') ? mid.substr(0, 1) : "carts";
+        std::string nfo_path = cache_dir + "/" + mid + ".nfo";
+        download_state.cart_path = cache_dir + "/" + lid + ".p8.png";
 
-    file.Open(nfo_path, lol::FileAccess::Write);
-    if (file.IsValid())
-    {
-        file.Write(client.get_result());
-        file.Close();
+        file.Open(nfo_path, lol::FileAccess::Write);
+        if (file.IsValid())
+        {
+            file.Write(download_state.client.get_result());
+            file.Close();
+        }
+
+        // Download cart
+        download_state.client.get(host + "/bbs/get_cart.php?cat=7&lid=" + lid);
+        download_state.step = 3;
+        break;
+    }
+    case 3:
+        // Step 3: wait while downloading
+        if (download_state.client.get_status() != lol::net::http::status::pending)
+            download_state.step = 4;
+        break;
+    case 4: {
+        // Step 4: bail out if errors, load cart otherwise
+        if (download_state.client.get_status() != lol::net::http::status::success)
+            return std::make_tuple(true, false, std::string("error downloading cart"));
+
+        lol::File file;
+        // Save cart
+        file.Open(download_state.cart_path, lol::FileAccess::Write, true);
+        if (file.IsValid())
+        {
+            file.Write(download_state.client.get_result());
+            file.Close();
+        }
+
+        // Load cart
+        m_cart.load(download_state.cart_path);
+        return std::make_tuple(true, true, std::string());
+    }
+    default:
+        break;
     }
 
-    // Download cart
-    client.get(host_name + "/bbs/get_cart.php?cat=7&lid=" + lid);
-    while (client.get_status() == lol::net::http::status::pending)
-        ; // spinlock
-
-    if (client.get_status() != lol::net::http::status::success)
-        return false;
-
-    // Save cart
-    file.Open(cart_path, lol::FileAccess::Write, true);
-    if (file.IsValid())
-    {
-        file.Write(client.get_result());
-        file.Close();
-    }
-
-    // Load cart
-    return m_cart.load(cart_path);
+    return std::make_tuple(false, false, std::string());
 }
 
 bool vm::private_load(std::string name)

@@ -106,9 +106,18 @@ private:
     // Private methods (hidden from the user)
     opt<bool> private_cartdata(opt<std::string> str);
     bool private_is_api(std::string str);
-    bool private_download(std::string str);
     bool private_load(std::string str);
     void private_stub(std::string str);
+
+    // Asynchronous download system (WIP)
+    tup<bool, bool, std::string> private_download(opt<std::string> str);
+    struct
+    {
+        int step;
+        lol::net::http::client client;
+        std::string cart_path;
+    }
+    download_state;
 
     // System
     void api_run();

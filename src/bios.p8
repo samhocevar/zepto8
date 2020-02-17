@@ -122,7 +122,6 @@ end
 local function stub(s)
     return function(a) __stub(s.."("..(a and '"'..tostr(a)..'"' or "")..")") end
 end
-load = stub("load")
 save = stub("save")
 info = stub("info")
 abort = stub("abort")
@@ -137,6 +136,26 @@ ls = dir
 function flip()
     _update_buttons()
     yield()
+end
+
+-- Load a cart from file or URL
+function load(arg)
+    local finished, success, msg
+    if string.match(arg, '^#') then
+        print('downloading '..arg)
+        finished, success, msg = __download(arg)
+        while not finished do
+            finished, success, msg = __download()
+            flip()
+        end
+    else
+        success, msg = __load(arg), ""
+    end
+    if success then
+        print('ok')
+    else
+        print('failed: '..msg)
+    end
 end
 
 
@@ -312,17 +331,7 @@ local function do_command(cmd)
     elseif string.match(cmd, '^ *run *$') then
         run()
     elseif string.match(cmd, '^ *load[ |(]') then
-        local arg = string.gsub(cmd, '^ *load *', '')
-        local task = __load
-        if string.match(arg, '^#') then
-            print('downloading '..arg)
-            task = __download
-        end
-        if task(arg) then
-            print('ok')
-        else
-            print('failed')
-        end
+        load(string.gsub(cmd, '^ *load *', ''))
     elseif cmd == 'help' then
         print('no help yet lol')
     else
