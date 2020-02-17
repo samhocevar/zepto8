@@ -417,7 +417,6 @@ end
 --
 -- Initialise the VM
 --
-srand(0)
 __z8_loop = cocreate(__z8_boot_sequence)
 
 

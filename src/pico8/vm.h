@@ -89,6 +89,8 @@ private:
     void api_poke4(int16_t addr, fix32 val);
     void api_memcpy(int16_t dst, int16_t src, int16_t size);
     void api_memset(int16_t dst, uint8_t val, int16_t size);
+    fix32 api_rnd(opt<fix32>);
+    void api_srand(fix32);
     var<bool, int16_t, fix32, std::string, std::nullptr_t> api_stat(int16_t id);
     void api_printh(rich_string str, opt<std::string> filename, opt<bool> overwrite);
     void api_extcmd(std::string cmd);
@@ -160,6 +162,8 @@ public:
             { "poke4",    bind<&vm::api_poke4>() },
             { "memcpy",   bind<&vm::api_memcpy>() },
             { "memset",   bind<&vm::api_memset>() },
+            { "rnd",      bind<&vm::api_rnd>() },
+            { "srand",    bind<&vm::api_srand>() },
             { "stat",     bind<&vm::api_stat>() },
             { "printh",   bind<&vm::api_printh>() },
             { "extcmd",   bind<&vm::api_extcmd>() },
@@ -219,6 +223,7 @@ private:
     void vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits);
 
     void getaudio(int channel, void *buffer, int bytes);
+    void update_prng();
 
 public:
     // TODO: try to get rid of this
@@ -236,6 +241,13 @@ private:
     int m_buttons[2][64];
     struct { fix32 x, y, b; } m_mouse;
     struct { int start = 0, stop = 0; char chars[256]; } m_keyboard;
+
+    // PRNG state
+    struct prng
+    {
+        uint32_t a, b;
+    }
+    m_prng;
 
     // Audio states: one music and four audio channels
     struct music

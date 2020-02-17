@@ -79,6 +79,8 @@ vm::vm()
     // Clear memory
     ::memset(&m_ram, 0, sizeof(m_ram));
 
+    // FIXME: must find entropy somewhere for the PRNG
+
     // Initialize Zepto8 runtime
     int status = luaL_dostring(m_lua, m_bios->get_code().c_str());
     if (status != LUA_OK)
@@ -491,6 +493,27 @@ void vm::api_memset(int16_t dst, uint8_t val, int16_t size)
     }
 
     ::memset(&m_ram[dst], val, size);
+}
+
+void vm::update_prng()
+{
+    m_prng.b = m_prng.a + ((m_prng.b >> 16) | (m_prng.b << 16));
+    m_prng.a += m_prng.b;
+}
+
+fix32 vm::api_rnd(opt<fix32> in_range)
+{
+    uint32_t range = in_range ? in_range->bits() : 0x10000;
+    update_prng();
+    return fix32::frombits(range ? m_prng.b % range : 0);
+}
+
+void vm::api_srand(fix32 seed)
+{
+    m_prng.a = seed ? seed.bits() : 0xdeadbeef;
+    m_prng.b = m_prng.a ^ 0xbead29ba;
+    for (int i = 0; i < 32; ++i)
+        update_prng();
 }
 
 var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
