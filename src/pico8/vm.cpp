@@ -262,14 +262,14 @@ bool vm::step(float seconds)
 
 void vm::button(int index, int state)
 {
-    m_buttons[1][index] += state;
+    m_state.buttons[1][index] += state;
 }
 
 void vm::mouse(lol::ivec2 coords, int buttons)
 {
-    m_mouse.x = (double)coords.x;
-    m_mouse.y = (double)coords.y;
-    m_mouse.b = (double)buttons;
+    m_state.mouse.x = (double)coords.x;
+    m_state.mouse.y = (double)coords.y;
+    m_state.mouse.b = (double)buttons;
 }
 
 void vm::text(char ch)
@@ -277,8 +277,8 @@ void vm::text(char ch)
     // Convert uppercase characters to special glyphs
     if (ch >= 'A' && ch <= 'Z')
         ch = '\x80' + (ch - 'A');
-    m_keyboard.chars[m_keyboard.stop] = ch;
-    m_keyboard.stop = (m_keyboard.stop + 1) % (int)sizeof(m_keyboard.chars);
+    m_state.kbd.chars[m_state.kbd.stop] = ch;
+    m_state.kbd.stop = (m_state.kbd.stop + 1) % (int)sizeof(m_state.kbd.chars);
 }
 
 //
@@ -288,7 +288,7 @@ void vm::text(char ch)
 void vm::api_run()
 {
     // Initialise VM state (TODO: check what else to init)
-    ::memset(m_buttons, 0, sizeof(m_buttons));
+    ::memset(m_state.buttons, 0, sizeof(m_state.buttons));
 
     // Load cartridge code and call __z8_run_cart() on it
     lua_getglobal(m_sandbox_lua, "__z8_run_cart");
@@ -497,21 +497,21 @@ void vm::api_memset(int16_t dst, uint8_t val, int16_t size)
 
 void vm::update_prng()
 {
-    m_prng.b = m_prng.a + ((m_prng.b >> 16) | (m_prng.b << 16));
-    m_prng.a += m_prng.b;
+    m_state.prng.b = m_state.prng.a + ((m_state.prng.b >> 16) | (m_state.prng.b << 16));
+    m_state.prng.a += m_state.prng.b;
 }
 
 fix32 vm::api_rnd(opt<fix32> in_range)
 {
     uint32_t range = in_range ? in_range->bits() : 0x10000;
     update_prng();
-    return fix32::frombits(range ? m_prng.b % range : 0);
+    return fix32::frombits(range ? m_state.prng.b % range : 0);
 }
 
 void vm::api_srand(fix32 seed)
 {
-    m_prng.a = seed ? seed.bits() : 0xdeadbeef;
-    m_prng.b = m_prng.a ^ 0xbead29ba;
+    m_state.prng.a = seed ? seed.bits() : 0xdeadbeef;
+    m_state.prng.b = m_state.prng.a ^ 0xbead29ba;
     for (int i = 0; i < 32; ++i)
         update_prng();
 }
@@ -564,25 +564,25 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
         return std::string();
 
     if (id >= 16 && id <= 19)
-        return m_channels[id & 3].m_sfx;
+        return m_state.channels[id & 3].sfx;
 
     if (id >= 20 && id <= 23)
-        return m_channels[id & 3].m_sfx == -1 ? fix32(-1)
-                    : fix32((int)m_channels[id & 3].m_offset);
+        return m_state.channels[id & 3].sfx == -1 ? fix32(-1)
+                    : fix32((int)m_state.channels[id & 3].offset);
 
     if (id == 24)
-        return int16_t(m_music.pattern);
+        return int16_t(m_state.music.pattern);
 
     if (id == 25)
-        return int16_t(m_music.count);
+        return int16_t(m_state.music.count);
 
     if (id == 26)
-        return int16_t(m_music.offset * m_music.speed);
+        return int16_t(m_state.music.offset * m_state.music.speed);
 
     if (id >= 30 && id <= 36)
     {
         bool devkit_mode = m_ram.draw_state.mouse_flag == 1;
-        bool has_text = devkit_mode && m_keyboard.start != m_keyboard.stop;
+        bool has_text = devkit_mode && m_state.kbd.start != m_state.kbd.stop;
 
         // Undocumented (see http://pico-8.wikia.com/wiki/Stat)
         switch (id)
@@ -592,24 +592,24 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
                 if (!has_text)
                     return std::string();
 
-                if (m_keyboard.stop > m_keyboard.start)
+                if (m_state.kbd.stop > m_state.kbd.start)
                 {
-                    std::string ret(&m_keyboard.chars[m_keyboard.start],
-                                    m_keyboard.stop - m_keyboard.start);
-                    m_keyboard.start = m_keyboard.stop = 0;
+                    std::string ret(&m_state.kbd.chars[m_state.kbd.start],
+                                    m_state.kbd.stop - m_state.kbd.start);
+                    m_state.kbd.start = m_state.kbd.stop = 0;
                     return ret;
                 }
 
-                /* if (m_keyboard.stop < m_keyboard.start) */
+                /* if (m_state.kbd.stop < m_state.kbd.start) */
                 {
-                    std::string ret(&m_keyboard.chars[m_keyboard.start],
-                                    (int)sizeof(m_keyboard.chars) - m_keyboard.start);
-                    m_keyboard.start = 0;
+                    std::string ret(&m_state.kbd.chars[m_state.kbd.start],
+                                    (int)sizeof(m_state.kbd.chars) - m_state.kbd.start);
+                    m_state.kbd.start = 0;
                 }
                 return (int16_t)0;
-            case 32: return devkit_mode ? m_mouse.x : fix32(0); break;
-            case 33: return devkit_mode ? m_mouse.y : fix32(0); break;
-            case 34: return devkit_mode ? m_mouse.b : fix32(0); break;
+            case 32: return devkit_mode ? m_state.mouse.x : fix32(0); break;
+            case 33: return devkit_mode ? m_state.mouse.y : fix32(0); break;
+            case 34: return devkit_mode ? m_state.mouse.b : fix32(0); break;
             case 35: return (int16_t)0; break; // FIXME
             case 36: return (int16_t)0; break; // FIXME
         }
@@ -658,22 +658,22 @@ void vm::api_update_buttons()
     // Update button state
     for (int i = 0; i < 64; ++i)
     {
-        if (m_buttons[1][i])
-            ++m_buttons[0][i];
+        if (m_state.buttons[1][i])
+            ++m_state.buttons[0][i];
         else
-            m_buttons[0][i] = 0;
-        m_buttons[1][i] = 0;
+            m_state.buttons[0][i] = 0;
+        m_state.buttons[1][i] = 0;
     }
 }
 
 var<bool, int16_t> vm::api_btn(opt<int16_t> n, int16_t p)
 {
     if (n)
-        return (bool)m_buttons[0][(*n + 8 * p) & 0x3f];
+        return (bool)m_state.buttons[0][(*n + 8 * p) & 0x3f];
 
     int16_t bits = 0;
     for (int i = 0; i < 16; ++i)
-        bits |= m_buttons[0][i] ? 1 << i : 0;
+        bits |= m_state.buttons[0][i] ? 1 << i : 0;
     return bits;
 }
 
@@ -691,11 +691,11 @@ var<bool, int16_t> vm::api_btnp(opt<int16_t> n, int16_t p)
     };
 
     if (n)
-        return was_pressed(m_buttons[0][(*n + 8 * p) & 0x3f]);
+        return was_pressed(m_state.buttons[0][(*n + 8 * p) & 0x3f]);
 
     int16_t bits = 0;
     for (int i = 0; i < 16; ++i)
-        bits |= was_pressed(m_buttons[0][i]) ? 1 << i : 0;
+        bits |= was_pressed(m_state.buttons[0][i]) ? 1 << i : 0;
     return bits;
 }
 

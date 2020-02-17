@@ -36,6 +36,41 @@ template<typename... T> using tup = std::tuple<T...>;
 
 struct rich_string : public std::string {};
 
+// The VM state: everything that does not reside in PICO-8 memory or in Lua
+// memory but that we want to serialise for snapshots.
+struct state
+{
+    // Input
+    int buttons[2][64];
+    struct { fix32 x, y, b; } mouse;
+    struct { int start = 0, stop = 0; char chars[256]; } kbd;
+    struct { uint32_t a, b; } prng;
+
+    // Audio states: one music and four audio channels
+    struct music
+    {
+        int16_t count = 0;
+        int16_t pattern = -1;
+        int8_t master = -1;
+        uint8_t mask = 0xf;
+        uint8_t speed = 0;
+        float offset = 0;
+    }
+    music;
+
+    struct channel
+    {
+        int16_t sfx = -1;
+        float offset = 0;
+        float phi = 0;
+        bool can_loop = true;
+
+        int8_t prev_key = 0;
+        float prev_vol = 0;
+    }
+    channels[4];
+};
+
 class vm : z8::vm_base
 {
     friend class z8::player;
@@ -233,47 +268,10 @@ private:
     struct lua_State *m_lua;
     cart m_cart;
     memory m_ram;
+    state m_state;
 
     // Files
     std::string m_cartdata;
-
-    // Input
-    int m_buttons[2][64];
-    struct { fix32 x, y, b; } m_mouse;
-    struct { int start = 0, stop = 0; char chars[256]; } m_keyboard;
-
-    // PRNG state
-    struct prng
-    {
-        uint32_t a, b;
-    }
-    m_prng;
-
-    // Audio states: one music and four audio channels
-    struct music
-    {
-        int16_t count = 0;
-        int16_t pattern = -1;
-        int8_t master = -1;
-        uint8_t mask = 0xf;
-        uint8_t speed = 0;
-        float offset = 0;
-    }
-    m_music;
-
-    struct channel
-    {
-        channel();
-
-        int16_t m_sfx = -1;
-        float m_offset = 0;
-        float m_phi = 0;
-        bool m_can_loop = true;
-
-        int8_t m_prev_key = 0;
-        float m_prev_vol = 0;
-    }
-    m_channels[4];
 
     lol::timer m_timer;
     int m_instructions = 0;

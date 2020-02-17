@@ -61,23 +61,8 @@ uint8_t song::sfx(int n) const
 }
 
 #if DEBUG_EXPORT_WAV
-std::map<void const *, FILE *> exports;
+std::map<int, FILE *> exports;
 #endif
-
-vm::channel::channel()
-{
-#if DEBUG_EXPORT_WAV
-    static int count = 0;
-    char const *header = "RIFF" "\xe4\xc1\x08\0" /* chunk size */ "WAVEfmt "
-        "\x10\0\0\0" /* subchunk size */ "\x01\0" /* format (PCM) */
-        "\x01\0" /* channels (1) */ "\x22\x56\0\0" /* sample rate (22050) */
-        "\x22\x56\0\0" /* byte rate */ "\x02\0" /* block align (2) */
-        "\x10\0" /* bits per sample (16) */ "data"
-        "\xc0\xc1\x08\00" /* bytes in data */;
-    exports[this] = fopen(lol::format("/tmp/zepto8_%d.wav", count++).c_str(), "w+");
-    fwrite(header, 44, 1, exports[this]);
-#endif
-}
 
 std::function<void(void *, int)> vm::get_streamer(int ch)
 {
@@ -100,45 +85,45 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
     for (int i = 0; i < samples; ++i)
     {
         // Advance music using the master channel
-        if (chan == m_music.master && m_music.pattern != -1)
+        if (chan == m_state.music.master && m_state.music.pattern != -1)
         {
-            float const offset_per_second = 22050.f / (183.f * m_music.speed);
+            float const offset_per_second = 22050.f / (183.f * m_state.music.speed);
             float const offset_per_sample = offset_per_second / samples_per_second;
-            m_music.offset += offset_per_sample;
-            if (m_music.offset >= 32.f)
+            m_state.music.offset += offset_per_sample;
+            if (m_state.music.offset >= 32.f)
             {
-                int16_t next_pattern = m_music.pattern + 1;
-                int16_t next_count = m_music.count + 1;
-                if (m_ram.song[m_music.pattern].stop)
+                int16_t next_pattern = m_state.music.pattern + 1;
+                int16_t next_count = m_state.music.count + 1;
+                if (m_ram.song[m_state.music.pattern].stop)
                 {
                     next_pattern = -1;
-                    next_count = m_music.count;
+                    next_count = m_state.music.count;
                 }
-                else if (m_ram.song[m_music.pattern].loop)
+                else if (m_ram.song[m_state.music.pattern].loop)
                     while (--next_pattern > 0 && !m_ram.song[next_pattern].start)
                         ;
 
                 // FIXME: this is a very inelegant hack, don’t use api_music()
-                api_music(next_pattern, 0, m_music.mask);
-                m_music.count = next_count;
+                api_music(next_pattern, 0, m_state.music.mask);
+                m_state.music.count = next_count;
             }
         }
 
-        if (m_channels[chan].m_sfx == -1)
+        if (m_state.channels[chan].sfx == -1)
         {
             buffer[i] = 0;
             continue;
         }
 
-        int const index = m_channels[chan].m_sfx;
+        int const index = m_state.channels[chan].sfx;
         ASSERT(index >= 0 && index < 64);
         struct sfx const &sfx = m_ram.sfx[index];
 
         // Speed must be 1—255 otherwise the SFX is invalid
         int const speed = lol::max(1, (int)sfx.speed);
 
-        float const offset = m_channels[chan].m_offset;
-        float const phi = m_channels[chan].m_phi;
+        float const offset = m_state.channels[chan].offset;
+        float const phi = m_state.channels[chan].phi;
 
         // PICO-8 exports instruments as 22050 Hz WAV files with 183 samples
         // per speed unit per note, so this is how much we should advance
@@ -150,7 +135,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         // off when the start index >= end index”.
         float const loop_range = float(sfx.loop_end - sfx.loop_start);
         if (loop_range > 0.f && next_offset >= sfx.loop_end
-             && m_channels[chan].m_can_loop)
+             && m_state.channels[chan].can_loop)
         {
             next_offset = std::fmod(next_offset - sfx.loop_start, loop_range)
                         + sfx.loop_start;
@@ -182,9 +167,9 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
                     float t = lol::fmod(offset, 1.f);
                     // From the documentation: “Slide to the next note and volume”,
                     // but it’s actually _from_ the _prev_ note and volume.
-                    freq = lol::mix(key_to_freq(m_channels[chan].m_prev_key), freq, t);
-                    if (m_channels[chan].m_prev_vol > 0.f)
-                        volume = lol::mix(m_channels[chan].m_prev_vol, volume, t);
+                    freq = lol::mix(key_to_freq(m_state.channels[chan].prev_key), freq, t);
+                    if (m_state.channels[chan].prev_vol > 0.f)
+                        volume = lol::mix(m_state.channels[chan].prev_vol, volume, t);
                     break;
                 }
                 case FX_VIBRATO:
@@ -233,25 +218,36 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
 
             buffer[i] = sample;
 
-            m_channels[chan].m_phi = phi + freq / samples_per_second;
+            m_state.channels[chan].phi = phi + freq / samples_per_second;
         }
 
-        m_channels[chan].m_offset = next_offset;
+        m_state.channels[chan].offset = next_offset;
 
         if (next_offset >= 32.f)
         {
-            m_channels[chan].m_sfx = -1;
+            m_state.channels[chan].sfx = -1;
         }
         else if (next_note_id != note_id)
         {
-            m_channels[chan].m_prev_key = sfx.notes[note_id].key;
-            m_channels[chan].m_prev_vol = sfx.notes[note_id].volume / 7.f;
+            m_state.channels[chan].prev_key = sfx.notes[note_id].key;
+            m_state.channels[chan].prev_vol = sfx.notes[note_id].volume / 7.f;
         }
     }
 
 #if DEBUG_EXPORT_WAV
-    auto fd = exports[&m_channels[chan]];
-    fwrite(buffer, samples, 1, fd);
+    if (!exports[chan])
+    {
+        static char const *header =
+            "RIFF" "\xe4\xc1\x08\0" /* chunk size */ "WAVEfmt "
+            "\x10\0\0\0" /* subchunk size */ "\x01\0" /* format (PCM) */
+            "\x01\0" /* channels (1) */ "\x22\x56\0\0" /* sample rate (22050) */
+            "\x22\x56\0\0" /* byte rate */ "\x02\0" /* block align (2) */
+            "\x10\0" /* bits per sample (16) */ "data"
+            "\xc0\xc1\x08\00" /* bytes in data */;
+        exports[chan] = fopen(lol::format("/tmp/zepto8_%d.wav", chan).c_str(), "w+");
+        fwrite(header, 44, 1, exports[chan]);
+    }
+    fwrite(buffer, samples, 1, exports[chan]);
 #endif
 }
 
@@ -270,19 +266,19 @@ void vm::api_music(int16_t pattern, int16_t fade_len, int16_t mask)
 
     if (pattern == -1)
     {
-        if (m_music.pattern >= 0)
+        if (m_state.music.pattern >= 0)
         {
             // Stop playing the current song
             for (int i = 0; i < 4; ++i)
-                if (m_music.mask & (1 << i))
-                    m_channels[i].m_sfx = -1;
-            m_music.pattern = -1;
+                if (m_state.music.mask & (1 << i))
+                    m_state.channels[i].sfx = -1;
+            m_state.music.pattern = -1;
         }
         return;
     }
 
     // Find music speed; it’s the speed of the fastest sfx
-    m_music.master = m_music.speed = -1;
+    m_state.music.master = m_state.music.speed = -1;
     for (int i = 0; i < 4; ++i)
     {
         int n = m_ram.song[pattern].sfx(i);
@@ -290,33 +286,33 @@ void vm::api_music(int16_t pattern, int16_t fade_len, int16_t mask)
             continue;
 
         auto &sfx = m_ram.sfx[n & 0x3f];
-        if (m_music.master == -1 || m_music.speed > sfx.speed)
+        if (m_state.music.master == -1 || m_state.music.speed > sfx.speed)
         {
-            m_music.master = i;
-            m_music.speed = lol::max(1, (int)sfx.speed);
+            m_state.music.master = i;
+            m_state.music.speed = lol::max(1, (int)sfx.speed);
         }
     }
 
-    m_music.count = 0;
-    m_music.pattern = pattern;
-    m_music.mask = mask ? mask & 0xf : 0xf;
-    m_music.offset = 0;
+    m_state.music.count = 0;
+    m_state.music.pattern = pattern;
+    m_state.music.mask = mask ? mask & 0xf : 0xf;
+    m_state.music.offset = 0;
 
     for (int i = 0; i < 4; ++i)
     {
-        if (((1 << i) & m_music.mask) == 0)
+        if (((1 << i) & m_state.music.mask) == 0)
             continue;
 
         int n = m_ram.song[pattern].sfx(i);
         if (n & 0x40)
             continue;
 
-        m_channels[i].m_sfx = n;
-        m_channels[i].m_offset = 0.f;
-        m_channels[i].m_phi = 0.f;
-        m_channels[i].m_can_loop = false;
-        m_channels[i].m_prev_key = 24;
-        m_channels[i].m_prev_vol = 0.f;
+        m_state.channels[i].sfx = n;
+        m_state.channels[i].offset = 0.f;
+        m_state.channels[i].phi = 0.f;
+        m_state.channels[i].can_loop = false;
+        m_state.channels[i].prev_key = 24;
+        m_state.channels[i].prev_vol = 0.f;
     }
 }
 
@@ -337,13 +333,13 @@ void vm::api_sfx(int16_t sfx, opt<int16_t> in_chan, int16_t offset)
     {
         // Stop playing the current channel
         if (chan != -1)
-            m_channels[chan].m_sfx = -1;
+            m_state.channels[chan].sfx = -1;
     }
     else if (sfx == -2)
     {
         // Stop looping the current channel
         if (chan != -1)
-            m_channels[chan].m_can_loop = false;
+            m_state.channels[chan].can_loop = false;
     }
     else
     {
@@ -354,8 +350,8 @@ void vm::api_sfx(int16_t sfx, opt<int16_t> in_chan, int16_t offset)
         if (chan == -1)
         {
             for (int i = 0; i < 4; ++i)
-                if (m_channels[i].m_sfx == -1 ||
-                    m_channels[i].m_sfx == sfx)
+                if (m_state.channels[i].sfx == -1 ||
+                    m_state.channels[i].sfx == sfx)
                 {
                     chan = i;
                     break;
@@ -368,26 +364,26 @@ void vm::api_sfx(int16_t sfx, opt<int16_t> in_chan, int16_t offset)
         {
             for (int i = 0; i < 4; ++i)
                if (chan == -1 ||
-                    m_channels[i].m_sfx < m_channels[chan].m_sfx)
+                    m_state.channels[i].sfx < m_state.channels[chan].sfx)
                    chan = i;
         }
 
         // Stop any channel playing the same sfx
         for (int i = 0; i < 4; ++i)
-            if (m_channels[i].m_sfx == sfx)
-                m_channels[i].m_sfx = -1;
+            if (m_state.channels[i].sfx == sfx)
+                m_state.channels[i].sfx = -1;
 
         // Play this sound!
-        m_channels[chan].m_sfx = sfx;
-        m_channels[chan].m_offset = std::max(0.f, (float)offset);
-        m_channels[chan].m_phi = 0.f;
-        m_channels[chan].m_can_loop = true;
+        m_state.channels[chan].sfx = sfx;
+        m_state.channels[chan].offset = std::max(0.f, (float)offset);
+        m_state.channels[chan].phi = 0.f;
+        m_state.channels[chan].can_loop = true;
         // Playing an instrument starting with the note C-2 and the
         // slide effect causes no noticeable pitch variation in PICO-8,
         // so I assume this is the default value for “previous key”.
-        m_channels[chan].m_prev_key = 24;
+        m_state.channels[chan].prev_key = 24;
         // There is no default value for “previous volume”.
-        m_channels[chan].m_prev_vol = 0.f;
+        m_state.channels[chan].prev_vol = 0.f;
     }
 }
 
