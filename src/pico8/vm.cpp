@@ -21,8 +21,6 @@
 #include "bindings/lua.h"
 #include "bios.h"
 
-#include <httplib.h>
-
 // FIXME: activate this one day, when we use Lua 5.3 maybe?
 #define HAVE_LUA_GETEXTRASPACE 0
 
@@ -154,18 +152,19 @@ void vm::instruction_hook(lua_State *l, lua_Debug *)
 bool vm::private_download(std::string name)
 {
     // Load cart info from a URL
-    std::string host_name = "www.lexaloffle.com";
+    std::string host_name = "https://www.lexaloffle.com";
     std::string url = "/bbs/cpost_lister3.php?nfo=1&version=000112bw&lid=" + name.substr(1);
 
-    httplib::Client client(host_name);
-    client.set_follow_location(true);
+    lol::net::http::client client;
+    client.get(host_name + url);
+    while (client.get_status() == lol::net::http::status::pending)
+        ; // spinlock
 
-    auto res = client.Get(url.c_str());
-    if (!res || res->status != 200)
+    if (client.get_status() != lol::net::http::status::success)
         return false;
 
     std::map<std::string, std::string> data;
-    for (auto& line : lol::split(res->body, '\n'))
+    for (auto& line : lol::split(client.get_result(), '\n'))
     {
         size_t delim = line.find(':');
         if (delim != std::string::npos)
@@ -192,21 +191,23 @@ bool vm::private_download(std::string name)
     file.Open(nfo_path, lol::FileAccess::Write);
     if (file.IsValid())
     {
-        file.Write(res->body);
+        file.Write(client.get_result());
         file.Close();
     }
 
     // Download cart
-    url = "/bbs/get_cart.php?cat=7&lid=" + lid;
-    res = client.Get(url.c_str());
-    if (!res || res->status != 200)
+    client.get(host_name + "/bbs/get_cart.php?cat=7&lid=" + lid);
+    while (client.get_status() == lol::net::http::status::pending)
+        ; // spinlock
+
+    if (client.get_status() != lol::net::http::status::success)
         return false;
 
     // Save cart
     file.Open(cart_path, lol::FileAccess::Write, true);
     if (file.IsValid())
     {
-        file.Write(res->body);
+        file.Write(client.get_result());
         file.Close();
     }
 

@@ -21,7 +21,7 @@ ___zepto8_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
                      -I3rdparty/zep/include \
                      $(AM_CPPFLAGS)
-___zepto8_LDFLAGS = $(static_libs) $(ssl_ldflags) $(AM_LDFLAGS)
+___zepto8_LDFLAGS = $(static_libs) $(AM_LDFLAGS)
 ___zepto8_DEPENDENCIES = $(static_libs) @LOL_DEPS@
 ___zepto8_DATA = bios.p8 unz8.p8
 if LOL_USE_EMSCRIPTEN
@@ -99,7 +99,7 @@ ___z8player_SOURCES = \
 ___z8player_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                        -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
                        $(AM_CPPFLAGS)
-___z8player_LDFLAGS = $(static_libs) $(ssl_ldflags) -ldl $(AM_LDFLAGS)
+___z8player_LDFLAGS = $(static_libs) -ldl $(AM_LDFLAGS)
 ___z8player_DEPENDENCIES = $(static_libs) @LOL_DEPS@
 if LOL_USE_EMSCRIPTEN
 ___z8player_LDFLAGS += --preload-file bios.p8 \
@@ -121,7 +121,7 @@ ___z8tool_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
                      -Izlib -DGZ8 -DZ_SOLO -DNO_GZIP -DHAVE_MEMCPY -Dlocal= \
                      $(AM_CPPFLAGS)
-___z8tool_LDFLAGS = $(static_libs) $(ssl_ldflags) -ldl $(AM_LDFLAGS)
+___z8tool_LDFLAGS = $(static_libs) -ldl $(AM_LDFLAGS)
 ___z8tool_DEPENDENCIES = $(static_libs) @LOL_DEPS@
 
 EXTRA_DIST += zlib/deflate.c zlib/trees.c
@@ -156,17 +156,9 @@ libzepto8_a_SOURCES = \
     raccoon/memory.h raccoon/font.h \
     raccoon/api.cpp \
     $(NULL)
-libzepto8_a_CPPFLAGS = $(ssl_cppflags) $(AM_CPPFLAGS)
+libzepto8_a_CPPFLAGS = $(AM_CPPFLAGS)
 
 EXTRA_DIST += libzepto8.vcxproj
-
-ssl_cppflags =
-ssl_ldflags =
-if HAVE_OPENSSL
-# FIXME: move this to Lol Engine
-ssl_cppflags += -DCPPHTTPLIB_OPENSSL_SUPPORT
-ssl_ldflags += -lssl
-endif
 
 libz8lua_a_SOURCES = \
     3rdparty/z8lua/lapi.c 3rdparty/z8lua/lcode.c 3rdparty/z8lua/ldebug.c \
