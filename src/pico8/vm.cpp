@@ -201,7 +201,8 @@ tup<bool, bool, std::string> vm::private_download(opt<std::string> str)
         cache_dir += (mid[0] >= '1' && mid[0] <= '9') ? mid.substr(0, 1) : "carts";
         std::error_code code;
         if (!std::filesystem::create_directories(cache_dir, code))
-            return std::make_tuple(true, false, std::string("cannot create cache dir"));
+            if (code.value() != 0) // XXX: workaround for Windows weird behaviour
+                return std::make_tuple(true, false, "can't create cache dir");
         std::string nfo_path = cache_dir + "/" + mid + ".nfo";
         download_state.cart_path = cache_dir + "/" + lid + ".p8.png";
 
