@@ -42,7 +42,7 @@ int main(int argc, char **argv)
         }
     }
 
-    lol::ivec2 win_size(144 * 3, 144 * 3);
+    lol::ivec2 win_size(144 * 4, 144 * 4);
     lol::Application app("zepto-8", win_size, 60.0f);
 
     bool is_raccoon = argc >= 2 && lol::ends_with(argv[1], ".rcn.json");

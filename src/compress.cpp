@@ -25,6 +25,7 @@
 #include <regex>
 
 extern "C" {
+#define z_errmsg z8_z_errmsg // avoid conflicts with the real zlib
 #define register /**/
 #define adler32(...) 0
 #include "zutil.h"
