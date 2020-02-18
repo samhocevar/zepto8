@@ -233,11 +233,24 @@ struct memory
     // Hardware pixel accessor
     uint8_t pixel(int x, int y) const
     {
-        uint8_t const mode = draw_state.screen_mode;
-        x = (mode & 0xfd) == 5 ? std::min(x, 127 - x)
-          : (mode & 0xfd) == 1 ? x / 2 : x;
-        y = (mode & 0xfe) == 6 ? std::min(y, 127 - y)
-          : (mode & 0xfe) == 2 ? y / 2 : y;
+        // Get screen mode, ignoring bit 0x40
+        uint8_t const mode = draw_state.screen_mode & ~0x40;
+
+        // Rotation modes (0x84 to 0x87)
+        if ((mode & 0xbc) == 0x84)
+        {
+            if (mode & 1)
+                std::swap(x, y);
+            return screen.get(mode & 2 ? 127 - x : x,
+                              (mode + 1 & 2) ? 127 - y : y);
+        }
+
+        x = (mode & 0xbd) == 0x05 ? std::min(x, 127 - x) // mirror
+          : (mode & 0xbd) == 0x01 ? x / 2                // stretch
+          : (mode & 0xbd) == 0x81 ? 127 - x : x;         // flip
+        y = (mode & 0xbe) == 0x06 ? std::min(y, 127 - y) // mirror
+          : (mode & 0xbe) == 0x02 ? y / 2                // stretch
+          : (mode & 0xbe) == 0x82 ? 127 - y : y;         // flip
         return screen.get(x, y);
     }
 
