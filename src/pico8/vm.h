@@ -145,7 +145,7 @@ private:
     var<bool, int16_t> api_btnp(opt<int16_t> n, int16_t p);
 
     // Text
-    tup<uint8_t, uint8_t> api_cursor(uint8_t x, uint8_t y, opt<uint8_t> c);
+    tup<uint8_t, uint8_t, uint8_t> api_cursor(uint8_t x, uint8_t y, opt<uint8_t> c);
     void api_print(opt<rich_string> str, opt<fix32> x, opt<fix32> y, opt<fix32> c);
 
     // Graphics

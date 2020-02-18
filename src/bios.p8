@@ -161,7 +161,8 @@ function load(arg)
     else
         color(14)
         print('failed')
-        cursor(0, cursor()[2])
+        local x,y = cursor()
+        cursor(0, y)
         print(msg)
     end
 end

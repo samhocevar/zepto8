@@ -178,15 +178,16 @@ void vm::vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits)
 // Text
 //
 
-tup<uint8_t, uint8_t> vm::api_cursor(uint8_t x, uint8_t y, opt<uint8_t> c)
+tup<uint8_t, uint8_t, uint8_t> vm::api_cursor(uint8_t x, uint8_t y, opt<uint8_t> in_c)
 {
     auto &ds = m_ram.draw_state;
+    uint8_t c = in_c ? *in_c : ds.pen;
 
     std::swap(ds.cursor.x, x);
     std::swap(ds.cursor.y, y);
-    if (c)
-        ds.pen = *c;
-    return std::make_tuple(x, y);
+    std::swap(ds.pen, c);
+
+    return std::make_tuple(x, y, c);
 }
 
 void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
