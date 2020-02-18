@@ -16,6 +16,8 @@
 
 #include <lol/engine.h>
 
+#include <filesystem>
+
 #include "pico8/pico8.h"
 #include "pico8/vm.h"
 #include "bindings/lua.h"
@@ -152,7 +154,8 @@ void vm::instruction_hook(lua_State *l, lua_Debug *)
 tup<bool, bool, std::string> vm::private_download(opt<std::string> str)
 {
     // Load cart info from a URL
-    std::string host = "https://www.lexaloffle.com";
+    //std::string host = "https://www.lexaloffle.com";
+    std::string host = "http://sam.hocevar.net/zepto8";
 
     if (str)
         download_state.step = 0;
@@ -185,7 +188,7 @@ tup<bool, bool, std::string> vm::private_download(opt<std::string> str)
         auto const& lid = data["lid"];
         auto const& mid = data["mid"];
         if (lid.size() == 0 || lid.size() == 0)
-            return std::make_tuple(true, false, std::string("error in data"));
+            return std::make_tuple(true, false, std::string("no cart info found"));
 
         // Write cart info
         lol::File file;
@@ -196,6 +199,9 @@ tup<bool, bool, std::string> vm::private_download(opt<std::string> str)
 #endif
         cache_dir += "/pico-8/bbs/";
         cache_dir += (mid[0] >= '1' && mid[0] <= '9') ? mid.substr(0, 1) : "carts";
+        std::error_code code;
+        if (!std::filesystem::create_directories(cache_dir, code))
+            return std::make_tuple(true, false, std::string("cannot create cache dir"));
         std::string nfo_path = cache_dir + "/" + mid + ".nfo";
         download_state.cart_path = cache_dir + "/" + lid + ".p8.png";
 
