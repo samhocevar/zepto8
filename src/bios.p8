@@ -142,19 +142,27 @@ end
 function load(arg)
     local finished, success, msg
     if string.match(arg, '^#') then
-        print('downloading '..arg)
+        color(6)
+        local x,y = cursor()
+        print('downloading.. ', x, y)
+        cursor(x+14*4, y)
         finished, success, msg = __download(arg)
         while not finished do
             finished, success, msg = __download()
             flip()
         end
     else
+        color(14)
+        print('not implemented yet')
         success, msg = __load(arg), ""
     end
     if success then
         print('ok')
     else
-        print('failed: '..msg)
+        color(14)
+        print('failed')
+        cursor(0, cursor()[2])
+        print(msg)
     end
 end
 
@@ -325,7 +333,7 @@ function __z8_boot_sequence()
 end
 
 local function do_command(cmd)
-    color(14)
+    local c = color()
     if string.match(cmd, '^ *$') then
         -- empty line
     elseif string.match(cmd, '^ *run *$') then
@@ -333,10 +341,21 @@ local function do_command(cmd)
     elseif string.match(cmd, '^ *load[ |(]') then
         load(string.gsub(cmd, '^ *load *', ''))
     elseif cmd == 'help' then
-        print('no help yet lol')
+        color(12)
+        print('\ncommands\n')
+        color(6)
+        print('load <filename>')
+        print('run')
+        print('')
+        color(12)
+        print('example: load #15133')
+        print('         load #dancer')
+        print('')
     else
+        color(14)
         print('syntax error')
     end
+    color(c)
 end
 
 function __z8_shell()
@@ -395,6 +414,7 @@ function __z8_shell()
         end
         -- fixme: print() behaves slightly differently when
         -- scrolling in the command prompt
+        local pen = peek(0x5f25)
         if exec then
             start_y = start_y + 6
             cursor(0, start_y)
@@ -406,7 +426,6 @@ function __z8_shell()
             history_pos = nil
             cmd, caret = "", 0
         else
-            local pen = peek(0x5f25)
             rectfill(0, start_y, (__z8_strlen(cmd) + 3) * 4, start_y + 5, 0)
             color(7)
             print('> ', 0, start_y, 7)
