@@ -17,6 +17,7 @@
 #include <lol/engine.h>
 
 #include <filesystem>
+#include <chrono>
 
 #include "pico8/pico8.h"
 #include "pico8/vm.h"
@@ -79,7 +80,9 @@ vm::vm()
     // Clear memory
     ::memset(&m_ram, 0, sizeof(m_ram));
 
-    // FIXME: must find entropy somewhere for the PRNG
+    // Initialise the PRNG with the current time
+    auto now = std::chrono::high_resolution_clock::now();
+    api_srand(fix32::frombits((int32_t)now.time_since_epoch().count()));
 
     // Initialize Zepto8 runtime
     int status = luaL_dostring(m_lua, m_bios->get_code().c_str());
