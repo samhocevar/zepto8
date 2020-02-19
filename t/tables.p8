@@ -6,7 +6,7 @@ __lua__
 
 -- small test framework
 do local sec, sn, ctx, cn = "", 0, "", 0
-   local fail, total = 0, 0
+   local fail, total, idx = 0, 0, 0
    function section(name)
        sec = name
        sn += 1
@@ -14,14 +14,16 @@ do local sec, sn, ctx, cn = "", 0, "", 0
    function fixture(name)
        ctx = name
        cn += 1
+       idx = 0
        a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z =
        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
    end
    function test_equal(x, y)
-       total = total + 1
+       total += 1
+       idx += 1
        if x ~= y then
            printh('section '..sec..':')
-           printh(ctx.." failed: '"..tostr(x).."' != '"..tostr(y).."'")
+           printh(ctx.." #"..idx.." failed: '"..tostr(x).."' != '"..tostr(y).."'")
            fail = fail + 1
        end
    end
@@ -140,6 +142,114 @@ fixture 'hole 1,2,*'
     t[3]=nil
     add(t,4) -- {1,2,4}
     test_equal(t[3],4)
+
+--
+-- Check that all() works properly
+--
+
+section 'all()'
+
+fixture 'empty'
+    t={}
+    s=''
+    for n in all(t) do s = s..tostr(n) end
+    test_equal(s,'')
+
+fixture 'simple'
+    t={1,2}
+    s=''
+    for n in all(t) do s = s..tostr(n) end
+    test_equal(s,'12')
+
+fixture 'dupes'
+    t={1,1,2,2}
+    s=''
+    for n in all(t) do s = s..tostr(n) end
+    test_equal(s,'1122')
+
+fixture 'holes'
+    t={1,nil,2,nil,nil,3}
+    s=''
+    for n in all(t) do s = s..tostr(n) end
+    test_equal(s,'123')
+
+--
+-- Check that foreach() works properly
+--
+
+section 'foreach()'
+
+fixture 'simple'
+    t={1,2,3}
+    v={}
+    foreach(t, function(x) add(v,x) end)
+    test_equal(v[1],1)
+    test_equal(v[2],2)
+    test_equal(v[3],3)
+    test_equal(v[4],nil)
+
+fixture 'inner add'
+    t={1,2,3}
+    v={}
+    foreach(t, function(x) add(v,x) if(x==2) then add(t,4) end end)
+    test_equal(v[1],1)
+    test_equal(v[2],2)
+    test_equal(v[3],3)
+    test_equal(v[4],4)
+    test_equal(v[5],nil)
+
+fixture 'inner del'
+    t={1,2,3}
+    v={}
+    foreach(t, function(x) add(v,x) if(x==2) then del(t,3) end end)
+    test_equal(v[1],1)
+    test_equal(v[2],2)
+    test_equal(v[3],nil)
+
+fixture 'inner del+add'
+    t={1,2,3}
+    v={}
+    foreach(t, function(x) add(v,x) if(x==2) then del(t,3) add(t,4) end end)
+    test_equal(v[1],1)
+    test_equal(v[2],2)
+    test_equal(v[3],4)
+    test_equal(v[4],nil)
+
+fixture 'inner del+del+add'
+    t={1,2,3}
+    v={}
+    foreach(t, function(x) add(v,x) if x==2 then del(t,2) del(t,3) add(t,4) end end)
+    test_equal(v[1],1)
+    test_equal(v[2],2)
+    test_equal(v[3],4)
+    test_equal(v[4],nil)
+
+fixture 'inner del+del+del+add'
+    t={1,2,3}
+    v={}
+    foreach(t, function(x) add(v,x) if x==2 then del(t,1) del(t,2) del(t,3) add(t,4) end end)
+    test_equal(v[1],1)
+    test_equal(v[2],2)
+    test_equal(v[3],nil)
+
+fixture 'nested foreach'
+    t={1,2}
+    v={}
+    foreach(t, function(x) foreach(t, function(y) add(v,x*100+y) end) end)
+    test_equal(v[1],101)
+    test_equal(v[2],102)
+    test_equal(v[3],201)
+    test_equal(v[4],202)
+    test_equal(v[5],nil)
+
+fixture 'nested foreach delete'
+    t={1,2,3}
+    v={}
+    foreach(t, function(x) if x==2 then foreach(t, function(y) del(t,y) end) end add(v,x) end)
+    test_equal(t[1],nil)
+    test_equal(v[1],1)
+    test_equal(v[2],2)
+    test_equal(v[3],nil)
 
 --
 -- print report

@@ -41,7 +41,6 @@ mapdraw = map
 -- but will not be propagated to the cart through _ENV.
 --
 local error = error
-local table = table -- for insert and remove
 local ipairs = ipairs
 local tonumber = tonumber
 local __cartdata = __cartdata
@@ -92,24 +91,37 @@ function add(c, x)
     if (c != nil) c[#c+1]=x return x
 end
 
-sub = string.sub
-
-function foreach(a, f)
-    if a != nil then for k, v in ipairs(a) do f(v) end end
-end
-
-function all(a)
-    local i, n = 0, a != nil and #a or 0
-    return function() i = i + 1 if i <= n then return a[i] end end
-end
-
-function del(a, v)
-    if a != nil then
-        for k, v2 in ipairs(a) do
-            if v == v2 then table.remove(a, k) return v end
+function del(c,v)
+    if c != nil then
+        local max = #c
+        for i=1,max do
+            if c[i]==v then
+                for j=i,max do c[j]=c[j+1] end
+                return v
+            end
         end
     end
 end
+
+
+function all(c)
+    if (c==nil or #c==0) return function() end
+    local i,prev = 1,nil
+    return function()
+        -- increment unless the current value changed
+        if (c[i]==prev) i+=1
+        -- skip until non-nil or end of table
+        while (i<=#c and c[i]==nil) i+=1
+        prev=c[i]
+        return prev
+    end
+end
+
+function foreach(c, f)
+     for v in all(c) do f(v) end
+end
+
+sub = string.sub
 
 function cartdata(s)
     if __cartdata() then
