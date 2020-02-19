@@ -487,12 +487,14 @@ void vm::api_map(int16_t cel_x, int16_t cel_y, int16_t sx, int16_t sy,
     int16_t src_y = cel_y * 8;
 
     // Clamp to screen
-    src_x += std::max(-sx, 0);
-    src_y += std::max(-sy, 0);
-    sx += std::max(-sx, 0);
-    sy += std::max(-sy, 0);
-    src_w -= std::max(src_w + sx - 128, 0);
-    src_h -= std::max(src_h + sy - 128, 0);
+    int16_t mx = std::max(-sx, 0);
+    int16_t my = std::max(-sy, 0);
+    src_x += mx;
+    src_y += my;
+    src_w -= mx + std::max(src_w + sx - 128, 0);
+    src_h -= my + std::max(src_h + sy - 128, 0);
+    sx += mx;
+    sy += my;
 
     for (int16_t dy = 0; dy < src_h; ++dy)
     for (int16_t dx = 0; dx < src_w; ++dx)
