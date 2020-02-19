@@ -85,7 +85,13 @@ function count(c)
     return cnt
 end
 
-function add(a, x) if a != nil then table.insert(a, x) end return x end
+-- It looks like table.insert() would work here but we also try to mimic
+-- the PICO-8 error messages:
+--  add("") → attempt to index local 'c' (a string value)
+function add(c, x)
+    if (c != nil) c[#c+1]=x return x
+end
+
 sub = string.sub
 
 function foreach(a, f)

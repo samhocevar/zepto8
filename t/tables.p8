@@ -20,12 +20,13 @@ do local sec, sn, ctx, cn = "", 0, "", 0
    function test_equal(x, y)
        total = total + 1
        if x ~= y then
-           print(ctx.." failed: '"..x.."' != '"..y.."'")
+           printh('section '..sec..':')
+           printh(ctx.." failed: '"..tostr(x).."' != '"..tostr(y).."'")
            fail = fail + 1
        end
    end
    function summary()
-       print("\n"..total.." tests - "..(total - fail).." passed, "..fail.." failed.")
+       printh("\n"..total.." tests - "..(total - fail).." passed, "..fail.." failed.")
    end
 end
 
@@ -92,6 +93,53 @@ fixture 'three with hole'
     t={1,2,3}
     t[2]=nil
     test_equal(count(t),2)
+
+--
+-- Check that add() works properly
+--
+
+section 'add()'
+
+fixture 'add to empty'
+    t={}
+    add(t,1)
+    test_equal(t[1],1)
+
+fixture 'return value'
+    x=add({},1)
+    test_equal(x,1)
+
+fixture 'return nil'
+    x=add(nil,1)
+    test_equal(x,nil)
+
+fixture 'add to 1,2'
+    t={1,2}
+    add(t, 3) -- {1,2,3}
+    test_equal(t[3],3)
+
+fixture 'add to *,2,3'
+    t={[2]=2,[3]=3}
+    add(t,4) -- {4,2,3}
+    test_equal(t[1],4)
+
+fixture 'hole *,2,3'
+    t={1,2,3}
+    t[1]=nil
+    add(t,4) -- {nil,2,3,4}
+    test_equal(t[4],4)
+
+fixture 'hole 1,*,3'
+    t={1,2,3}
+    t[2]=nil
+    add(t,4) -- {1,nil,3,4}
+    test_equal(t[4],4)
+
+fixture 'hole 1,2,*'
+    t={1,2,3}
+    t[3]=nil
+    add(t,4) -- {1,2,4}
+    test_equal(t[3],4)
 
 --
 -- print report
