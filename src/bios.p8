@@ -71,7 +71,20 @@ function assert(cond, msg)
     end
 end
 
-function count(a) return a != nil and #a or 0 end
+-- Experimenting with count() on PICO-8 shows that it returns the number
+-- of non-nil elements between c[1] and c[#c], which is slightly different
+-- from returning #c in cases where the table is no longer an array. See
+-- the tables.p8 unit test cart for more details.
+--
+-- We also try to mimic the PICO-8 error messages:
+--  count(nil) → attempt to get length of local 'c' (a nil value)
+--  count("x") → attempt to index local 'c' (a string value)
+function count(c)
+    local cnt,max = 0,#c
+    for i=1,max do if (c[i] != nil) cnt+=1 end
+    return cnt
+end
+
 function add(a, x) if a != nil then table.insert(a, x) end return x end
 sub = string.sub
 
