@@ -146,8 +146,14 @@ struct hw_state
     // 0x5f40—0x5f44: sound channel effects
     uint8_t half_rate, reverb, distort, lowpass;
 
-    // 0x5f44—0x4f80: undocumented
-    uint8_t undocumented[60];
+    // 0x5f44—0x4f5c: undocumented
+    uint8_t undocumented1[24];
+
+    // 0x5f5c—0x4f5e: btnp() autorepeat parameters
+    uint8_t btnp_delay, btnp_rate;
+
+    // 0x5f5e—0x4f80: undocumented
+    uint8_t undocumented2[34];
 };
 
 struct memory

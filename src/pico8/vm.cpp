@@ -716,13 +716,18 @@ var<bool, int16_t> vm::api_btn(opt<int16_t> n, int16_t p)
 
 var<bool, int16_t> vm::api_btnp(opt<int16_t> n, int16_t p)
 {
-    auto was_pressed = [](int i) -> bool
+    // Autorepeat behaviour is overridden by the hw state, and 255 disables it
+    // (https://twitter.com/lexaloffle/status/1176688167719587841)
+    int delay = m_ram.hw_state.btnp_delay ? m_ram.hw_state.btnp_delay : 15;
+    int rate = m_ram.hw_state.btnp_rate ? m_ram.hw_state.btnp_rate : 4;
+
+    auto was_pressed = [delay, rate](int i) -> bool
     {
         // “Same as btn() but only true when the button was not pressed the last frame”
         if (i == 1)
             return true;
         // “btnp() also returns true every 4 frames after the button is held for 15 frames.”
-        if (i > 15 && i % 4 == 0)
+        if (delay != 255 && i > delay && (i - delay - 1) % rate == 0)
             return true;
         return false;
     };
