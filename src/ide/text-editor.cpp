@@ -14,19 +14,22 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h>
-
-#include <set>
-#include <string>
+#include <string>     // std::string
+#include <map>        // std::map
+#include <memory>     // std::shared_ptr
+#include <functional> // std::function
 
 #include "zepto8.h"
 #include "ide/text-editor.h"
 #include "pico8/pico8.h"
 
+#include <lol/engine.h> // for the ImGui headers and much more stuff
+
 #include "zep.h"
 #include "zep/mode_vim.h"
 #include "zep/mode_standard.h"
 #include "zep/filesystem.h"
+
 #include "zep/imgui/editor_imgui.h"
 
 #define BUFFER_NAME "code.p8"

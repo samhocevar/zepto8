@@ -15,7 +15,8 @@
 #endif
 
 #include <lol/engine.h>
-
+#include <lol/getopt> // lol::getopt
+#include <lol/utils>  // lol::ends_with
 #include <fstream>
 #include <sstream>
 #include <iostream>

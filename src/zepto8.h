@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -12,10 +12,13 @@
 
 #pragma once
 
-#include <lol/engine.h>
-
-#include <string>
+#include <lol/vector> // lol::ivec2
+#include <string>     // std::string
+#include <tuple>      // std::tuple
+#include <functional> // std::function
+#include <cassert>    // assert()
 #include <cstddef>
+#include <memory>     // std::unique_ptr
 
 // The ZEPTO-8 types
 // —————————————————
@@ -28,8 +31,6 @@ namespace pico8
 {
     class bios; // TODO: get rid of this
 }
-
-using lol::u8vec4;
 
 //
 // A simple 4-bit 2D array
@@ -52,14 +53,14 @@ public:
 
     inline uint8_t get(int x, int y) const
     {
-        ASSERT(x >= 0 && x < W && y >= 0 && y < H);
+        assert(x >= 0 && x < W && y >= 0 && y < H);
         uint8_t const p = data[y][x / 2];
         return x & 1 ? p >> 4 : p & 0xf;
     }
 
     inline void set(int x, int y, uint8_t c)
     {
-        ASSERT(x >= 0 && x < W && y >= 0 && y < H);
+        assert(x >= 0 && x < W && y >= 0 && y < H);
         uint8_t &p = data[y][x / 2];
         p = (p & (x & 1 ? 0x0f : 0xf0)) | (x & 1 ? c << 4 : c & 0x0f);
     }

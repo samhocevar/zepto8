@@ -79,7 +79,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h" />
-    <ClInclude Include="3rdparty/portable-file-dialogs/portable-file-dialogs.h" />
     <ClInclude Include="3rdparty/zep/src/buffer.h" />
     <ClInclude Include="3rdparty/zep/src/commands.h" />
     <ClInclude Include="3rdparty/zep/src/display.h" />

@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -13,6 +13,10 @@
 #pragma once
 
 #include <lol/engine.h>
+#include <lol/utils>  // lol::ends_with
+#include <lol/thread> // lol::timer
+#include <lol/vector> // lol::ivec2
+#include <vector>     // std::vector
 
 #if HAVE_UNISTD_H
 #   include <unistd.h>
@@ -34,7 +38,7 @@ namespace z8
 
 struct telnet
 {
-    lol::array<uint8_t> m_screen;
+    std::vector<uint8_t> m_screen;
     lol::ivec2 m_term_size = lol::ivec2(128, 64);
 
     void run(char const *cart)
@@ -96,7 +100,7 @@ struct telnet
             vm->step(1.f / 60.f);
 
             vm->print_ansi(m_term_size,
-                           m_screen.count() ? m_screen.data() : nullptr);
+                           m_screen.empty() ? nullptr : m_screen.data());
 
             // FIXME: PICO-8 specific
             m_screen.resize(0x2000);

@@ -85,9 +85,6 @@
     <ClInclude Include="3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h">
       <Filter>3rdparty\imgui-club</Filter>
     </ClInclude>
-    <ClInclude Include="3rdparty/portable-file-dialogs/portable-file-dialogs.h">
-      <Filter>3rdparty\portable-file-dialogs</Filter>
-    </ClInclude>
     <ClInclude Include="3rdparty/zep/src/mcommon/file/path.h">
       <Filter>3rdparty\zep\mcommon\file</Filter>
     </ClInclude>
@@ -200,9 +197,6 @@
     </Filter>
     <Filter Include="3rdparty\imgui-club">
       <UniqueIdentifier>{58dd1412-ec0c-4e8b-9180-8c61e6c40987}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="3rdparty\portable-file-dialogs">
-      <UniqueIdentifier>{e8e642c5-a93d-4179-9b1d-4a5a748fe12a}</UniqueIdentifier>
     </Filter>
     <Filter Include="3rdparty\zep">
       <UniqueIdentifier>{8aa5accd-0ff8-4c72-8992-157f2d1f0bc0}</UniqueIdentifier>

@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -30,8 +30,6 @@
 
 namespace z8::pico8
 {
-
-using lol::msg;
 
 std::string_view charset::to_utf8[256];
 std::u32string_view charset::to_utf32[256];
@@ -123,7 +121,7 @@ std::string charset::pico8_to_utf8(std::string const &str)
 
 void vm::private_stub(std::string str)
 {
-    msg::info("z8:stub:%s\n", str.c_str());
+    lol::msg::info("z8:stub:%s\n", str.c_str());
 }
 
 bool vm::private_is_api(std::string str)

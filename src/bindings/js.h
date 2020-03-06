@@ -14,8 +14,6 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h>
-
 #include <optional>
 
 extern "C" {

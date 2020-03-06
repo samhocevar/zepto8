@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2017 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -14,7 +14,9 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h>
+#include <lol/vector> // lol::ivec2
+#include <algorithm>  // std::swap, std::min
+#include <cstring>    // memcmp()
 
 #include "zepto8.h"
 
@@ -24,6 +26,8 @@ namespace z8
 void vm_base::print_ansi(lol::ivec2 term_size,
                          uint8_t const *prev_screen) const
 {
+    using std::min;
+
     int palette[16];
     for (int i = 0; i < 16; ++i)
         palette[i] = get_ansi_color(i);
@@ -32,7 +36,7 @@ void vm_base::print_ansi(lol::ivec2 term_size,
 
     auto &screen = get_screen();
 
-    for (int y = 0; y < 2 * lol::min(64, term_size.y); y += 2)
+    for (int y = 0; y < 2 * min(64, term_size.y); y += 2)
     {
         if (prev_screen && !memcmp(&screen.data[y],
                                    &prev_screen[y * 64], 128))
@@ -42,7 +46,7 @@ void vm_base::print_ansi(lol::ivec2 term_size,
 
         int oldfg = -1, oldbg = -1;
 
-        for (int x = 0; x < lol::min(128, term_size.x); ++x)
+        for (int x = 0; x < min(128, term_size.x); ++x)
         {
             uint8_t fg = screen.get(x, y);
             uint8_t bg = screen.get(x, y + 1);

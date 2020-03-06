@@ -16,6 +16,7 @@
 
 #include <lol/engine.h>
 
+#include <algorithm>  // std::min
 #include <filesystem>
 #include <chrono>
 
@@ -62,8 +63,6 @@ template<> void z8::bindings::lua_get(lua_State *l, int n,
 namespace z8::pico8
 {
 
-using lol::msg;
-
 vm::vm()
 {
     m_bios = std::make_unique<bios>();
@@ -89,7 +88,7 @@ vm::vm()
     if (status != LUA_OK)
     {
         char const *message = lua_tostring(m_lua, -1);
-        msg::error("error %d loading bios.p8: %s\n", status, message);
+        lol::msg::error("error %d loading bios.p8: %s\n", status, message);
         lua_pop(m_lua, 1);
         lol::abort();
     }
@@ -130,7 +129,7 @@ void vm::runtime_error(std::string str)
 int vm::panic_hook(lua_State* l)
 {
     char const *message = lua_tostring(l, -1);
-    msg::error("Lua panic: %s\n", message);
+    lol::msg::error("Lua panic: %s\n", message);
     lol::abort();
     return 0;
 }
@@ -270,7 +269,7 @@ void vm::run()
     if (status != LUA_OK)
     {
         char const *message = lua_tostring(m_lua, -1);
-        msg::error("error %d running cartridge: %s\n", status, message);
+        lol::msg::error("error %d running cartridge: %s\n", status, message);
         lua_pop(m_lua, 1);
     }
 }
@@ -285,7 +284,7 @@ bool vm::step(float seconds)
     if (status != LUA_OK)
     {
         char const *message = lua_tostring(m_lua, -1);
-        msg::error("error %d in main loop: %s\n", status, message);
+        lol::msg::error("error %d in main loop: %s\n", status, message);
     }
     else
     {
@@ -340,6 +339,8 @@ void vm::api_menuitem()
 
 void vm::api_reload(int16_t in_dst, int16_t in_src, opt<int16_t> in_size)
 {
+    using std::min;
+
     int dst = 0, src = 0, size = offsetof(memory, code);
 
     if (in_size && *in_size <= 0)
@@ -364,7 +365,7 @@ void vm::api_reload(int16_t in_dst, int16_t in_src, opt<int16_t> in_size)
     // If reading from after the cart, fill that part with zeroes
     if (src > (int)offsetof(memory, code))
     {
-        int amount = lol::min(size, (int)sizeof(m_ram) - src);
+        int amount = min(size, (int)sizeof(m_ram) - src);
         ::memset(&m_ram[dst], 0, amount);
         dst += amount;
         src = (src + amount) & 0xffff;
@@ -372,7 +373,7 @@ void vm::api_reload(int16_t in_dst, int16_t in_src, opt<int16_t> in_size)
     }
 
     // Now copy possibly legal data
-    int amount = lol::min(size, (int)offsetof(memory, code) - src);
+    int amount = min(size, (int)offsetof(memory, code) - src);
     ::memcpy(&m_ram[dst], &m_cart.get_rom()[src], amount);
     dst += amount;
     size -= amount;
@@ -474,6 +475,8 @@ void vm::api_poke4(int16_t addr, fix32 val)
 
 void vm::api_memcpy(int16_t in_dst, int16_t in_src, int16_t in_size)
 {
+    using std::min;
+
     if (in_size <= 0)
         return;
 
@@ -486,7 +489,7 @@ void vm::api_memcpy(int16_t in_dst, int16_t in_src, int16_t in_size)
     // else seems legal, especially reading from anywhere.
     if (dst < 0 || dst + size > (int)sizeof(m_ram))
     {
-        msg::info("z8:segv:memcpy(0x%x,0x%x,0x%x)\n", src, dst, size);
+        lol::msg::info("z8:segv:memcpy(0x%x,0x%x,0x%x)\n", src, dst, size);
         runtime_error("bad memory access");
         return;
     }
@@ -497,14 +500,14 @@ void vm::api_memcpy(int16_t in_dst, int16_t in_src, int16_t in_size)
     int delayed_dst = dst, delayed_size = 0;
     if (src > (int)sizeof(m_ram))
     {
-        delayed_size = lol::min(size, (int)sizeof(m_ram) - src);
+        delayed_size = min(size, (int)sizeof(m_ram) - src);
         dst += delayed_size;
         src = (src + delayed_size) & 0xffff;
         size -= delayed_size;
     }
 
     // Now copy possibly legal data
-    int amount = lol::min(size, (int)sizeof(m_ram) - src);
+    int amount = min(size, (int)sizeof(m_ram) - src);
     memmove(&m_ram[dst], &m_ram[src], amount);
     dst += amount;
     size -= amount;
@@ -524,7 +527,7 @@ void vm::api_memset(int16_t dst, uint8_t val, int16_t size)
 
     if (dst < 0 || dst + size > (int)sizeof(m_ram))
     {
-        msg::info("z8:segv:memset(0x%x,0x%x,0x%x)\n", dst, val, size);
+        lol::msg::info("z8:segv:memset(0x%x,0x%x,0x%x)\n", dst, val, size);
         runtime_error("bad memory access");
         return;
     }

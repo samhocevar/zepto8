@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -15,6 +15,9 @@
 #endif
 
 #include <lol/engine.h>
+#include <lol/vector>    // lol::vec2
+#include <lol/transform> // lol::mat4
+#include <lol/color>     // lol::color
 
 #include "player.h"
 
@@ -129,7 +132,7 @@ void player::tick_game(float seconds)
     // Aspect ratio
     m_win_size = lol::Video::GetSize();
     m_scale = (float)std::min(m_win_size.x / SCREEN_WIDTH, m_win_size.y / SCREEN_HEIGHT);
-    m_screen_pos = ivec2((lol::vec2(m_win_size) - lol::vec2(SCREEN_WIDTH * m_scale, SCREEN_HEIGHT * m_scale)) / 2.f);
+    m_screen_pos = lol::ivec2((lol::vec2(m_win_size) - lol::vec2(SCREEN_WIDTH * m_scale, SCREEN_HEIGHT * m_scale)) / 2.f);
     m_scenecam->SetProjection(lol::mat4::ortho(0.f, (float)m_win_size.x, 0.f, (float)m_win_size.y, -100.f, 100.f));
 
     auto mouse = lol::input::mouse();
@@ -209,7 +212,7 @@ void player::tick_draw(float seconds, lol::Scene &scene)
         m_tile->GetTexture()->Bind();
         m_tile->GetTexture()->SetData(m_screen.data());
 
-        scene.get_renderer()->clear_color(lol::Color::black);
+        scene.get_renderer()->clear_color(lol::color::black);
         scene.AddTile(m_tile, 0, lol::vec3((float)m_screen_pos.x, (float)m_screen_pos.y, 10.f), lol::vec2(m_scale), 0.f);
     }
 }

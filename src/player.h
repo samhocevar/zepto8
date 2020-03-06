@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2019 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -13,6 +13,9 @@
 #pragma once
 
 #include <lol/engine.h>
+#include <map>    // std::map
+#include <vector> // std::vector
+#include <memory> // std::shared_ptr
 
 #include "zepto8.h"
 #include "pico8/cart.h"
@@ -23,10 +26,6 @@
 
 namespace z8
 {
-
-using lol::array;
-using lol::ivec2;
-using lol::u8vec4;
 
 class player : public lol::WorldEntity
 {
@@ -51,7 +50,7 @@ private:
     std::shared_ptr<vm_base> m_vm;
 
     std::map<lol::input::key, int> m_input_map;
-    array<u8vec4> m_screen;
+    std::vector<lol::u8vec4> m_screen;
 
     // Video
     bool m_embedded = false;

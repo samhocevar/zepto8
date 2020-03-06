@@ -12,12 +12,12 @@
 
 #pragma once
 
-#include <lol/engine.h>
-
-#include <map>
-#include <set>
-#include <string_view>
-#include <regex>
+#include <map>         // std::map
+#include <set>         // std::set
+#include <string_view> // std::string_view
+#include <regex>       // std::regex
+#include <cfloat>      // FLT_MAX
+#include <lol/vector>  // lol::vec4
 
 // The PICO-8 definitions
 // ——————————————————————

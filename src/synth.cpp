@@ -16,12 +16,17 @@
 
 #include "synth.h"
 
+#include <lol/noise> // lol::perlin_noise
+#include <cmath>     // std::fabs, std::fmod
+
 namespace z8
 {
 
 float synth::waveform(int instrument, float advance)
 {
-    float t = lol::fmod(advance, 1.f);
+    using std::fabs, std::fmod;
+
+    float t = fmod(advance, 1.f);
     float ret = 0.f;
 
     // Multipliers were measured from PICO-8 WAV exports. Waveforms are
@@ -30,7 +35,7 @@ float synth::waveform(int instrument, float advance)
     switch (instrument)
     {
         case INST_TRIANGLE:
-            return 0.354f * (lol::abs(4.f * t - 2.0f) - 1.0f);
+            return 0.354f * (fabs(4.f * t - 2.0f) - 1.0f);
         case INST_TILTED_SAW:
         {
             static float const a = 0.9f;
@@ -45,8 +50,8 @@ float synth::waveform(int instrument, float advance)
         case INST_PULSE:
             return t < 1.f / 3 ? 0.25f : -0.25f;
         case INST_ORGAN:
-            ret = t < 0.5f ? 3.f - lol::abs(24.f * t - 6.f)
-                           : 1.f - lol::abs(16.f * t - 12.f);
+            ret = t < 0.5f ? 3.f - fabs(24.f * t - 6.f)
+                           : 1.f - fabs(16.f * t - 12.f);
             return ret / 9.f;
         case INST_NOISE:
         {
@@ -65,9 +70,9 @@ float synth::waveform(int instrument, float advance)
         {   // This one has a subfrequency of freq/128 that appears
             // to modulate two signals using a triangle wave
             // FIXME: amplitude seems to be affected, too
-            float k = lol::abs(2.f * lol::fmod(advance / 128.f, 1.f) - 1.f);
-            float u = lol::fmod(t + 0.5f * k, 1.0f);
-            ret = lol::abs(4.f * u - 2.f) - lol::abs(8.f * t - 4.f);
+            float k = fabs(2.f * fmod(advance / 128.f, 1.f) - 1.f);
+            float u = fmod(t + 0.5f * k, 1.0f);
+            ret = fabs(4.f * u - 2.f) - fabs(8.f * t - 4.f);
             return ret / 6.f;
         }
     }

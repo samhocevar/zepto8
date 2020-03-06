@@ -1,9 +1,9 @@
 // Copyright (c) 2015-2018 Dr. Colin Hirsch and Daniel Frey
 // Please see LICENSE for license or visit https://github.com/taocpp/PEGTL/
 
-#include <tao/pegtl.hpp>
-#include <tao/pegtl/analyze.hpp>
-#include <tao/pegtl/contrib/raw_string.hpp>
+#include <lol/pegtl>
+#include <lol/3rdparty/pegtl/include/tao/pegtl/analyze.hpp>
+#include <lol/3rdparty/pegtl/include/tao/pegtl/contrib/raw_string.hpp>
 
 namespace lua53
 {

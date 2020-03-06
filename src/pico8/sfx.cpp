@@ -15,6 +15,8 @@
 #endif
 
 #include <lol/engine.h>
+#include <algorithm> // std::max
+#include <cmath>     // std::fabs, std::fmod, std::floor
 
 #include "pico8/vm.h"
 #include "synth.h"
@@ -23,8 +25,6 @@ namespace z8::pico8
 {
 
 #define DEBUG_EXPORT_WAV 0
-
-using lol::msg;
 
 enum
 {
@@ -40,7 +40,8 @@ enum
 
 static float key_to_freq(float key)
 {
-    return 440.f * std::exp2((key - 33.f) / 12.f);
+    using std::exp2;
+    return 440.f * exp2((key - 33.f) / 12.f);
 }
 
 #if DEBUG_STUFF
@@ -76,6 +77,8 @@ std::function<void(void *, int)> vm::get_streamer(int ch)
 // new music chunk. Be careful when implementing music.
 void vm::getaudio(int chan, void *in_buffer, int in_bytes)
 {
+    using std::fabs, std::fmod, std::floor, std::max;
+
     int const samples_per_second = 22050;
     int const bytes_per_sample = 2; // mono S16 for now
 
@@ -120,7 +123,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         struct sfx const &sfx = m_ram.sfx[index];
 
         // Speed must be 1—255 otherwise the SFX is invalid
-        int const speed = lol::max(1, (int)sfx.speed);
+        int const speed = max(1, (int)sfx.speed);
 
         float const offset = m_state.channels[chan].offset;
         float const phi = m_state.channels[chan].phi;
@@ -137,12 +140,12 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         if (loop_range > 0.f && next_offset >= sfx.loop_end
              && m_state.channels[chan].can_loop)
         {
-            next_offset = std::fmod(next_offset - sfx.loop_start, loop_range)
+            next_offset = fmod(next_offset - sfx.loop_start, loop_range)
                         + sfx.loop_start;
         }
 
-        int const note_id = (int)lol::floor(offset);
-        int const next_note_id = (int)lol::floor(next_offset);
+        int const note_id = (int)floor(offset);
+        int const next_note_id = (int)floor(next_offset);
 
         uint8_t key = sfx.notes[note_id].key;
         float volume = sfx.notes[note_id].volume / 7.f;
@@ -164,7 +167,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
                     break;
                 case FX_SLIDE:
                 {
-                    float t = lol::fmod(offset, 1.f);
+                    float t = fmod(offset, 1.f);
                     // From the documentation: “Slide to the next note and volume”,
                     // but it’s actually _from_ the _prev_ note and volume.
                     freq = lol::mix(key_to_freq(m_state.channels[chan].prev_key), freq, t);
@@ -176,19 +179,19 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
                 {
                     // 7.5f and 0.25f were found empirically by matching
                     // frequency graphs of PICO-8 instruments.
-                    float t = lol::abs(lol::fmod(7.5f * offset / offset_per_second, 1.0f) - 0.5f) - 0.25f;
+                    float t = fabs(fmod(7.5f * offset / offset_per_second, 1.0f) - 0.5f) - 0.25f;
                     // Vibrato half a semi-tone, so multiply by pow(2,1/12)
                     freq = lol::mix(freq, freq * 1.059463094359f, t);
                     break;
                 }
                 case FX_DROP:
-                    freq *= 1.f - lol::fmod(offset, 1.f);
+                    freq *= 1.f - fmod(offset, 1.f);
                     break;
                 case FX_FADE_IN:
-                    volume *= lol::fmod(offset, 1.f);
+                    volume *= fmod(offset, 1.f);
                     break;
                 case FX_FADE_OUT:
-                    volume *= 1.f - lol::fmod(offset, 1.f);
+                    volume *= 1.f - fmod(offset, 1.f);
                     break;
                 case FX_ARP_FAST:
                 case FX_ARP_SLOW:
@@ -257,6 +260,8 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
 
 void vm::api_music(int16_t pattern, int16_t fade_len, int16_t mask)
 {
+    using std::max;
+
     // pattern: 0..63, -1 to stop music.
     // fade_len: fade length in milliseconds (default 0)
     // mask: reserved channels
@@ -289,7 +294,7 @@ void vm::api_music(int16_t pattern, int16_t fade_len, int16_t mask)
         if (m_state.music.master == -1 || m_state.music.speed > sfx.speed)
         {
             m_state.music.master = i;
-            m_state.music.speed = lol::max(1, (int)sfx.speed);
+            m_state.music.speed = max(1, (int)sfx.speed);
         }
     }
 

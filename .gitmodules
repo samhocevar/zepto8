@@ -11,9 +11,6 @@
 [submodule "imgui-club"]
 	path = src/3rdparty/imgui-club
 	url = ../../samhocevar/fork-imgui-club.git
-[submodule "portable-file-dialogs"]
-	path = src/3rdparty/portable-file-dialogs
-	url = ../../samhocevar/portable-file-dialogs.git
 [submodule "zep"]
 	path = src/3rdparty/zep
 	url = ../../samhocevar/fork-zep.git

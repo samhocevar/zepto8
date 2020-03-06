@@ -14,15 +14,13 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h>
-
 #include "pico8/vm.h"
 #include "pico8/pico8.h"
 
+#include <lol/vector> // lol::u8vec4
+
 namespace z8::pico8
 {
-
-using lol::msg;
 
 void vm::render(lol::u8vec4 *screen) const
 {

@@ -15,14 +15,14 @@
 #endif
 
 #include <lol/engine.h>
+#include <algorithm> // std::swap
+#include <cmath>     // std::min, std::max
 
 #include "pico8/vm.h"
 #include "bios.h"
 
 namespace z8::pico8
 {
-
-using lol::msg;
 
 /* Return color bits for use with set_pixel().
  *  - bits 0x0000ffff: fillp pattern
@@ -96,6 +96,8 @@ void vm::set_pixel(int16_t x, int16_t y, uint32_t color_bits)
 
 void vm::hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits)
 {
+    using std::min, std::max;
+
     auto &ds = m_ram.draw_state;
 
     if (y < ds.clip.y1 || y >= ds.clip.y2)
@@ -104,8 +106,8 @@ void vm::hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits)
     if (x1 > x2)
         std::swap(x1, x2);
 
-    x1 = std::max(x1, (int16_t)ds.clip.x1);
-    x2 = std::min(x2, (int16_t)(ds.clip.x2 - 1));
+    x1 = max(x1, (int16_t)ds.clip.x1);
+    x2 = min(x2, (int16_t)(ds.clip.x2 - 1));
 
     if (x1 > x2)
         return;
@@ -139,6 +141,8 @@ void vm::hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits)
 
 void vm::vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits)
 {
+    using std::min, std::max;
+
     auto &ds = m_ram.draw_state;
 
     if (x < ds.clip.x1 || x >= ds.clip.x2)
@@ -147,8 +151,8 @@ void vm::vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits)
     if (y1 > y2)
         std::swap(y1, y2);
 
-    y1 = std::max(y1, (int16_t)ds.clip.y1);
-    y2 = std::min(y2, (int16_t)(ds.clip.y2 - 1));
+    y1 = max(y1, (int16_t)ds.clip.y1);
+    y2 = min(y2, (int16_t)(ds.clip.y2 - 1));
 
     if (y1 > y2)
         return;
@@ -420,6 +424,8 @@ void vm::api_fset(opt<int16_t> n, opt<int16_t> f, opt<bool> b)
 void vm::api_line(int16_t x0, opt<int16_t> opt_y0, opt<int16_t> opt_x1,
                   int16_t y1, opt<fix32> c)
 {
+    using std::abs, std::min, std::max;
+
     auto &ds = m_ram.draw_state;
 
     int16_t y0, x1;
@@ -451,7 +457,7 @@ void vm::api_line(int16_t x0, opt<int16_t> opt_y0, opt<int16_t> opt_x1,
     {
         set_pixel(x0, y0, color_bits);
     }
-    else if (lol::abs(x1 - x0) > lol::abs(y1 - y0))
+    else if (abs(x1 - x0) > abs(y1 - y0))
     {
         for (int16_t x = std::min(x0, x1); x <= std::max(x0, x1); ++x)
         {

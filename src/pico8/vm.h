@@ -28,8 +28,6 @@ namespace z8 { class player; }
 namespace z8::pico8
 {
 
-using lol::u8vec4;
-
 template<typename T> using opt = std::optional<T>;
 template<typename... T> using var = std::variant<T...>;
 template<typename... T> using tup = std::tuple<T...>;

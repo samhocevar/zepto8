@@ -12,7 +12,8 @@
 
 #pragma once
 
-#include <lol/engine.h>
+#include <lol/vector> // lol::u8vec2
+#include <algorithm>  // std::swap
 
 #include "zepto8.h"
 
@@ -248,7 +249,7 @@ struct memory
             if (mode & 1)
                 std::swap(x, y);
             return screen.get(mode & 2 ? 127 - x : x,
-                              (mode + 1 & 2) ? 127 - y : y);
+                              ((mode + 1) & 2) ? 127 - y : y);
         }
 
         x = (mode & 0xbd) == 0x05 ? std::min(x, 127 - x) // mirror

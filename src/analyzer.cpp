@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2017 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -14,12 +14,11 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h>
+#include <lol/vector>
+#include <lol/pegtl>
 
 #include <string>
 #include <regex>
-
-#include <tao/pegtl.hpp>
 
 #include "analyzer.h"
 #define WITH_PICO8 1
@@ -27,7 +26,6 @@
 
 using lol::ivec2;
 using lol::ivec3;
-using lol::msg;
 
 using namespace tao;
 

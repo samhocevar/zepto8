@@ -15,13 +15,15 @@
 #endif
 
 #include <lol/engine.h>
+#include <lol/utils>   // lol::ends_with
+#include <lol/dialogs> // pfd::message etc.
+#include <lol/vector>  // lol::ivec2 etc.
 
 #include "imgui_internal.h" // for the docking API
 
 #include "zepto8.h"
 #include "ide/ide.h"
 #include "pico8/pico8.h"
-#include "3rdparty/portable-file-dialogs/portable-file-dialogs.h"
 
 #define CUSTOM_FONT 0
 
@@ -91,8 +93,8 @@ void ide::apply_scale()
 
 bool ide::init_draw()
 {
-    m_screen = std::make_shared<lol::Texture>(ivec2(128, 128), lol::PixelFormat::RGBA_8);
-    m_sprites = std::make_shared<lol::Texture>(ivec2(128, 128), lol::PixelFormat::RGBA_8);
+    m_screen = std::make_shared<lol::Texture>(lol::ivec2(128, 128), lol::PixelFormat::RGBA_8);
+    m_sprites = std::make_shared<lol::Texture>(lol::ivec2(128, 128), lol::PixelFormat::RGBA_8);
 
     return true;
 }

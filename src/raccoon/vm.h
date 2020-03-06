@@ -12,9 +12,8 @@
 
 #pragma once
 
-#include <lol/engine.h>
-
-#include <optional>
+#include <optional>   // std::optional
+#include <lol/vector> // lol::ivec2
 
 #include "zepto8.h"
 #include "player.h"

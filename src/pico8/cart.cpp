@@ -14,14 +14,12 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h>
-
-#include "tao/pegtl.hpp"
-
 #include "zepto8.h"
 #include "pico8/cart.h"
 #include "pico8/pico8.h"
 
+#include <lol/engine.h>
+#include <lol/pegtl>
 #include <regex>
 
 namespace z8::pico8

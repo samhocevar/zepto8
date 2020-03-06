@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2017 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2017—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -24,10 +24,6 @@
 namespace z8
 {
 
-using lol::array;
-using lol::ivec2;
-using lol::msg;
-using lol::u8vec4;
 using lol::PixelFormat;
 
 bool splore::dump(char const *filename)
@@ -35,9 +31,9 @@ bool splore::dump(char const *filename)
     // Open cartridge as PNG image
     lol::image img;
     img.load(filename);
-    ivec2 size = img.size();
+    lol::ivec2 size = img.size();
 
-    if (size != ivec2(8 * 128, 4 * (128 + 8)))
+    if (size != lol::ivec2(8 * 128, 4 * (128 + 8)))
         return false;
 
     auto const &pixels = img.lock2d<PixelFormat::RGBA_8>();
@@ -48,10 +44,10 @@ bool splore::dump(char const *filename)
 
         for (int line = 0; line < 3; ++line)
         {
-            u8vec4 const *sol = &pixels[cart % 8 * 128][cart / 8 * (128 + 8) + 128 + line];
+            lol::u8vec4 const *sol = &pixels[cart % 8 * 128][cart / 8 * (128 + 8) + 128 + line];
             for (int x = 0; x < 128; ++x)
             {
-                u8vec4 p = sol[x];
+                auto p = sol[x];
                 if (p.r == 0)
                     break;
                 info_lines[line] += (char)p.r;

@@ -14,7 +14,8 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h>
+#include <set>    // std::set
+#include <string> // std::string
 
 #include "pico8/pico8.h"
 

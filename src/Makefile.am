@@ -31,7 +31,6 @@ endif
 
 3rdparty_sources = \
     3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h \
-    3rdparty/portable-file-dialogs/portable-file-dialogs.h \
     3rdparty/zep/include/zep/buffer.h \
     3rdparty/zep/include/zep/commands.h \
     3rdparty/zep/include/zep/display.h \
