@@ -1,47 +1,101 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
+-- zepto-8 conformance tests
+-- for print()
 
-cls()
-print("> print()")
-print()
-printh()
+-- small test framework
+do local sec, sn, ctx, cn = "", 0, "", 0
+   local fail, total, idx = 0, 0, 0
+   function section(name)
+       sec = name
+       sn += 1
+   end
+   function fixture(name)
+       ctx = name
+       cn += 1
+       idx = 0
+       a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z =
+       0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+   end
+   function test_equal(x, y)
+       total += 1
+       idx += 1
+       if x ~= y then
+           printh('section '..sec..':')
+           printh(ctx.." #"..idx.." failed: '"..tostr(x).."' != '"..tostr(y).."'")
+           fail = fail + 1
+       end
+   end
+   function summary()
+       printh("\n"..total.." tests - "..(total - fail).." passed, "..fail.." failed.")
+   end
+end
 
-print("> print(nil)")
-print(nil)
-printh(nil)
+-- small crc for the screen
+function crc()
+  local x = 0
+  for i=0x6000,0x7fff,4 do
+    local p=peek4(i)
+    x+=p*0xedb8.4e73+rotl(p,16)*0xbe36.7d8f+bxor(rotl(x,7),0xdead.beef)
+  end
+  return x
+end
 
-print("> print(false)")
-print(false)
-printh(false)
+--
+-- t1. check that print() changes the screen
+--
 
-print("> print(true)")
-print(true)
-printh(true)
+fixture "t1.01"
+    cls() a=crc()
+    print('x')
+    test_equal(crc() == a, false)
 
-print("> print(1)")
-print(1)
-printh(1)
+--
+-- t2. print() for printable types
+--
 
-print("> print(xxx)")
-print(xxx)
-printh(xxx)
+fixture "t2.01"
+    cls() print('false') a=crc() cls()
+    print(false)
+    test_equal(crc(), a)
 
-print("> print({'lol'})")
-print({'lol'})
-printh({'lol'})
+fixture "t2.02"
+    cls() print('true') a=crc() cls()
+    print(true)
+    test_equal(crc(), a)
 
-print("> print(cos)")
-print(cos)
-printh(cos)
+fixture "t2.03"
+    cls() print('1') a=crc() cls()
+    print(1)
+    test_equal(crc(), a)
 
-print("> print(cocreate(cls))")
-print(cocreate(cos))
-printh(cocreate(cos))
+--
+-- t3. print() for non-printable types
+--
 
-print("> print(type(false))")
-print(type(false))
-printh(type(false))
+fixture "t3.01"
+    cls() print('[nil]') a=crc() cls()
+    print(nil)
+    test_equal(crc(), a)
 
-print(">")
+fixture "t3.02"
+    cls() print('[table]') a=crc() cls()
+    print({})
+    test_equal(crc(), a)
 
+fixture "t3.03"
+    cls() print('[function]') a=crc() cls()
+    print(cos)
+    test_equal(crc(), a)
+
+fixture "t3.04"
+    cls() print('[thread]') a=crc() cls()
+    print(cocreate(cos))
+    test_equal(crc(), a)
+
+--
+-- print report
+--
+
+summary()
