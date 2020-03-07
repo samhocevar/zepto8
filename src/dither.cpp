@@ -164,7 +164,7 @@ void dither(char const *src, char const *out, bool hicolor, bool error_diffusion
 
                 // Pick the final color using a dithering kernel
                 int *found = luts[key];
-                nearest = found[(int)(kernel[i % kernel.size().x][j % kernel.size().y] * DEPTH)];
+                nearest = found[(int)(kernel[i % kernel.sizes().x][j % kernel.sizes().y] * DEPTH)];
             }
 
             pixels.push_back(nearest);
