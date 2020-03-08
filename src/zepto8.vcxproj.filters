@@ -27,13 +27,13 @@
     <ClCompile Include="3rdparty/zep/src/mode.cpp">
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
-    <ClCompile Include="3rdparty/zep/src/mode_repl.cpp">
-      <Filter>3rdparty\zep</Filter>
-    </ClCompile>
     <ClCompile Include="3rdparty/zep/src/mode_search.cpp">
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
     <ClCompile Include="3rdparty/zep/src/mode_standard.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/mode_tree.cpp">
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
     <ClCompile Include="3rdparty/zep/src/mode_vim.cpp">

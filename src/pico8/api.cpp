@@ -14,8 +14,8 @@
 #   include "config.h"
 #endif
 
-#include <set>    // std::set
-#include <string> // std::string
+#include <unordered_set> // std::unordered_set
+#include <string>        // std::string
 
 #include "pico8/pico8.h"
 
@@ -23,7 +23,7 @@ namespace z8::pico8
 {
 
 // This is the list from Lua’s luaX_tokens
-std::set<std::string> api::keywords =
+std::unordered_set<std::string> api::keywords =
 {
     "and", "break", "do", "else", "elseif",
     "end", "false", "for", "function", "goto", "if",
@@ -31,7 +31,7 @@ std::set<std::string> api::keywords =
     "return", "then", "true", "until", "while",
 };
 
-std::set<std::string> api::functions =
+std::unordered_set<std::string> api::functions =
 {
     // Implemented in Lua (mostly baselib)
     "assert", "getmetatable", "next", "pairs", "rawequal",

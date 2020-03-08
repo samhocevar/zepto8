@@ -12,12 +12,12 @@
 
 #pragma once
 
-#include <map>         // std::map
-#include <set>         // std::set
-#include <string_view> // std::string_view
-#include <regex>       // std::regex
-#include <cfloat>      // FLT_MAX
-#include <lol/vector>  // lol::vec4
+#include <map>           // std::map
+#include <unordered_set> // std::unordered_set
+#include <string_view>   // std::string_view
+#include <regex>         // std::regex
+#include <cfloat>        // FLT_MAX
+#include <lol/vector>    // lol::vec4
 
 // The PICO-8 definitions
 // ——————————————————————
@@ -40,8 +40,8 @@ enum
 
 struct api
 {
-    static std::set<std::string> functions;
-    static std::set<std::string> keywords;
+    static std::unordered_set<std::string> functions;
+    static std::unordered_set<std::string> keywords;
 };
 
 struct charset

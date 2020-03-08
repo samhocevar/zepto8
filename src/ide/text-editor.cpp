@@ -99,27 +99,25 @@ class zep_theme : public Zep::ZepTheme
 public:
     zep_theme()
     {
-        m_palette[Zep::ThemeColor::Text] = pico8::palette::light_gray;
-        m_palette[Zep::ThemeColor::Normal] = pico8::palette::light_gray;
-        m_palette[Zep::ThemeColor::Parenthesis] = pico8::palette::light_gray;
-        m_palette[Zep::ThemeColor::Background] = pico8::palette::dark_blue;
-        m_palette[Zep::ThemeColor::LineNumber] = pico8::palette::orange;
-        m_palette[Zep::ThemeColor::CursorNormal] = pico8::palette::red;
-        m_palette[Zep::ThemeColor::Comment] = pico8::palette::indigo;
-        m_palette[Zep::ThemeColor::Keyword] = pico8::palette::pink;
-        m_palette[Zep::ThemeColor::Identifier] = pico8::palette::green;
-        m_palette[Zep::ThemeColor::Number] = pico8::palette::blue;
-        m_palette[Zep::ThemeColor::String] = pico8::palette::blue;
+        add_color(Zep::ThemeColor::Text,         pico8::palette::light_gray);
+        add_color(Zep::ThemeColor::Text,         pico8::palette::light_gray);
+        add_color(Zep::ThemeColor::Normal,       pico8::palette::light_gray);
+        add_color(Zep::ThemeColor::Parenthesis,  pico8::palette::light_gray);
+        add_color(Zep::ThemeColor::Background,   pico8::palette::dark_blue);
+        add_color(Zep::ThemeColor::LineNumber,   pico8::palette::orange);
+        add_color(Zep::ThemeColor::CursorNormal, pico8::palette::red);
+        add_color(Zep::ThemeColor::Comment,      pico8::palette::indigo);
+        add_color(Zep::ThemeColor::Keyword,      pico8::palette::pink);
+        add_color(Zep::ThemeColor::Identifier,   pico8::palette::green);
+        add_color(Zep::ThemeColor::Number,       pico8::palette::blue);
+        add_color(Zep::ThemeColor::String,       pico8::palette::blue);
     }
 
-    virtual Zep::NVec4f GetColor(Zep::ThemeColor themeColor) const
+    virtual Zep::NVec4f const &GetColor(Zep::ThemeColor themeColor) const
     {
         auto it = m_palette.find(themeColor);
         if (it != m_palette.end())
-        {
-            auto col = pico8::palette::get(it->second);
-            return Zep::NVec4f(col.r, col.g, col.b, col.a);
-        }
+            return it->second;
         return Zep::ZepTheme::GetColor(themeColor);
     }
 
@@ -127,7 +125,13 @@ public:
     //virtual Zep::NVec4f GetUniqueColor(uint32_t id) const
 
 private:
-    std::map<Zep::ThemeColor, int> m_palette;
+    void add_color(Zep::ThemeColor tid, int cid)
+    {
+        auto col = pico8::palette::get(cid);
+        m_palette[tid] = Zep::NVec4f(col.r, col.g, col.b, col.a);
+    }
+
+    std::map<Zep::ThemeColor, Zep::NVec4f> m_palette;
 };
 
 text_editor::text_editor()

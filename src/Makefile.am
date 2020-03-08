@@ -70,20 +70,22 @@ endif
     3rdparty/zep/src/commands.cpp \
     3rdparty/zep/src/display.cpp \
     3rdparty/zep/src/editor.cpp \
+    3rdparty/zep/src/keymap.cpp \
     3rdparty/zep/src/line_widgets.cpp \
     3rdparty/zep/src/mcommon/animation/timer.cpp \
     3rdparty/zep/src/mcommon/file/path.cpp \
     3rdparty/zep/src/mcommon/string/stringutils.cpp \
     3rdparty/zep/src/mode.cpp \
-    3rdparty/zep/src/mode_repl.cpp \
     3rdparty/zep/src/mode_search.cpp \
     3rdparty/zep/src/mode_standard.cpp \
+    3rdparty/zep/src/mode_tree.cpp \
     3rdparty/zep/src/mode_vim.cpp \
     3rdparty/zep/src/scroller.cpp \
     3rdparty/zep/src/splits.cpp \
     3rdparty/zep/src/syntax.cpp \
     3rdparty/zep/src/syntax_providers.cpp \
     3rdparty/zep/src/syntax_rainbow_brackets.cpp \
+    3rdparty/zep/src/syntax_tree.cpp \
     3rdparty/zep/src/tab_window.cpp \
     3rdparty/zep/src/theme.cpp \
     3rdparty/zep/src/window.cpp \
