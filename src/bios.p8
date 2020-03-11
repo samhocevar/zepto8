@@ -364,6 +364,14 @@ function __z8_boot_sequence()
     __z8_loop = cocreate(__z8_shell)
 end
 
+local function print_clear(s)
+    -- empty next line
+    local y, c = peek(0x5f27), color(0)
+    rectfill(0, y, 127, y + 5)
+    color(c)
+    print(s)
+end
+
 local function do_command(cmd)
     local c = color()
     if string.match(cmd, '^ *$') then
@@ -374,18 +382,18 @@ local function do_command(cmd)
         load(string.gsub(cmd, '^ *load *', ''))
     elseif cmd == 'help' then
         color(12)
-        print('\ncommands\n')
+        print_clear('') print_clear('commands') print_clear('')
         color(6)
-        print('load <filename>')
-        print('run')
-        print('')
+        print_clear('load <filename>')
+        print_clear('run')
+        print_clear('')
         color(12)
-        print('example: load #15133')
-        print('         load #dancer')
-        print('')
+        print_clear('example: load #15133')
+        print_clear('         load #dancer')
+        print_clear('')
     else
         color(14)
-        print('syntax error')
+        print_clear('syntax error')
     end
     color(c)
 end
@@ -448,9 +456,10 @@ function __z8_shell()
         -- scrolling in the command prompt
         local pen = peek(0x5f25)
         if exec then
-            start_y = start_y + 6
+            -- return was pressed, so print an empty line to ensure scrolling
             cursor(0, start_y)
-            rectfill(0, start_y, 127, start_y + 5, 0)
+            print('')
+            start_y = peek(0x5f27)
             do_command(cmd)
             start_y = peek(0x5f27)
             flip()
