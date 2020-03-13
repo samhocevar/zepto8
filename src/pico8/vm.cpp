@@ -19,6 +19,7 @@
 #include <algorithm>  // std::min
 #include <filesystem>
 #include <chrono>
+#include <ctime>
 
 #include "pico8/pico8.h"
 #include "pico8/vm.h"
@@ -588,11 +589,11 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
         return fix32::frombits(bits);
     }
 
-    if (id == 1)
-        return (int16_t)0;
+    if (id == 1 || id == 2)
+        return int16_t(0); // TODO (CPU usage)
 
     if (id == 4)
-        return std::string();
+        return std::string(); // TODO (clipboard)
 
     if (id == 5)
     {
@@ -601,7 +602,13 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
     }
 
     if (id == 6)
-        return std::string();
+        return std::string(); // TODO (call arguments)
+
+    if (id == 7 || id == 8 || id == 9)
+        return int16_t(0); // TODO (frame rate))
+
+    if (id >= 12 && id <= 15)
+        return int16_t(0); // TODO (pause menu)
 
     if (id >= 16 && id <= 19)
         return m_state.channels[id & 3].sfx;
@@ -654,6 +661,24 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
             case 36: return (int16_t)0; break; // FIXME
         }
     }
+
+    if ((id >= 80 && id <= 85) || (id >= 90 && id <= 95))
+    {
+        time_t t;
+        time(&t);
+        auto const *tm = (id <= 85 ? std::gmtime : std::localtime)(&t);
+        switch (id % 10)
+        {
+            case 0: return int16_t(tm->tm_year + 1900);
+            case 1: return int16_t(tm->tm_mon + 1);
+            case 2: return int16_t(tm->tm_mday);
+            case 3: return int16_t(tm->tm_hour);
+            case 4: return int16_t(tm->tm_min);
+            case 5: return int16_t(tm->tm_sec);
+        }
+    }
+
+    // TODO: everything below this is unimplemented
 
     if (id >= 48 && id < 72)
     {
