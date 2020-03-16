@@ -156,8 +156,8 @@ private:
     fix32 api_fillp(fix32 fillp);
     opt<var<int16_t, bool>> api_fget(opt<int16_t> n, opt<int16_t> f);
     void api_fset(opt<int16_t> n, opt<int16_t> f, opt<bool> b);
-    void api_line(int16_t x0, opt<int16_t> opt_y0, opt<int16_t> opt_x1,
-                  int16_t y1, opt<fix32> c);
+    void api_line(opt<fix32> arg0, opt<fix32> arg1, opt<fix32> arg2,
+                  opt<fix32> arg3, opt<fix32> arg4);
     void api_map(int16_t cel_x, int16_t cel_y, int16_t sx, int16_t sy,
                  opt<int16_t> in_cel_w, opt<int16_t> in_cel_h, int16_t layer);
     fix32 api_mget(int16_t x, int16_t y);

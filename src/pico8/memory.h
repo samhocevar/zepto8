@@ -131,8 +131,11 @@ struct draw_state
     // 0x5f31—0x5f35: fill pattern
     uint8_t fillp[2], fillp_trans, fillp_flag;
 
-    // 0x5f35—0x5f3c: undocumented
-    uint8_t undocumented3[7];
+    // 0x5f35—0x5f3b: undocumented
+    uint8_t undocumented3[6];
+
+    // 0x5f3b: next polyline will not draw (0x1)
+    uint8_t polyline_flag;
 
     // 0x5f3c—0x5f40: polyline current point coordinates
 #if __GNUC__

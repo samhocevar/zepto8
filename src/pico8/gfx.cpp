@@ -421,37 +421,56 @@ void vm::api_fset(opt<int16_t> n, opt<int16_t> f, opt<bool> b)
         data &= ~(1 << *f);
 }
 
-void vm::api_line(int16_t x0, opt<int16_t> opt_y0, opt<int16_t> opt_x1,
-                  int16_t y1, opt<fix32> c)
+void vm::api_line(opt<fix32> arg0, opt<fix32> arg1, opt<fix32> arg2,
+                  opt<fix32> arg3, opt<fix32> arg4)
 {
     using std::abs, std::min, std::max;
 
     auto &ds = m_ram.draw_state;
 
-    int16_t y0, x1;
+    uint32_t color_bits;
 
-    // Polyline mode if and only if there are 2 arguments
-    if (opt_y0 && !opt_x1)
+    if (!arg0 || !arg1)
     {
-        x1 = x0;
-        y1 = *opt_y0;
+        ds.polyline_flag |= 0x1;
+        color_bits = to_color_bits(arg0);
+        return;
+    }
+
+    int16_t x0, y0, x1, y1;
+
+    if (!arg2 || !arg3)
+    {
+        // Polyline mode (with 2 or 3 arguments)
         x0 = ds.polyline.x;
         y0 = ds.polyline.y;
+        x1 = int16_t(*arg0);
+        y1 = int16_t(*arg1);
+        color_bits = to_color_bits(arg2);
     }
     else
     {
-        y0 = *opt_y0;
-        x1 = *opt_x1;
+        // Standard mode
+        x0 = int16_t(*arg0);
+        y0 = int16_t(*arg1);
+        x1 = int16_t(*arg2);
+        y1 = int16_t(*arg3);
+        color_bits = to_color_bits(arg4);
     }
 
     // Store polyline state
     ds.polyline.x = x1;
     ds.polyline.y = y1;
 
+    // If this is the polyline bootstrap, do nothing
+    if (ds.polyline_flag & 0x1)
+    {
+        ds.polyline_flag &= ~0x1;
+        return;
+    }
+
     x0 -= ds.camera.x; y0 -= ds.camera.y;
     x1 -= ds.camera.x; y1 -= ds.camera.y;
-
-    uint32_t color_bits = to_color_bits(c);
 
     if (x0 == x1 && y0 == y1)
     {
