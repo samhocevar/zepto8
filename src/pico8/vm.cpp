@@ -563,9 +563,10 @@ void vm::update_prng()
 
 fix32 vm::api_rnd(opt<fix32> in_range)
 {
-    uint32_t range = in_range ? in_range->bits() : 0x10000;
+    int32_t range = in_range ? in_range->bits() : 0x10000;
     update_prng();
-    return fix32::frombits(range ? m_state.prng.b % range : 0);
+    return fix32::frombits(range > 0 ? m_state.prng.b % range :
+                           range < 0 ? -(m_state.prng.b % -range) : 0);
 }
 
 void vm::api_srand(fix32 seed)
