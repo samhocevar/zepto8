@@ -372,10 +372,11 @@ void vm::api_cls(uint8_t c)
     m_ram.draw_state.cursor.y = 0;
 }
 
-uint8_t vm::api_color(uint8_t c)
+uint8_t vm::api_color(opt<uint8_t> c)
 {
-    std::swap(c, m_ram.draw_state.pen);
-    return c;
+    uint8_t col = c ? *c : 6;
+    std::swap(col, m_ram.draw_state.pen);
+    return col;
 }
 
 fix32 vm::api_fillp(fix32 fillp)
