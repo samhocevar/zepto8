@@ -265,6 +265,7 @@ private:
     void vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits);
 
     void getaudio(int channel, void *buffer, int bytes);
+    void update_registers();
     void update_prng();
 
 public:

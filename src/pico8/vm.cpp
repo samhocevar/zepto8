@@ -381,6 +381,8 @@ void vm::api_reload(int16_t in_dst, int16_t in_src, opt<int16_t> in_size)
 
     // If there is anything left to copy, it’s zeroes again
     ::memset(&m_ram[dst], 0, size);
+
+    update_registers();
 }
 
 fix32 vm::api_dget(int16_t n)
@@ -443,6 +445,8 @@ void vm::api_poke(int16_t addr, int16_t val)
         return;
     }
     m_ram[addr] = (uint8_t)val;
+
+    update_registers();
 }
 
 void vm::api_poke2(int16_t addr, int16_t val)
@@ -456,6 +460,8 @@ void vm::api_poke2(int16_t addr, int16_t val)
 
     m_ram[addr + 0] = (uint8_t)val;
     m_ram[addr + 1] = (uint8_t)((uint16_t)val >> 8);
+
+    update_registers();
 }
 
 void vm::api_poke4(int16_t addr, fix32 val)
@@ -472,6 +478,8 @@ void vm::api_poke4(int16_t addr, fix32 val)
     m_ram[addr + 1] = (uint8_t)(x >> 8);
     m_ram[addr + 2] = (uint8_t)(x >> 16);
     m_ram[addr + 3] = (uint8_t)(x >> 24);
+
+    update_registers();
 }
 
 void vm::api_memcpy(int16_t in_dst, int16_t in_src, int16_t in_size)
@@ -519,6 +527,8 @@ void vm::api_memcpy(int16_t in_dst, int16_t in_src, int16_t in_size)
         ::memset(&m_ram[delayed_dst], 0, delayed_size);
     if (size)
         ::memset(&m_ram[dst], 0, size);
+
+    update_registers();
 }
 
 void vm::api_memset(int16_t dst, uint8_t val, int16_t size)
@@ -534,6 +544,15 @@ void vm::api_memset(int16_t dst, uint8_t val, int16_t size)
     }
 
     ::memset(&m_ram[dst], val, size);
+
+    update_registers();
+}
+
+void vm::update_registers()
+{
+    // PICO-8 appears to update this after a poke(). No bits are set to 1 though.
+    for (uint8_t &btn : m_ram.hw_state.btn_state)
+        btn &= 0x3f;
 }
 
 void vm::update_prng()
@@ -720,13 +739,21 @@ void vm::api_extcmd(std::string cmd)
 
 void vm::api_update_buttons()
 {
+    uint8_t *btn_state = m_ram.hw_state.btn_state;
+
     // Update button state
     for (int i = 0; i < 64; ++i)
     {
         if (m_state.buttons[1][i])
+	{
+            btn_state[i / 8] |= 1 << (i % 8);
             ++m_state.buttons[0][i];
+	}
         else
+	{
+            btn_state[i / 8] &= ~(1 << (i % 8));
             m_state.buttons[0][i] = 0;
+        }
         m_state.buttons[1][i] = 0;
     }
 }

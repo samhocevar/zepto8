@@ -150,14 +150,20 @@ struct hw_state
     // 0x5f40—0x5f44: sound channel effects
     uint8_t half_rate, reverb, distort, lowpass;
 
-    // 0x5f44—0x4f5c: undocumented
-    uint8_t undocumented1[24];
+    // 0x5f44—0x5f4c: undocumented
+    uint8_t undocumented1[8];
+
+    // 0x5f4c—0x5f54: button state
+    uint8_t btn_state[8];
+
+    // 0x5f54—0x5f5c: undocumented
+    uint8_t undocumented2[8];
 
     // 0x5f5c—0x4f5e: btnp() autorepeat parameters
     uint8_t btnp_delay, btnp_rate;
 
     // 0x5f5e—0x4f80: undocumented
-    uint8_t undocumented2[34];
+    uint8_t undocumented3[34];
 };
 
 struct memory
