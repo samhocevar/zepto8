@@ -34,7 +34,7 @@ std::unordered_set<std::string> api::keywords =
 std::unordered_set<std::string> api::functions =
 {
     // Implemented in Lua (mostly baselib)
-    "assert", "getmetatable", "next", "pairs", "rawequal",
+    "assert", "getmetatable", "next", "ipairs", "pairs", "rawequal",
     "rawlen", "rawget", "rawset", "setmetatable", "type",
     // Present in Lua but actually implemented by ZEPTO-8
     "load", "print",

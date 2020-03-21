@@ -41,7 +41,6 @@ mapdraw = map
 -- but will not be propagated to the cart through _ENV.
 --
 local error = error
-local ipairs = ipairs
 local tonumber = tonumber
 local __cartdata = __cartdata
 
