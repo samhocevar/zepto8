@@ -267,6 +267,7 @@ private:
     void getaudio(int channel, void *buffer, int bytes);
     void update_registers();
     void update_prng();
+    void set_music_pattern(int pattern);
 
 public:
     // TODO: try to get rid of this

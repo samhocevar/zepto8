@@ -106,9 +106,8 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
                     while (--next_pattern > 0 && !m_ram.song[next_pattern].start)
                         ;
 
-                // FIXME: this is a very inelegant hack, don’t use api_music()
-                api_music(next_pattern, 0, m_state.music.mask);
                 m_state.music.count = next_count;
+                set_music_pattern(next_pattern);
             }
         }
 
@@ -260,8 +259,6 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
 
 void vm::api_music(int16_t pattern, int16_t fade_len, int16_t mask)
 {
-    using std::max;
-
     // pattern: 0..63, -1 to stop music.
     // fade_len: fade length in milliseconds (default 0)
     // mask: reserved channels
@@ -282,6 +279,21 @@ void vm::api_music(int16_t pattern, int16_t fade_len, int16_t mask)
         return;
     }
 
+    // Initialise music state for the whole song
+    m_state.music.count = 0;
+    m_state.music.mask = mask ? mask & 0xf : 0xf;
+
+    set_music_pattern(pattern);
+}
+
+void vm::set_music_pattern(int pattern)
+{
+    using std::max;
+
+    // Initialise music state for the current pattern
+    m_state.music.pattern = pattern;
+    m_state.music.offset = 0;
+
     // Find music speed; it’s the speed of the fastest sfx
     m_state.music.master = m_state.music.speed = -1;
     for (int i = 0; i < 4; ++i)
@@ -298,11 +310,7 @@ void vm::api_music(int16_t pattern, int16_t fade_len, int16_t mask)
         }
     }
 
-    m_state.music.count = 0;
-    m_state.music.pattern = pattern;
-    m_state.music.mask = mask ? mask & 0xf : 0xf;
-    m_state.music.offset = 0;
-
+    // Play music sfx on active channels
     for (int i = 0; i < 4; ++i)
     {
         if (((1 << i) & m_state.music.mask) == 0)
