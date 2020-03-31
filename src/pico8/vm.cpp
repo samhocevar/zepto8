@@ -566,7 +566,7 @@ fix32 vm::api_rnd(opt<fix32> in_range)
     int32_t range = in_range ? in_range->bits() : 0x10000;
     update_prng();
     return fix32::frombits(range > 0 ? m_state.prng.b % range :
-                           range < 0 ? -(m_state.prng.b % -range) : 0);
+                           range < 0 ? -int32_t(m_state.prng.b % -range) : 0);
 }
 
 void vm::api_srand(fix32 seed)
