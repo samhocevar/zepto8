@@ -95,7 +95,16 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
             m_state.music.offset += offset_per_sample;
             m_state.music.volume += m_state.music.volume_step / samples_per_second;
             m_state.music.volume = lol::clamp(m_state.music.volume, 0.f, 1.f);
-            if (m_state.music.offset >= 32.f)
+
+            if (m_state.music.volume_step < 0 && m_state.music.volume <= 0)
+            {
+                // Fade out is finished, stop playing the current song
+                for (int i = 0; i < 4; ++i)
+                    if (m_state.channels[i].is_music)
+                        m_state.channels[i].sfx = -1;
+                m_state.music.pattern = -1;
+            }
+            else if (m_state.music.offset >= 32.f)
             {
                 int16_t next_pattern = m_state.music.pattern + 1;
                 int16_t next_count = m_state.music.count + 1;
@@ -275,14 +284,9 @@ void vm::api_music(int16_t pattern, int16_t fade_len, int16_t mask)
 
     if (pattern == -1)
     {
-        if (m_state.music.pattern >= 0)
-        {
-            // Stop playing the current song
-            for (int i = 0; i < 4; ++i)
-                if (m_state.music.mask & (1 << i))
-                    m_state.channels[i].sfx = -1;
-            m_state.music.pattern = -1;
-        }
+        // Music will stop when fade out is finished
+        m_state.music.volume_step = fade_len <= 0 ? -FLT_MAX
+                                  : -m_state.music.volume * (1000.f / fade_len);
         return;
     }
 
