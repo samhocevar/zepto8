@@ -52,7 +52,9 @@ struct state
         int8_t master = -1;
         uint8_t mask = 0xf;
         uint8_t speed = 0;
-        float offset = 0;
+        float volume = 0.f;
+        float volume_step = 0.f;
+        float offset = 0.f;
     }
     music;
 
@@ -62,6 +64,7 @@ struct state
         float offset = 0;
         float phi = 0;
         bool can_loop = true;
+        bool is_music = false;
 
         int8_t prev_key = 0;
         float prev_vol = 0;

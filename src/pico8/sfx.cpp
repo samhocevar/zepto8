@@ -93,6 +93,8 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
             float const offset_per_second = 22050.f / (183.f * m_state.music.speed);
             float const offset_per_sample = offset_per_second / samples_per_second;
             m_state.music.offset += offset_per_sample;
+            m_state.music.volume += m_state.music.volume_step / samples_per_second;
+            m_state.music.volume = lol::clamp(m_state.music.volume, 0.f, 1.f);
             if (m_state.music.offset >= 32.f)
             {
                 int16_t next_pattern = m_state.music.pattern + 1;
@@ -210,6 +212,11 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
             // Play note
             float waveform = synth::waveform(sfx.notes[note_id].instrument, phi);
 
+            // Apply master music volume from fade in/out
+            // FIXME: check whether this should be done after distortion
+            if (m_state.channels[chan].is_music)
+                volume *= m_state.music.volume;
+
             int16_t sample = (int16_t)(32767.99f * volume * waveform);
 
             // Apply hardware effects
@@ -283,6 +290,14 @@ void vm::api_music(int16_t pattern, int16_t fade_len, int16_t mask)
     m_state.music.count = 0;
     m_state.music.mask = mask ? mask & 0xf : 0xf;
 
+    m_state.music.volume = 1.f;
+    m_state.music.volume_step = 0.f;
+    if (fade_len > 0)
+    {
+        m_state.music.volume = 0.f;
+        m_state.music.volume_step = 1000.f / fade_len;
+    }
+
     set_music_pattern(pattern);
 }
 
@@ -324,6 +339,7 @@ void vm::set_music_pattern(int pattern)
         m_state.channels[i].offset = 0.f;
         m_state.channels[i].phi = 0.f;
         m_state.channels[i].can_loop = false;
+        m_state.channels[i].is_music = true;
         m_state.channels[i].prev_key = 24;
         m_state.channels[i].prev_vol = 0.f;
     }
@@ -391,6 +407,7 @@ void vm::api_sfx(int16_t sfx, opt<int16_t> in_chan, int16_t offset)
         m_state.channels[chan].offset = std::max(0.f, (float)offset);
         m_state.channels[chan].phi = 0.f;
         m_state.channels[chan].can_loop = true;
+        m_state.channels[chan].is_music = false;
         // Playing an instrument starting with the note C-2 and the
         // slide effect causes no noticeable pitch variation in PICO-8,
         // so I assume this is the default value for “previous key”.
