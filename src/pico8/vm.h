@@ -42,7 +42,6 @@ struct state
     int buttons[2][64];
     struct { fix32 x, y, b; } mouse;
     struct { int start = 0, stop = 0; char chars[256]; } kbd;
-    struct { uint32_t a = 0, b = lol::rand<uint32_t>(); } prng;
 
     // Audio states: one music and four audio channels
     struct music
