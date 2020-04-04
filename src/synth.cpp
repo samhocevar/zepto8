@@ -35,13 +35,13 @@ float synth::waveform(int instrument, float advance)
     switch (instrument)
     {
         case INST_TRIANGLE:
-            return 0.354f * (fabs(4.f * t - 2.0f) - 1.0f);
+            return 0.5f * (fabs(4.f * t - 2.0f) - 1.0f);
         case INST_TILTED_SAW:
         {
             static float const a = 0.9f;
             ret = t < a ? 2.f * t / a - 1.f
                         : 2.f * (1.f - t) / (1.f - a) - 1.f;
-            return ret * 0.406f;
+            return ret * 0.5f;
         }
         case INST_SAW:
             return 0.653f * (t < 0.5f ? t : t - 1.f);
