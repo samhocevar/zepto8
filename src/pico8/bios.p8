@@ -252,8 +252,9 @@ function __z8_reset_state()
     -- From the PICO-8 documentation:
     -- “The draw state is reset each time a program is run. This is equivalent to calling:
     -- clip() camera() pal() color(6)”
+    -- Note from Sam: color() is actually short for color(6)
     -- Note from Sam: also add fillp() here.
-    clip() camera() pal() color(6) fillp()
+    clip() camera() pal() color() fillp()
 end
 
 function __z8_reset_cartdata()
@@ -306,9 +307,11 @@ function __z8_run_cart(cart_code)
     end)
 end
 
+-- FIXME: this function is quite a mess
 function __z8_tick()
     if (costatus(__z8_loop) == "dead") return -1
     ret, err = coresume(__z8_loop)
+
     -- XXX: test eris persistence
     __z8_persist_delay += 1
     if __z8_persist_delay > 30 and btnp(13) then
@@ -319,9 +322,12 @@ function __z8_tick()
             backup = persist(__z8_loop)
         end
     end
-    if __z8_stopped then __z8_stopped = false -- FIXME: what now?
-    -- FIXME: I use __stub because printh() prints nothing in Visual Studio
-    elseif not ret then __stub(tostr(err))
+
+    if __z8_stopped then
+        __z8_stopped = false -- FIXME: what now?
+    elseif not ret then
+        -- FIXME: I use __stub because printh() prints nothing in Visual Studio
+        __stub(tostr(err))
     end
     return 0
 end
