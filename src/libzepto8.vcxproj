@@ -93,7 +93,7 @@
     <Image Include="data\blank.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="bios.p8" />
+    <None Include="pico8\bios.p8" />
     <None Include="unz8.p8" />
   </ItemGroup>
 </Project>

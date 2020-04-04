@@ -23,9 +23,9 @@ ___zepto8_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      $(AM_CPPFLAGS)
 ___zepto8_LDFLAGS = $(static_libs) $(AM_LDFLAGS)
 ___zepto8_DEPENDENCIES = $(static_libs) @LOL_DEPS@
-___zepto8_DATA = bios.p8 unz8.p8
+___zepto8_DATA = pico8/bios.p8 unz8.p8
 if LOL_USE_EMSCRIPTEN
-___zepto8_LDFLAGS += --preload-file bios.p8 --preload-file data/zepto8.ttf \
+___zepto8_LDFLAGS += --preload-file pico8/bios.p8 --preload-file data/zepto8.ttf \
                      --shell-file template.html
 endif
 
@@ -103,7 +103,7 @@ ___z8player_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
 ___z8player_LDFLAGS = $(static_libs) -ldl $(AM_LDFLAGS)
 ___z8player_DEPENDENCIES = $(static_libs) @LOL_DEPS@
 if LOL_USE_EMSCRIPTEN
-___z8player_LDFLAGS += --preload-file bios.p8 \
+___z8player_LDFLAGS += --preload-file pico8/bios.p8 \
                        --shell-file template.html
 endif
 

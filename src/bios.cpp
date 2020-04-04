@@ -23,7 +23,7 @@ namespace z8::pico8
 
 bios::bios()
 {
-    char const *filename = "bios.p8";
+    char const *filename = "pico8/bios.p8";
 
     // Initialize BIOS
     for (auto const &file : lol::sys::get_path_list(filename))

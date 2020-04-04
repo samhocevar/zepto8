@@ -85,7 +85,9 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="bios.p8" />
+    <None Include="pico8\bios.p8">
+      <Filter>pico8</Filter>
+    </None>
     <None Include="unz8.p8" />
   </ItemGroup>
 </Project>
