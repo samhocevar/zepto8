@@ -372,7 +372,7 @@ end
 
 local function print_clear(s)
     -- empty next line
-    local y, c = peek(0x5f27), color(0)
+    local y, c = @0x5f27, color(0)
     rectfill(0, y, 127, y + 5)
     color(c)
     print(s)
@@ -409,7 +409,7 @@ function __z8_shell()
     poke(0x5f2d, 1)
     local history = {}
     local cmd, caret = "", 0
-    local start_y = peek(0x5f27)
+    local start_y = @0x5f27
     while true do
         local exec = false
         -- read next characters and act on them
@@ -460,14 +460,14 @@ function __z8_shell()
         end
         -- fixme: print() behaves slightly differently when
         -- scrolling in the command prompt
-        local pen = peek(0x5f25)
+        local pen = @0x5f25
         if exec then
             -- return was pressed, so print an empty line to ensure scrolling
             cursor(0, start_y)
             print('')
-            start_y = peek(0x5f27)
+            start_y = @0x5f27
             do_command(cmd)
-            start_y = peek(0x5f27)
+            start_y = @0x5f27
             flip()
             if (#cmd > 0 and cmd != history[#history]) add(history, cmd)
             history_pos = nil

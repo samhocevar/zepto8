@@ -70,6 +70,7 @@ vm::vm()
 
     m_lua = luaL_newstate();
     lua_atpanic(m_lua, &vm::panic_hook);
+    lua_setpico8memory(m_lua, (uint8_t *)&m_ram);
     luaL_openlibs(m_lua);
 
     bindings::lua::init(m_lua, this);
