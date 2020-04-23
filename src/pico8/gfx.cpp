@@ -732,6 +732,10 @@ void vm::api_sspr(int16_t sx, int16_t sy, int16_t sw, int16_t sh,
     int16_t dw = in_dw ? *in_dw : sw;
     int16_t dh = in_dh ? *in_dh : sh;
 
+    // Support negative dw and dh by flipping the target rectangle
+    if (dw < 0) { dw = -dw; dx -= dw - 1; flip_x = !flip_x; }
+    if (dh < 0) { dh = -dh; dy -= dh - 1; flip_y = !flip_y; }
+
     // Iterate over destination pixels
     // FIXME: maybe clamp if target area is too big?
     for (int16_t j = 0; j < dh; ++j)
