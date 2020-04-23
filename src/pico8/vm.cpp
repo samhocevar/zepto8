@@ -566,14 +566,8 @@ fix32 vm::api_rnd(opt<fix32> in_range)
 {
     update_prng();
     uint32_t b = m_ram.hw_state.prng.b;
-#if 0 // FIXME: I’ve read on Discord that Zep wasn’t so sure about this
-    int32_t range = in_range ? in_range->bits() : 0x10000;
-    return fix32::frombits(range > 0 ? b % range :
-                           range < 0 ? -int32_t(b % -range) : 0);
-#else
     uint32_t range = in_range ? uint32_t(in_range->bits()) : 0x10000;
     return fix32::frombits(range > 0 ? b % range : 0);
-#endif
 }
 
 void vm::api_srand(fix32 seed)
