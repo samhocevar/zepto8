@@ -339,24 +339,26 @@ void vm::api_circfill(int16_t x, int16_t y, int16_t r, opt<fix32> c)
     }
 }
 
-void vm::api_clip(int16_t x, int16_t y, int16_t w, opt<int16_t> h)
+tup<uint8_t, uint8_t, uint8_t, uint8_t> vm::api_clip(int16_t x, int16_t y, int16_t w, opt<int16_t> h)
 {
-    int16_t x1 = 0, y1 = 0, x2 = 128, y2 = 128;
+    uint8_t x1 = 0, y1 = 0, x2 = 128, y2 = 128;
 
     // All three arguments are required for the non-default behaviour
     if (h)
     {
-        x2 = std::min(x2, (int16_t)(x + w));
-        y2 = std::min(y2, (int16_t)(y + *h));
-        x1 = std::max(x1, x);
-        y1 = std::max(y1, y);
+        x2 = uint8_t(std::min(int16_t(x2), int16_t(x + w)));
+        y2 = uint8_t(std::min(int16_t(y2), int16_t(y + *h)));
+        x1 = uint8_t(std::max(int16_t(x1), x));
+        y1 = uint8_t(std::max(int16_t(y1), y));
     }
 
     auto &ds = m_ram.draw_state;
-    ds.clip.x1 = (uint8_t)x1;
-    ds.clip.y1 = (uint8_t)y1;
-    ds.clip.x2 = (uint8_t)x2;
-    ds.clip.y2 = (uint8_t)y2;
+    std::swap(ds.clip.x1, x1);
+    std::swap(ds.clip.y1, y1);
+    std::swap(ds.clip.x2, x2);
+    std::swap(ds.clip.y2, y2);
+
+    return std::make_tuple(x1, y1, x2, y2);
 }
 
 void vm::api_cls(uint8_t c)
