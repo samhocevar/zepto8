@@ -599,23 +599,27 @@ opt<uint8_t> vm::api_pal(opt<uint8_t> c0, opt<uint8_t> c1, uint8_t p)
     }
 }
 
-opt<bool> vm::api_palt(opt<uint8_t> c, opt<bool> t)
+var<int16_t, bool> vm::api_palt(opt<int16_t> c, opt<bool> t)
 {
     auto &ds = m_ram.draw_state;
 
-    if (!c || !t)
+    if (!t)
     {
+        int16_t prev = 0;
         for (int i = 0; i < 16; ++i)
         {
+            prev |= ((ds.pal[0][i] & 0x10) >> 4) << (15 - i);
             ds.pal[0][i] &= 0xf;
-            ds.pal[0][i] |= i ? 0x00 : 0x10;
+            // If c is set, set transparency according to the (15 - i)th bit.
+            // Otherwise, only color 0 is transparent.
+            ds.pal[0][i] |= (c ? *c & (1 << (15 - i)) : i == 0) ? 0x10 : 0x00;
         }
-        return std::nullopt; // FIXME: check that this is the correct behaviour
+        return prev;
     }
     else
     {
         uint8_t &data = ds.pal[0][*c & 0xf];
-        auto prev = data & 0x10;
+        bool prev = data & 0x10;
         data = (data & 0xf) | (*t ? 0x10 : 0x00);
         return prev;
     }
