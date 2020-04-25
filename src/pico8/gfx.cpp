@@ -202,12 +202,13 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
     if (!str)
         return;
 
+    // The presence of y indicates whether mode is print(s,c) or print(s,x,y,c)
+    bool has_coords = !!opt_y;
     // FIXME: make x and y int16_t instead?
-    bool use_cursor = !opt_x || !opt_y;
-    fix32 x = use_cursor ? fix32(ds.cursor.x) : *opt_x;
-    fix32 y = use_cursor ? fix32(ds.cursor.y) : *opt_y;
+    fix32 x = has_coords ? *opt_x : fix32(ds.cursor.x);
+    fix32 y = has_coords ? *opt_y : fix32(ds.cursor.y);
     // FIXME: we ignore fillp here, but should we set it in to_color_bits()?
-    uint32_t color_bits = to_color_bits(c) & 0xf0000;
+    uint32_t color_bits = to_color_bits(has_coords ? c : opt_x) & 0xf0000;
     fix32 initial_x = x;
 
     for (uint8_t ch : *str)
@@ -241,7 +242,13 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
     // In PICO-8 scrolling only happens _after_ the whole string was printed,
     // even if it contained carriage returns or if the cursor was already
     // below the threshold value.
-    if (use_cursor)
+    if (has_coords)
+    {
+        // FIXME: should a multiline print update y?
+        ds.cursor.x = (uint8_t)initial_x;
+        ds.cursor.y = (uint8_t)y;
+    }
+    else
     {
         int16_t const lines = 6;
 
@@ -256,12 +263,6 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
 
         ds.cursor.x = (uint8_t)initial_x;
         ds.cursor.y = (uint8_t)(y + fix32(lines));
-    }
-    else
-    {
-        // FIXME: should a multiline print update y?
-        ds.cursor.x = (uint8_t)initial_x;
-        ds.cursor.y = (uint8_t)y;
     }
 }
 
