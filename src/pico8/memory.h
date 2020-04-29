@@ -212,8 +212,10 @@ struct memory
 
     union
     {
+        // A cart will have the code section here
         uint8_t code[0x3d00];
 
+        // Runtime PICO-8 memory
         struct
         {
             uint8_t user_data[0x1b00];

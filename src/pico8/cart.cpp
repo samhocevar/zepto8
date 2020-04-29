@@ -93,47 +93,7 @@ bool cart::load_png(std::string const &filename)
     img.unlock(pixels);
 
     // Retrieve code, with optional decompression
-    if (version == 0 || m_rom.code[0] != ':' || m_rom.code[1] != 'c'
-                     || m_rom.code[2] != ':' || m_rom.code[3] != '\0')
-    {
-        int length = 0;
-        while (length < (int)sizeof(m_rom.code) && m_rom.code[length] != '\0')
-            ++length;
-
-        m_code.resize(length);
-        memcpy(&m_code[0], &m_rom.code, length);
-    }
-    else if (version == 1 || version >= 5)
-    {
-        // Expected data length (including trailing zero)
-        int length = m_rom.code[4] * 256
-                   + m_rom.code[5];
-
-        m_code.resize(0);
-        for (int i = 8; i < (int)sizeof(m_rom.code) && (int)m_code.length() < length; ++i)
-        {
-            if (m_rom.code[i] >= 0x3c)
-            {
-                int a = (m_rom.code[i] - 0x3c) * 16 + (m_rom.code[i + 1] & 0xf);
-                int b = m_rom.code[i + 1] / 16 + 2;
-                if ((int)m_code.length() >= a)
-                    while (b--)
-                        m_code += m_code[m_code.length() - a];
-                ++i;
-            }
-            else
-            {
-                m_code += m_rom.code[i] ? decompress_lut[m_rom.code[i] - 1]
-                                        : m_rom.code[++i];
-            }
-        }
-
-        if (length != (int)m_code.length())
-            msg::warn("expected %d code bytes, got %d\n", length, (int)m_code.length());
-    }
-
-    // Remove possible trailing zeroes
-    m_code.resize(strlen(m_code.c_str()));
+    m_code = code::decompress(m_rom.code);
 
     msg::debug("version: %d.%d code: %d chars\n", version, minor, (int)m_code.length());
 

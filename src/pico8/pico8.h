@@ -61,6 +61,11 @@ private:
     static std::regex utf8_regex;
 };
 
+struct code
+{
+    static std::string decompress(uint8_t const *input);
+};
+
 struct palette
 {
     enum

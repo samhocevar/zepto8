@@ -65,6 +65,7 @@
     <ClCompile Include="bios.cpp" />
     <ClCompile Include="pico8\api.cpp" />
     <ClCompile Include="pico8\cart.cpp" />
+    <ClCompile Include="pico8\code.cpp" />
     <ClCompile Include="pico8\gfx.cpp" />
     <ClCompile Include="pico8\private.cpp" />
     <ClCompile Include="pico8\render.cpp" />
