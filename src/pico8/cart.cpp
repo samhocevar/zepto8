@@ -46,9 +46,6 @@ bool cart::load(std::string const &filename)
     return false;
 }
 
-static uint8_t const *compress_lut = nullptr;
-static char const *decompress_lut = "\n 0123456789abcdefghijklmnopqrstuvwxyz!#%(){}[]<>+=/*:;.,~_";
-
 bool cart::load_png(std::string const &filename)
 {
     // Open cartridge as PNG image
@@ -429,110 +426,27 @@ lol::image cart::get_png() const
 
 std::vector<uint8_t> cart::get_compressed_code() const
 {
-    std::vector<uint8_t> ret;
-
-    /* Ensure the compression LUT is initialised */
-    if (!compress_lut)
-    {
-        uint8_t *tmp = new uint8_t[256];
-        memset(tmp, 0, 256);
-        for (int i = 0; i < 0x3b; ++i)
-            tmp[(uint8_t)decompress_lut[i]] = i + 1;
-        compress_lut = tmp;
-    }
-
-    /* FIXME: PICO-8 appears to be adding an implicit \n at the
-     * end of the code, and ignoring it when compressing code. So
-     * for the moment we write one char too many. */
-    for (int i = 0; i < (int)m_code.length(); ++i)
-    {
-        /* Look behind for possible patterns */
-        int best_j = 0, best_len = 0;
-        for (int j = lol::max(i - 3135, 0); j < i; ++j)
-        {
-            int end = std::min((int)m_code.length() - j, 17);
-
-            /* XXX: official PICO-8 stops at i - j, despite being able
-             * to support m_code.length() - j, it seems. */
-            end = std::min(end, i - j);
-
-            for (int k = 0; ; ++k)
-            {
-                if (k >= end || m_code[j + k] != m_code[i + k])
-                {
-                    if (k > best_len)
-                    {
-                        best_j = j;
-                        best_len = k;
-                    }
-                    break;
-                }
-            }
-        }
-
-        uint8_t byte = (uint8_t)m_code[i];
-
-        /* If best length is 2, it may or may not be interesting to emit a back
-         * reference. Most of the time, if the first character fits in a single
-         * byte, we should emit it directly. And if the first character needs
-         * to be escaped, we should always emit a back reference of length 2.
-         *
-         * However there is at least one suboptimal case with preexisting
-         * sequences “ab”, “b-”, and “-c-”. Then the sequence “ab-c-” can be
-         * encoded as “a” “b-” “c-” (5 bytes) or as “ab” “-c-” (4 bytes).
-         * Clearly it is more interesting to encode “ab” as a two-byte back
-         * reference. But since this case is statistically rare, we ignore
-         * it and accept that compression could be more efficient.
-         *
-         * If it can be a relief, PICO-8 is a lot less good than us at this. */
-        if (compress_lut[byte] && best_len <= 2)
-        {
-            ret.push_back(compress_lut[byte]);
-        }
-        else if (best_len >= 2)
-        {
-            uint8_t a = 0x3c + (i - best_j) / 16;
-            uint8_t b = ((i - best_j) & 0xf) + (best_len - 2) * 16;
-            ret.insert(ret.end(), { a, b });
-            i += best_len - 1;
-        }
-        else
-        {
-            ret.insert(ret.end(), { '\0', byte });
-        }
-    }
-
-    msg::debug("compressed code (%d bytes, max %d)\n",
-               (int)ret.size(), (int)sizeof(m_rom.code) - 8);
-
-    return ret;
+    return code::compress(m_code);
 }
 
 std::vector<uint8_t> cart::get_bin() const
 {
     int const data_size = offsetof(memory, code);
 
-    /* Create ROM data */
+    // Create ROM image
     std::vector<uint8_t> ret;
 
+    // Copy data to ROM
     ret.resize(data_size);
     memcpy(ret.data(), &m_rom, data_size);
 
-    ret.insert(ret.end(),
-    {
-        ':', 'c', ':', '\0',
-        (uint8_t)(m_code.length() >> 8),
-        (uint8_t)m_code.length(),
-        0, 0 /* FIXME: what is this? */
-    });
+    // Copy code to ROM
+    auto compressed = code::compress(m_code);
+    ret.insert(ret.end(), compressed.begin(), compressed.end());
 
-    auto const &code = get_compressed_code();
-    ret.insert(ret.end(), code.begin(), code.end());
-
-    int const rom_size = (int)sizeof(m_rom);
     msg::debug("compressed code length: %d/%d\n",
-               (int)ret.size() - data_size, rom_size - data_size);
-    ret.resize(rom_size);
+               int(compressed.size()), int(sizeof(memory::code)));
+    ret.resize(sizeof(memory));
 
     ret.push_back(PICO8_VERSION);
 

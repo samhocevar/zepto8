@@ -64,6 +64,7 @@ private:
 struct code
 {
     static std::string decompress(uint8_t const *input);
+    static std::vector<uint8_t> compress(std::string const &input);
 };
 
 struct palette
