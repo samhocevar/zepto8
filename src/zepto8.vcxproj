@@ -39,86 +39,22 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{28F5DE0F-B162-4833-8F61-A1AF782850A2}</ProjectGuid>
+    <ProjectGuid>{948C0C9A-2C25-41D9-BF1B-92B14A8C061B}</ProjectGuid>
     <ConfigurationType>Application</ConfigurationType>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(LolDir)\build\msbuild\lol.props" />
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>.;3rdparty/zep/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="3rdparty/zep/src/buffer.cpp" />
-    <ClCompile Include="3rdparty/zep/src/commands.cpp" />
-    <ClCompile Include="3rdparty/zep/src/display.cpp" />
-    <ClCompile Include="3rdparty/zep/src/editor.cpp" />
-    <ClCompile Include="3rdparty/zep/src/keymap.cpp" />
-    <ClCompile Include="3rdparty/zep/src/line_widgets.cpp" />
-    <ClCompile Include="3rdparty/zep/src/mcommon/animation/timer.cpp" />
-    <ClCompile Include="3rdparty/zep/src/mcommon/file/path.cpp" />
-    <ClCompile Include="3rdparty/zep/src/mcommon/string/stringutils.cpp" />
-    <ClCompile Include="3rdparty/zep/src/mode.cpp" />
-    <ClCompile Include="3rdparty/zep/src/mode_search.cpp" />
-    <ClCompile Include="3rdparty/zep/src/mode_standard.cpp" />
-    <ClCompile Include="3rdparty/zep/src/mode_tree.cpp" />
-    <ClCompile Include="3rdparty/zep/src/mode_vim.cpp" />
-    <ClCompile Include="3rdparty/zep/src/scroller.cpp" />
-    <ClCompile Include="3rdparty/zep/src/splits.cpp" />
-    <ClCompile Include="3rdparty/zep/src/syntax.cpp" />
-    <ClCompile Include="3rdparty/zep/src/syntax_providers.cpp" />
-    <ClCompile Include="3rdparty/zep/src/syntax_rainbow_brackets.cpp" />
-    <ClCompile Include="3rdparty/zep/src/syntax_tree.cpp" />
-    <ClCompile Include="3rdparty/zep/src/tab_window.cpp" />
-    <ClCompile Include="3rdparty/zep/src/theme.cpp" />
-    <ClCompile Include="3rdparty/zep/src/window.cpp" />
-    <ClCompile Include="ide/ide.cpp" />
-    <ClCompile Include="ide/memory-editor.cpp" />
-    <ClCompile Include="ide/text-editor.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="zepto8.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h" />
-    <ClInclude Include="3rdparty/zep/src/buffer.h" />
-    <ClInclude Include="3rdparty/zep/src/commands.h" />
-    <ClInclude Include="3rdparty/zep/src/display.h" />
-    <ClInclude Include="3rdparty/zep/src/editor.h" />
-    <ClInclude Include="3rdparty/zep/src/filesystem.h" />
-    <ClInclude Include="3rdparty/zep/src/gap_buffer.h" />
-    <ClInclude Include="3rdparty/zep/src/imgui/console_imgui.h" />
-    <ClInclude Include="3rdparty/zep/src/imgui/display_imgui.h" />
-    <ClInclude Include="3rdparty/zep/src/imgui/editor_imgui.h" />
-    <ClInclude Include="3rdparty/zep/src/imgui/usb_hid_keys.h" />
-    <ClInclude Include="3rdparty/zep/src/mcommon/animation/timer.h" />
-    <ClInclude Include="3rdparty/zep/src/mcommon/file/archive.h" />
-    <ClInclude Include="3rdparty/zep/src/mcommon/file/path.h" />
-    <ClInclude Include="3rdparty/zep/src/mcommon/logger.h" />
-    <ClInclude Include="3rdparty/zep/src/mcommon/math/math.h" />
-    <ClInclude Include="3rdparty/zep/src/mcommon/string/murmur_hash.h" />
-    <ClInclude Include="3rdparty/zep/src/mcommon/string/stringutils.h" />
-    <ClInclude Include="3rdparty/zep/src/mcommon/threadpool.h" />
-    <ClInclude Include="3rdparty/zep/src/mcommon/threadutils.h" />
-    <ClInclude Include="3rdparty/zep/src/mode.h" />
-    <ClInclude Include="3rdparty/zep/src/mode_search.h" />
-    <ClInclude Include="3rdparty/zep/src/mode_standard.h" />
-    <ClInclude Include="3rdparty/zep/src/mode_vim.h" />
-    <ClInclude Include="3rdparty/zep/src/scroller.h" />
-    <ClInclude Include="3rdparty/zep/src/splits.h" />
-    <ClInclude Include="3rdparty/zep/src/syntax.h" />
-    <ClInclude Include="3rdparty/zep/src/syntax_providers.h" />
-    <ClInclude Include="3rdparty/zep/src/syntax_rainbow_brackets.h" />
-    <ClInclude Include="3rdparty/zep/src/tab_window.h" />
-    <ClInclude Include="3rdparty/zep/src/theme.h" />
-    <ClInclude Include="3rdparty/zep/src/window.h" />
-    <ClInclude Include="3rdparty/zep/src/zep.h" />
-    <ClInclude Include="3rdparty/zep/src/zep_config.h" />
-    <ClInclude Include="ide/ide.h" />
-    <ClInclude Include="ide/memory-editor.h" />
-    <ClInclude Include="ide/text-editor.h" />
     <ClInclude Include="player.h" />
-    <ClInclude Include="zepto8.h" />
   </ItemGroup>
   <Import Project="$(LolDir)\build\msbuild\lol-core.props" />
   <Import Project="$(LolDir)\build\msbuild\lol-lua.props" />

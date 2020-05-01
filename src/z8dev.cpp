@@ -16,13 +16,12 @@
 
 #include <lol/engine.h>
 #include <lol/getopt> // lol::getopt
-#include <lol/utils>  // lol:ends_with
 #include <fstream>
 #include <sstream>
 
 #include "zepto8.h"
 #include "player.h"
-#include "raccoon/vm.h"
+#include "ide/ide.h"
 
 int main(int argc, char **argv)
 {
@@ -43,17 +42,14 @@ int main(int argc, char **argv)
         }
     }
 
-    lol::ivec2 win_size(144 * 4, 144 * 4);
+    lol::ivec2 win_size(1280, 768);
     lol::Application app("zepto-8", win_size, 60.0f);
 
-    bool is_raccoon = argc >= 2 && lol::ends_with(argv[1], ".rcn.json");
-
-    z8::player *player = new z8::player(false, is_raccoon);
+    auto ide = new z8::ide();
 
     if (argc >= 2)
     {
-        player->load(argv[1]);
-        player->run();
+        ide->load(argv[1]);
     }
 
     app.Run();

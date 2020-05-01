@@ -1,32 +1,48 @@
 
 include $(top_srcdir)/lol/build/autotools/common.am
 
-bin_PROGRAMS = ../zepto8 ../z8player ../z8tool ../z8lua
+bin_PROGRAMS = ../zepto8 ../z8dev ../z8tool ../z8lua
 noinst_LIBRARIES = $(static_libs)
 
 static_libs = libzepto8.a libz8lua.a libquickjs.a
 
 ___zepto8dir = $(datarootdir)/zepto8
 
-# FIXME: move player.cpp / player.h into a separate library?
 ___zepto8_SOURCES = \
     zepto8.cpp \
+    player.cpp player.h \
+    $(NULL)
+___zepto8_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
+                     -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
+                     $(AM_CPPFLAGS)
+___zepto8_LDFLAGS = $(static_libs) -ldl $(AM_LDFLAGS)
+___zepto8_DEPENDENCIES = $(static_libs) @LOL_DEPS@
+if LOL_USE_EMSCRIPTEN
+___zepto8_LDFLAGS += --preload-file pico8/bios.p8 \
+                     --shell-file template.html
+endif
+
+EXTRA_DIST += zepto8.vcxproj
+
+# FIXME: move player.cpp / player.h into a separate library?
+___z8dev_SOURCES = \
+    z8dev.cpp \
     ide/ide.cpp ide/ide.h \
     ide/text-editor.cpp ide/text-editor.h \
     ide/memory-editor.cpp ide/memory-editor.h \
     player.cpp player.h \
     $(3rdparty_sources) \
     $(NULL)
-___zepto8_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
-                     -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
-                     -I3rdparty/zep/include \
-                     $(AM_CPPFLAGS)
-___zepto8_LDFLAGS = $(static_libs) $(AM_LDFLAGS)
-___zepto8_DEPENDENCIES = $(static_libs) @LOL_DEPS@
-___zepto8_DATA = pico8/bios.p8 unz8.p8
+___z8dev_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
+                    -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
+                    -I3rdparty/zep/include \
+                    $(AM_CPPFLAGS)
+___z8dev_LDFLAGS = $(static_libs) $(AM_LDFLAGS)
+___z8dev_DEPENDENCIES = $(static_libs) @LOL_DEPS@
+___z8dev_DATA = pico8/bios.p8 unz8.p8
 if LOL_USE_EMSCRIPTEN
-___zepto8_LDFLAGS += --preload-file pico8/bios.p8 --preload-file data/zepto8.ttf \
-                     --shell-file template.html
+___z8dev_LDFLAGS += --preload-file pico8/bios.p8 --preload-file data/zepto8.ttf \
+                    --shell-file template.html
 endif
 
 3rdparty_sources = \
@@ -91,23 +107,7 @@ endif
     3rdparty/zep/src/window.cpp \
     $(NULL)
 
-EXTRA_DIST += $(___zepto8_DATA) zepto8.vcxproj
-
-___z8player_SOURCES = \
-    z8player.cpp \
-    player.cpp player.h \
-    $(NULL)
-___z8player_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
-                       -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
-                       $(AM_CPPFLAGS)
-___z8player_LDFLAGS = $(static_libs) -ldl $(AM_LDFLAGS)
-___z8player_DEPENDENCIES = $(static_libs) @LOL_DEPS@
-if LOL_USE_EMSCRIPTEN
-___z8player_LDFLAGS += --preload-file pico8/bios.p8 \
-                       --shell-file template.html
-endif
-
-EXTRA_DIST += z8player.vcxproj
+EXTRA_DIST += $(___z8dev_DATA) z8dev.vcxproj
 
 ___z8tool_SOURCES = \
     z8tool.cpp \

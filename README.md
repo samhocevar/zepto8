@@ -3,11 +3,15 @@ Fantasy fantasy console emulator emulator
 
 This is all experimental.
 
-## z8player
+## zepto8
 
-    # z8player cart.p8
+    # zepto8 cart.p8
 
 Plays a PICO-8 cartridge.
+
+## z8dev
+
+Experimental IDE. Not working yet.
 
 ## z8tool
 
