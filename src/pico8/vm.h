@@ -178,6 +178,8 @@ private:
     void api_sspr(int16_t sx, int16_t sy, int16_t sw, int16_t sh,
                   int16_t dx, int16_t dy, opt<int16_t> in_dw,
                   opt<int16_t> in_dh, bool flip_x, bool flip_y);
+    void api_tline(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
+                   fix32 mx, fix32 my, opt<fix32> mdx, opt<fix32> mdy);
 
     // Sound
     void api_music(int16_t pattern, int16_t fade_len, int16_t mask);
