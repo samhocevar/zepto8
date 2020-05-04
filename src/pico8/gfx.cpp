@@ -482,18 +482,24 @@ void vm::api_line(opt<fix32> arg0, opt<fix32> arg1, opt<fix32> arg2,
     }
     else if (abs(x1 - x0) > abs(y1 - y0))
     {
-        for (int16_t x = std::min(x0, x1); x <= std::max(x0, x1); ++x)
+        for (int16_t x = x0, y = y0, dx = x0 <= x1 ? 1 : -1; ; )
         {
-            int16_t y = (int16_t)lol::round(lol::mix((double)y0, (double)y1, (double)(x - x0) / (x1 - x0)));
             set_pixel(x, y, color_bits);
+            if (x == x1)
+                break;
+            x += dx;
+            y = (int16_t)lol::round(lol::mix((double)y0, (double)y1, (double)(x - x0) / (x1 - x0)));
         }
     }
     else
     {
-        for (int16_t y = std::min(y0, y1); y <= std::max(y0, y1); ++y)
+        for (int16_t x = x0, y = y0, dy = y0 <= y1 ? 1 : -1; ; )
         {
-            int16_t x = (int16_t)lol::round(lol::mix((double)x0, (double)x1, (double)(y - y0) / (y1 - y0)));
             set_pixel(x, y, color_bits);
+            if (y == y1)
+                break;
+            y += dy;
+            x = (int16_t)lol::round(lol::mix((double)x0, (double)x1, (double)(y - y0) / (y1 - y0)));
         }
     }
 }
@@ -522,24 +528,24 @@ void vm::api_tline(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
     }
     else if (abs(x1 - x0) >= abs(y1 - y0))
     {
-        for (int16_t x = x0, dx = x0 <= x1 ? 1 : -1;; )
+        for (int16_t x = x0, y = y0, dx = x0 <= x1 ? 1 : -1; ; )
         {
-            int16_t y = (int16_t)lol::round(lol::mix((double)y0, (double)y1, (double)(x - x0) / (x1 - x0)));
             set_pixel(x, y, 0); // FIXME
             if (x == x1)
                 break;
             x += dx;
+            y = (int16_t)lol::round(lol::mix((double)y0, (double)y1, (double)(x - x0) / (x1 - x0)));
         }
     }
     else
     {
-        for (int16_t y = y0, dy = y0 <= y1 ? 1 : -1;; )
+        for (int16_t x = x0, y = y0, dy = y0 <= y1 ? 1 : -1; ; )
         {
-            int16_t x = (int16_t)lol::round(lol::mix((double)x0, (double)x1, (double)(y - y0) / (y1 - y0)));
             set_pixel(x, y, 0); // FIXME
             if (y == y1)
                 break;
             y += dy;
+            x = (int16_t)lol::round(lol::mix((double)x0, (double)x1, (double)(y - y0) / (y1 - y0)));
         }
     }
 }
