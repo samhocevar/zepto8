@@ -6,7 +6,8 @@ noinst_LIBRARIES = $(static_libs)
 
 static_libs = libzepto8.a libz8lua.a libquickjs.a
 
-___zepto8dir = $(datarootdir)/zepto8
+libzepto8_adir = $(datarootdir)/zepto8
+___z8devdir = $(datarootdir)/zepto8
 
 ___zepto8_SOURCES = \
     zepto8.cpp \
@@ -39,7 +40,7 @@ ___z8dev_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                     $(AM_CPPFLAGS)
 ___z8dev_LDFLAGS = $(static_libs) $(AM_LDFLAGS)
 ___z8dev_DEPENDENCIES = $(static_libs) @LOL_DEPS@
-___z8dev_DATA = pico8/bios.p8 unz8.p8
+___z8dev_DATA = unz8.p8
 if LOL_USE_EMSCRIPTEN
 ___z8dev_LDFLAGS += --preload-file pico8/bios.p8 --preload-file data/zepto8.ttf \
                     --shell-file template.html
@@ -157,9 +158,10 @@ libzepto8_a_SOURCES = \
     raccoon/memory.h raccoon/font.h \
     raccoon/api.cpp \
     $(NULL)
+libzepto8_a_DATA = pico8/bios.p8
 libzepto8_a_CPPFLAGS = $(AM_CPPFLAGS)
 
-EXTRA_DIST += libzepto8.vcxproj
+EXTRA_DIST += $(libzepto8_a_DATA) libzepto8.vcxproj
 
 libz8lua_a_SOURCES = \
     3rdparty/z8lua/lapi.c 3rdparty/z8lua/lcode.c 3rdparty/z8lua/ldebug.c \
