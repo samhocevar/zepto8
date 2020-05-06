@@ -135,32 +135,31 @@ struct palette
             lol::u8vec4(0xff, 0x9d, 0x81, 0xff),
         };
 
-        // Bit 0x80 activates the second half of the palette
-        return pal[(n & 0xf) | ((n & 0x80) >> 3)];
+        return pal[n & 0x1f];
     }
 
     /* Find the closest palette element to c (a vector of floats in 0…1) */
-    static int best(lol::vec4 c)
+    static int best(lol::vec4 c, int count = 16)
     {
         int ret = 0;
         float dist = FLT_MAX;
-        for (int i = 0; i < 16; ++i)
+        for (int n = 0; n < count; ++n)
         {
-            lol::vec3 delta = c.rgb - get(i).rgb;
+            lol::vec3 delta = c.rgb - get(n).rgb;
             float newdist = lol::sqlength(delta);
             if (newdist < dist)
             {
                 dist = newdist;
-                ret = i;
+                ret = n;
             }
         }
         return ret;
     }
 
     /* Find the closest palette element to c (a vector of uint8_ts in 0…255) */
-    static int best(lol::u8vec4 c)
+    static int best(lol::u8vec4 c, int count = 16)
     {
-        return best(lol::vec4(c) / 255.f);
+        return best(lol::vec4(c) / 255.f, count);
     }
 };
 

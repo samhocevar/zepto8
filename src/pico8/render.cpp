@@ -30,7 +30,11 @@ void vm::render(lol::u8vec4 *screen) const
     // very random due to rotation, flip, stretch etc.
     lol::u8vec4 lut[16];
     for (int n = 0; n < 16; ++n)
-        lut[n] = palette::get8(ds.pal[1][n]);
+    {
+        int c = ds.pal[1][n];
+        // Bit 0x80 activates the second half of the palette
+        lut[n] = palette::get8((c & 0xf) | ((c & 0x80) >> 3));
+    }
 
     for (int y = 0; y < 128; ++y)
     for (int x = 0; x < 128; ++x)
