@@ -12,10 +12,12 @@
 
 #pragma once
 
+#include <string>
+
 namespace z8
 {
 
-void dither(char const *src, char const *out, bool hicolor, bool error_diffusion);
+void dither(std::string const &src, std::string const &out, bool hicolor, bool error_diffusion);
 
 } // namespace z8
 

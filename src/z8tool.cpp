@@ -15,8 +15,8 @@
 #endif
 
 #include <lol/engine.h>
-#include <lol/getopt> // lol::getopt
-#include <lol/utils>  // lol::ends_with
+#include <lol/cli>   // lol::cli
+#include <lol/utils> // lol::ends_with
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -38,27 +38,17 @@
 enum class mode
 {
     none,
-    run      = 130,
-    inspect  = 131,
-    headless = 132,
-    telnet   = 133,
-    splore   = 134,
-    dither   = 135,
-    minify   = 136,
-    compress = 137,
 
-    tolua  = 140,
-    topng  = 141,
-    top8   = 143,
-    tobin  = 144,
-    todata = 145,
+    tolua, topng, top8, tobin, todata,
 
-    out     = 'o',
-    data    = 150,
-    hicolor = 151,
-    error_diffusion = 152,
-    raw     = 153,
-    skip    = 154,
+    dither,
+    minify,
+    compress,
+    run,
+    inspect,
+    headless,
+    telnet,
+    splore,
 };
 
 static void usage()
@@ -80,92 +70,61 @@ int main(int argc, char **argv)
 {
     lol::sys::init(argc, argv);
 
-    lol::getopt opt(argc, argv);
-    opt.add_opt('h',                 "help",     false);
-    opt.add_opt(int(mode::run),      "run",      true);
-    opt.add_opt(int(mode::dither),   "dither",   true);
-    opt.add_opt(int(mode::minify),   "minify",   false);
-    opt.add_opt(int(mode::compress), "compress", false);
-    opt.add_opt(int(mode::inspect),  "inspect",  true);
-    opt.add_opt(int(mode::headless), "headless", true);
-    opt.add_opt(int(mode::tolua),    "tolua",    false);
-    opt.add_opt(int(mode::topng),    "topng",    false);
-    opt.add_opt(int(mode::top8),     "top8",     false);
-    opt.add_opt(int(mode::tobin),    "tobin",    false);
-    opt.add_opt(int(mode::todata),   "todata",   false);
-    opt.add_opt(int(mode::out),      "out",      true);
-    opt.add_opt(int(mode::data),     "data",     true);
-    opt.add_opt(int(mode::hicolor),  "hicolor",  false);
-    opt.add_opt(int(mode::raw),      "raw",      true);
-    opt.add_opt(int(mode::skip),     "skip",     true);
-    opt.add_opt(int(mode::error_diffusion), "error-diffusion", false);
-#if HAVE_UNISTD_H
-    opt.add_opt(int(mode::telnet),   "telnet",   true);
-#endif
-    opt.add_opt(int(mode::splore),   "splore",   true);
-
     mode run_mode = mode::none;
-    char const *data = nullptr;
-    char const *in = nullptr;
-    char const *out = nullptr;
+    std::string in, out, data;
     size_t raw = 0, skip = 0;
     bool hicolor = false;
     bool error_diffusion = false;
 
-    for (;;)
-    {
-        int c = opt.parse();
-        if (c == -1)
-            break;
+    auto help = lol::cli::required("-h", "--help").call([]()
+                    { ::usage(); exit(EXIT_SUCCESS); });
 
-        switch (c)
-        {
-        case 'h':
-            usage();
-            return EXIT_SUCCESS;
-        case (int)mode::run:
-        case (int)mode::headless:
-        case (int)mode::inspect:
-        case (int)mode::dither:
-        case (int)mode::telnet:
-        case (int)mode::splore:
-            run_mode = mode(c);
-            in = opt.arg;
-            break;
-        case (int)mode::minify:
-        case (int)mode::compress:
-        case (int)mode::tolua:
-        case (int)mode::topng:
-        case (int)mode::top8:
-        case (int)mode::tobin:
-        case (int)mode::todata:
-            run_mode = mode(c);
-            break;
-        case (int)mode::data:
-            data = opt.arg;
-            break;
-        case (int)mode::out:
-            out = opt.arg;
-            break;
-        case (int)mode::hicolor:
-            hicolor = true;
-            break;
-        case (int)mode::raw:
-            raw = atoi(opt.arg);
-            break;
-        case (int)mode::skip:
-            skip = atoi(opt.arg);
-            break;
-        case (int)mode::error_diffusion:
-            error_diffusion = true;
-            break;
-        default:
-            return EXIT_FAILURE;
-        }
-    }
+    auto convert =
+    (
+        ( lol::cli::required("--tolua").set(run_mode, mode::tolua) |
+          lol::cli::required("--topng").set(run_mode, mode::topng) |
+          lol::cli::required("--top8").set(run_mode, mode::top8) |
+          lol::cli::required("--tobin").set(run_mode, mode::tobin) |
+          lol::cli::required("--todata").set(run_mode, mode::todata) ),
+        lol::cli::option("--data") & lol::cli::value("file", data),
+        lol::cli::value("cart", in),
+        lol::cli::option("-o") & lol::cli::value("file", out)
+    );
 
-    if (!in)
-        in = argv[opt.index];
+    auto dither =
+    (
+        lol::cli::required("--dither").set(run_mode, mode::dither),
+        lol::cli::option("--hicolor").set(hicolor, true),
+        lol::cli::option("--error-diffusion").set(error_diffusion, true),
+        lol::cli::value("image").set(in),
+        lol::cli::option("-o") & lol::cli::value("output", out)
+    );
+
+    auto minify = lol::cli::required("--minify").set(run_mode, mode::minify);
+
+    auto compress =
+    (
+        lol::cli::required("--compress").set(run_mode, mode::compress),
+        lol::cli::option("--raw") & lol::cli::value("num", raw),
+        lol::cli::option("--skip") & lol::cli::value("num", skip)
+    );
+
+    auto other =
+    (
+        ( lol::cli::required("--run").set(run_mode, mode::run) |
+          lol::cli::required("--inspect").set(run_mode, mode::inspect) |
+          lol::cli::required("--headless").set(run_mode, mode::headless) |
+#if HAVE_UNISTD_H
+          lol::cli::required("--telnet").set(run_mode, mode::telnet) |
+#endif
+          lol::cli::required("--splore").set(run_mode, mode::splore) )
+        & lol::cli::value("cart", in)
+    );
+
+    auto success = lol::cli::parse(argc, argv, help | convert | dither | minify | compress | other);
+
+    if (!success)
+        return EXIT_FAILURE;
 
     if (run_mode == mode::tolua || run_mode == mode::top8 ||
         run_mode == mode::tobin || run_mode == mode::topng ||
@@ -174,7 +133,7 @@ int main(int argc, char **argv)
         z8::pico8::cart cart;
         cart.load(in);
 
-        if (data)
+        if (data.length())
         {
             std::string s;
             lol::File f;
@@ -191,7 +150,8 @@ int main(int argc, char **argv)
                     break;
                 }
             }
-            memcpy(&cart.get_rom(), s.c_str(), lol::min(int(s.length()), 0x4300));
+            using std::min;
+            memcpy(&cart.get_rom(), s.c_str(), min(s.length(), size_t(0x4300)));
         }
 
         if (run_mode == mode::tolua)
@@ -209,7 +169,7 @@ int main(int argc, char **argv)
         }
         else if (run_mode == mode::topng)
         {
-            if (!out)
+            if (!out.length())
                 return EXIT_FAILURE;
             cart.get_png().save(out);
         }

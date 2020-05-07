@@ -21,7 +21,6 @@
 #include <lol/engine.h>
 
 #include "zepto8.h"
-#include "splore.h"
 #include "pico8/pico8.h"
 
 #define DEPTH 512
@@ -29,7 +28,7 @@
 namespace z8
 {
 
-void dither(char const *src, char const *out, bool hicolor, bool error_diffusion)
+void dither(std::string const &src, std::string const &out, bool hicolor, bool error_diffusion)
 {
 
     std::vector<lol::vec3> colors;
@@ -204,9 +203,9 @@ void dither(char const *src, char const *out, bool hicolor, bool error_diffusion
         }
 
     /* Save data */
-    FILE *s = out ? fopen(out, "wb+") : stdout;
+    FILE *s = out.length() ? fopen(out.c_str(), "wb+") : stdout;
     fwrite(rawdata.data(), 1, rawdata.size(), s);
-    if (out)
+    if (out.length())
         fclose(s);
 }
 

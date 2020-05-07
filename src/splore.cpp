@@ -26,7 +26,7 @@ namespace z8
 
 using lol::PixelFormat;
 
-bool splore::dump(char const *filename)
+bool splore::dump(std::string const &filename)
 {
     // Open cartridge as PNG image
     lol::image img;

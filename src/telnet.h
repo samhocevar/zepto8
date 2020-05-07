@@ -41,7 +41,7 @@ struct telnet
     std::vector<uint8_t> m_screen;
     lol::ivec2 m_term_size = lol::ivec2(128, 64);
 
-    void run(char const *cart)
+    void run(std::string const &cart)
     {
         disable_echo();
 

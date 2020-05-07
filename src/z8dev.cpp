@@ -15,9 +15,8 @@
 #endif
 
 #include <lol/engine.h>
-#include <lol/getopt> // lol::getopt
-#include <fstream>
-#include <sstream>
+#include <lol/cli> // lol::cli
+#include <cstdio>  // printf
 
 #include "zepto8.h"
 #include "player.h"
@@ -27,29 +26,31 @@ int main(int argc, char **argv)
 {
     lol::sys::init(argc, argv);
 
-    lol::getopt opt(argc, argv);
+    std::string cart;
+    bool has_cart = false;
 
-    for (;;)
-    {
-        int c = opt.parse();
-        if (c == -1)
-            break;
+    auto version = lol::cli::required("-V", "--version").call([]()
+                       { printf("%s\n", PACKAGE_VERSION); exit(EXIT_SUCCESS); })
+                 % "output version information and exit";
 
-        switch (c)
-        {
-        default:
-            return EXIT_FAILURE;
-        }
-    }
+    auto run =
+    (
+        lol::cli::opt_value("cart", cart).set(has_cart, true)
+    );
+
+    auto success = lol::cli::parse(argc, argv, version | run);
+
+    if (!success)
+        return EXIT_FAILURE;
 
     lol::ivec2 win_size(1280, 768);
     lol::Application app("zepto-8", win_size, 60.0f);
 
     auto ide = new z8::ide();
 
-    if (argc >= 2)
+    if (has_cart)
     {
-        ide->load(argv[1]);
+        ide->load(cart);
     }
 
     app.Run();

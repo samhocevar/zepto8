@@ -25,7 +25,7 @@ public:
     splore()
     {}
 
-    bool dump(char const *filename);
+    bool dump(std::string const &filename);
 };
 
 } // namespace z8
