@@ -53,7 +53,9 @@ std::string code::decompress(uint8_t const *input)
 
 std::vector<uint8_t> code::compress(std::string const &input)
 {
-    return compress_old(input);
+    auto a = compress_old(input);
+    auto b = compress_new(input);
+    return a.size() < b.size() ? a : b;
 }
 
 static uint8_t const *compress_lut = nullptr;
@@ -70,7 +72,7 @@ static std::string decompress_new(uint8_t const *input)
     int compressed = input[6] * 256 + input[7];
     assert(compressed <= int(sizeof(pico8::memory::code)));
 
-    int offset = 8 * 8; // offset in bits
+    auto offset = size_t(8) * 8; // offset in bits
     auto get_bits = [&](int count) -> uint32_t
     {
         uint32_t n = 0;
@@ -149,9 +151,64 @@ static std::string decompress_old(uint8_t const *input)
     return ret;
 }
 
+
 static std::vector<uint8_t> compress_new(std::string const& input)
 {
+    static int compress_bits[16] =
+    {
+        4, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 8
+    };
+
     std::vector<uint8_t> ret;
+
+    ret.insert(ret.end(),
+    {
+        '\0', 'p', 'x', 'a',
+        uint8_t(input.length() >> 8), uint8_t(input.length()),
+        0, 0,
+    });
+
+    // Move to front structure, reversed
+    std::vector<uint8_t> mtf(256);
+    for (int i = 0; i < 256; ++i)
+        mtf[i] = uint8_t(255 - i);
+
+    auto offset = ret.size() * 8; // offset in bits
+    auto put_bits = [&](int count, int n) -> void
+    {
+        for (int i = 0; i < count; ++i, ++offset)
+        {
+            if (ret.size() * 8 <= offset)
+                ret.push_back(0);
+            ret.back() |= ((n >> i) & 1) << (offset & 0x7);
+        }
+    };
+
+    for (int i = 0; i < input.length(); ++i)
+    {
+        uint8_t ch = input[i];
+
+        // Find char in mtf structure
+        auto pos = std::find(mtf.rbegin(), mtf.rend(), ch);
+        auto n = int(std::distance(mtf.rbegin(), pos));
+
+        // Cost for a single char will be 2*bits-2
+        int bits = compress_bits[n >> 4];
+
+        if (true)
+        {
+            put_bits(bits - 2, ((1 << (bits - 3)) - 1));
+            put_bits(bits, n - (1 << bits) + 16);
+            mtf.erase(mtf.begin() + 255 - n);
+            mtf.push_back(ch);
+        }
+    }
+
+    // Adjust compressed size
+    int compressed = int((offset + 7) / 8);
+    ret[6] = uint8_t(compressed >> 8);
+    ret[7] = uint8_t(compressed);
+
     return ret;
 }
 
