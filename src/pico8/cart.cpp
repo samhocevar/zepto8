@@ -74,16 +74,12 @@ bool cart::load_png(std::string const &filename)
     // Retrieve label from image pixels
     if (size.x >= LABEL_WIDTH + LABEL_X && size.y >= LABEL_HEIGHT + LABEL_Y)
     {
-        m_label.resize(LABEL_WIDTH * LABEL_HEIGHT / 2);
+        m_label.resize(LABEL_WIDTH * LABEL_HEIGHT);
         for (int y = 0; y < LABEL_HEIGHT; ++y)
         for (int x = 0; x < LABEL_WIDTH; ++x)
         {
             lol::u8vec4 p = pixels[(y + LABEL_Y) * size.x + (x + LABEL_X)];
-            uint8_t c = palette::best(p);
-            if (x & 1)
-                m_label[(y * LABEL_WIDTH + x) / 2] += c << 4;
-            else
-                m_label[(y * LABEL_WIDTH + x) / 2] = c;
+            m_label[y * LABEL_WIDTH + x] = palette::best(p, 32);
         }
     }
 
@@ -237,19 +233,31 @@ struct p8_reader::action<p8_reader::r_data>
         }
         else
         {
-            bool must_swap = r.m_current_section == section::gfx
-                          || r.m_current_section == section::lab;
+            // Gfx section has nybbles swapped
+            bool const is_swapped = r.m_current_section == section::gfx;
+            // Label is base32 (0-9 a-v), others are hexadecimal
+            bool const is_base32 = r.m_current_section == section::lab;
 
-            // Decode hexadecimal data from this section
-            auto &section = r.m_sections[(int8_t)r.m_current_section];
-            for (uint8_t const *parser = (uint8_t const *)in.begin(); parser < (uint8_t const *)in.end(); ++parser)
+            // Decode data from this section
+            auto &section = r.m_sections[int8_t(r.m_current_section)];
+            for (auto *parser = (uint8_t const *)in.begin(); parser < (uint8_t const *)in.end(); ++parser)
             {
-                if ((parser[0] >= 'a' && parser[0] <= 'f')
-                     || (parser[0] >= 'A' && parser[0] <= 'F')
-                     || (parser[0] >= '0' && parser[0] <= '9'))
+                if (is_base32)
                 {
-                    char str[3] = { (char)parser[must_swap ? 1 : 0],
-                                    (char)parser[must_swap ? 0 : 1], '\0' };
+                    uint8_t ch = parser[0];
+                    int8_t b = ch >= '0' && ch <= '9' ? ch - '0' :
+                               ch >= 'a' && ch <= 'v' ? ch - 'a' + 10 :
+                               ch >= 'A' && ch <= 'V' ? ch - 'A' + 10 :
+                               -1;
+                    if (b >= 0)
+                        section.push_back(uint8_t(b));
+                }
+                else if ((parser[0] >= 'a' && parser[0] <= 'f')
+                      || (parser[0] >= 'A' && parser[0] <= 'F')
+                      || (parser[0] >= '0' && parser[0] <= '9'))
+                {
+                    char str[3] = { (char)parser[is_swapped ? 1 : 0],
+                                    (char)parser[is_swapped ? 0 : 1], '\0' };
                     section.push_back((uint8_t)strtoul(str, nullptr, 16));
                     ++parser;
                 }
@@ -322,7 +330,7 @@ bool cart::load_p8(std::string const &filename)
                (int)map.size(), (int)(sizeof(m_rom.map) + sizeof(m_rom.map2)),
                (int)sfx.size() / (4 + 80) * (4 + 64), (int)sizeof(m_rom.sfx),
                (int)mus.size() / 5 * 4, (int)sizeof(m_rom.song),
-               (int)lab.size(), LABEL_WIDTH * LABEL_HEIGHT / 2);
+               (int)lab.size(), LABEL_WIDTH * LABEL_HEIGHT);
 
     // The optional second chunk of gfx is contiguous, we can copy it directly
     memcpy(&m_rom.gfx, gfx.data(), std::min(sizeof(m_rom.gfx), gfx.size()));
@@ -380,7 +388,7 @@ bool cart::load_p8(std::string const &filename)
     }
 
     // Optional cartridge label
-    m_label.resize(std::min(lab.size(), size_t(LABEL_WIDTH * LABEL_HEIGHT / 2)));
+    m_label.resize(std::min(lab.size(), size_t(LABEL_WIDTH * LABEL_HEIGHT)));
     memcpy(m_label.data(), lab.data(), m_label.size());
 
     // Invalidate code cache
@@ -399,12 +407,12 @@ lol::image cart::get_png() const
     u8vec4 *pixels = ret.lock<PixelFormat::RGBA_8>();
 
     /* Apply label */
-    if (m_label.size() >= LABEL_WIDTH * LABEL_HEIGHT / 2)
+    if (m_label.size() >= LABEL_WIDTH * LABEL_HEIGHT)
     {
         for (int y = 0; y < LABEL_HEIGHT; ++y)
         for (int x = 0; x < LABEL_WIDTH; ++x)
         {
-            uint8_t col = (m_label[(y * LABEL_WIDTH + x) / 2] >> (4 * (x & 1))) & 0xf;
+            uint8_t col = m_label[y * LABEL_WIDTH + x] & 0x1f;
             pixels[(y + LABEL_Y) * size.x + (x + LABEL_X)] = palette::get8(col);
         }
     }
@@ -481,13 +489,14 @@ std::string cart::get_p8() const
     }
 
     // Export label
-    if (m_label.size() >= LABEL_WIDTH * LABEL_HEIGHT / 2)
+    if (m_label.size() >= LABEL_WIDTH * LABEL_HEIGHT)
     {
         ret += "__label__\n";
-        for (int i = 0; i < LABEL_WIDTH * LABEL_HEIGHT / 2; ++i)
+        for (int i = 0; i < LABEL_WIDTH * LABEL_HEIGHT; ++i)
         {
-            ret += lol::format("%02x", uint8_t(m_label.data()[i] * 0x101 / 0x10));
-            if ((i + 1) % (LABEL_WIDTH / 2) == 0)
+            uint8_t col = m_label.data()[i];
+            ret += "0123456789abcdefghijklmnopqrstuv"[col & 0x1f];
+            if ((i + 1) % LABEL_WIDTH == 0)
                 ret += '\n';
         }
         ret += '\n';
