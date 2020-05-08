@@ -21,7 +21,6 @@
 #include <lol/engine.h>
 #include <lol/pegtl>
 #include <cstring> // std::memchr
-#include <regex>
 
 namespace z8::pico8
 {
@@ -68,22 +67,22 @@ static std::string decompress_new(uint8_t const *input)
     for (int i = 0; i < 256; ++i)
         mtf[i] = uint8_t(255 - i);
 
-    int length = input[4] * 256 + input[5];
-    int compressed = input[6] * 256 + input[7];
-    assert(compressed <= int(sizeof(pico8::memory::code)));
+    size_t length = input[4] * 256 + input[5];
+    size_t compressed = input[6] * 256 + input[7];
+    assert(compressed <= sizeof(pico8::memory::code));
 
-    auto offset = size_t(8) * 8; // offset in bits
-    auto get_bits = [&](int count) -> uint32_t
+    size_t pos = size_t(8) * 8; // stream position in bits
+    auto get_bits = [&](size_t count) -> uint32_t
     {
         uint32_t n = 0;
-        for (int i = 0; i < count; ++i, ++offset)
-            n |= ((input[offset >> 3] >> (offset & 0x7)) & 0x1) << i;
+        for (size_t i = 0; i < count; ++i, ++pos)
+            n |= ((input[pos >> 3] >> (pos & 0x7)) & 0x1) << i;
         return n;
     };
 
     std::string ret;
 
-    while (int(ret.size()) < length && offset < compressed * 8)
+    while (ret.size() < length && pos < compressed * 8)
     {
         if (get_bits(1))
         {
@@ -121,16 +120,16 @@ static std::string decompress_old(uint8_t const *input)
     std::string ret;
 
     // Expected data length (including trailing zero)
-    int length = input[4] * 256 + input[5];
+    size_t length = input[4] * 256 + input[5];
 
     ret.resize(0);
-    for (int i = 8; i < (int)sizeof(pico8::memory::code) && (int)ret.length() < length; ++i)
+    for (size_t i = 8; i < sizeof(pico8::memory::code) && ret.length() < length; ++i)
     {
         if (input[i] >= 0x3c)
         {
-            int a = (input[i] - 0x3c) * 16 + (input[i + 1] & 0xf);
-            int b = input[i + 1] / 16 + 2;
-            if ((int)ret.length() >= a)
+            size_t a = (input[i] - 0x3c) * 16 + (input[i + 1] & 0xf);
+            size_t b = input[i + 1] / 16 + 2;
+            if (ret.length() >= a)
                 while (b--)
                     ret += ret[ret.length() - a];
             ++i;
@@ -142,8 +141,8 @@ static std::string decompress_old(uint8_t const *input)
         }
     }
 
-    if (length != (int)ret.length())
-        msg::warn("expected %d code bytes, got %d\n", length, (int)ret.length());
+    if (length != ret.length())
+        msg::warn("expected %d code bytes, got %d\n", int(length), int(ret.length()));
 
     // Remove possible trailing zeroes
     ret.resize(strlen(ret.c_str()));
@@ -156,6 +155,7 @@ static std::vector<uint8_t> compress_new(std::string const& input)
 {
     static int compress_bits[16] =
     {
+        // Number of bits required to encode n/16
         4, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 8
     };
 
@@ -173,24 +173,24 @@ static std::vector<uint8_t> compress_new(std::string const& input)
     for (int i = 0; i < 256; ++i)
         mtf[i] = uint8_t(255 - i);
 
-    auto offset = ret.size() * 8; // offset in bits
-    auto put_bits = [&](int count, int n) -> void
+    size_t pos = ret.size() * 8; // stream position in bits
+    auto put_bits = [&](size_t count, uint32_t n) -> void
     {
-        for (int i = 0; i < count; ++i, ++offset)
+        for (size_t i = 0; i < count; ++i, ++pos)
         {
-            if (ret.size() * 8 <= offset)
+            if (ret.size() * 8 <= pos)
                 ret.push_back(0);
-            ret.back() |= ((n >> i) & 1) << (offset & 0x7);
+            ret.back() |= ((n >> i) & 1) << (pos & 0x7);
         }
     };
 
-    for (int i = 0; i < input.length(); ++i)
+    for (size_t i = 0; i < input.length(); ++i)
     {
         uint8_t ch = input[i];
 
         // Find char in mtf structure
-        auto pos = std::find(mtf.rbegin(), mtf.rend(), ch);
-        auto n = int(std::distance(mtf.rbegin(), pos));
+        auto val = std::find(mtf.rbegin(), mtf.rend(), ch);
+        auto n = int(std::distance(mtf.rbegin(), val));
 
         // Cost for a single char will be 2*bits-2
         int bits = compress_bits[n >> 4];
@@ -205,7 +205,7 @@ static std::vector<uint8_t> compress_new(std::string const& input)
     }
 
     // Adjust compressed size
-    int compressed = int((offset + 7) / 8);
+    size_t compressed = (pos + 7) / 8;
     ret[6] = uint8_t(compressed >> 8);
     ret[7] = uint8_t(compressed);
 
