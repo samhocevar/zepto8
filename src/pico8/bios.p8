@@ -122,6 +122,8 @@ function foreach(c, f)
 end
 
 sub = string.sub
+pack = table.pack
+unpack = table.unpack
 
 function cartdata(s)
     if __cartdata() then

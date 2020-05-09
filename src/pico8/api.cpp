@@ -31,11 +31,13 @@ std::unordered_set<std::string> api::keywords =
     "return", "then", "true", "until", "while",
 };
 
+// The official API. Anything not in this list may still exist in the Lua
+// runtime, but will be hidden from user cartridges.
 std::unordered_set<std::string> api::functions =
 {
     // Implemented in Lua (mostly baselib)
     "assert", "getmetatable", "next", "ipairs", "pairs", "rawequal",
-    "rawlen", "rawget", "rawset", "setmetatable", "type",
+    "rawlen", "rawget", "rawset", "setmetatable", "type", "pack", "unpack",
     // Present in Lua but actually implemented by ZEPTO-8
     "load", "print",
     // Implemented in pico8lib (from z8lua)
