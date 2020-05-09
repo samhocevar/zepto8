@@ -159,11 +159,14 @@ struct hw_state
     // 0x5f54—0x5f5c: undocumented
     uint8_t undocumented2[8];
 
-    // 0x5f5c—0x4f5e: btnp() autorepeat parameters
+    // 0x5f5c—0x5f5e: btnp() autorepeat parameters
     uint8_t btnp_delay, btnp_rate;
 
-    // 0x5f5e—0x4f80: undocumented
-    uint8_t undocumented3[34];
+    // 0x5f5e: bitplane selector
+    uint8_t bit_mask;
+
+    // 0x5f5f—0x5f80: undocumented
+    uint8_t undocumented3[33];
 };
 
 struct memory

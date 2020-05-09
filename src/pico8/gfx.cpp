@@ -79,6 +79,7 @@ uint8_t vm::get_pixel(int16_t x, int16_t y) const
 void vm::set_pixel(int16_t x, int16_t y, uint32_t color_bits)
 {
     auto &ds = m_ram.draw_state;
+    auto &hw = m_ram.hw_state;
 
     if (x < ds.clip.x1 || x >= ds.clip.x2 || y < ds.clip.y1 || y >= ds.clip.y2)
         return;
@@ -91,6 +92,13 @@ void vm::set_pixel(int16_t x, int16_t y, uint32_t color_bits)
         color = (color_bits >> 20) & 0xf;
     }
 
+    if (hw.bit_mask)
+    {
+        uint8_t old = m_ram.screen.get(x, y);
+        color = (old & ~(hw.bit_mask & 7))
+              | (color & (hw.bit_mask & 7) & (hw.bit_mask >> 4));
+    }
+
     m_ram.screen.set(x, y, color);
 }
 
@@ -99,6 +107,7 @@ void vm::hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits)
     using std::min, std::max;
 
     auto &ds = m_ram.draw_state;
+    auto &hw = m_ram.hw_state;
 
     if (y < ds.clip.y1 || y >= ds.clip.y2)
         return;
@@ -112,8 +121,8 @@ void vm::hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits)
     if (x1 > x2)
         return;
 
-    // FIXME: very inefficient when fillp is active
-    if (color_bits & 0xffff)
+    // Cannot use shortcut code when fillp or bitplanes are active
+    if ((color_bits & 0xffff) || hw.bit_mask)
     {
         for (int16_t x = x1; x <= x2; ++x)
             set_pixel(x, y, color_bits);
@@ -144,6 +153,7 @@ void vm::vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits)
     using std::min, std::max;
 
     auto &ds = m_ram.draw_state;
+    auto &hw = m_ram.hw_state;
 
     if (x < ds.clip.x1 || x >= ds.clip.x2)
         return;
@@ -157,8 +167,8 @@ void vm::vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits)
     if (y1 > y2)
         return;
 
-    // FIXME: very inefficient when fillp is active
-    if (color_bits & 0xffff)
+    // Cannot use shortcut code when fillp or bitplanes are active
+    if ((color_bits & 0xffff) || hw.bit_mask)
     {
         for (int16_t y = y1; y <= y2; ++y)
             set_pixel(x, y, color_bits);
