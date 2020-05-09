@@ -14,7 +14,7 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h>
+#include <lol/engine.h> // lol::image
 
 #include <string>
 

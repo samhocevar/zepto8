@@ -14,6 +14,7 @@
 
 #include <lol/vector> // lol::u8vec2
 #include <algorithm>  // std::swap
+#include <cassert>    // assert
 
 #include "zepto8.h"
 
@@ -188,13 +189,13 @@ struct memory
                  // located after map.
                  inline uint8_t &operator[](int n)
                  {
-                     ASSERT(n >= 0 && n < (int)(sizeof(memory::map) + sizeof(memory::map2)));
+                     assert(n >= 0 && n < (int)(sizeof(memory::map) + sizeof(memory::map2)));
                      return b[(n ^ 0x1000) - 0x1000];
                  }
 
                  inline uint8_t const &operator[](int n) const
                  {
-                     ASSERT(n >= 0 && n < (int)(sizeof(memory::map) + sizeof(memory::map2)));
+                     assert(n >= 0 && n < (int)(sizeof(memory::map) + sizeof(memory::map2)));
                      return b[(n ^ 0x1000) - 0x1000];
                  }
 
@@ -241,13 +242,13 @@ struct memory
     // Standard accessors
     inline uint8_t &operator[](int n)
     {
-        ASSERT(n >= 0 && n < (int)sizeof(memory));
+        assert(n >= 0 && n < (int)sizeof(memory));
         return ((uint8_t *)this)[n];
     }
 
     inline uint8_t const &operator[](int n) const
     {
-        ASSERT(n >= 0 && n < (int)sizeof(memory));
+        assert(n >= 0 && n < (int)sizeof(memory));
         return ((uint8_t const *)this)[n];
     }
 

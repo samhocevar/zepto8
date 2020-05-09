@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <lol/engine.h>
+#include <lol/engine.h> // lol::input
 #include <map>    // std::map
 #include <vector> // std::vector
 #include <memory> // std::shared_ptr

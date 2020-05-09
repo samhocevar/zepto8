@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <lol/engine.h>
+#include <lol/msg>    // lol::msg
 #include <lol/utils>  // lol::ends_with
 #include <lol/thread> // lol::timer
 #include <lol/vector> // lol::ivec2

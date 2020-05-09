@@ -18,7 +18,8 @@
 #include "pico8/cart.h"
 #include "pico8/pico8.h"
 
-#include <lol/engine.h>
+#include <lol/engine.h> // lol::image
+#include <lol/msg>      // lol::msg
 #include <lol/pegtl>
 #include <regex>
 

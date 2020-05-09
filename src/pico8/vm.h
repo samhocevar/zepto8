@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <lol/engine.h>
+#include <lol/engine.h> // lol::net
 
 #include <optional>
 #include <variant>

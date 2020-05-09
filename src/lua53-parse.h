@@ -2,7 +2,7 @@
 // Please see LICENSE for license or visit https://github.com/taocpp/PEGTL/
 
 #include <lol/pegtl>
-#include <lol/3rdparty/pegtl/include/tao/pegtl/analyze.hpp>
+#include <lol/3rdparty/pegtl/include/tao/pegtl/contrib/analyze.hpp>
 #include <lol/3rdparty/pegtl/include/tao/pegtl/contrib/raw_string.hpp>
 
 namespace lua53

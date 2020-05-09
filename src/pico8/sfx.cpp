@@ -14,9 +14,11 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h>
+#include <lol/math>  // lol::clamp, lol::mix
+#include <lol/utils> // lol::format
 #include <algorithm> // std::max
 #include <cmath>     // std::fabs, std::fmod, std::floor
+#include <cassert>   // assert
 
 #include "pico8/vm.h"
 #include "synth.h"
@@ -57,7 +59,7 @@ static std::string key_to_name(float key)
 
 uint8_t song::sfx(int n) const
 {
-    ASSERT(n >= 0 && n <= 3);
+    assert(n >= 0 && n <= 3);
     return data[n] & 0x7f;
 }
 
@@ -99,9 +101,9 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
             if (m_state.music.volume_step < 0 && m_state.music.volume <= 0)
             {
                 // Fade out is finished, stop playing the current song
-                for (int i = 0; i < 4; ++i)
-                    if (m_state.channels[i].is_music)
-                        m_state.channels[i].sfx = -1;
+                for (int n = 0; n < 4; ++n)
+                    if (m_state.channels[n].is_music)
+                        m_state.channels[n].sfx = -1;
                 m_state.music.pattern = -1;
             }
             else if (m_state.music.offset >= 32.f)
@@ -129,7 +131,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
         }
 
         int const index = m_state.channels[chan].sfx;
-        ASSERT(index >= 0 && index < 64);
+        assert(index >= 0 && index < 64);
         struct sfx const &sfx = m_ram.sfx[index];
 
         // Speed must be 1—255 otherwise the SFX is invalid

@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <lol/engine.h>
+#include <lol/engine.h> // lol::image
 
 #include <vector> // std::vector
 #include <string> // std::string

@@ -18,7 +18,8 @@
 #include <vector>
 #include <algorithm>
 
-#include <lol/engine.h>
+#include <lol/engine.h> // lol::image
+#include <lol/msg>      // lol::msg
 
 #include "zepto8.h"
 #include "pico8/pico8.h"

@@ -14,8 +14,9 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h>
+#include <lol/engine.h> // lol::File
 #include <lol/cli>   // lol::cli
+#include <lol/msg>   // lol::msg
 #include <lol/utils> // lol::ends_with
 #include <fstream>
 #include <sstream>

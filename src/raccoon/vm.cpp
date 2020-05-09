@@ -14,8 +14,9 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h>
+#include <lol/engine.h> // lol::sys, lol::File
 #include <lol/vector> // lol::u8vec4
+#include <lol/msg>    // lol::msg
 
 extern "C" {
 #include "3rdparty/quickjs/quickjs.h"
@@ -175,10 +176,8 @@ void vm::run()
     eval_buf(m_ctx, code, "<run_code>", JS_EVAL_TYPE_GLOBAL);
 }
 
-bool vm::step(float seconds)
+bool vm::step(float /* seconds */)
 {
-    UNUSED(seconds);
-
     std::string code =
         "if (typeof update != 'undefined') update();\n"
         "if (typeof draw != 'undefined') draw();\n";

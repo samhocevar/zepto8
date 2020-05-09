@@ -14,10 +14,10 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h>
-#include <lol/utils>   // lol::ends_with
-#include <lol/dialogs> // pfd::message etc.
-#include <lol/vector>  // lol::ivec2 etc.
+#include <lol/engine.h> // lol::gui
+#include <lol/utils>    // lol::ends_with
+#include <lol/dialogs>  // pfd::message etc.
+#include <lol/vector>   // lol::ivec2 etc.
 
 #include "imgui_internal.h" // for the docking API
 

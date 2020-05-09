@@ -14,7 +14,8 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h>
+#include <lol/math>  // lol::round, lol::mix
+#include <lol/utils> // lol::format
 #include <algorithm> // std::swap
 #include <cmath>     // std::min, std::max
 

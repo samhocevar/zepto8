@@ -14,12 +14,14 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h>
+#include <lol/engine.h> // lol::File, lol::net
+#include <lol/msg>
 
 #include <algorithm>  // std::min
 #include <filesystem>
 #include <chrono>
 #include <ctime>
+#include <cassert>
 
 #include "pico8/pico8.h"
 #include "pico8/vm.h"
@@ -92,7 +94,7 @@ vm::vm()
         char const *message = lua_tostring(m_lua, -1);
         lol::msg::error("error %d loading bios.p8: %s\n", status, message);
         lua_pop(m_lua, 1);
-        lol::abort();
+        assert(false);
     }
 }
 
@@ -132,7 +134,7 @@ int vm::panic_hook(lua_State* l)
 {
     char const *message = lua_tostring(l, -1);
     lol::msg::error("Lua panic: %s\n", message);
-    lol::abort();
+    assert(false);
     return 0;
 }
 
@@ -276,10 +278,8 @@ void vm::run()
     }
 }
 
-bool vm::step(float seconds)
+bool vm::step(float /* seconds */)
 {
-    UNUSED(seconds);
-
     bool ret = false;
     lua_getglobal(m_lua, "__z8_tick");
     int status = lua_pcall(m_lua, 0, 1, 0);

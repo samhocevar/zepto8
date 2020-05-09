@@ -18,7 +18,8 @@
 // replacement before they actually remove the feature.
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING 1
 
-#include <lol/engine.h>
+#include <lol/msg>   // lol::msg
+#include <lol/utils> // lol::format
 
 #include <locale>
 #include <string>

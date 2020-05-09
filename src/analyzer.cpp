@@ -37,8 +37,6 @@ namespace lua53
 template<bool B>
 struct disable_crlf
 {
-    using analyze_t = pegtl::success::analyze_t;
-
     template< pegtl::apply_mode, pegtl::rewind_mode,
               template< typename ... > class Action,
               template< typename ... > class Control,
@@ -52,8 +50,6 @@ struct disable_crlf
 
 struct sep
 {
-    using analyze_t = sep_normal::analyze_t;
-
     template< pegtl::apply_mode A, pegtl::rewind_mode R,
               template< typename ... > class Action,
               template< typename ... > class Control,
@@ -69,8 +65,6 @@ struct sep
 
 struct query_at_sol
 {
-    using analyze_t = query::analyze_t;
-
     template< pegtl::apply_mode, pegtl::rewind_mode,
               template< typename ... > class Action,
               template< typename ... > class Control,

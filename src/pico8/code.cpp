@@ -18,9 +18,9 @@
 #include "pico8/cart.h"
 #include "pico8/pico8.h"
 
-#include <lol/engine.h>
-#include <lol/pegtl>
-#include <cstring> // std::memchr
+#include <lol/vector> // lol::ivec2
+#include <lol/msg>    // lol::msg
+#include <cstring>    // std::memchr
 
 namespace z8::pico8
 {
@@ -28,7 +28,6 @@ namespace z8::pico8
 using lol::ivec2;
 using lol::msg;
 using lol::u8vec4;
-using lol::PixelFormat;
 
 static std::string decompress_new(uint8_t const *input);
 static std::string decompress_old(uint8_t const *input);

@@ -14,7 +14,7 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h>
+#include <lol/engine.h>  // lol::input
 #include <lol/vector>    // lol::vec2
 #include <lol/transform> // lol::mat4
 #include <lol/color>     // lol::color
@@ -28,8 +28,6 @@
 
 namespace z8
 {
-
-using lol::msg;
 
 player::player(bool is_embedded, bool is_raccoon)
   : m_input_map

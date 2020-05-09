@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <lol/engine.h>
+#include <lol/engine.h> // lol::WorldEntity
 
 #include "zepto8.h"
 #include "player.h"

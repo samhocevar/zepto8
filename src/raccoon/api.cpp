@@ -14,7 +14,9 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h>
+#include <lol/math>   // lol::rand
+#include <lol/vector> // lol::u8vec3
+#include <lol/msg>    // lol::msg
 
 #include "zepto8.h"
 #include "raccoon/vm.h"

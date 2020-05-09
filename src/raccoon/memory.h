@@ -13,6 +13,7 @@
 #pragma once
 
 #include <lol/vector> // lol::u8vec3
+#include <cassert>    // assert
 
 #include "zepto8.h"
 
@@ -90,13 +91,13 @@ struct memory
 
     inline uint8_t &operator[](int n)
     {
-        ASSERT(n >= 0 && n < (int)sizeof(memory));
+        assert(n >= 0 && n < (int)sizeof(memory));
         return ((uint8_t *)this)[n];
     }
 
     inline uint8_t const &operator[](int n) const
     {
-        ASSERT(n >= 0 && n < (int)sizeof(memory));
+        assert(n >= 0 && n < (int)sizeof(memory));
         return ((uint8_t const *)this)[n];
     }
 };
