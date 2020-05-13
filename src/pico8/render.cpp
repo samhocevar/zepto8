@@ -31,7 +31,7 @@ void vm::render(lol::u8vec4 *screen) const
     lol::u8vec4 lut[16];
     for (int n = 0; n < 16; ++n)
     {
-        int c = ds.pal[1][n];
+        int c = ds.screen_palette[n];
         // Bit 0x80 activates the second half of the palette
         lut[n] = palette::get8((c & 0xf) | ((c & 0x80) >> 3));
     }
@@ -64,7 +64,7 @@ int vm::get_ansi_color(uint8_t c) const
     };
 
     // FIXME: support the extended palette!
-    return ansi_palette[m_ram.draw_state.pal[1][c & 0xf] & 0xf];
+    return ansi_palette[m_ram.draw_state.screen_palette[c & 0xf] & 0xf];
 }
 
 } // namespace z8::pico8

@@ -61,8 +61,8 @@ uint32_t vm::to_color_bits(opt<fix32> c)
     uint8_t c1 = ds.pen & 0xf;
     uint8_t c2 = (ds.pen >> 4) & 0xf;
 
-    bits |= (ds.pal[0][c1] & 0xf) << 16;
-    bits |= (ds.pal[0][c2] & 0xf) << 20;
+    bits |= (ds.draw_palette[c1] & 0xf) << 16;
+    bits |= (ds.draw_palette[c2] & 0xf) << 20;
 
     return bits;
 }
@@ -605,9 +605,9 @@ void vm::api_map(int16_t cel_x, int16_t cel_y, int16_t sx, int16_t sy,
         {
             int col = m_ram.gfx.get(sprite % 16 * 8 + (src_x + dx) % 8,
                                     sprite / 16 * 8 + (src_y + dy) % 8);
-            if ((ds.pal[0][col] & 0x10) == 0)
+            if ((ds.draw_palette[col] & 0x10) == 0)
             {
-                uint32_t color_bits = (ds.pal[0][col] & 0xf) << 16;
+                uint32_t color_bits = (ds.draw_palette[col] & 0xf) << 16;
                 set_pixel(sx + dx, sy + dy, color_bits);
             }
         }
@@ -640,8 +640,8 @@ opt<uint8_t> vm::api_pal(opt<uint8_t> c0, opt<uint8_t> c1, uint8_t p)
         // transparency values and fill pattern)”
         for (int i = 0; i < 16; ++i)
         {
-            ds.pal[0][i] = i | (i ? 0x00 : 0x10);
-            ds.pal[1][i] = i;
+            ds.draw_palette[i] = i | (i ? 0x00 : 0x10);
+            ds.screen_palette[i] = i;
         }
         ds.fillp[0] = 0;
         ds.fillp[1] = 0;
@@ -650,7 +650,8 @@ opt<uint8_t> vm::api_pal(opt<uint8_t> c0, opt<uint8_t> c1, uint8_t p)
     }
     else
     {
-        uint8_t &data = ds.pal[p & 1][*c0 & 0xf];
+        uint8_t &data = (p & 1) ? ds.screen_palette[*c0 & 0xf]
+                                : ds.draw_palette[*c0 & 0xf];
         uint8_t prev = data;
 
         if (p & 1)
@@ -671,17 +672,17 @@ var<int16_t, bool> vm::api_palt(opt<int16_t> c, opt<bool> t)
         int16_t prev = 0;
         for (int i = 0; i < 16; ++i)
         {
-            prev |= ((ds.pal[0][i] & 0x10) >> 4) << (15 - i);
-            ds.pal[0][i] &= 0xf;
+            prev |= ((ds.draw_palette[i] & 0x10) >> 4) << (15 - i);
+            ds.draw_palette[i] &= 0xf;
             // If c is set, set transparency according to the (15 - i)th bit.
             // Otherwise, only color 0 is transparent.
-            ds.pal[0][i] |= (c ? *c & (1 << (15 - i)) : i == 0) ? 0x10 : 0x00;
+            ds.draw_palette[i] |= (c ? *c & (1 << (15 - i)) : i == 0) ? 0x10 : 0x00;
         }
         return prev;
     }
     else
     {
-        uint8_t &data = ds.pal[0][*c & 0xf];
+        uint8_t &data = ds.draw_palette[*c & 0xf];
         bool prev = data & 0x10;
         data = (data & 0xf) | (*t ? 0x10 : 0x00);
         return prev;
@@ -763,7 +764,7 @@ void vm::api_sset(int16_t x, int16_t y, opt<int16_t> c)
     auto &ds = m_ram.draw_state;
 
     uint8_t col = c ? (uint8_t)*c : ds.pen;
-    m_ram.gfx.safe_set(x, y, ds.pal[0][col & 0xf]);
+    m_ram.gfx.safe_set(x, y, ds.draw_palette[col & 0xf]);
 }
 
 void vm::api_spr(int16_t n, int16_t x, int16_t y, opt<fix32> w,
@@ -783,9 +784,9 @@ void vm::api_spr(int16_t n, int16_t x, int16_t y, opt<fix32> w,
             int16_t di = flip_x ? w8 - 1 - i : i;
             int16_t dj = flip_y ? h8 - 1 - j : j;
             uint8_t col = m_ram.gfx.safe_get(n % 16 * 8 + di, n / 16 * 8 + dj);
-            if ((ds.pal[0][col] & 0x10) == 0)
+            if ((ds.draw_palette[col] & 0x10) == 0)
             {
-                uint32_t color_bits = (ds.pal[0][col] & 0xf) << 16;
+                uint32_t color_bits = (ds.draw_palette[col] & 0xf) << 16;
                 set_pixel(x + i, y + j, color_bits);
             }
         }
@@ -819,9 +820,9 @@ void vm::api_sspr(int16_t sx, int16_t sy, int16_t sw, int16_t sh,
         int16_t y = sy + sh * dj / dh;
 
         uint8_t col = m_ram.gfx.safe_get(x, y);
-        if ((ds.pal[0][col] & 0x10) == 0)
+        if ((ds.draw_palette[col] & 0x10) == 0)
         {
-            uint32_t color_bits = (ds.pal[0][col] & 0xf) << 16;
+            uint32_t color_bits = (ds.draw_palette[col] & 0xf) << 16;
             set_pixel(dx + i, dy + j, color_bits);
         }
     }

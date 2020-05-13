@@ -83,7 +83,8 @@ struct song
 struct draw_state
 {
     // 0x5f00—0x5f20: palette information (draw palette, screen palette)
-    uint8_t pal[2][16];
+    uint8_t draw_palette[16];
+    uint8_t screen_palette[16];
 
     // 0x5f20—0x5f24: clipping information
     struct
