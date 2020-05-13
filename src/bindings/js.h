@@ -32,6 +32,7 @@ namespace z8::bindings
 static JSValue js_box(JSContext *ctx, bool x) { return JS_NewBool(ctx, (int)x); }
 static JSValue js_box(JSContext *ctx, int x) { return JS_NewInt32(ctx, x); }
 static JSValue js_box(JSContext *ctx, double x) { return JS_NewFloat64(ctx, x); }
+static JSValue js_box(JSContext* ctx, std::string s) { return JS_NewStringLen(ctx, s.c_str(), s.length()); }
 
 //
 // Convert a JSValue to a standard type

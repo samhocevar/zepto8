@@ -151,8 +151,12 @@ void vm::run()
 
     memset(&m_ram, 0, sizeof(m_ram));
     memcpy(&m_ram, &m_rom, offsetof(decltype(m_ram), end_of_rom));
-    for (int i = 0; i < 16; ++i)
-        m_ram.palmod[i] = i;
+
+    // Initialise gamepad state
+    m_ram.gamepad.layouts[0] = 0;
+    m_ram.gamepad.layouts[1] = 1;
+    m_ram.gamepad.layouts[2] = 1;
+    m_ram.gamepad.layouts[3] = 1;
 
     // Load the mini JS api
     std::string js_api =
@@ -183,8 +187,8 @@ bool vm::step(float /* seconds */)
         "if (typeof draw != 'undefined') draw();\n";
     eval_buf(m_ctx, code, "<step_code>", JS_EVAL_TYPE_GLOBAL);
 
-    m_ram.gamepad[1] = m_ram.gamepad[0];
-    m_ram.gamepad[0] = 0;
+    m_ram.gamepad.prev_buttons = m_ram.gamepad.buttons;
+    m_ram.gamepad.buttons.fill(0);
 
     return true;
 }
@@ -192,7 +196,7 @@ bool vm::step(float /* seconds */)
 void vm::button(int index, int state)
 {
     if (state)
-        m_ram.gamepad[0] |= 1 << index;
+        m_ram.gamepad.buttons[0] |= 1 << index;
 }
 
 void vm::mouse(lol::ivec2 coords, int buttons)
@@ -209,8 +213,8 @@ void vm::render(lol::u8vec4 *screen) const
     struct { lol::u8vec4 a, b; } lut[256];
     for (int n = 0; n < 256; ++n)
     {
-        lut[n].a = lol::u8vec4(m_ram.palette[n % 16], 0xff);
-        lut[n].b = lol::u8vec4(m_ram.palette[n / 16], 0xff);
+        lut[n].a = lol::u8vec4(m_ram.palette[n % 16].color, 0xff);
+        lut[n].b = lol::u8vec4(m_ram.palette[n / 16].color, 0xff);
     }
 
     /* Render actual screen */

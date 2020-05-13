@@ -42,7 +42,7 @@ void vm::api_write(int p, int x)
 
 void vm::api_palset(int n, int r, int g, int b)
 {
-    m_ram.palette[n & 0xf] = lol::u8vec3(r, g, b);
+    m_ram.palette[n & 0xf].color = lol::u8vec3(r, g, b);
 }
 
 void vm::api_pset(int x, int y, int c)
@@ -57,26 +57,35 @@ int vm::api_pget(int x, int y)
 
 void vm::api_palm(int c0, int c1)
 {
-    uint8_t &data = m_ram.palmod[c0 & 0xf];
-    data = (data & 0xf0) | (c1 & 0xf);
+    m_ram.palette[c0 & 0xf].index = c1 & 0xf;
 }
 
 void vm::api_palt(int c, int v)
 {
-    uint8_t &data = m_ram.palmod[c & 0xf];
-    data = (data & 0x7f) | (v ? 0x80 : 0x00);
+    m_ram.palette[c & 0xf].trans = v ? 1 : 0;
 }
 
 bool vm::api_btn(int i, std::optional<int> p)
 {
-    int bit = 1 << (i + 8 * (p.has_value() ? p.value() : 0));
-    return m_ram.gamepad[0] & bit;
+    int bit = 1 << i;
+    return m_ram.gamepad.buttons[p ? *p & 0x3 : 0] & bit;
 }
 
 bool vm::api_btnp(int i, std::optional<int> p)
 {
-    int bit = 1 << (i + 8 * (p.has_value() ? p.value() : 0));
-    return (m_ram.gamepad[0] & bit) && !(m_ram.gamepad[1] & bit);
+    int bit = 1 << i;
+    return (m_ram.gamepad.buttons[p ? *p & 0x3 : 0] & bit)
+        && !(m_ram.gamepad.prev_buttons[p ? *p & 0x3 : 0] & bit);
+}
+
+std::string vm::api_btns(int i, std::optional<int> p)
+{
+    // Raccoon uses private Unicode range starting at U+E000
+    // for button glyphs
+    int layout = m_ram.gamepad.layouts[p ? *p & 0x3 : 0];
+    char ret[4] = "\xee\x80\x80"; // U+E000
+    ret[3] += i + (layout ? 8 : 0);
+    return std::string(ret);
 }
 
 int vm::api_fget(int n, std::optional<int> f)
@@ -135,9 +144,9 @@ void vm::api_map(int celx, int cely, int sx, int sy, int celw, int celh)
                 spry + dy < 0 || spry + dy >= 96)
                 continue;
             auto c = m_ram.sprites.get(sprx + dx, spry + dy);
-            if (m_ram.palmod[c] & 0x80)
+            if (m_ram.palette[c].trans)
                 continue;
-            c = m_ram.palmod[c] & 0xf;
+            c = m_ram.palette[c].index;
             m_ram.screen.safe_set(startx + dx, starty + dy, c);
         }
     }
@@ -147,7 +156,7 @@ void vm::api_rect(int x, int y, int w, int h, int c)
 {
     x -= m_ram.camera.x;
     y -= m_ram.camera.y;
-    c = m_ram.palmod[c & 0xf] & 0xf;
+    c = m_ram.palette[c & 0xf].index;
     int x0 = std::max(x, 0);
     int x1 = std::min(x + w, 127);
     if (y >= 0 && y < 128)
@@ -170,7 +179,7 @@ void vm::api_rectfill(int x, int y, int w, int h, int c)
 {
     x -= m_ram.camera.x;
     y -= m_ram.camera.y;
-    c = m_ram.palmod[c & 0xf] & 0xf;
+    c = m_ram.palette[c & 0xf].index;
     int x0 = std::max(x, 0);
     int x1 = std::min(x + w, 127);
     int y0 = std::max(y, 0);
@@ -199,9 +208,9 @@ void vm::api_spr(int n, int x, int y,
                 continue;
             auto c = m_ram.sprites.get(flip_x ? sx + sw - 1 - dx : sx + dx,
                                        flip_y ? sy + sh - 1 - dy : sy + dy);
-            if (m_ram.palmod[c] & 0x80)
+            if (m_ram.palette[c].trans)
                 continue;
-            c = m_ram.palmod[c] & 0xf;
+            c = m_ram.palette[c].index;
             m_ram.screen.set(x + dx, y + dy, c);
         }
 }

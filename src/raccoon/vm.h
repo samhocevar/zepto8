@@ -69,6 +69,7 @@ private:
     void api_palt(int c, int v);
     bool api_btn(int i, std::optional<int> p);
     bool api_btnp(int i, std::optional<int> p);
+    std::string api_btns(int i, std::optional<int> p);
     void api_cls(std::optional<int> c);
     void api_cam(int x, int y);
     void api_map(int celx, int cely, int sx, int sy, int celw, int celh);
@@ -120,6 +121,7 @@ public:
             { "sfx",      bind<&vm::api_sfx>() },
             { "btn",      bind<&vm::api_btn>() },
             { "btnp",     bind<&vm::api_btnp>() },
+            { "btns",     bind<&vm::api_btns>() },
         };
     };
 
