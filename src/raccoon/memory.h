@@ -42,8 +42,8 @@ struct snd_state
 #pragma pack(push,1)
 struct mus_state
 {
-    uint8_t playing : 1;
     uint8_t index   : 7;
+    uint8_t playing : 1;
     uint16_t time;
     uint16_t max_time;
 };
@@ -58,41 +58,51 @@ struct pad_state
 };
 #pragma pack(pop)
 
+// Register: SPPPPPPP EEIIIIII OOTTTTTT __EEEVVV
 struct snd_reg
 {
-    uint8_t on_off     : 1;
-    uint8_t period     : 7;
-    uint8_t envelope   : 2;
+    uint8_t period : 7;
+    uint8_t on_off : 1;
+
     uint8_t instrument : 6;
-    uint8_t offset     : 2;
-    uint8_t pitch      : 6;
-    uint8_t ______     : 2;
-    uint8_t effect     : 3;
-    uint8_t volume     : 3;
+    uint8_t envelope   : 2;
+
+    uint8_t pitch  : 6;
+    uint8_t offset : 2;
+
+    uint8_t volume : 3;
+    uint8_t effect : 3;
+    uint8_t        : 2;
 };
 
+// Note: __TTTTTT __EEEVVV
 struct note
 {
-    uint8_t _____    : 2;
-    uint8_t pitch    : 6;
-    uint8_t ______   : 2;
-    uint8_t effect   : 3;
-    uint8_t volume   : 3;
+    uint8_t pitch  : 6;
+    uint8_t        : 2;
+
+    uint8_t volume : 3;
+    uint8_t effect : 3;
+    uint8_t        : 2;
 };
 
+// Track: PPPPPPPPP EEIIIIII 64xNote
 struct track
 {
     uint8_t period     : 8;
-    uint8_t envelope   : 2;
+
     uint8_t instrument : 6;
+    uint8_t envelope   : 2;
+
     struct note notes[32];
 };
 
+// Music: FUTTTTTT FUTTTTTT FUTTTTTTT _UTTTTTT
 struct node
 {
-    uint8_t flag    : 1;
-    uint8_t has_sfx : 1;
-    uint8_t track   : 6;
+    uint8_t track : 6;
+    uint8_t used  : 1;
+    uint8_t flag  : 1;
 };
 
 #pragma pack(push,1)
@@ -113,9 +123,9 @@ struct memory
     struct
     {
         lol::u8vec3 color;
-        uint8_t trans : 1;
-        uint8_t _____ : 3;
         uint8_t index : 4;
+        uint8_t       : 3;
+        uint8_t trans : 1;
     }
     palette[16];
 

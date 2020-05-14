@@ -170,7 +170,7 @@ void vm::run()
         "ceil = Math.ceil;\n"
         "sign = Math.sign;\n"
         "sqrt = Math.sqrt;\n"
-        "r = rnd; p = pset; c = cls; b = btn;\n";
+        "r = rnd; l = line; p = pset; c = cls; b = btn;\n";
     eval_buf(m_ctx, js_api, "<js_api>", JS_EVAL_TYPE_GLOBAL);
 
     eval_buf(m_ctx, m_code, "<load_cart>", JS_EVAL_TYPE_GLOBAL);

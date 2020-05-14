@@ -53,7 +53,7 @@ private:
     void js_wrap();
 
 private:
-    void api_dprint(std::string s);
+    void api_debug(std::string s);
 
     int api_read(int p);
     void api_write(int p, int x);
@@ -73,6 +73,9 @@ private:
     void api_cls(std::optional<int> c);
     void api_cam(int x, int y);
     void api_map(int celx, int cely, int sx, int sy, int celw, int celh);
+    void api_line(int x0, int y0, int x1, int y1, int c);
+    void api_circ(int x, int y, int r, int c);
+    void api_circfill(int x, int y, int r, int c);
     void api_rect(int x, int y, int w, int h, int c);
     void api_rectfill(int x, int y, int w, int h, int c);
     void api_spr(int n, int x, int y,
@@ -92,7 +95,7 @@ public:
 
         std::vector<typename T::bind_desc> data =
         {
-            { "dprint",   bind<&vm::api_dprint>() },
+            { "debug",    bind<&vm::api_debug>() },
 
             { "read",     bind<&vm::api_read>() },
             { "write",    bind<&vm::api_write>() },
@@ -111,6 +114,9 @@ public:
             { "pget",     bind<&vm::api_pget>() },
             { "pset",     bind<&vm::api_pset>() },
             { "spr",      bind<&vm::api_spr>() },
+            { "line",     bind<&vm::api_line>() },
+            { "circ",     bind<&vm::api_circ>() },
+            { "circfill", bind<&vm::api_circfill>() },
             { "rect",     bind<&vm::api_rect>() },
             { "rectfill", bind<&vm::api_rectfill>() },
             { "print",    bind<&vm::api_print>() },

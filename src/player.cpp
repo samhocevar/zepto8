@@ -36,29 +36,43 @@ player::player(bool is_embedded, bool is_raccoon)
         { lol::input::key::SC_Right, 1 },
         { lol::input::key::SC_Up, 2 },
         { lol::input::key::SC_Down, 3 },
-        { lol::input::key::SC_Z, 4 },
-        { lol::input::key::SC_C, 4 },
-        { lol::input::key::SC_N, 4 },
-        { lol::input::key::SC_Insert, 4 },
-        { lol::input::key::SC_X, 5 },
-        { lol::input::key::SC_V, 5 },
-        { lol::input::key::SC_M, 5 },
-        { lol::input::key::SC_Delete, 5 },
-
-        { lol::input::key::SC_P, 6 },
-        { lol::input::key::SC_Return, 6 },
-
-        { lol::input::key::SC_S, 8 },
-        { lol::input::key::SC_F, 9 },
-        { lol::input::key::SC_E, 10 },
-        { lol::input::key::SC_D, 11 },
-        { lol::input::key::SC_LShift, 12 },
-        { lol::input::key::SC_A, 12 },
-        { lol::input::key::SC_Q, 13 },
-        { lol::input::key::SC_Tab, 13 },
     },
     m_embedded(is_embedded)
 {
+    if (is_raccoon)
+    {
+        m_input_map[lol::input::key::SC_X] = 4;
+        m_input_map[lol::input::key::SC_C] = 5;
+        m_input_map[lol::input::key::SC_V] = 6;
+        m_input_map[lol::input::key::SC_B] = 7;
+    }
+    else
+    {
+        // Player 1 buttons
+        m_input_map[lol::input::key::SC_Z] = 4;
+        m_input_map[lol::input::key::SC_C] = 4;
+        m_input_map[lol::input::key::SC_N] = 4;
+        m_input_map[lol::input::key::SC_Insert] = 4;
+        m_input_map[lol::input::key::SC_X] = 5;
+        m_input_map[lol::input::key::SC_V] = 5;
+        m_input_map[lol::input::key::SC_M] = 5;
+        m_input_map[lol::input::key::SC_Delete] = 5;
+
+        // Pause menu
+        m_input_map[lol::input::key::SC_P] = 6;
+        m_input_map[lol::input::key::SC_Return] = 6;
+
+        // Player 2 buttons
+        m_input_map[lol::input::key::SC_S] = 8;
+        m_input_map[lol::input::key::SC_F] = 9;
+        m_input_map[lol::input::key::SC_E] = 10;
+        m_input_map[lol::input::key::SC_D] = 11;
+        m_input_map[lol::input::key::SC_LShift] = 12;
+        m_input_map[lol::input::key::SC_A] = 12;
+        m_input_map[lol::input::key::SC_Q] = 13;
+        m_input_map[lol::input::key::SC_Tab] = 13;
+    }
+
     // FIXME: find a way to use std::make_shared here on MSVC
     if (is_raccoon)
         m_vm.reset((z8::vm_base *)new raccoon::vm());

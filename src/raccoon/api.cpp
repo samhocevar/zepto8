@@ -25,7 +25,7 @@
 namespace z8::raccoon
 {
 
-void vm::api_dprint(std::string s)
+void vm::api_debug(std::string s)
 {
     lol::msg::info("debug: %s\n", s.c_str());
 }
@@ -150,6 +150,21 @@ void vm::api_map(int celx, int cely, int sx, int sy, int celw, int celh)
             m_ram.screen.safe_set(startx + dx, starty + dy, c);
         }
     }
+}
+
+void vm::api_line(int x0, int y0, int x1, int y1, int c)
+{
+    lol::msg::info("stub: line(%d, %d, %d, %d, %d)\n", x0, y0, x1, y1, c);
+}
+
+void vm::api_circ(int x, int y, int r, int c)
+{
+    lol::msg::info("stub: circ(%d, %d, %d, %d)\n", x, y, r, c);
+}
+
+void vm::api_circfill(int x, int y, int r, int c)
+{
+    lol::msg::info("stub: circfill(%d, %d, %d, %d)\n", x, y, r, c);
 }
 
 void vm::api_rect(int x, int y, int w, int h, int c)
