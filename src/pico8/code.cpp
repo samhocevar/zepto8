@@ -21,6 +21,8 @@
 #include <lol/vector> // lol::ivec2
 #include <lol/msg>    // lol::msg
 #include <cstring>    // std::memchr
+#include <vector>     // std::vector
+#include <array>      // std::array
 
 namespace z8::pico8
 {
@@ -34,34 +36,31 @@ static std::string decompress_old(uint8_t const *input);
 static std::vector<uint8_t> compress_new(std::string const &input);
 static std::vector<uint8_t> compress_old(std::string const &input);
 
-// Move to front structure, reversed for performance
+// Move to front structure
 struct move_to_front
 {
     move_to_front()
-      : state(256)
     {
         for (int n = 0; n < 256; ++n)
-            state[n] = uint8_t(255 - n);
+            state[n] = uint8_t(n);
     }
 
     // Get the nth byte and move it to front
     uint8_t get(int n)
     {
-        uint8_t ch = state[255 - n];
-        state.erase(state.begin() + 255 - n);
-        state.push_back(ch);
-        return ch;
+        std::rotate(state.begin(), state.begin() + n, state.begin() + n + 1);
+        return state.front();
     }
 
     // Find index of a given character
     int find(uint8_t ch)
     {
-        auto val = std::find(state.rbegin(), state.rend(), ch);
-        return int(std::distance(state.rbegin(), val));
+        auto val = std::find(state.begin(), state.end(), ch);
+        return int(std::distance(state.begin(), val));
     }
 
 private:
-    std::vector<uint8_t> state;
+    std::array<uint8_t, 256> state;
 };
 
 std::string code::decompress(uint8_t const *input)
