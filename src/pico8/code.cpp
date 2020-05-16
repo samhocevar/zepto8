@@ -34,6 +34,36 @@ static std::string decompress_old(uint8_t const *input);
 static std::vector<uint8_t> compress_new(std::string const &input);
 static std::vector<uint8_t> compress_old(std::string const &input);
 
+// Move to front structure, reversed for performance
+struct move_to_front
+{
+    move_to_front()
+      : state(256)
+    {
+        for (int n = 0; n < 256; ++n)
+            state[n] = uint8_t(255 - n);
+    }
+
+    // Get the nth byte and move it to front
+    uint8_t get(int n)
+    {
+        uint8_t ch = state[255 - n];
+        state.erase(state.begin() + 255 - n);
+        state.push_back(ch);
+        return ch;
+    }
+
+    // Find index of a given character
+    int find(uint8_t ch)
+    {
+        auto val = std::find(state.rbegin(), state.rend(), ch);
+        return int(std::distance(state.rbegin(), val));
+    }
+
+private:
+    std::vector<uint8_t> state;
+};
+
 std::string code::decompress(uint8_t const *input)
 {
     if (input[0] == '\0' && input[1] == 'p' &&
@@ -61,11 +91,6 @@ static char const *decompress_lut = "\n 0123456789abcdefghijklmnopqrstuvwxyz!#%(
 
 static std::string decompress_new(uint8_t const *input)
 {
-    // Move to front structure, reversed
-    std::vector<uint8_t> mtf(256);
-    for (int i = 0; i < 256; ++i)
-        mtf[i] = uint8_t(255 - i);
-
     size_t length = input[4] * 256 + input[5];
     size_t compressed = input[6] * 256 + input[7];
     assert(compressed <= sizeof(pico8::memory::code));
@@ -79,6 +104,7 @@ static std::string decompress_new(uint8_t const *input)
         return n;
     };
 
+    move_to_front mtf;
     std::string ret;
 
     while (ret.size() < length && pos < compressed * 8)
@@ -89,11 +115,9 @@ static std::string decompress_new(uint8_t const *input)
             while (get_bits(1))
                 ++nbits;
             int n = get_bits(nbits) + (1 << nbits) - 16;
-            uint8_t ch = mtf[255 - n];
-            mtf.erase(mtf.begin() + 255 - n);
+            uint8_t ch = mtf.get(n);
             if (!ch)
                 break;
-            mtf.push_back(ch);
             ret.push_back(char(ch));
         }
         else
@@ -167,11 +191,6 @@ static std::vector<uint8_t> compress_new(std::string const& input)
         0, 0,
     });
 
-    // Move to front structure, reversed
-    std::vector<uint8_t> mtf(256);
-    for (int i = 0; i < 256; ++i)
-        mtf[i] = uint8_t(255 - i);
-
     size_t pos = ret.size() * 8; // stream position in bits
     auto put_bits = [&](size_t count, uint32_t n) -> void
     {
@@ -183,13 +202,14 @@ static std::vector<uint8_t> compress_new(std::string const& input)
         }
     };
 
+    move_to_front mtf;
+
     for (size_t i = 0; i < input.length(); ++i)
     {
         uint8_t ch = input[i];
 
         // Find char in mtf structure
-        auto val = std::find(mtf.rbegin(), mtf.rend(), ch);
-        auto n = int(std::distance(mtf.rbegin(), val));
+        int n = mtf.find(ch);
 
         // Cost for a single char will be 2*bits-2
         int bits = compress_bits[n >> 4];
@@ -198,8 +218,7 @@ static std::vector<uint8_t> compress_new(std::string const& input)
         {
             put_bits(bits - 2, ((1 << (bits - 3)) - 1));
             put_bits(bits, n - (1 << bits) + 16);
-            mtf.erase(mtf.begin() + 255 - n);
-            mtf.push_back(ch);
+            mtf.get(n);
         }
     }
 
