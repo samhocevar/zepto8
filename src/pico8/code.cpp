@@ -177,7 +177,7 @@ static std::vector<uint8_t> compress_new(std::string const& input)
 {
     static int compress_bits[16] =
     {
-        // Number of bits required to encode n/16
+        // this[n/16] is the number of bits required to encode n
         4, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 8
     };
 
@@ -207,17 +207,66 @@ static std::vector<uint8_t> compress_new(std::string const& input)
     {
         uint8_t ch = input[i];
 
-        // Find char in mtf structure
+        // Find char in mtf structure; cost for a single char
+        // will be 2*bits-2
         int n = mtf.find(ch);
-
-        // Cost for a single char will be 2*bits-2
         int bits = compress_bits[n >> 4];
 
-        if (true)
+        // Look behind for possible patterns
+        int best_off = 0, best_len = 1, best_cost = 100000;
+        for (int j = std::max(int(i) - 32768, 0); j < i; ++j)
+        {
+            int end = int(input.length()) - j;
+
+            for (int k = 0; ; ++k)
+            {
+                if (k >= end || input[j + k] != input[i + k])
+                {
+                    if (k > 0)
+                    {
+                        int offset = int(i - j);
+                        int cost = (offset <= 32 ? 8 : offset <= 1024 ? 13 : 17)
+                                 + ((k + 6) / 7);
+                        // if (cost/k <= best_cost/best_len)
+                        if (cost * best_len <= best_cost * k)
+                        {
+                            best_off = offset;
+                            best_len = k;
+                            best_cost = cost;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Choose between back reference and single char; it’s unfortunate
+        // that we can’t use back references of length 1 or 2 because there
+        // may be cases when we don’t want to pollute the mtf structure.
+        if (best_len < 3 || (2 * bits - 2) * best_len < best_cost)
         {
             put_bits(bits - 2, ((1 << (bits - 3)) - 1));
             put_bits(bits, n - (1 << bits) + 16);
             mtf.get(n);
+        }
+        else
+        {
+            i += best_len - 1;
+            best_len -= 3;
+            best_off -= 1;
+
+            if (best_off < 32)
+                put_bits(8, 0x6 | (best_off << 3));
+            else if (best_off < 1024)
+                put_bits(13, 0x2 | (best_off << 3));
+            else
+                put_bits(17, 0x0 | (best_off << 2));
+
+            while (best_len >= 0)
+            {
+                put_bits(3, std::min(best_len, 7));
+                best_len -= 7;
+            }
         }
     }
 
@@ -255,9 +304,9 @@ static std::vector<uint8_t> compress_old(std::string const &input)
     // for the moment we write one char too many.
     for (int i = 0; i < (int)input.length(); ++i)
     {
-        /* Look behind for possible patterns */
+        // Look behind for possible patterns
         int best_j = 0, best_len = 0;
-        for (int j = lol::max(i - 3135, 0); j < i; ++j)
+        for (int j = std::max(i - 3135, 0); j < i; ++j)
         {
             int end = std::min((int)input.length() - j, 17);
 
@@ -269,7 +318,7 @@ static std::vector<uint8_t> compress_old(std::string const &input)
             {
                 if (k >= end || input[j + k] != input[i + k])
                 {
-                    if (k > best_len)
+                    if (k >= best_len)
                     {
                         best_j = j;
                         best_len = k;
