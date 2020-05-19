@@ -16,6 +16,7 @@
 
 #include <lol/vector>
 #include <lol/pegtl>
+#include <lol/msg>
 
 #include <string>
 #include <regex>
@@ -87,7 +88,22 @@ struct query_at_sol
 
 } // namespace lua53
 
-std::string z8::pico8::code::parse(std::string const &s)
+bool z8::pico8::code::parse(std::string const &s)
+{
+    parser p;
+    pegtl::string_input<> in(s, "p8");
+    try
+    {
+        pegtl::parse<lua53::grammar>(in, p);
+    }
+    catch (std::exception &e)
+    {
+        lol::msg::error("parse error: %s\n", e.what());
+    }
+    return true;
+}
+
+std::string z8::pico8::code::fix(std::string const &s)
 {
     /* PNG carts have a “if(_update60)_update…” code snippet added by PICO-8
      * for backwards compatibility. But some buggy versions apparently miss

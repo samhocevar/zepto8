@@ -59,7 +59,7 @@ public:
     std::string const &get_lua()
     {
         if (m_lua.length() == 0)
-            m_lua = code::parse(m_code);
+            m_lua = code::fix(m_code);
         return m_lua;
     }
 

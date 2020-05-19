@@ -29,6 +29,7 @@
 
 #include "zepto8.h"
 #include "pico8/vm.h"
+#include "pico8/pico8.h"
 #include "raccoon/vm.h"
 #include "telnet.h"
 #include "splore.h"
@@ -182,6 +183,12 @@ int main(int argc, char **argv)
         {
             printf("Code size: %d\n", (int)cart.get_p8().size());
             printf("Compressed code size: %d\n", (int)cart.get_compressed_code().size());
+
+            auto &code = cart.get_code();
+            if (z8::pico8::code::parse(code))
+                printf("Code is valid\n");
+            else
+                printf("Code has syntax errors\n");
         }
     }
     else if (run_mode == mode::run || run_mode == mode::headless)
