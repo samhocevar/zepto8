@@ -466,10 +466,8 @@ namespace lua53
    //
    // If a line starts with “?” then the rest of the line is used as arguments
    // to the print() function. The line must not start with whitespace.
-   struct query : tao::pegtl::one< '?' > {};
-   struct query_at_sol;
-
-   struct short_print : tao::pegtl::seq< query_at_sol,
+   struct short_print : tao::pegtl::seq< struct at_sol,
+                                         tao::pegtl::one< '?' >,
                                          one_line_seq< seps, tao::pegtl::try_catch< expr_list_must >, seps >,
                                          tao::pegtl::at< tao::pegtl::sor< tao::pegtl::eolf, comment, cpp_comment > > > {};
 #endif

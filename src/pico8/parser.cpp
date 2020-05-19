@@ -69,7 +69,7 @@ struct sep
     }
 };
 
-struct query_at_sol
+struct at_sol
 {
     template< pegtl::apply_mode, pegtl::rewind_mode,
               template< typename ... > class Action,
@@ -77,7 +77,7 @@ struct query_at_sol
               typename Input >
     static bool match(Input & in, parse_state &)
     {
-        return in.position().byte_in_line == 0 && query::match(in);
+        return in.position().byte_in_line == 1;
     }
 };
 
