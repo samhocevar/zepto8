@@ -17,7 +17,7 @@
 #include <vector> // std::vector
 #include <string> // std::string
 
-#include "analyzer.h"
+#include "pico8/pico8.h"
 #include "pico8/memory.h"
 
 // The cart class
@@ -59,7 +59,7 @@ public:
     std::string const &get_lua()
     {
         if (m_lua.length() == 0)
-            m_lua = analyzer().fix(m_code);
+            m_lua = code::parse(m_code);
         return m_lua;
     }
 

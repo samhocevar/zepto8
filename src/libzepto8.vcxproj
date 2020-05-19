@@ -61,12 +61,12 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="analyzer.cpp" />
     <ClCompile Include="bios.cpp" />
     <ClCompile Include="pico8\api.cpp" />
     <ClCompile Include="pico8\cart.cpp" />
     <ClCompile Include="pico8\code.cpp" />
     <ClCompile Include="pico8\gfx.cpp" />
+    <ClCompile Include="pico8\parser.cpp" />
     <ClCompile Include="pico8\private.cpp" />
     <ClCompile Include="pico8\render.cpp" />
     <ClCompile Include="pico8\sfx.cpp" />
@@ -77,10 +77,10 @@
     <ClCompile Include="vm.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="analyzer.h" />
     <ClInclude Include="bindings/js.h" />
     <ClInclude Include="bindings/lua.h" />
     <ClInclude Include="pico8\cart.h" />
+    <ClInclude Include="pico8\grammar.h" />
     <ClInclude Include="pico8\memory.h" />
     <ClInclude Include="pico8\pico8.h" />
     <ClInclude Include="pico8\vm.h" />

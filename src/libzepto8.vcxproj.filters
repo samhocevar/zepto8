@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="analyzer.cpp" />
     <ClCompile Include="bios.cpp" />
     <ClCompile Include="pico8\api.cpp">
       <Filter>pico8</Filter>
@@ -13,6 +12,9 @@
       <Filter>pico8</Filter>
     </ClCompile>
     <ClCompile Include="pico8\gfx.cpp">
+      <Filter>pico8</Filter>
+    </ClCompile>
+    <ClCompile Include="pico8\parser.cpp">
       <Filter>pico8</Filter>
     </ClCompile>
     <ClCompile Include="pico8\private.cpp">
@@ -37,7 +39,6 @@
     <ClCompile Include="vm.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="analyzer.h" />
     <ClInclude Include="bindings\js.h">
       <Filter>bindings</Filter>
     </ClInclude>
@@ -45,6 +46,9 @@
       <Filter>bindings</Filter>
     </ClInclude>
     <ClInclude Include="pico8\cart.h">
+      <Filter>pico8</Filter>
+    </ClInclude>
+    <ClInclude Include="pico8\grammar.h">
       <Filter>pico8</Filter>
     </ClInclude>
     <ClInclude Include="pico8\memory.h">

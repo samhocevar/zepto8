@@ -143,15 +143,14 @@ libzepto8_a_SOURCES = \
     vm.cpp \
     bios.cpp bios.h \
     synth.cpp synth.h \
-    analyzer.cpp analyzer.h lua53-parse.h \
     \
     bindings/js.h bindings/lua.h \
     \
     pico8/vm.cpp pico8/vm.h \
-    pico8/pico8.h pico8/memory.h \
+    pico8/pico8.h pico8/memory.h pico8/grammar.h \
     pico8/cart.cpp pico8/cart.h \
     pico8/private.cpp pico8/gfx.cpp pico8/code.cpp \
-    pico8/render.cpp pico8/sfx.cpp \
+    pico8/parser.cpp pico8/render.cpp pico8/sfx.cpp \
     pico8/api.cpp \
     \
     raccoon/vm.cpp raccoon/vm.h \
