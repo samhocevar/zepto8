@@ -8,7 +8,11 @@
 #include <lol/3rdparty/pegtl/include/tao/pegtl/contrib/analyze.hpp>
 #include <lol/3rdparty/pegtl/include/tao/pegtl/contrib/raw_string.hpp>
 
+#if WITH_PICO8
+namespace z8::pico8
+#else
 namespace lua53
+#endif
 {
    // PEGTL grammar for the Lua 5.3.0 lexer and parser.
    //
@@ -269,6 +273,10 @@ namespace lua53
    struct op_one : tao::pegtl::seq< tao::pegtl::one< O >, tao::pegtl::at< tao::pegtl::not_one< N... > > > {};
    template< char O, char P, char... N >
    struct op_two : tao::pegtl::seq< tao::pegtl::string< O, P >, tao::pegtl::at< tao::pegtl::not_one< N... > > > {};
+#if WITH_PICO8
+   template< char O, char P, char Q, char... N >
+   struct op_three : tao::pegtl::seq< tao::pegtl::string< O, P, Q >, tao::pegtl::at< tao::pegtl::not_one< N... > > > {};
+#endif
 
    struct table_field_one : tao::pegtl::if_must< tao::pegtl::one< '[' >, seps, expression, seps, tao::pegtl::one< ']' >, seps, tao::pegtl::one< '=' >, seps, expression > {};
    struct table_field_two : tao::pegtl::if_must< tao::pegtl::seq< name, seps, op_one< '=', '=' > >, seps, expression > {};
@@ -312,9 +320,10 @@ namespace lua53
    struct right_assoc : tao::pegtl::seq< S, seps, tao::pegtl::opt_must< O, seps, right_assoc< S, O > > > {};
 
 #if WITH_PICO8
-   // Prevent “--” from matching two consecutive “-” when comments
-   // and CRLF are disabled.
-   struct unary_operators : tao::pegtl::sor< op_one< '-', '-' >,
+   struct unary_operators : tao::pegtl::sor< op_one< '-', '-', '=' >, // “-” but not “--” or “-=”
+                                             op_one< '%', '=' >,      // “%” but not “%=”
+                                             tao::pegtl::one< '@' >,  // “@”
+                                             tao::pegtl::one< '$' >,  // “$”
 #else
    struct unary_operators : tao::pegtl::sor< tao::pegtl::one< '-' >,
 #endif
@@ -333,30 +342,44 @@ namespace lua53
                                          function_literal,
                                          expr_thirteen,
                                          table_constructor > {};
+#if WITH_PICO8
+   // PICO-8 has extra operators such as “<<>” or “^^” so we need to
+   // disambiguate more carefully when matching. Also all binary operators
+   // have a compound assignment version, so avoid matching “=”.
+   struct expr_eleven : tao::pegtl::seq< expr_twelve, seps, tao::pegtl::opt< op_one< '^', '^', '=' >, seps, expr_ten, seps > > {};
+   struct unary_apply : tao::pegtl::if_must< unary_operators, seps, expr_ten, seps > {};
+   struct expr_ten : tao::pegtl::sor< unary_apply, expr_eleven > {};
+   struct operators_nine : tao::pegtl::sor< op_one< '/', '/', '=' >, // “/” but not “//” or “/=”
+                                            op_one< '\\', '=' >,     // “\” but not “\=”
+                                            op_one< '*', '=' >,      // “*” but not “*=”
+                                            op_one< '%', '=' > > {}; // “%” but not “%=”
+   struct expr_nine : left_assoc< expr_ten, operators_nine > {};
+   // Prevent “--” from matching two consecutive “-” when comments
+   // and CRLF are disabled.
+   struct operators_eight : tao::pegtl::sor< op_one< '-', '-', '=' >, // “-” but not “--” or “-=”
+                                             op_one< '+', '=' > > {}; // “+” but not “+=”
+   struct expr_eight : left_assoc< expr_nine, operators_eight > {};
+   struct expr_seven : right_assoc< expr_eight, op_two< '.', '.', '.', '=' > > {}; // “..” but not “...” or “..=”
+   struct operators_six : tao::pegtl::sor< op_three< '<', '<', '>', '=' >, // “<<>” but not “<<>=”
+                                           op_three< '>', '>', '<', '=' >, // “>><” but not “>><=”
+                                           op_three< '>', '>', '>', '=' >, // “>>>” but not “>>>=”
+                                           op_two< '<', '<', '=' >,        // “<<” but not “<<=”
+                                           op_two< '>', '>', '=' > > {};   // “>>” but not “>>=”
+   struct expr_six : left_assoc< expr_seven, operators_six > {};
+   struct expr_five : left_assoc< expr_six, op_one< '&', '=' > > {};       // “&” but not “&=”
+   struct expr_four : left_assoc< expr_five, op_two< '^', '^', '=' > > {}; // “^^” but not “^^=”
+   struct expr_three : left_assoc< expr_four, op_one< '|', '=' > > {};     // “|” but not “|=”
+#else
    struct expr_eleven : tao::pegtl::seq< expr_twelve, seps, tao::pegtl::opt< tao::pegtl::one< '^' >, seps, expr_ten, seps > > {};
    struct unary_apply : tao::pegtl::if_must< unary_operators, seps, expr_ten, seps > {};
    struct expr_ten : tao::pegtl::sor< unary_apply, expr_eleven > {};
-#if WITH_PICO8
-   // PICO-8 doesn’t accept “//” as an operator and instead uses it
-   // as a C++-like comment delimiter, so we only support “/” here
-   // and we prevent it from matching “//”.
-   struct operators_nine : tao::pegtl::sor< op_one< '/', '/' >,
-#else
    struct operators_nine : tao::pegtl::sor< tao::pegtl::two< '/' >,
                                             tao::pegtl::one< '/' >,
-#endif
                                             tao::pegtl::one< '*' >,
                                             tao::pegtl::one< '%' > > {};
    struct expr_nine : left_assoc< expr_ten, operators_nine > {};
-#if WITH_PICO8
-   // Prevent “--” from matching two consecutive “-” when comments
-   // and CRLF are disabled.
-   struct operators_eight : tao::pegtl::sor< tao::pegtl::one< '+' >,
-                                             op_one< '-', '-' > > {};
-#else
    struct operators_eight : tao::pegtl::sor< tao::pegtl::one< '+' >,
                                              tao::pegtl::one< '-' > > {};
-#endif
    struct expr_eight : left_assoc< expr_nine, operators_eight > {};
    struct expr_seven : right_assoc< expr_eight, op_two< '.', '.', '.' > > {};
    struct operators_six : tao::pegtl::sor< tao::pegtl::two< '<' >,
@@ -365,13 +388,6 @@ namespace lua53
    struct expr_five : left_assoc< expr_six, tao::pegtl::one< '&' > > {};
    struct expr_four : left_assoc< expr_five, op_one< '~', '=' > > {};
    struct expr_three : left_assoc< expr_four, tao::pegtl::one< '|' > > {};
-#if WITH_PICO8
-   // From the PICO-8 documentation:
-   //
-   //  3. != operator
-   //
-   // Not shorthand, but pico-8 also accepts != instead of ~= for "not equal to"
-   struct operator_notequal : tao::pegtl::string< '!', '=' > {};
 #endif
    struct operators_two : tao::pegtl::sor< tao::pegtl::two< '=' >,
                                            tao::pegtl::string< '<', '=' >,
@@ -379,7 +395,7 @@ namespace lua53
                                            op_one< '<', '<' >,
                                            op_one< '>', '>' >,
 #if WITH_PICO8
-                                           operator_notequal,
+                                           tao::pegtl::string< '!', '=' >, // “!=”
 #endif
                                            tao::pegtl::string< '~', '=' > > {};
    struct expr_two : left_assoc< expr_three, operators_two > {};
@@ -463,21 +479,23 @@ namespace lua53
    struct for_statement : tao::pegtl::if_must< key_for, seps, name, seps, tao::pegtl::sor< for_statement_one, for_statement_two >, key_do, statement_list< key_end > > {};
 
 #if WITH_PICO8
-   // From the PICO-8 documentation:
-   //
-   //  2. unary math operators
-   //
-   // a += 2  -- equivalent to: a = a + 2
-   // a -= 2  -- equivalent to: a = a - 2
-   // a *= 2  -- equivalent to: a = a * 2
-   // a /= 2  -- equivalent to: a = a / 2
-   // a %= 2  -- equivalent to: a = a % 2
-   struct reassign_var : variable {};
-   struct reassign_op : tao::pegtl::sor< tao::pegtl::string< '+', '=' >,
+   struct compound_var : variable {};
+   struct compound_op : tao::pegtl::sor< tao::pegtl::string< '+', '=' >,
                                          tao::pegtl::string< '-', '=' >,
                                          tao::pegtl::string< '*', '=' >,
                                          tao::pegtl::string< '/', '=' >,
-                                         tao::pegtl::string< '%', '=' > > {};
+                                         tao::pegtl::string< '%', '=' >,
+                                         tao::pegtl::string< '^', '=' >,
+                                         tao::pegtl::string< '\\', '=' >,
+                                         tao::pegtl::string< '&', '=' >,
+                                         tao::pegtl::string< '|', '=' >,
+                                         tao::pegtl::string< '^', '^', '=' >,
+                                         tao::pegtl::string< '<', '<', '=' >,
+                                         tao::pegtl::string< '>', '>', '=' >,
+                                         tao::pegtl::string< '>', '>', '>', '=' >,
+                                         tao::pegtl::string< '>', '>', '<', '=' >,
+                                         tao::pegtl::string< '<', '<', '>', '=' >,
+                                         tao::pegtl::string< '.', '.', '=' > > {};
    // We could use one_line_seq to try to emulate the PICO-8 parser: it seems
    // to first validate the syntax on a single line, but still allow multiline
    // code at runtime. For instance this is not valid:
@@ -498,11 +516,11 @@ namespace lua53
    // And that shit, too (the 3 is replaced with a space) but it’s tricky to
    // support properly, so I chose to ignore it:
    //   a+=sin(b)3-c
-   struct reassign_body_trail : tao::pegtl::one< ',' > {};
-   struct reassign_body_one : tao::pegtl::seq< reassign_var, seps, reassign_op, seps, expression > {};
-   struct reassign_body : tao::pegtl::sor< one_line_seq< reassign_body_one, reassign_body_trail >,
-                                           reassign_body_one > {};
-   struct reassignment : tao::pegtl::seq< tao::pegtl::opt< key_local, seps >, reassign_body > {};
+   struct compound_body_trail : tao::pegtl::one< ',' > {};
+   struct compound_body_one : tao::pegtl::seq< compound_var, seps, compound_op, seps, expression > {};
+   struct compound_body : tao::pegtl::sor< one_line_seq< compound_body_one, compound_body_trail >,
+                                           compound_body_one > {};
+   struct compound_statement : tao::pegtl::seq< tao::pegtl::opt< key_local, seps >, compound_body > {};
 #endif
    struct assignment_variable_list : tao::pegtl::list_must< variable, tao::pegtl::one< ',' >, sep > {};
    struct assignments_one : tao::pegtl::if_must< tao::pegtl::one< '=' >, seps, expr_list_must > {};
@@ -518,7 +536,7 @@ namespace lua53
    struct statement : tao::pegtl::sor< semicolon,
 #if WITH_PICO8
                                        disable_backtracking< assignments >,
-                                       disable_backtracking< reassignment >,
+                                       disable_backtracking< compound_statement >,
                                        short_print,
                                        disable_backtracking< if_do_statement >,
                                        short_if_statement,

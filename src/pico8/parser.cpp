@@ -30,18 +30,13 @@ using lol::ivec3;
 
 using namespace tao;
 
-namespace z8
+namespace z8::pico8
 {
 
-struct parser
+struct parse_state
 {
     int m_disable_crlf = 0;
 };
-
-} // namespace z8
-
-namespace lua53
-{
 
 // Special rule to disallow line breaks when matching special
 // PICO-8 syntax (the one-line if(...)... construct)
@@ -52,7 +47,7 @@ struct disable_crlf
               template< typename ... > class Action,
               template< typename ... > class Control,
               typename Input >
-    static bool match(Input &, z8::parser &f)
+    static bool match(Input &, parse_state &f)
     {
         f.m_disable_crlf += B ? 1 : -1;
         return true;
@@ -65,7 +60,7 @@ struct sep
               template< typename ... > class Action,
               template< typename ... > class Control,
               typename Input >
-    static bool match(Input & in, z8::parser &f)
+    static bool match(Input & in, parse_state &f)
     {
         if (f.m_disable_crlf > 0)
             return sep_horiz::match(in);
@@ -80,21 +75,19 @@ struct query_at_sol
               template< typename ... > class Action,
               template< typename ... > class Control,
               typename Input >
-    static bool match(Input & in, z8::parser &)
+    static bool match(Input & in, parse_state &)
     {
         return in.position().byte_in_line == 0 && query::match(in);
     }
 };
 
-} // namespace lua53
-
-bool z8::pico8::code::parse(std::string const &s)
+bool code::parse(std::string const &s)
 {
-    parser p;
+    parse_state p;
     pegtl::string_input<> in(s, "p8");
     try
     {
-        pegtl::parse<lua53::grammar>(in, p);
+        pegtl::parse<grammar>(in, p);
     }
     catch (std::exception &e)
     {
@@ -103,7 +96,7 @@ bool z8::pico8::code::parse(std::string const &s)
     return true;
 }
 
-std::string z8::pico8::code::fix(std::string const &s)
+std::string code::fix(std::string const &s)
 {
     /* PNG carts have a “if(_update60)_update…” code snippet added by PICO-8
      * for backwards compatibility. But some buggy versions apparently miss
@@ -113,3 +106,4 @@ std::string z8::pico8::code::fix(std::string const &s)
     return std::regex_replace(s, pattern, "");
 }
 
+} // namespace z8::pico8
