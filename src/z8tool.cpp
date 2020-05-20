@@ -41,7 +41,7 @@ enum class mode
 {
     none,
 
-    tolua, topng, top8, tobin, todata,
+    code, ast, topng, top8, tobin, todata,
 
     dither,
     minify,
@@ -55,7 +55,7 @@ enum class mode
 
 static void usage()
 {
-    printf("Usage: z8tool [--tolua|--topng|--top8|--tobin|--todata] [--data <file>] <cart> [-o <file>]\n");
+    printf("Usage: z8tool [--code|--ast|--topng|--top8|--tobin|--todata] [--data <file>] <cart> [-o <file>]\n");
     printf("       z8tool --dither [--hicolor] [--error-diffusion] <image> [-o <file>]\n");
     printf("       z8tool --minify\n");
     printf("       z8tool --compress [--raw <num>] [--skip <num>]\n");
@@ -83,7 +83,8 @@ int main(int argc, char **argv)
 
     auto convert =
     (
-        ( lol::cli::required("--tolua").set(run_mode, mode::tolua) |
+        ( lol::cli::required("--code").set(run_mode, mode::code) |
+          lol::cli::required("--ast").set(run_mode, mode::ast) |
           lol::cli::required("--topng").set(run_mode, mode::topng) |
           lol::cli::required("--top8").set(run_mode, mode::top8) |
           lol::cli::required("--tobin").set(run_mode, mode::tobin) |
@@ -128,10 +129,15 @@ int main(int argc, char **argv)
     if (!success)
         return EXIT_FAILURE;
 
-    if (run_mode == mode::tolua || run_mode == mode::top8 ||
-        run_mode == mode::tobin || run_mode == mode::topng ||
-        run_mode == mode::todata || run_mode == mode::inspect)
+    switch (run_mode)
     {
+    case mode::code:
+    case mode::ast:
+    case mode::top8:
+    case mode::tobin:
+    case mode::topng:
+    case mode::todata:
+    case mode::inspect: {
         z8::pico8::cart cart;
         cart.load(in);
 
@@ -156,9 +162,14 @@ int main(int argc, char **argv)
             memcpy(&cart.get_rom(), s.c_str(), min(s.length(), size_t(0x4300)));
         }
 
-        if (run_mode == mode::tolua)
+        if (run_mode == mode::code)
         {
-            printf("%s", cart.get_code().c_str());
+            printf("%s", cart.get_p8().c_str());
+        }
+        else if (run_mode == mode::ast)
+        {
+            auto &code = cart.get_code();
+            printf("%s", z8::pico8::code::ast(code).c_str());
         }
         else if (run_mode == mode::top8)
         {
@@ -190,9 +201,11 @@ int main(int argc, char **argv)
             else
                 printf("Code has syntax errors\n");
         }
+        break;
     }
-    else if (run_mode == mode::run || run_mode == mode::headless)
-    {
+
+    case mode::headless:
+    case mode::run: {
         std::unique_ptr<z8::vm_base> vm;
         if (lol::ends_with(in, ".rcn.json"))
             vm.reset((z8::vm_base *)new z8::raccoon::vm());
@@ -210,19 +223,20 @@ int main(int argc, char **argv)
                 t.wait(1.f / 60.f);
             }
         }
+        break;
     }
-    else if (run_mode == mode::dither)
-    {
+
+    case mode::dither:
         z8::dither(in, out, hicolor, error_diffusion);
-    }
-    else if (run_mode == mode::minify)
-    {
+        break;
+
+    case mode::minify: {
         auto input = std::string{ std::istreambuf_iterator<char>(std::cin),
                                   std::istreambuf_iterator<char>() };
         std::cout << z8::minify(input) << '\n';
+        break;
     }
-    else if (run_mode == mode::compress)
-    {
+    case mode::compress: {
         std::vector<uint8_t> input;
 #if _MSC_VER
         _setmode(_fileno(stdin), _O_BINARY);
@@ -245,21 +259,21 @@ int main(int argc, char **argv)
                 output.erase(output.begin(), output.begin() + std::min(skip, output.size()));
             std::cout << z8::encode59(output) << '\n';
         }
+        break;
     }
-    else if (run_mode == mode::splore)
-    {
+    case mode::splore: {
         z8::splore splore;
         splore.dump(in);
+        break;
     }
 #if HAVE_UNISTD_H
-    else if (run_mode == mode::telnet)
-    {
+    case mode::telnet: {
         z8::telnet telnet;
         telnet.run(in);
+        break;
     }
 #endif
-    else
-    {
+    default:
         usage();
         return EXIT_FAILURE;
     }

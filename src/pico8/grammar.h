@@ -508,12 +508,6 @@ namespace lua53
    // There are also several other bugs that we try to tackle using a few
    // hacks, for instance eating that last comma. Most of them were reported
    // to https://www.lexaloffle.com/bbs/?tid=29750
-   // For instance, this shit is valid (the comma is replaced with a space
-   // in PICO-8, so we try to do the same):
-   //   a+=b,c=1
-   // And that shit, too (the 3 is replaced with a space) but it’s tricky to
-   // support properly, so I chose to ignore it:
-   //   a+=sin(b)3-c
    struct compound_body_trail : tao::pegtl::one< ',' > {};
    struct compound_body_one : tao::pegtl::seq< compound_var, seps, compound_op, seps, expression > {};
    struct compound_body : tao::pegtl::sor< one_line_seq< compound_body_one, compound_body_trail >,
