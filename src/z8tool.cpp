@@ -158,7 +158,7 @@ int main(int argc, char **argv)
 
         if (run_mode == mode::tolua)
         {
-            printf("%s", cart.get_lua().c_str());
+            printf("%s", cart.get_code().c_str());
         }
         else if (run_mode == mode::top8)
         {

@@ -56,13 +56,6 @@ public:
         return m_code;
     }
 
-    std::string const &get_lua()
-    {
-        if (m_lua.length() == 0)
-            m_lua = code::fix(m_code);
-        return m_lua;
-    }
-
     std::vector<uint8_t> get_compressed_code() const;
     std::vector<uint8_t> get_bin() const;
     std::string get_p8() const;

@@ -21,6 +21,7 @@
 #include <lol/vector> // lol::ivec2
 #include <lol/msg>    // lol::msg
 #include <cstring>    // std::memchr
+#include <regex>      // std::regex
 #include <vector>     // std::vector
 #include <array>      // std::array
 
@@ -169,7 +170,11 @@ static std::string decompress_old(uint8_t const *input)
     // Remove possible trailing zeroes
     ret.resize(strlen(ret.c_str()));
 
-    return ret;
+    // Some old PNG carts have a “if(_update60)_update…” code snippet added by
+    // PICO-8 for backwards compatibility. But some buggy versions apparently
+    // miss a carriage return or space, leading to syntax errors. Remove it.
+    static std::regex junk("if(_update60)_update=function()_update60([)_update_buttons(]*)_update60()end$");
+    return std::regex_replace(ret, junk, "");
 }
 
 

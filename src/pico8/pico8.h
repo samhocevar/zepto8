@@ -67,7 +67,6 @@ struct code
     static std::vector<uint8_t> compress(std::string const &input);
 
     static bool parse(std::string const &s);
-    static std::string fix(std::string const &s);
 };
 
 struct palette

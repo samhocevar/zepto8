@@ -330,7 +330,7 @@ void vm::api_run()
 
     // Load cartridge code and call __z8_run_cart() on it
     lua_getglobal(m_sandbox_lua, "__z8_run_cart");
-    lua_pushstring(m_sandbox_lua, m_cart.get_lua().c_str());
+    lua_pushstring(m_sandbox_lua, m_cart.get_code().c_str());
     lua_pcall(m_sandbox_lua, 1, 0, 0);
 }
 

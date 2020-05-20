@@ -19,7 +19,6 @@
 #include <lol/msg>
 
 #include <string>
-#include <regex>
 
 #include "pico8.h"
 #define WITH_PICO8 1
@@ -94,16 +93,6 @@ bool code::parse(std::string const &s)
         lol::msg::error("parse error: %s\n", e.what());
     }
     return true;
-}
-
-std::string code::fix(std::string const &s)
-{
-    /* PNG carts have a “if(_update60)_update…” code snippet added by PICO-8
-     * for backwards compatibility. But some buggy versions apparently miss
-     * a carriage return or space, leading to syntax errors or maybe this
-     * code being lost in a comment. */
-    static std::regex pattern("if(_update60)_update=function()_update60()_update_buttons()_update60()end");
-    return std::regex_replace(s, pattern, "");
 }
 
 } // namespace z8::pico8
