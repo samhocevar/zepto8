@@ -205,7 +205,7 @@ int main(int argc, char **argv)
         if (lol::ends_with(out, ".bin"))
         {
             std::ofstream f(out, std::ios::binary);
-            auto &bin =  cart.get_bin();
+            auto const &bin = cart.get_bin();
             f.write((char const *)bin.data(), bin.size());
         }
         else if (lol::ends_with(out, ".png"))
