@@ -63,8 +63,14 @@ private:
 
 struct code
 {
+    enum class format
+    {
+        best, pxa, old,
+    };
+
     static std::string decompress(uint8_t const *input);
-    static std::vector<uint8_t> compress(std::string const &input);
+    static std::vector<uint8_t> compress(std::string const &input,
+                                         format fmt = format::pxa);
 
     static bool parse(std::string const &s);
     static std::string ast(std::string const &s);

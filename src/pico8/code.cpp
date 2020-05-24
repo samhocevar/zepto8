@@ -79,11 +79,20 @@ std::string code::decompress(uint8_t const *input)
     return std::string((char const *)input, len);
 }
 
-std::vector<uint8_t> code::compress(std::string const &input)
+std::vector<uint8_t> code::compress(std::string const &input,
+                                    format fmt /* = format::pxa */)
 {
-    auto a = compress_old(input);
-    auto b = compress_new(input);
-    return a.size() < b.size() ? a : b;
+    switch (fmt)
+    {
+        case format::old: return compress_old(input);
+        case format::pxa: return compress_new(input);
+        default:
+        {
+            auto a = compress_old(input);
+            auto b = compress_new(input);
+            return a.size() < b.size() ? a : b;
+        }
+    }
 }
 
 static uint8_t const *compress_lut = nullptr;
