@@ -228,9 +228,12 @@ static std::vector<uint8_t> compress_new(std::string const& input)
 
             int offset = int(i - j);
             int cost = (offset <= 32 ? 8 : offset <= 1024 ? 13 : 17)
-                     + ((k + 6) / 7);
-            // if (cost/k <= best_cost/best_len)
-            if (cost * best_len <= best_cost * k)
+                     + ((k + 3) / 7);
+            // Do a cost analysis (cost/k <= best_cost/best_len) if the
+            // back reference length is at least 3. It’s unfortunate that
+            // we can’t use back references of length 1 or 2 because there
+            // may be cases when we don’t want to pollute the mtf struct.
+            if (k >= 3 && cost * best_len <= best_cost * k)
             {
                 best_off = offset;
                 best_len = k;
@@ -238,10 +241,9 @@ static std::vector<uint8_t> compress_new(std::string const& input)
             }
         }
 
-        // Choose between back reference and single char; it’s unfortunate
-        // that we can’t use back references of length 1 or 2 because there
-        // may be cases when we don’t want to pollute the mtf structure.
-        if (best_len < 3 || (2 * bits - 2) * best_len < best_cost)
+        // Choose between back reference and single char depending on the
+        // cost compuation.
+        if ((2 * bits - 2) * best_len < best_cost)
         {
             put_bits(bits - 2, ((1 << (bits - 3)) - 1));
             put_bits(bits, n - (1 << bits) + 16);
