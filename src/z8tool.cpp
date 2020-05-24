@@ -18,7 +18,7 @@
 #include <lol/cli>   // lol::cli
 #include <lol/msg>   // lol::msg
 #include <lol/utils> // lol::ends_with
-#include <fstream>
+#include <fstream>   // std::ofstream
 #include <sstream>
 #include <iostream>
 #include <streambuf>
@@ -41,30 +41,31 @@ enum class mode
 {
     none,
 
-    code, ast, topng, top8, tobin, todata,
+    stats,
+    luamin,
+    listlua,
+    printast,
+    convert,
+    run, headless, telnet,
 
     dither,
-    minify,
     compress,
-    run,
-    inspect,
-    headless,
-    telnet,
     splore,
 };
 
 static void usage()
 {
-    printf("Usage: z8tool [--code|--ast|--topng|--top8|--tobin|--todata] [--data <file>] <cart> [-o <file>]\n");
-    printf("       z8tool --dither [--hicolor] [--error-diffusion] <image> [-o <file>]\n");
-    printf("       z8tool --minify\n");
-    printf("       z8tool --compress [--raw <num>] [--skip <num>]\n");
-    printf("       z8tool --run <cart>\n");
-    printf("       z8tool --inspect <cart>\n");
-    printf("       z8tool --headless <cart>\n");
+    printf("Usage: z8tool stats <cart>\n");
+    printf("       z8tool convert <cart> [--data <file>] <output.p8|output.p8.png|output.bin>\n");
+    printf("       z8tool listlua <cart>\n");
+    printf("       z8tool printast <cart>\n");
 #if HAVE_UNISTD_H
-    printf("       z8tool --telnet <cart>\n");
+    printf("       z8tool run [--headless|--telnet] <cart>\n");
+#else
+    printf("       z8tool run [--headless] <cart>\n");
 #endif
+    printf("       z8tool --dither [--hicolor] [--error-diffusion] <image> [-o <file>]\n");
+    printf("       z8tool --compress [--raw <num>] [--skip <num>]\n");
     printf("       z8tool --splore <image>\n");
 }
 
@@ -81,15 +82,41 @@ int main(int argc, char **argv)
     auto help = lol::cli::required("-h", "--help").call([]()
                     { ::usage(); exit(EXIT_SUCCESS); });
 
-    auto convert =
+    auto commands1 =
     (
-        ( lol::cli::required("--code").set(run_mode, mode::code) |
-          lol::cli::required("--ast").set(run_mode, mode::ast) |
-          lol::cli::required("--topng").set(run_mode, mode::topng) |
-          lol::cli::required("--top8").set(run_mode, mode::top8) |
-          lol::cli::required("--tobin").set(run_mode, mode::tobin) |
-          lol::cli::required("--todata").set(run_mode, mode::todata) ),
+        (
+            // p8tool interface
+            lol::cli::command("stats").set(run_mode, mode::stats) |
+            lol::cli::command("listlua").set(run_mode, mode::listlua) |
+            lol::cli::command("luamin").set(run_mode, mode::luamin) |
+            lol::cli::command("printast").set(run_mode, mode::printast)
+        ),
+        lol::cli::value("cart", in)
+    );
+
+    auto commands2 =
+    (
+        (
+            lol::cli::command("convert").set(run_mode, mode::convert)
+        ),
         lol::cli::option("--data") & lol::cli::value("file", data),
+        lol::cli::value("cart", in),
+        lol::cli::value("output", out)
+    );
+
+    auto run =
+    (
+        lol::cli::command("run").set(run_mode, mode::run),
+        lol::cli::option("--headless").set(run_mode, mode::headless),
+#if HAVE_UNISTD_H
+        lol::cli::option("--telnet").set(run_mode, mode::telnet),
+#endif
+        lol::cli::value("cart", in)
+    );
+
+    auto other =
+    (
+        lol::cli::required("--splore").set(run_mode, mode::splore),
         lol::cli::value("cart", in),
         lol::cli::option("-o") & lol::cli::value("file", out)
     );
@@ -103,8 +130,6 @@ int main(int argc, char **argv)
         lol::cli::option("-o") & lol::cli::value("output", out)
     );
 
-    auto minify = lol::cli::required("--minify").set(run_mode, mode::minify);
-
     auto compress =
     (
         lol::cli::required("--compress").set(run_mode, mode::compress),
@@ -112,35 +137,50 @@ int main(int argc, char **argv)
         lol::cli::option("--skip") & lol::cli::value("num", skip)
     );
 
-    auto other =
-    (
-        ( lol::cli::required("--run").set(run_mode, mode::run) |
-          lol::cli::required("--inspect").set(run_mode, mode::inspect) |
-          lol::cli::required("--headless").set(run_mode, mode::headless) |
-#if HAVE_UNISTD_H
-          lol::cli::required("--telnet").set(run_mode, mode::telnet) |
-#endif
-          lol::cli::required("--splore").set(run_mode, mode::splore) )
-        & lol::cli::value("cart", in)
-    );
-
-    auto success = lol::cli::parse(argc, argv, help | convert | dither | minify | compress | other);
+    auto commands = commands1 | commands2 | run | other | dither | compress;
+    auto success = lol::cli::parse(argc, argv, help | commands);
 
     if (!success)
+    {
+        usage();
         return EXIT_FAILURE;
+    }
+
+    // Most commands manipulate a cart, so get it right now
+    z8::pico8::cart cart;
 
     switch (run_mode)
     {
-    case mode::code:
-    case mode::ast:
-    case mode::top8:
-    case mode::tobin:
-    case mode::topng:
-    case mode::todata:
-    case mode::inspect: {
-        z8::pico8::cart cart;
+    case mode::stats: {
         cart.load(in);
+        printf("Code size: %d\n", (int)cart.get_p8().size());
+        printf("Compressed code size: %d\n", (int)cart.get_compressed_code().size());
 
+        auto &code = cart.get_code();
+        if (z8::pico8::code::parse(code))
+            printf("Code is valid\n");
+        else
+            printf("Code has syntax errors\n");
+        break;
+    }
+    case mode::listlua:
+        cart.load(in);
+        printf("%s", cart.get_p8().c_str());
+        break;
+
+    case mode::luamin:
+        cart.load(in);
+        std::cout << z8::minify(cart.get_code()) << '\n';
+        break;
+
+    case mode::printast: {
+        cart.load(in);
+        auto &code = cart.get_code();
+        printf("%s", z8::pico8::code::ast(code).c_str());
+        break;
+    }
+    case mode::convert:
+        cart.load(in);
         if (data.length())
         {
             std::string s;
@@ -162,47 +202,18 @@ int main(int argc, char **argv)
             memcpy(&cart.get_rom(), s.c_str(), min(s.length(), size_t(0x4300)));
         }
 
-        if (run_mode == mode::code)
+        if (lol::ends_with(out, ".bin"))
         {
-            printf("%s", cart.get_p8().c_str());
+            std::ofstream f(out, std::ios::binary);
+            auto &bin =  cart.get_bin();
+            f.write((char const *)bin.data(), bin.size());
         }
-        else if (run_mode == mode::ast)
-        {
-            auto &code = cart.get_code();
-            printf("%s", z8::pico8::code::ast(code).c_str());
-        }
-        else if (run_mode == mode::top8)
-        {
-            printf("%s", cart.get_p8().c_str());
-        }
-        else if (run_mode == mode::tobin)
-        {
-            auto const &bin = cart.get_bin();
-            fwrite(bin.data(), 1, bin.size(), stdout);
-        }
-        else if (run_mode == mode::topng)
-        {
-            if (!out.length())
-                return EXIT_FAILURE;
+        else if (lol::ends_with(out, ".png"))
             cart.get_png().save(out);
-        }
-        else if (run_mode == mode::todata)
-        {
-            fwrite(&cart.get_rom(), 1, 0x4300, stdout);
-        }
-        else if (run_mode == mode::inspect)
-        {
-            printf("Code size: %d\n", (int)cart.get_p8().size());
-            printf("Compressed code size: %d\n", (int)cart.get_compressed_code().size());
+        else
+            std::ofstream(out) << cart.get_p8();
 
-            auto &code = cart.get_code();
-            if (z8::pico8::code::parse(code))
-                printf("Code is valid\n");
-            else
-                printf("Code has syntax errors\n");
-        }
         break;
-    }
 
     case mode::headless:
     case mode::run: {
@@ -217,7 +228,7 @@ int main(int argc, char **argv)
         {
             lol::timer t;
             running = vm->step(1.f / 60.f);
-            if (run_mode == mode::run)
+            if (run_mode != mode::headless)
             {
                 vm->print_ansi(lol::ivec2(128, 64), nullptr);
                 t.wait(1.f / 60.f);
@@ -230,12 +241,6 @@ int main(int argc, char **argv)
         z8::dither(in, out, hicolor, error_diffusion);
         break;
 
-    case mode::minify: {
-        auto input = std::string{ std::istreambuf_iterator<char>(std::cin),
-                                  std::istreambuf_iterator<char>() };
-        std::cout << z8::minify(input) << '\n';
-        break;
-    }
     case mode::compress: {
         std::vector<uint8_t> input;
 #if _MSC_VER
