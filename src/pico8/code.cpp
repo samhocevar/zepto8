@@ -221,27 +221,20 @@ static std::vector<uint8_t> compress_new(std::string const& input)
         int best_off = 0, best_len = 1, best_cost = 100000;
         for (int j = std::max(int(i) - 32768, 0); j < i; ++j)
         {
-            int end = int(input.length()) - j;
+            int k = 0, end = int(input.length()) - j;
 
-            for (int k = 0; ; ++k)
+            while (k < end && input[j + k] == input[i + k])
+                ++k;
+
+            int offset = int(i - j);
+            int cost = (offset <= 32 ? 8 : offset <= 1024 ? 13 : 17)
+                     + ((k + 6) / 7);
+            // if (cost/k <= best_cost/best_len)
+            if (cost * best_len <= best_cost * k)
             {
-                if (k >= end || input[j + k] != input[i + k])
-                {
-                    if (k > 0)
-                    {
-                        int offset = int(i - j);
-                        int cost = (offset <= 32 ? 8 : offset <= 1024 ? 13 : 17)
-                                 + ((k + 6) / 7);
-                        // if (cost/k <= best_cost/best_len)
-                        if (cost * best_len <= best_cost * k)
-                        {
-                            best_off = offset;
-                            best_len = k;
-                            best_cost = cost;
-                        }
-                    }
-                    break;
-                }
+                best_off = offset;
+                best_len = k;
+                best_cost = cost;
             }
         }
 
@@ -313,23 +306,19 @@ static std::vector<uint8_t> compress_old(std::string const &input)
         int best_j = 0, best_len = 0;
         for (int j = std::max(i - 3135, 0); j < i; ++j)
         {
-            int end = std::min((int)input.length() - j, 17);
+            int k = 0, end = std::min((int)input.length() - j, 17);
 
             // XXX: official PICO-8 stops at i - j, despite being able
             // to support input.length() - j, it seems.
             end = std::min(end, i - j);
 
-            for (int k = 0; ; ++k)
+            while (k < end && input[j + k] == input[i + k])
+                ++k;
+
+            if (k >= best_len)
             {
-                if (k >= end || input[j + k] != input[i + k])
-                {
-                    if (k >= best_len)
-                    {
-                        best_j = j;
-                        best_len = k;
-                    }
-                    break;
-                }
+                best_j = j;
+                best_len = k;
             }
         }
 
