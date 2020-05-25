@@ -25,6 +25,12 @@
 #include <vector>     // std::vector
 #include <array>      // std::array
 
+#if 0
+#define TRACE(...) lol::msg::info(__VA_ARGS__)
+#else
+#define TRACE(...) (void)0
+#endif
+
 namespace z8::pico8
 {
 
@@ -41,6 +47,11 @@ static std::vector<uint8_t> compress_old(std::string const &input);
 struct move_to_front
 {
     move_to_front()
+    {
+        reset();
+    }
+
+    void reset()
     {
         for (int n = 0; n < 256; ++n)
             state[n] = uint8_t(n);
@@ -116,8 +127,12 @@ static std::string decompress_new(uint8_t const *input)
     move_to_front mtf;
     std::string ret;
 
+    TRACE("# Size: %d (%04x)\n", int(compressed), int(compressed));
+
     while (ret.size() < length && pos < compressed * 8)
     {
+        auto oldpos = pos;
+
         if (get_bits(1))
         {
             int nbits = 4;
@@ -127,6 +142,7 @@ static std::string decompress_new(uint8_t const *input)
             uint8_t ch = mtf.get(n);
             if (!ch)
                 break;
+            TRACE("%04x [%d] $%d\n", int(ret.size()), int(pos-oldpos), ch);
             ret.push_back(char(ch));
         }
         else
@@ -139,6 +155,7 @@ static std::string decompress_new(uint8_t const *input)
                 len += (n = get_bits(3));
             while (n == 7);
 
+            TRACE("%04x [%d] %d@-%d\n", int(ret.size()), int(pos-oldpos), len, offset);
             for (int i = 0; i < len; ++i)
                 ret.push_back(ret[ret.size() - offset]);
         }
@@ -215,66 +232,122 @@ static std::vector<uint8_t> compress_new(std::string const& input)
         }
     };
 
+    // Describe a transition between two characters; if length is 1 we emit
+    // a single character, otherwise it is a back reference.
+    struct transition
+    {
+        int prev = -1, next = -1;
+        int length = 0;
+        int offset = 0;
+        int cost = 0; // only for debugging purposes
+    };
+
+    // The transitions between characters is a directed acyclic graph with
+    // weights equal to the cost in bits of each encoding. We can solve
+    // single-source shortest path on it to find a very good solution to the
+    // compression problem.
+    std::vector<transition> transitions(input.length() + 1);
+    std::vector<int> weights(input.length() + 1, INT_MAX);
+    weights[0] = 0;
+
+    auto relax_node = [&](size_t i, int len, int offset, int cost)
+    {
+        if (weights[i] + cost < weights[i + len])
+        {
+            weights[i + len] = weights[i] + cost;
+            transitions[i + len].prev = int(i);
+            transitions[i + len].length = len;
+            transitions[i + len].offset = offset;
+            transitions[i + len].cost = cost;
+        }
+    };
+
     move_to_front mtf;
 
     for (size_t i = 0; i < input.length(); ++i)
     {
-        uint8_t ch = input[i];
+        // Estimate cost of emitting a single character. FIXME: we do not know
+        // the real cost because the MtF state depends on how we ended on this
+        // node of the graph, but I can’t find a better way for now.
+        int n = mtf.find(input[i]);
+        int cost = 2 * compress_bits[n >> 4] - 2;
+        mtf.get(n);
+        relax_node(i, 1, -1, cost);
 
-        // Find char in mtf structure; cost for a single char
-        // will be 2*bits-2
-        int n = mtf.find(ch);
-        int bits = compress_bits[n >> 4];
-
-        // Look behind for possible patterns
-        int best_off = 0, best_len = 1, best_cost = 100000;
+        // Look for back references. FIXME: we could use a suffix tree or a
+        // suffix array for better performance here.
         for (int j = std::max(int(i) - 32768, 0); j < i; ++j)
         {
-            int k = 0, end = int(input.length()) - j;
+            int len = 0, end = int(input.length()) - j;
 
-            while (k < end && input[j + k] == input[i + k])
-                ++k;
+            while (len < end && input[j + len] == input[i + len])
+                ++len;
+
+            if (len < 3)
+                continue;
 
             int offset = int(i - j);
-            int cost = (offset <= 32 ? 8 : offset <= 1024 ? 13 : 17)
-                     + ((k + 3) / 7);
-            // Do a cost analysis (cost/k <= best_cost/best_len) if the
-            // back reference length is at least 3. It’s unfortunate that
-            // we can’t use back references of length 1 or 2 because there
-            // may be cases when we don’t want to pollute the mtf struct.
-            if (k >= 3 && cost * best_len <= best_cost * k)
-            {
-                best_off = offset;
-                best_len = k;
-                best_cost = cost;
-            }
-        }
+            cost = (offset <= 32 ? 11 : offset <= 1024 ? 16 : 20)
+                 + (len - 3) / 7 * 3;
 
-        // Choose between back reference and single char depending on the
-        // cost compuation.
-        if ((2 * bits - 2) * best_len < best_cost)
+            relax_node(i, len, offset, cost);
+
+            // Small optimisation: a back reference of length 10 followed by
+            // one of length 8 cost 35 bits, but two back references of
+            // length 9 cost 32 bits. So when we find a long back reference,
+            // it may be interesting to consider the one just below the
+            // encoding threshold. This saves us a couple bytes per kiB of
+            // compressed data, for free.
+            if (len >= 10)
+                relax_node(i, len - 1 - (len + 4) % 7, offset, cost - 3);
+        }
+    }
+
+    // Link every predecessor to their successor in the transition array
+    for (int i = int(input.length()); ; )
+    {
+        int prev = transitions[i].prev;
+        if (prev < 0)
+            break;
+        transitions[prev].next = i;
+        i = prev;
+    }
+
+    // Emit the final compression bitstream
+    mtf.reset();
+
+    for (int i = 0; transitions[i].next >= 0; i = transitions[i].next)
+    {
+        // The transition information is in the _next_ node
+        auto const &t = transitions[transitions[i].next];
+
+        if (t.length == 1)
         {
+            int n = mtf.find(input[i]);
+            int bits = compress_bits[n >> 4];
+            TRACE("%04x [%d] $%d\n", int(i), 2 * bits - 2, input[i]);
+
             put_bits(bits - 2, ((1 << (bits - 3)) - 1));
             put_bits(bits, n - (1 << bits) + 16);
             mtf.get(n);
         }
         else
         {
-            i += best_len - 1;
-            best_len -= 3;
-            best_off -= 1;
+            int len = t.length - 3;
+            int off = t.offset - 1;
+            TRACE("%04x [%d] %d@-%d\n", int(i), t.cost, t.length, t.offset);
 
-            if (best_off < 32)
-                put_bits(8, 0x6 | (best_off << 3));
-            else if (best_off < 1024)
-                put_bits(13, 0x2 | (best_off << 3));
+            if (off < 32)
+                put_bits(8, 0x6 | (off << 3));
+            else if (off < 1024)
+                put_bits(13, 0x2 | (off << 3));
             else
-                put_bits(17, 0x0 | (best_off << 2));
+                put_bits(17, 0x0 | (off << 2));
 
-            while (best_len >= 0)
+            while (len >= 0)
             {
-                put_bits(3, std::min(best_len, 7));
-                best_len -= 7;
+                put_bits(3, std::min(len, 7));
+                len -= 7;
             }
         }
     }
@@ -283,6 +356,8 @@ static std::vector<uint8_t> compress_new(std::string const& input)
     size_t compressed = (pos + 7) / 8;
     ret[6] = uint8_t(compressed >> 8);
     ret[7] = uint8_t(compressed);
+
+    TRACE("# Size: %d (%04x)\n", int(compressed), int(compressed));
 
     return ret;
 }
