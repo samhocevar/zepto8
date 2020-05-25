@@ -41,6 +41,7 @@ enum class mode
 {
     none,
 
+    test,
     stats,
     luamin,
     listlua,
@@ -69,6 +70,72 @@ static void usage()
     printf("       z8tool --splore <image>\n");
 }
 
+void test()
+{
+#if 1
+    for (int t = 0; t < 3; ++t)
+    {
+        int chars = 65536;
+        int as = 10;
+        std::string data;
+        for (int i = 0; i < chars; ++i)
+            data += char(0x10 + lol::rand(as));
+        z8::pico8::code::compress(data, z8::pico8::code::format::pxa);
+    }
+#elif 0
+    int foo[] = { 2, 4, 8, 10, 16, 64, 128, 224, 256 };
+    for (int as : foo)
+    {
+        int bytes = 2048;
+        int chars = int(std::ceil(bytes * 8.f / std::log2(float(as))));
+        int comp[4];
+        for (int k = 0; k < 4; ++k)
+        {
+            std::string data;
+            for (int i = 0; i < chars; ++i)
+                data += char(0x10 + lol::rand(as));
+            comp[k] = int(z8::pico8::code::compress(data, z8::pico8::code::format::pxa).size()) - 8;
+        }
+        float mean = 0.25f * (comp[0] + comp[1] + comp[2] + comp[3]);
+        float eff = mean / bytes;
+        printf("%d %d %d %d %d %d %d %f %f\n", as, bytes, chars,
+               comp[0], comp[1], comp[2], comp[3], mean, eff);
+    }
+#else
+    // alphabet size
+    for (int a = 16; a <= 240; ++a)
+    {
+        float bits = std::log2(float(a));
+
+        // char group size
+        for (int n = 1; n < 32; ++n)
+        {
+            // total bits that a group can encode
+            float gbits = n * bits;
+            // effective bits it will encode
+            int ebits = int(std::floor(gbits));
+
+            if (ebits <= 0 || ebits > 64)
+                continue;
+
+            // amount of data we want to encode
+            int bytes = 2048;
+            // number of chars this represents
+            int nchars = int(std::ceil(bytes * 8.f / ebits * n));
+
+            std::string data;
+            for (int i = 0; i < nchars; ++i)
+                data += char(0x10 + lol::rand(a));
+
+            auto compressed = z8::pico8::code::compress(data, z8::pico8::code::format::pxa);
+
+            printf("% 3u % 2u % 3.4f % 2u % 5u %f\n", a, n, gbits, ebits, nchars, bytes / float(compressed.size()));
+            fflush(stdout);
+        }
+    }
+#endif
+}
+
 int main(int argc, char **argv)
 {
     lol::sys::init(argc, argv);
@@ -82,6 +149,13 @@ int main(int argc, char **argv)
     auto help = lol::cli::required("-h", "--help").call([]()
                     { ::usage(); exit(EXIT_SUCCESS); });
 
+    auto commands0 =
+    (
+        (
+            lol::cli::command("test").set(run_mode, mode::test)
+        )
+    );
+
     auto commands1 =
     (
         (
@@ -89,7 +163,14 @@ int main(int argc, char **argv)
             lol::cli::command("stats").set(run_mode, mode::stats) |
             lol::cli::command("listlua").set(run_mode, mode::listlua) |
             lol::cli::command("luamin").set(run_mode, mode::luamin) |
-            lol::cli::command("printast").set(run_mode, mode::printast)
+            lol::cli::command("printast").set(run_mode, mode::printast) |
+            // custom interface
+            ( lol::cli::command("run").set(run_mode, mode::run),
+#if HAVE_UNISTD_H
+              lol::cli::option("--telnet").set(run_mode, mode::telnet),
+#endif
+              lol::cli::option("--headless").set(run_mode, mode::headless)
+            )
         ),
         lol::cli::value("cart", in)
     );
@@ -97,21 +178,12 @@ int main(int argc, char **argv)
     auto commands2 =
     (
         (
+            // not from p8tool (it has writep8 instead)
             lol::cli::command("convert").set(run_mode, mode::convert)
         ),
         lol::cli::option("--data") & lol::cli::value("file", data),
         lol::cli::value("cart", in),
         lol::cli::value("output", out)
-    );
-
-    auto run =
-    (
-        lol::cli::command("run").set(run_mode, mode::run),
-        lol::cli::option("--headless").set(run_mode, mode::headless),
-#if HAVE_UNISTD_H
-        lol::cli::option("--telnet").set(run_mode, mode::telnet),
-#endif
-        lol::cli::value("cart", in)
     );
 
     auto other =
@@ -137,7 +209,7 @@ int main(int argc, char **argv)
         lol::cli::option("--skip") & lol::cli::value("num", skip)
     );
 
-    auto commands = commands1 | commands2 | run | other | dither | compress;
+    auto commands = commands0 | commands1 | commands2 | other | dither | compress;
     auto success = lol::cli::parse(argc, argv, help | commands);
 
     if (!success)
@@ -151,6 +223,10 @@ int main(int argc, char **argv)
 
     switch (run_mode)
     {
+    case mode::test:
+        test();
+        break;
+
     case mode::stats: {
         cart.load(in);
         printf("Code size: %d\n", (int)cart.get_p8().size());
