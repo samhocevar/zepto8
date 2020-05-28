@@ -1,6 +1,6 @@
-[submodule "lol"]
-	path = lol
-	url = ../../lolengine/lol.git
+[submodule "lolengine"]
+	path = src/3rdparty/lolengine
+	url = ../../lolengine/lolengine.git
 [submodule "wiki"]
 	path = wiki
 	url = ../../samhocevar/zepto8.wiki.git

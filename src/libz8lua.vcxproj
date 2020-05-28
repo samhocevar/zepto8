@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="LolMacros">
-    <LolDir Condition="Exists('$(SolutionDir)\lol')">$(SolutionDir)\lol</LolDir>
-    <LolDir Condition="!Exists('$(SolutionDir)\lol')">$(SolutionDir)\..</LolDir>
+    <LolDir>$(SolutionDir)src\3rdparty\lolengine\</LolDir>
   </PropertyGroup>
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|NX64">
@@ -43,7 +42,7 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
-  <Import Project="$(LolDir)\build\msbuild\lol.props" />
+  <Import Project="$(LolDir)build\msbuild\lol.props" />
   <PropertyGroup Label="Configuration">
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>

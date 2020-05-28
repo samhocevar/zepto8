@@ -1,5 +1,5 @@
 
-include $(top_srcdir)/lol/build/autotools/common.am
+include $(top_srcdir)/src/3rdparty/lolengine/build/autotools/common.am
 
 bin_PROGRAMS = ../zepto8 ../z8dev ../z8tool ../z8lua
 noinst_LIBRARIES = $(static_libs)
