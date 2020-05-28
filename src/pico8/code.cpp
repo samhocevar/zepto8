@@ -245,31 +245,32 @@ static std::vector<uint8_t> compress_new(std::string const& input)
 
     // Describe a transition between two characters; if length is 1 we emit
     // a single character, otherwise it is a back reference.
-    struct transition
+    struct node
     {
-        int prev = -1, next = -1;
-        int length = 0;
-        int offset = 0;
-        int cost = 0; // only for debugging purposes
+        // Here, cost is only for debugging purposes
+        int length = 0, offset = 0, cost = 0;
+        // Sum of costs leading to this node
+        int weight = INT_MAX;
+        // Next and previous nodes
+        int next = -1, prev = -1;
     };
 
     // The transitions between characters is a directed acyclic graph with
     // weights equal to the cost in bits of each encoding. We can solve
     // single-source shortest path on it to find a very good solution to the
     // compression problem.
-    std::vector<transition> transitions(input.length() + 1);
-    std::vector<int> weights(input.length() + 1, INT_MAX);
-    weights[0] = 0;
+    std::vector<node> nodes(input.length() + 1);
+    nodes[0].weight = 0;
 
     auto relax_node = [&](size_t i, int len, int offset, int cost)
     {
-        if (weights[i] + cost < weights[i + len])
+        if (nodes[i].weight + cost < nodes[i + len].weight)
         {
-            weights[i + len] = weights[i] + cost;
-            transitions[i + len].prev = int(i);
-            transitions[i + len].length = len;
-            transitions[i + len].offset = offset;
-            transitions[i + len].cost = cost;
+            nodes[i + len].weight = nodes[i].weight + cost;
+            nodes[i + len].prev = int(i);
+            nodes[i + len].length = len;
+            nodes[i + len].offset = offset;
+            nodes[i + len].cost = cost;
         }
     };
 
@@ -317,20 +318,20 @@ static std::vector<uint8_t> compress_new(std::string const& input)
     // Link every predecessor to their successor in the transition array
     for (int i = int(input.length()); ; )
     {
-        int prev = transitions[i].prev;
+        int prev = nodes[i].prev;
         if (prev < 0)
             break;
-        transitions[prev].next = i;
+        nodes[prev].next = i;
         i = prev;
     }
 
     // Emit the final compression bitstream
     mtf.reset();
 
-    for (int i = 0; transitions[i].next >= 0; i = transitions[i].next)
+    for (int i = 0; nodes[i].next >= 0; i = nodes[i].next)
     {
         // The transition information is in the _next_ node
-        auto const &t = transitions[transitions[i].next];
+        auto const &t = nodes[nodes[i].next];
 
         if (t.length == 1)
         {
