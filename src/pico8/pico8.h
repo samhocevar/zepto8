@@ -65,7 +65,7 @@ struct code
 {
     enum class format
     {
-        best, pxa, old,
+        best, pxa, old, store,
     };
 
     static std::string decompress(uint8_t const *input);

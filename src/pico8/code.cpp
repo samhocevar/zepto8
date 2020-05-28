@@ -97,11 +97,22 @@ std::vector<uint8_t> code::compress(std::string const &input,
     {
         case format::old: return compress_old(input);
         case format::pxa: return compress_new(input);
+        case format::best:
         default:
         {
-            auto a = compress_old(input);
+            auto ret = compress_old(input);
             auto b = compress_new(input);
-            return a.size() < b.size() ? a : b;
+            if (b.size() < ret.size())
+                ret = b;
+            if (ret.size() <= input.length())
+                return ret;
+            [[fallthrough]];
+        }
+        case format::store:
+        {
+            std::vector<uint8_t> ret(input.begin(), input.end());
+            ret.push_back(0);
+            return ret;
         }
     }
 }
