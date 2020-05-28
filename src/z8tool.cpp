@@ -72,7 +72,7 @@ static void usage()
 
 void test()
 {
-#if 1
+#if 0
     for (int t = 0; t < 3; ++t)
     {
         int chars = 65536;
@@ -83,17 +83,18 @@ void test()
         z8::pico8::code::compress(data, z8::pico8::code::format::pxa);
     }
 #elif 0
-    int foo[] = { 2, 4, 8, 10, 16, 64, 128, 224, 256 };
+    int foo[] = { 2, 4, 8, 10, 16, 41, 48, 64, 85, 112, 128, 224, 256 };
+    //std::vector<int> foo(50, 10);
     for (int as : foo)
     {
-        int bytes = 2048;
+        int bytes = 4096;
         int chars = int(std::ceil(bytes * 8.f / std::log2(float(as))));
         int comp[4];
         for (int k = 0; k < 4; ++k)
         {
             std::string data;
             for (int i = 0; i < chars; ++i)
-                data += char(0x10 + lol::rand(as));
+                data += char((as <= 10 ? '0' : as <= 128 ? 'A' : '\0') + lol::rand(as));
             comp[k] = int(z8::pico8::code::compress(data, z8::pico8::code::format::pxa).size()) - 8;
         }
         float mean = 0.25f * (comp[0] + comp[1] + comp[2] + comp[3]);
@@ -103,7 +104,8 @@ void test()
     }
 #else
     // alphabet size
-    for (int a = 16; a <= 240; ++a)
+    //for (int a = 2; a <= 240; ++a)
+    for (int a = 20; a <= 200; ++a)
     {
         float bits = std::log2(float(a));
 
@@ -115,7 +117,12 @@ void test()
             // effective bits it will encode
             int ebits = int(std::floor(gbits));
 
-            if (ebits <= 0 || ebits > 64)
+            bool ok = true;
+            for (int k = 2; k < n; ++k)
+                if ((n / k * k == n) && (ebits / k * k == ebits))
+                    ok = false;
+
+            if (!ok || ebits <= 0 || ebits > 64)
                 continue;
 
             // amount of data we want to encode
@@ -123,13 +130,21 @@ void test()
             // number of chars this represents
             int nchars = int(std::ceil(bytes * 8.f / ebits * n));
 
-            std::string data;
-            for (int i = 0; i < nchars; ++i)
-                data += char(0x10 + lol::rand(a));
+            size_t source = 0;
+            size_t compressed = 0;
 
-            auto compressed = z8::pico8::code::compress(data, z8::pico8::code::format::pxa);
+            for (int step = 0; step < 10; ++step)
+            {
+                std::string data;
+                for (int i = 0; i < nchars; ++i)
+                    data += char(0x10 + lol::rand(a));
 
-            printf("% 3u % 2u % 3.4f % 2u % 5u %f\n", a, n, gbits, ebits, nchars, bytes / float(compressed.size()));
+                source += bytes;
+                compressed += z8::pico8::code::compress(data, z8::pico8::code::format::pxa).size();
+            }
+
+            float eff = float(source) / compressed;
+            printf("% 3u % 2u % 3.4f % 2u % 5u %f\n", a, n, gbits, ebits, nchars, eff);
             fflush(stdout);
         }
     }
@@ -229,8 +244,10 @@ int main(int argc, char **argv)
 
     case mode::stats: {
         cart.load(in);
-        printf("Code size: %d\n", (int)cart.get_p8().size());
-        printf("Compressed code size: %d\n", (int)cart.get_compressed_code().size());
+        printf("Tokens: ? / 8192\n");
+        printf("Code size: %d / 65535\n", (int)cart.get_code().size());
+        printf("Compressed code size: %d / %d\n",
+               int(cart.get_compressed_code().size()), int(sizeof(z8::pico8::memory::code)));
 
         auto &code = cart.get_code();
         if (z8::pico8::code::parse(code))
@@ -241,7 +258,7 @@ int main(int argc, char **argv)
     }
     case mode::listlua:
         cart.load(in);
-        printf("%s", cart.get_p8().c_str());
+        printf("%s", cart.get_code().c_str());
         break;
 
     case mode::luamin:
