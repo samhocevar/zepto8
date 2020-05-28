@@ -18,12 +18,13 @@
 #include "pico8/cart.h"
 #include "pico8/pico8.h"
 
-#include <lol/vector> // lol::ivec2
-#include <lol/msg>    // lol::msg
-#include <cstring>    // std::memchr
-#include <regex>      // std::regex
-#include <vector>     // std::vector
-#include <array>      // std::array
+#include <lol/algo/suffix_array> // lol::suffix_array
+#include <unordered_map> // std::unordered_map
+#include <lol/msg> // lol::msg
+#include <cstring> // std::memchr
+#include <regex>   // std::regex
+#include <vector>  // std::vector
+#include <array>   // std::array
 
 #if 0
 #define TRACE(...) lol::msg::info(__VA_ARGS__)
@@ -34,9 +35,7 @@
 namespace z8::pico8
 {
 
-using lol::ivec2;
 using lol::msg;
-using lol::u8vec4;
 
 static std::string decompress_new(uint8_t const *input);
 static std::string decompress_old(uint8_t const *input);
@@ -274,44 +273,67 @@ static std::vector<uint8_t> compress_new(std::string const& input)
         }
     };
 
+    // Create suffix array, inverse suffix array, and LCP array for input
+    auto sar = lol::suffix_array<>{ input };
+    auto isar = std::vector<size_t>(sar.size());
+    for (size_t i = 0; i < sar.size(); ++i)
+        isar[sar.nth_element(i)] = i;
+    auto lcp = std::vector<size_t>(sar.size());
+    sar.longest_common_prefix_array(lcp.begin());
+
     move_to_front mtf;
 
+    // First pass: estimate costs in bits for each node
     for (size_t i = 0; i < input.length(); ++i)
     {
-        // Estimate cost of emitting a single character. FIXME: we do not know
-        // the real cost because the MtF state depends on how we ended on this
-        // node of the graph, but I can’t find a better way for now.
+        // Cost of emitting a single character. This is not the actual cost
+        // because the MtF state depends on how we ended on this node of the
+        // graph, but I can’t find a better way for now.
         int n = mtf.find(input[i]);
         int cost = 2 * compress_bits[n >> 4] - 2;
         mtf.get(n);
         relax_node(i, 1, -1, cost);
 
-        // Look for back references. FIXME: we could use a suffix tree or a
-        // suffix array for better performance here.
-        for (int j = std::max(int(i) - 32768, 0); j < i; ++j)
+        // Cost of emitting a back reference. We find the current suffix in
+        // the suffix array by using the inverse suffix array, and proceed to
+        // scan in both directions for compatible suffixes as long as the
+        // candidate length is 3 or greater.
+        size_t start = isar[i];
+
+        for (auto forward : { 0, 1 })
         {
-            int len = 0, end = int(input.length()) - j;
+            size_t suffix = start;
+            size_t len = input.length() - i;
 
-            while (len < end && input[j + len] == input[i + len])
-                ++len;
+            while (suffix > 0 && suffix + 1 < sar.size())
+            {
+                suffix += forward ? 1 : -1;
+                len = std::min(len, lcp[suffix - forward]);
 
-            if (len < 3)
-                continue;
+                if (len < 3)
+                    break;
 
-            int offset = int(i - j);
-            cost = (offset <= 32 ? 11 : offset <= 1024 ? 16 : 20)
-                 + (len - 3) / 7 * 3;
+                size_t j = sar.nth_element(suffix);
 
-            relax_node(i, len, offset, cost);
+                // Only look at valid back references
+                if (j + 32768 < i || j >= i)
+                    continue;
 
-            // Small optimisation: a back reference of length 10 followed by
-            // one of length 8 cost 35 bits, but two back references of
-            // length 9 cost 32 bits. So when we find a long back reference,
-            // it may be interesting to consider the one just below the
-            // encoding threshold. This saves us a couple bytes per kiB of
-            // compressed data, for free.
-            if (len >= 10)
-                relax_node(i, len - 1 - (len + 4) % 7, offset, cost - 3);
+                int offset = int(i - j);
+                cost = (offset <= 32 ? 11 : offset <= 1024 ? 16 : 20)
+                     + int(len - 3) / 7 * 3;
+
+                relax_node(i, len, offset, cost);
+
+                // Small optimisation: a back reference of length 10 followed by
+                // one of length 8 cost 35 bits, but two back references of
+                // length 9 costs 32 bits. So when we find a long back reference,
+                // it may be interesting to consider the one just below the
+                // encoding threshold. This saves us a couple bytes per kiB of
+                // compressed data, for free.
+                if (len >= 10)
+                    relax_node(i, len - 1 - (len + 4) % 7, offset, cost - 3);
+            }
         }
     }
 
