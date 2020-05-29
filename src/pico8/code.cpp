@@ -37,9 +37,9 @@ namespace z8::pico8
 
 using lol::msg;
 
-static std::string decompress_new(uint8_t const *input);
+static std::string pxa_decompress(uint8_t const *input);
 static std::string decompress_old(uint8_t const *input);
-static std::vector<uint8_t> compress_new(std::string const &input);
+static std::vector<uint8_t> pxa_compress(std::string const &input, bool fast = false);
 static std::vector<uint8_t> compress_old(std::string const &input);
 
 // Move to front structure
@@ -78,7 +78,7 @@ std::string code::decompress(uint8_t const *input)
 {
     if (input[0] == '\0' && input[1] == 'p' &&
         input[2] == 'x' && input[3] == 'a')
-        return decompress_new(input);
+        return pxa_decompress(input);
 
     if (input[0] == ':' && input[1] == 'c' &&
         input[2] == ':' && input[3] == '\0')
@@ -95,12 +95,13 @@ std::vector<uint8_t> code::compress(std::string const &input,
     switch (fmt)
     {
         case format::old: return compress_old(input);
-        case format::pxa: return compress_new(input);
+        case format::pxa: return pxa_compress(input);
+        case format::pxa_fast: return pxa_compress(input, true);
         case format::best:
         default:
         {
             auto ret = compress_old(input);
-            auto b = compress_new(input);
+            auto b = pxa_compress(input);
             if (b.size() < ret.size())
                 ret = b;
             if (ret.size() <= input.length())
@@ -119,7 +120,7 @@ std::vector<uint8_t> code::compress(std::string const &input,
 static uint8_t const *compress_lut = nullptr;
 static char const *decompress_lut = "\n 0123456789abcdefghijklmnopqrstuvwxyz!#%(){}[]<>+=/*:;.,~_";
 
-static std::string decompress_new(uint8_t const *input)
+static std::string pxa_decompress(uint8_t const *input)
 {
     size_t length = input[4] * 256 + input[5];
     size_t compressed = input[6] * 256 + input[7];
@@ -214,7 +215,7 @@ static std::string decompress_old(uint8_t const *input)
 }
 
 
-static std::vector<uint8_t> compress_new(std::string const& input)
+static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
 {
     static int compress_bits[16] =
     {
@@ -321,7 +322,7 @@ static std::vector<uint8_t> compress_new(std::string const& input)
 
                 // If we already tested 50 back references for this suffix,
                 // stop there, otherwise we may use too much CPU.
-                if (suffix + 50 < start || start + 50 < suffix)
+                if (fast && (suffix + 50 < start || start + 50 < suffix))
                     break;
 
                 size_t j = sar.nth_element(suffix);
