@@ -232,7 +232,7 @@ static std::vector<uint8_t> compress_new(std::string const& input)
     });
 
     size_t pos = ret.size() * 8; // stream position in bits
-    auto put_bits = [&](size_t count, uint32_t n) -> void
+    auto put_bits = [&pos, &ret](size_t count, uint32_t n) -> void
     {
         for (size_t i = 0; i < count; ++i, ++pos)
         {
@@ -261,13 +261,13 @@ static std::vector<uint8_t> compress_new(std::string const& input)
     std::vector<node> nodes(input.length() + 1);
     nodes[0].weight = 0;
 
-    auto relax_node = [&](size_t i, int len, int offset, int cost)
+    auto relax_node = [&nodes](size_t i, size_t len, int offset, int cost)
     {
         if (nodes[i].weight + cost < nodes[i + len].weight)
         {
             nodes[i + len].weight = nodes[i].weight + cost;
             nodes[i + len].prev = int(i);
-            nodes[i + len].length = len;
+            nodes[i + len].length = int(len);
             nodes[i + len].offset = offset;
             nodes[i + len].cost = cost;
         }
@@ -296,21 +296,21 @@ static std::vector<uint8_t> compress_new(std::string const& input)
 
         // Cost of emitting a back reference. We find the current suffix in
         // the suffix array by using the inverse suffix array, and proceed to
-        // scan in both directions for compatible suffixes as long as the
-        // candidate length is 3 or greater.
+        // scan in both directions for compatible suffixes as long as we have
+        // at least 3 good characters in the suffix.
         size_t start = isar[i];
 
         for (auto forward : { 0, 1 })
         {
             size_t suffix = start;
-            size_t len = input.length() - i;
+            size_t good = input.length() - i;
 
             while (suffix > 0 && suffix + 1 < sar.size())
             {
                 suffix += forward ? 1 : -1;
-                len = std::min(len, lcp[suffix - forward]);
+                good = std::min(good, lcp[suffix - forward]);
 
-                if (len < 3)
+                if (good < 3)
                     break;
 
                 size_t j = sar.nth_element(suffix);
@@ -320,19 +320,19 @@ static std::vector<uint8_t> compress_new(std::string const& input)
                     continue;
 
                 int offset = int(i - j);
-                cost = (offset <= 32 ? 11 : offset <= 1024 ? 16 : 20)
-                     + int(len - 3) / 7 * 3;
 
-                relax_node(i, len, offset, cost);
+                // We try to emit a back reference of size L, but also of
+                // size L-1, L-2… down to L-7. This is O(1) and has been shown
+                // to help in some edge cases. For instance two back references
+                // of lengths 10 and 8 cost 35 bits, but lengths 9 and 9 cost
+                // 32 bits, so the greedy approach is not always optimal.
+                for (size_t len = good; len + 7 >= good && len >= 3; --len)
+                {
+                    int cost = (offset <= 32 ? 11 : offset <= 1024 ? 16 : 20)
+                             + int(len - 3) / 7 * 3;
 
-                // Small optimisation: a back reference of length 10 followed by
-                // one of length 8 cost 35 bits, but two back references of
-                // length 9 costs 32 bits. So when we find a long back reference,
-                // it may be interesting to consider the one just below the
-                // encoding threshold. This saves us a couple bytes per kiB of
-                // compressed data, for free.
-                if (len >= 10)
-                    relax_node(i, len - 1 - (len + 4) % 7, offset, cost - 3);
+                    relax_node(i, len, offset, cost);
+                }
             }
         }
     }
@@ -359,7 +359,7 @@ static std::vector<uint8_t> compress_new(std::string const& input)
         {
             int n = mtf.find(input[i]);
             int bits = compress_bits[n >> 4];
-            TRACE("%04x [%d] $%d\n", int(i), 2 * bits - 2, input[i]);
+            TRACE("%04x [%d%+d] $%d\n", int(i), t.cost, 2 * bits - 2 - t.cost, input[i]);
 
             put_bits(bits - 2, ((1 << (bits - 3)) - 1));
             put_bits(bits, n - (1 << bits) + 16);
