@@ -32,11 +32,13 @@ ac_cv_have_readline=no
 AC_CHECK_LIB(readline, rl_callback_handler_install, [ac_cv_have_readline=yes])
 AM_CONDITIONAL(HAVE_READLINE, test "${ac_cv_have_readline}" != "no")
 
+AC_CHECK_LIB(stdc++fs, main, [LIBS="${LIBS} -lstdc++fs"])
+
 dnl
 dnl  Inherit all Lol Engine checks
 dnl
 
-LOL_AC_SUBPROJECT()
+LOL_AC_SUBPROJECT(src/3rdparty/lolengine)
 
 dnl
 dnl  Perform the actual commands
