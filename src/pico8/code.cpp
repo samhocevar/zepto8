@@ -300,70 +300,76 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
         // scan in both directions for compatible suffixes as long as we have
         // at least 3 good characters in the suffix.
         size_t start = isar[i];
+        size_t left = start, right = start;
+        size_t next_left_len = left ? lcp[left - 1] : 0, next_right_len = lcp[right];
 
-        for (auto forward : { 0, 1 })
+        // Keep track of whether we emitted a back reference of the given length,
+        // to allow for early loop exits.
+        bool done1024 = false, done32 = false;
+
+        // Stop when the common suffix length becomes too small.
+        // TODO: when left_len and right_len become significantly smaller
+        // than their initial values, it may be time to exit the loop, because
+        // the odds that we find a better back reference become too small.
+        while (next_left_len >= 3 || next_right_len >= 3)
         {
-            size_t suffix = start;
-            size_t current_len = std::max(lcp[suffix], lcp[suffix ? suffix - 1 : 0]);
-            bool done1024 = false, done32 = false;
-
-            while (suffix > 0 && suffix + 1 < sar.size())
+            size_t suffix, current_len;
+            if (next_left_len > next_right_len)
             {
-                suffix += forward ? 1 : -1;
-                current_len = std::min(current_len, lcp[suffix - forward]);
-
-                // Stop when the common suffix length becomes too small.
-                // TODO: when current_len becomes significantly smaller than
-                // its initial value, it may be time to exit the loop, because
-                // the odds that we find a better back reference become too
-                // small.
-                if (current_len < 3)
-                    break;
-
-                // If we already tested 50 back references for this suffix,
-                // stop there, otherwise we may use too much CPU.
-                if (fast && (suffix + 50 < start || start + 50 < suffix))
-                    break;
-
-                size_t j = sar.nth_element(suffix);
-
-                // Only look at valid back references
-                if (j + 32768 < i || j >= i)
-                    continue;
-
-                int offset = int(i - j);
-                int cost = 11;
-
-                // If we already emitted one of these back reference lengths,
-                // there is no need to do it again.
-                if (offset > 1024)
-                {
-                    if (done1024)
-                        continue;
-                    done1024 = true;
-                    cost = 20;
-                }
-                else if (offset > 32)
-                {
-                    if (done32)
-                        continue;
-                    done32 = done1024 = true;
-                    cost = 16;
-                }
-
-                // We try to emit a back reference of size L, but also of
-                // size L-1, L-2… down to L-7. This is O(1) and has been shown
-                // to help in some edge cases. For instance two back references
-                // of lengths 10 and 8 cost 35 bits, but lengths 9 and 9 cost
-                // 32 bits, so the greedy approach is not always optimal.
-                for (size_t len = current_len; len + 7 >= current_len && len >= 3; --len)
-                    relax_node(i, len, offset, cost + int(len - 3) / 7 * 3);
-
-                // We can’t do better than a reference of offset ≤ 32 because
-                // no subsequent attempt can beat current_len.
-                if (offset <= 32)
-                    break;
+                current_len = next_left_len;
+                suffix = --left;
+                next_left_len = std::min(next_left_len, left ? lcp[left - 1] : 0);
             }
+            else
+            {
+                current_len = next_right_len;
+                suffix = ++right;
+                next_right_len = std::min(next_right_len, lcp[right]);
+            }
+
+            // If we already tested 100 back references for this suffix,
+            // stop there, otherwise we may use too much CPU.
+            if (fast && right - left > 100)
+                break;
+
+            size_t j = sar.nth_element(suffix);
+
+            // Only look at valid back references
+            if (j + 32768 < i || j >= i)
+                continue;
+
+            int offset = int(i - j);
+            cost = 11;
+
+            // If we already emitted one of these back reference lengths,
+            // there is no need to do it again.
+            if (offset > 1024)
+            {
+                if (done1024)
+                    continue;
+                done1024 = true;
+                cost = 20;
+            }
+            else if (offset > 32)
+            {
+                if (done32)
+                    continue;
+                done32 = done1024 = true;
+                cost = 16;
+            }
+
+            // We try to emit a back reference of size L, but also of
+            // size L-1, L-2… down to L-7. This is O(1) and has been shown
+            // to help in some edge cases. For instance two back references
+            // of lengths 10 and 8 cost 35 bits, but lengths 9 and 9 cost
+            // 32 bits, so the greedy approach is not always optimal.
+            for (size_t len = current_len; len + 7 >= current_len && len >= 3; --len)
+                relax_node(i, len, offset, cost + int(len - 3) / 7 * 3);
+
+            // We can’t do better than a reference of offset ≤ 32 because
+            // no subsequent attempt can beat current_len.
+            if (offset <= 32)
+                break;
         }
     }
 
