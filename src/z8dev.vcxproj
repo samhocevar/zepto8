@@ -54,6 +54,7 @@
     <ClCompile Include="3rdparty/zep/src/commands.cpp" />
     <ClCompile Include="3rdparty/zep/src/display.cpp" />
     <ClCompile Include="3rdparty/zep/src/editor.cpp" />
+    <ClCompile Include="3rdparty/zep/src/index.cpp" />
     <ClCompile Include="3rdparty/zep/src/keymap.cpp" />
     <ClCompile Include="3rdparty/zep/src/line_widgets.cpp" />
     <ClCompile Include="3rdparty/zep/src/mcommon/animation/timer.cpp" />

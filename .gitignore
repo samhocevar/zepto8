@@ -35,6 +35,12 @@ libtool
 stamp-*
 *-stamp
 test-suite.log
+# Emscripten cruft
+*.html
+*.html.mem
+*.js
+*.wasm
+*.wasm.map
 # Personal stuff
 patch-*.diff
 # Debugging cruft

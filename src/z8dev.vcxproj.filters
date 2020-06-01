@@ -24,6 +24,9 @@
     <ClCompile Include="3rdparty/zep/src/editor.cpp">
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/indexer.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
     <ClCompile Include="3rdparty/zep/src/mode.cpp">
       <Filter>3rdparty\zep</Filter>
     </ClCompile>

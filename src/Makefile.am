@@ -87,6 +87,7 @@ endif
     3rdparty/zep/src/commands.cpp \
     3rdparty/zep/src/display.cpp \
     3rdparty/zep/src/editor.cpp \
+    3rdparty/zep/src/indexer.cpp \
     3rdparty/zep/src/keymap.cpp \
     3rdparty/zep/src/line_widgets.cpp \
     3rdparty/zep/src/mcommon/animation/timer.cpp \
