@@ -15,10 +15,11 @@
 #endif
 
 #include <lol/engine.h> // lol::File
-#include <lol/cli>   // lol::cli
-#include <lol/msg>   // lol::msg
-#include <lol/utils> // lol::ends_with
-#include <fstream>   // std::ofstream
+#include <lol/cli>    // lol::cli
+#include <lol/msg>    // lol::msg
+#include <lol/utils>  // lol::ends_with
+#include <lol/thread> // lol::timer
+#include <fstream>    // std::ofstream
 #include <sstream>
 #include <iostream>
 #include <streambuf>
@@ -72,24 +73,43 @@ static void usage()
 
 void test()
 {
-#if 0
-    for (int t = 0; t < 3; ++t)
+#if 1
+    int const foo[] = { 2, 4, 8, 10, 16, 41, 48, 64, 85, 112, 128, 224, 256 };
+    for (int as : foo)
     {
-        int chars = 65536;
-        int as = 10;
-        std::string data;
-        for (int i = 0; i < chars; ++i)
-            data += char(0x10 + lol::rand(as));
-        z8::pico8::code::compress(data, z8::pico8::code::format::pxa);
+        int const steps = 4;
+        size_t chars = 65535;
+        //size_t chars = 127;
+        float time[2] = { 0 };
+        size_t size[2] = { 0 };
+        for (int k = 0; k < steps; ++k)
+        {
+            std::string data;
+            for (size_t i = 0; i < chars; ++i)
+                data += char((as <= 10 ? '0' : as <= 128 ? 'A' : '\0') + lol::rand(as));
+            lol::timer t;
+            auto c0 = z8::pico8::code::compress(data, z8::pico8::code::format::pxa);
+            time[0] += t.get();
+            auto c1 = z8::pico8::code::compress(data, z8::pico8::code::format::pxa_fast);
+            time[1] += t.get();
+            size[0] += c0.size();
+            size[1] += c1.size();
+        }
+        float time0 = time[0] * 1000.f / steps;
+        float time1 = time[1] * 1000.f / steps;
+        float ratio0 = float(size[0]) / steps / chars * 100.f;
+        float ratio1 = float(size[1]) / steps / chars * 100.f;
+        printf("n %d\tbest %.2f%% %.2fms\tfast %.2f%% %.2fms\n", as, ratio0, time0, ratio1, time1);
     }
 #elif 0
-    int foo[] = { 2, 4, 8, 10, 16, 41, 48, 64, 85, 112, 128, 224, 256 };
+    int const foo[] = { 2, 4, 8, 10, 16, 41, 48, 64, 85, 112, 128, 224, 256 };
     //std::vector<int> foo(50, 10);
     for (int as : foo)
     {
         int bytes = 8192;
         int chars = int(std::ceil(bytes * 8.f / std::log2(float(as))));
         int comp[4];
+        lol::timer t;
         for (int k = 0; k < 4; ++k)
         {
             std::string data;
@@ -99,8 +119,9 @@ void test()
         }
         float mean = 0.25f * (comp[0] + comp[1] + comp[2] + comp[3]);
         float eff = mean / bytes;
-        printf("%d %d %d %d %d %d %d %f %f\n", as, bytes, chars,
-               comp[0], comp[1], comp[2], comp[3], mean, eff);
+        float time = t.get() * 1000.f;
+        printf("%d %d %d %d %d %d %d %f %f %f\n", as, bytes, chars,
+               comp[0], comp[1], comp[2], comp[3], mean, eff, time);
     }
 #else
     // alphabet size
