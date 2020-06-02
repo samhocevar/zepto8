@@ -38,9 +38,9 @@ namespace z8::pico8
 using lol::msg;
 
 static std::string pxa_decompress(uint8_t const *input);
-static std::string decompress_old(uint8_t const *input);
+static std::string legacy_decompress(uint8_t const *input);
 static std::vector<uint8_t> pxa_compress(std::string const &input, bool fast = false);
-static std::vector<uint8_t> compress_old(std::string const &input);
+static std::vector<uint8_t> legacy_compress(std::string const &input);
 
 // Move to front structure
 struct move_to_front
@@ -76,13 +76,11 @@ private:
 
 std::string code::decompress(uint8_t const *input)
 {
-    if (input[0] == '\0' && input[1] == 'p' &&
-        input[2] == 'x' && input[3] == 'a')
+    if (input[0] == '\0' && input[1] == 'p' && input[2] == 'x' && input[3] == 'a')
         return pxa_decompress(input);
 
-    if (input[0] == ':' && input[1] == 'c' &&
-        input[2] == ':' && input[3] == '\0')
-        return decompress_old(input);
+    if (input[0] == ':' && input[1] == 'c' && input[2] == ':' && input[3] == '\0')
+        return legacy_decompress(input);
 
     auto end = (uint8_t const *)std::memchr(input, '\0', sizeof(pico8::memory::code));
     auto len = end ? size_t(end - input) : sizeof(pico8::memory::code);
@@ -94,13 +92,13 @@ std::vector<uint8_t> code::compress(std::string const &input,
 {
     switch (fmt)
     {
-        case format::old: return compress_old(input);
+        case format::old: return legacy_compress(input);
         case format::pxa: return pxa_compress(input);
         case format::pxa_fast: return pxa_compress(input, true);
         case format::best:
         default:
         {
-            auto ret = compress_old(input);
+            auto ret = legacy_compress(input);
             auto b = pxa_compress(input);
             if (b.size() < ret.size())
                 ret = b;
@@ -175,7 +173,7 @@ static std::string pxa_decompress(uint8_t const *input)
     return ret;
 }
 
-static std::string decompress_old(uint8_t const *input)
+static std::string legacy_decompress(uint8_t const *input)
 {
     std::string ret;
 
@@ -207,9 +205,9 @@ static std::string decompress_old(uint8_t const *input)
     // Remove possible trailing zeroes
     ret.resize(strlen(ret.c_str()));
 
-    // Some old PNG carts have a “if(_update60)_update…” code snippet added by
-    // PICO-8 for backwards compatibility. But some buggy versions apparently
-    // miss a carriage return or space, leading to syntax errors. Remove it.
+    // Some old PNG carts have a “if(_update60)_update…” code snippet added by PICO-8 for backwards
+    // compatibility. But some buggy versions apparently miss a carriage return or space, leading
+    // to syntax errors. Remove it.
     static std::regex junk("if(_update60)_update=function()_update60([)_update_buttons(]*)_update60()end$");
     return std::regex_replace(ret, junk, "");
 }
@@ -243,8 +241,8 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
         }
     };
 
-    // Describe a transition between two characters; if length is 1 we emit
-    // a single character, otherwise it is a back reference.
+    // Describe a transition between two characters; if length is 1 we emit a single character,
+    // otherwise it is a back reference.
     struct node
     {
         // Here, cost is only for debugging purposes
@@ -255,10 +253,9 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
         int next = -1, prev = -1;
     };
 
-    // The transitions between characters is a directed acyclic graph with
-    // weights equal to the cost in bits of each encoding. We can solve
-    // single-source shortest path on it to find a very good solution to the
-    // compression problem.
+    // The transitions between characters is a directed acyclic graph with weights equal to the
+    // cost in bits of each encoding. We can solve single-source shortest path on it to find a
+    // very good solution to the compression problem.
     std::vector<node> nodes(input.length() + 1);
     nodes[0].weight = 0;
 
@@ -274,43 +271,40 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
         }
     };
 
-    // Create suffix array, inverse suffix array, and LCP array for input
+    // Create suffix array, inverse suffix array, and LCP array for input. The LCP array has an
+    // extra leading zero value for convenience, so lcp[n] stores the number of shared characters
+    // between sar[n] and sar[n+1].
     auto sar = lol::suffix_array<>{ input };
     auto isar = std::vector<size_t>(sar.size());
     for (size_t i = 0; i < sar.size(); ++i)
         isar[sar.nth_element(i)] = i;
-    auto lcp = std::vector<size_t>(sar.size());
-    sar.longest_common_prefix_array(lcp.begin());
+    auto lcp = std::vector<size_t>(sar.size() + 1);
+    sar.longest_common_prefix_array(lcp.begin() + 1);
 
     move_to_front mtf;
 
     // First pass: estimate costs in bits for each node
     for (size_t i = 0; i < input.length(); ++i)
     {
-        // Cost of emitting a single character. This is not the actual cost
-        // because the MtF state depends on how we ended on this node of the
-        // graph, but I can’t find a better way for now.
+        // Cost of emitting a single character. This is not the actual cost because the MtF state
+        // depends on what graph nodes we come from, but I can’t find a better way for now.
         int n = mtf.find(input[i]);
         int cost = 2 * compress_bits[n >> 4] - 2;
         mtf.get(n);
         relax_node(i, 1, -1, cost);
 
-        // Cost of emitting a back reference. We find the current suffix in
-        // the suffix array by using the inverse suffix array, and proceed to
-        // scan in both directions for compatible suffixes as long as we have
-        // at least 3 good characters in the suffix.
+        // Cost of emitting a back reference. We find the current suffix in the suffix array by
+        // using the inverse suffix array, and proceed to scan in both directions for compatible
+        // suffixes as long as we have at least 3 good characters in the suffix.
         size_t start = isar[i];
         size_t left = start, right = start;
-        size_t next_left_len = left ? lcp[left - 1] : 0, next_right_len = lcp[right];
+        size_t next_left_len = lcp[left], next_right_len = lcp[right + 1];
 
-        // Keep track of whether we emitted a back reference of the given length,
-        // to allow for early loop exits.
+        // Keep track of whether we emitted a back reference of the given length, to allow for
+        // early loop exits.
         bool done1024 = false, done32 = false;
 
         // Stop when the common suffix length becomes too small.
-        // TODO: when left_len and right_len become significantly smaller
-        // than their initial values, it may be time to exit the loop, because
-        // the odds that we find a better back reference become too small.
         while (next_left_len >= 3 || next_right_len >= 3)
         {
             size_t suffix, current_len;
@@ -318,17 +312,17 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
             {
                 current_len = next_left_len;
                 suffix = --left;
-                next_left_len = std::min(next_left_len, left ? lcp[left - 1] : 0);
+                next_left_len = std::min(next_left_len, lcp[left]);
             }
             else
             {
                 current_len = next_right_len;
                 suffix = ++right;
-                next_right_len = std::min(next_right_len, lcp[right]);
+                next_right_len = std::min(next_right_len, lcp[right + 1]);
             }
 
-            // If we already tested 100 back references for this suffix,
-            // stop there, otherwise we may use too much CPU.
+            // If we already tested 100 back references for this suffix, stop there so as not to
+            // use too much CPU.
             if (fast && right - left > 100)
                 break;
 
@@ -341,8 +335,9 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
             int offset = int(i - j);
             cost = 11;
 
-            // If we already emitted one of these back reference lengths,
-            // there is no need to do it again.
+            // If we already emitted one of these back reference lengths, there is no need to
+            // do it again because any other back reference can be shorter. The gain here is an
+            // almost 80% speed increase.
             if (offset > 1024)
             {
                 if (done1024)
@@ -358,16 +353,15 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
                 cost = 16;
             }
 
-            // We try to emit a back reference of size L, but also of
-            // size L-1, L-2… down to L-7. This is O(1) and has been shown
-            // to help in some edge cases. For instance two back references
-            // of lengths 10 and 8 cost 35 bits, but lengths 9 and 9 cost
-            // 32 bits, so the greedy approach is not always optimal.
+            // We try to emit a back reference of size L, but also of sizes L-1, L-2… down to L-7.
+            // This is O(1) and has been shown to help in some edge cases. For instance two back
+            // references of lengths 10 and 8 cost 35 bits, but lengths 9 and 9 cost 32 bits, so
+            // the greedy approach is not always optimal.
             for (size_t len = current_len; len + 7 >= current_len && len >= 3; --len)
                 relax_node(i, len, offset, cost + int(len - 3) / 7 * 3);
 
-            // We can’t do better than a reference of offset ≤ 32 because
-            // no subsequent attempt can beat current_len.
+            // We can’t do better than a reference of offset ≤ 32 because no subsequent attempt can
+            // beat current_len.
             if (offset <= 32)
                 break;
         }
@@ -432,7 +426,7 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
     return ret;
 }
 
-static std::vector<uint8_t> compress_old(std::string const &input)
+static std::vector<uint8_t> legacy_compress(std::string const &input)
 {
     std::vector<uint8_t> ret;
 
@@ -453,9 +447,8 @@ static std::vector<uint8_t> compress_old(std::string const &input)
         compress_lut = tmp;
     }
 
-    // FIXME: PICO-8 appears to be adding an implicit \n at the
-    // end of the code, and ignoring it when compressing code. So
-    // for the moment we write one char too many.
+    // FIXME: PICO-8 appears to be adding an implicit \n at the end of the code, and ignoring it
+    // when compressing code. So for the moment we write one char too many.
     for (int i = 0; i < (int)input.length(); ++i)
     {
         // Look behind for possible patterns
@@ -480,17 +473,16 @@ static std::vector<uint8_t> compress_old(std::string const &input)
 
         uint8_t byte = (uint8_t)input[i];
 
-        // If best length is 2, it may or may not be interesting to emit a back
-        // reference. Most of the time, if the first character fits in a single
-        // byte, we should emit it directly. And if the first character needs
-        // to be escaped, we should always emit a back reference of length 2.
+        // If best length is 2, it may or may not be interesting to emit a back reference. Most of
+        // the time, if the first character fits in a single byte, we should emit it directly. And
+        // if the first character needs to be escaped, we should always emit a back reference of
+        // length 2.
         //
-        // However there is at least one suboptimal case with preexisting
-        // sequences “ab”, “b-”, and “-c-”. Then the sequence “ab-c-” can be
-        // encoded as “a” “b-” “c-” (5 bytes) or as “ab” “-c-” (4 bytes).
-        // Clearly it is more interesting to encode “ab” as a two-byte back
-        // reference. But since this case is statistically rare, we ignore
-        // it and accept that compression could be more efficient.
+        // However there is at least one suboptimal case with preexisting sequences “ab”, “b-”,
+        // and “-c-”. Then the sequence “ab-c-” can be encoded as “a” “b-” “c-” (5 bytes) or as
+        // “ab” “-c-” (4 bytes). Clearly it is more interesting to encode “ab” as a two-byte back
+        // reference. But since this case is statistically rare, we ignore it and accept that
+        // compression could be more efficient.
         //
         // If it can be a relief, PICO-8 is a lot less good than us at this.
         if (compress_lut[byte] && best_len <= 2)
