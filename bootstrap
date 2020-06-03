@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# Clean up
+if [ -d .git/modules/lol ]; then
+    echo "Warning: found old submodule directory .git/modules/lol"
+    exit 1
+fi
+
 # Check that the repository is properly set up
 if [ ! -x "./src/3rdparty/lolengine/bootstrap" ]; then
 cat << EOF
