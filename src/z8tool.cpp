@@ -87,7 +87,7 @@ void test()
     //std::vector<int> foo(50, 10);
     for (int as : foo)
     {
-        int bytes = 4096;
+        int bytes = 8192;
         int chars = int(std::ceil(bytes * 8.f / std::log2(float(as))));
         int comp[4];
         for (int k = 0; k < 4; ++k)
@@ -104,8 +104,7 @@ void test()
     }
 #else
     // alphabet size
-    //for (int a = 2; a <= 240; ++a)
-    for (int a = 20; a <= 200; ++a)
+    for (int a = 2; a <= 240; ++a)
     {
         float bits = std::log2(float(a));
 
@@ -246,6 +245,13 @@ int main(int argc, char **argv)
         cart.load(in);
         printf("Tokens: ? / 8192\n");
         printf("Code size: %d / 65535\n", (int)cart.get_code().size());
+        auto const &original_code = cart.get_rom().code;
+        if (original_code[0] == '\0' && original_code[1] == 'p'
+             && original_code[2] == 'x'  && original_code[3] == 'a')
+        {
+            printf("Original compressed size: %d / %d\n",
+               int(original_code[6] * 256 + original_code[7]), int(sizeof(z8::pico8::memory::code)));
+        }
         printf("Compressed code size: %d / %d\n",
                int(cart.get_compressed_code().size()), int(sizeof(z8::pico8::memory::code)));
 
