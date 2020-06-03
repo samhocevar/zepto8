@@ -64,6 +64,9 @@ public:
 private:
     bool load_png(std::string const &filename);
     bool load_p8(std::string const &filename);
+    bool load_js(std::string const &filename);
+
+    void set_bin(std::vector<uint8_t> const &data);
 
     memory m_rom;
     std::vector<uint8_t> m_label;

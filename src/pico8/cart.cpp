@@ -14,14 +14,21 @@
 #   include "config.h"
 #endif
 
+#include <lol/engine.h> // lol::image
+#include <lol/msg>      // lol::msg
+#include <lol/utils>    // lol::ends_with
+#include <lol/pegtl>
+#include <regex>
+#include <filesystem>
+#include <fstream>
+
+extern "C" {
+#include "3rdparty/quickjs/quickjs.h"
+}
+
 #include "zepto8.h"
 #include "pico8/cart.h"
 #include "pico8/pico8.h"
-
-#include <lol/engine.h> // lol::image
-#include <lol/msg>      // lol::msg
-#include <lol/pegtl>
-#include <regex>
 
 namespace z8::pico8
 {
@@ -35,14 +42,14 @@ using namespace tao;
 
 bool cart::load(std::string const &filename)
 {
-    if (load_p8(filename) || load_png(filename))
-    {
-        // Dump code to stdout
-        //msg::info("Cartridge code:\n");
-        //printf("%s", m_code.c_str());
-
+    if (lol::ends_with(lol::tolower(filename), ".p8") && load_p8(filename))
         return true;
-    }
+
+    if (lol::ends_with(lol::tolower(filename), ".png") && load_png(filename))
+        return true;
+
+    if (lol::ends_with(lol::tolower(filename), ".js") && load_js(filename))
+        return true;
 
     return false;
 }
@@ -67,11 +74,6 @@ bool cart::load_png(std::string const &filename)
         bytes[n] = p.a + p.r / 4 + p.g / 16 + p.b / 64;
     }
 
-    memcpy(&m_rom, bytes.data(), sizeof(m_rom));
-    uint8_t const *vbytes = bytes.data() + sizeof(m_rom);
-    int version = vbytes[0];
-    int minor = (vbytes[1] << 24) | (vbytes[2] << 16) | (vbytes[3] << 8) | vbytes[4];
-
     // Retrieve label from image pixels
     if (size.x >= LABEL_WIDTH + LABEL_X && size.y >= LABEL_HEIGHT + LABEL_Y)
     {
@@ -86,6 +88,78 @@ bool cart::load_png(std::string const &filename)
 
     img.unlock(pixels);
 
+    set_bin(bytes);
+    return true;
+}
+
+bool cart::load_js(std::string const &filename)
+{
+    namespace fs = std::filesystem;
+
+    // Read file
+    std::string code;
+    auto path = fs::path(filename);
+    try
+    {
+        auto const size = fs::file_size(path);
+        std::ifstream f(path, std::ios::in | std::ios::binary);
+        code.resize(size);
+        f.read(code.data(), size);
+        f.close();
+    }
+    catch (std::exception &)
+    {
+        return false;
+    }
+
+    // Find cart data
+    auto start = code.find("[", code.find("var _cartdat="));
+    auto end = code.find("]", start);
+
+    if (start == std::string::npos || end == std::string::npos)
+        return false;
+
+    auto rt = JS_NewRuntime();
+    auto ctx = JS_NewContext(rt);
+
+    // The QuickJS API says this must be zero terminated
+    std::vector<uint8_t> bytes(sizeof(m_rom) + 5);
+    bool success = false;
+    *(code.data() + end + 1) = '\0';
+    auto bin = JS_ParseJSON(ctx, code.c_str() + start, end + 1 - start, filename.c_str());
+    if (!JS_IsException(bin) && JS_IsArray(ctx, bin))
+    {
+        for (size_t i = 0; i < bytes.size(); ++i)
+        {
+            uint32_t x;
+            JSValue val = JS_GetPropertyUint32(ctx, bin, i);
+            if (JS_IsUndefined(val) || JS_ToUint32(ctx, &x, val))
+                break;
+            bytes[i] = uint8_t(x);
+            JS_FreeValue(ctx, val);
+        }
+        set_bin(bytes);
+        success = true;
+    }
+    JS_FreeValue(ctx, bin);
+
+    JS_FreeContext(ctx);
+    JS_FreeRuntime(rt);
+
+    return success;
+}
+
+//
+// Directly load a binary file to the cart memory
+//
+
+void cart::set_bin(std::vector<uint8_t> const &bytes)
+{
+    memcpy(&m_rom, bytes.data(), sizeof(m_rom));
+    uint8_t const *vbytes = bytes.data() + sizeof(m_rom);
+    int version = vbytes[0];
+    int minor = (vbytes[1] << 24) | (vbytes[2] << 16) | (vbytes[3] << 8) | vbytes[4];
+
     // Retrieve code, with optional decompression
     m_code = code::decompress(m_rom.code);
 
@@ -93,12 +167,10 @@ bool cart::load_png(std::string const &filename)
 
     // Invalidate code cache
     m_lua.resize(0);
-
-    return true;
 }
 
 //
-// A speacial parser object for the .p8 format
+// A special parser object for the .p8 format
 //
 
 struct p8_reader
