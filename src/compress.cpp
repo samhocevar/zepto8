@@ -25,14 +25,16 @@
 #include <regex>
 
 extern "C" {
-#define z_errmsg z8_z_errmsg // avoid conflicts with the real zlib
+#define z_errmsg z_errmsg_gz8 // avoid conflicts with the real zlib
 #define register /**/
-#define adler32(...) 0
+#define adler32_gz8(...) 0 // not implemented
+#include "gz8.h"
 #include "zutil.h"
 #include "zlib/deflate.c"
 #include "zlib/trees.c"
 #include "zlib.h"
 extern z_const char * const z_errmsg[] = {};
+#undef compress
 }
 
 namespace z8

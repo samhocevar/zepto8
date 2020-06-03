@@ -115,7 +115,7 @@ ___z8tool_SOURCES = \
     z8tool.cpp \
     splore.cpp splore.h \
     dither.cpp dither.h \
-    compress.cpp compress.h zlib/deflate.h \
+    compress.cpp compress.h zlib/deflate.h zlib/gz8.h \
     zlib/trees.h zlib/zconf.h zlib/zlib.h zlib/zutil.h \
     minify.cpp minify.h \
     telnet.h \
