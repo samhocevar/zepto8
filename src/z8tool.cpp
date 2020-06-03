@@ -73,8 +73,8 @@ static void usage()
 
 void test()
 {
-#if 1
-    int const foo[] = { 2, 4, 8, 10, 16, 41, 48, 64, 85, 112, 128, 224, 256 };
+#if 0
+    int const foo[] = { 2, 4, 8, 10, 16, 26, 41, 48, 64, 85, 112, 128, 224, 256 };
     for (int as : foo)
     {
         int const steps = 4;
@@ -101,27 +101,30 @@ void test()
         float ratio1 = float(size[1]) / steps / chars * 100.f;
         printf("n %d\tbest %.2f%% %.2fms\tfast %.2f%% %.2fms\n", as, ratio0, time0, ratio1, time1);
     }
-#elif 0
-    int const foo[] = { 2, 4, 8, 10, 16, 41, 48, 64, 85, 112, 128, 224, 256 };
+#elif 1
+    int const foo[] = { 2, 4, 8, 10, 16, 26, 41, 48, 64, 85, 112, 128, 224, 256 };
     //std::vector<int> foo(50, 10);
     for (int as : foo)
     {
+        int const steps = 4;
         int bytes = 8192;
         int chars = int(std::ceil(bytes * 8.f / std::log2(float(as))));
-        int comp[4];
+        int comp[steps];
+        float mean = 0.f;
         lol::timer t;
-        for (int k = 0; k < 4; ++k)
+        printf("%d %d %d ", as, bytes, chars);
+        for (int k = 0; k < steps; ++k)
         {
             std::string data;
             for (int i = 0; i < chars; ++i)
                 data += char((as <= 10 ? '0' : as <= 128 ? 'A' : '\0') + lol::rand(as));
             comp[k] = int(z8::pico8::code::compress(data, z8::pico8::code::format::pxa).size()) - 8;
+            printf("%d ", comp[k]);
+            mean += float(comp[k]) / steps;
         }
-        float mean = 0.25f * (comp[0] + comp[1] + comp[2] + comp[3]);
         float eff = mean / bytes;
-        float time = t.get() * 1000.f;
-        printf("%d %d %d %d %d %d %d %f %f %f\n", as, bytes, chars,
-               comp[0], comp[1], comp[2], comp[3], mean, eff, time);
+        float time = t.get() * 1000.f / steps;
+        printf("%f %f %f\n", mean, eff, time);
     }
 #else
     // alphabet size

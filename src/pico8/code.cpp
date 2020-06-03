@@ -23,6 +23,7 @@
 #include <lol/msg> // lol::msg
 #include <cstring> // std::memchr
 #include <regex>   // std::regex
+#include <stack>   // std::stack
 #include <vector>  // std::vector
 #include <array>   // std::array
 
@@ -70,8 +71,26 @@ struct move_to_front
         return int(std::distance(state.begin(), val));
     }
 
+    // Push a character and return its previous index, allowing the caller to compute the cost
+    // of the operation. This operation can be undone by op_pop().
+    int op_push(uint8_t ch)
+    {
+        int n = find(ch);
+        get(n);
+        ops.push(uint8_t(n));
+        return n;
+    }
+
+    // Undo an op_push() operation
+    void op_pop()
+    {
+        std::rotate(state.begin(), state.begin() + 1, state.begin() + ops.top() + 1);
+        ops.pop();
+    }
+
 private:
     std::array<uint8_t, 256> state;
+    std::stack<uint8_t> ops;
 };
 
 std::string code::decompress(uint8_t const *input)
@@ -140,7 +159,7 @@ static std::string pxa_decompress(uint8_t const *input)
 
     while (ret.size() < length && pos < compressed * 8)
     {
-        auto oldpos = pos;
+        auto oldpos = pos; (void)oldpos;
 
         if (get_bits(1))
         {
@@ -272,8 +291,8 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
     };
 
     // Create suffix array, inverse suffix array, and LCP array for input. The LCP array has an
-    // extra leading zero value for convenience, so lcp[n] stores the number of shared characters
-    // between sar[n] and sar[n+1].
+    // extra leading zero value for convenience, so lcp[n] stores the number of leading characters
+    // shared by sar[n] and sar[n+1].
     auto sar = lol::suffix_array<>{ input };
     auto isar = std::vector<size_t>(sar.size());
     for (size_t i = 0; i < sar.size(); ++i)
@@ -281,16 +300,53 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
     auto lcp = std::vector<size_t>(sar.size() + 1);
     sar.longest_common_prefix_array(lcp.begin() + 1);
 
+    // Keep track of the operations done on the MtF structure so we can undo them.
     move_to_front mtf;
 
     // First pass: estimate costs in bits for each node
     for (size_t i = 0; i < input.length(); ++i)
     {
+        // If the last transition to here was a back reference, roll back the MtF state to a
+        // node lying on the shortest path. Such a node always exists (in the worst case it’s
+        // the origin).
+        if (i != size_t(nodes[i].prev + 1))
+        {
+            std::stack<size_t> path;
+            size_t left = i, right = i;
+
+            do
+            {
+                if (left > right)
+                {
+                    path.push(left);
+                    left = nodes[left].prev;
+                }
+                else if (right == i || right == size_t(nodes[right].prev + 1))
+                {
+                    mtf.op_pop();
+                    --right;
+                }
+                else
+                {
+                    right = nodes[right].prev;
+                }
+            }
+            while (left != right);
+
+            // Replay everything from this path
+            while (path.size())
+            {
+                if (path.top() == left + 1)
+                    mtf.op_push(input[left]);
+                left = path.top();
+                path.pop();
+            }
+        }
+
         // Cost of emitting a single character. This is not the actual cost because the MtF state
         // depends on what graph nodes we come from, but I can’t find a better way for now.
-        int n = mtf.find(input[i]);
+        int n = mtf.op_push(input[i]);
         int cost = 2 * compress_bits[n >> 4] - 2;
-        mtf.get(n);
         relax_node(i, 1, -1, cost);
 
         // Cost of emitting a back reference. We find the current suffix in the suffix array by
@@ -360,8 +416,8 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
             for (size_t len = current_len; len + 7 >= current_len && len >= 3; --len)
                 relax_node(i, len, offset, cost + int(len - 3) / 7 * 3);
 
-            // We can’t do better than a reference of offset ≤ 32 because no subsequent attempt can
-            // beat current_len.
+            // We can’t do better than a reference of offset ≤ 32 because no subsequent attempt
+            // can beat current_len.
             if (offset <= 32)
                 break;
         }
@@ -389,7 +445,7 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
         {
             int n = mtf.find(input[i]);
             int bits = compress_bits[n >> 4];
-            TRACE("%04x [%d%+d] $%d\n", int(i), t.cost, 2 * bits - 2 - t.cost, input[i]);
+            TRACE("%04x [%d%+d] $%d\n", int(i), t.cost, 2 * bits - 2 - t.cost, uint8_t(input[i]));
 
             put_bits(bits - 2, ((1 << (bits - 3)) - 1));
             put_bits(bits, n - (1 << bits) + 16);
@@ -506,4 +562,3 @@ static std::vector<uint8_t> legacy_compress(std::string const &input)
 }
 
 } // namespace z8::pico8
-
