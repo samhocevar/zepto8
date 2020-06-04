@@ -38,6 +38,8 @@ namespace z8::pico8
 struct parse_state
 {
     int m_disable_crlf = 0;
+    // Track leading blanks at each start of line
+    size_t m_blank_line = 1, m_blank_byte = 1;
 };
 
 template<typename Rule>
@@ -87,7 +89,19 @@ struct sep
         if (f.m_disable_crlf > 0)
             return sep_horiz::match(in);
 
-        return sep_normal::match<A, R, Action, Control>(in, f, st...);
+        auto byte = in.position().byte_in_line;
+        auto line = in.position().line;
+        bool ret = sep_normal::match<A, R, Action, Control>(in, f, st...);
+        if (ret)
+        {
+            if ((byte == f.m_blank_byte && line == f.m_blank_line)
+                 || line != in.position().line)
+            {
+                f.m_blank_byte = in.position().byte_in_line;
+                f.m_blank_line = in.position().line;
+            }
+        }
+        return ret;
     }
 };
 
@@ -99,9 +113,10 @@ struct at_sol
               template< typename ... > class Action,
               template< typename ... > class Control,
               typename Input, typename... States >
-    static bool match(Input &in, parse_state &, States &&...)
+    static bool match(Input &in, parse_state &f, States &&...)
     {
-        return in.position().byte_in_line == 1;
+        return f.m_blank_line == in.position().line
+                && f.m_blank_byte == in.position().byte_in_line;
     }
 };
 
@@ -116,10 +131,10 @@ bool code::parse(std::string const &s)
     }
     catch (pegtl::parse_error const &e)
     {
-        auto const p = e.positions().front();
+        auto const pos = e.positions().front();
         std::cerr << e.what() << '\n'
-                  << in.line_at(p) << '\n'
-                  << std::setw(p.byte_in_line) << '^' << '\n';
+                  << in.line_at(pos) << '\n'
+                  << std::setw(pos.byte_in_line) << '^' << '\n';
     }
     catch (std::exception const &e)
     {
@@ -139,10 +154,10 @@ std::string code::ast(std::string const &s)
     }
     catch (pegtl::parse_error const &e)
     {
-        auto const p = e.positions().front();
+        auto const pos = e.positions().front();
         std::cerr << e.what() << '\n'
-                  << in.line_at(p) << '\n'
-                  << std::setw(p.byte_in_line) << '^' << '\n';
+                  << in.line_at(pos) << '\n'
+                  << std::setw(pos.byte_in_line) << '^' << '\n';
     }
     catch (std::exception const &e)
     {
