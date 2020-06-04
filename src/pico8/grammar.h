@@ -448,6 +448,14 @@ namespace lua53
    struct short_if_statement : tao::pegtl::seq< key_if, not_at_if_then,
                                                 one_line_seq< seps, tao::pegtl::try_catch< bracket_expr >, seps, short_if_body > > {};
 
+   struct short_while_body : tao::pegtl::seq< statement, seps,
+                                              tao::pegtl::until< tao::pegtl::sor< tao::pegtl::eof, tao::pegtl::not_at< statement > >, statement, seps > > {};
+   struct short_while_statement : tao::pegtl::seq< key_while,
+                                                   one_line_seq< seps,
+                                                                 tao::pegtl::try_catch< bracket_expr >,
+                                                                 seps,
+                                                                 short_while_body > > {};
+
    // Undocumented feature: if (...) do
    //
    // This is actually a side effect of the short if statements; the code
@@ -464,8 +472,8 @@ namespace lua53
 
    // Undocumented feature: short print
    //
-   // If a line starts with “?” then the rest of the line is used as arguments
-   // to the print() function. The line must not start with whitespace.
+   // If a line starts with “?” then the rest of the line is used as arguments to the print()
+   // function. The line can start with whitespace; struct at_sol takes care of that.
    struct short_print : tao::pegtl::seq< struct at_sol,
                                          tao::pegtl::one< '?' >,
                                          one_line_seq< seps, tao::pegtl::try_catch< expr_list_must >, seps >,
@@ -532,6 +540,7 @@ namespace lua53
                                        short_print,
                                        disable_backtracking< if_do_statement >,
                                        short_if_statement,
+                                       short_while_statement,
 #else
                                        assignments,
 #endif
