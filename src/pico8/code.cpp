@@ -113,7 +113,6 @@ struct compression_graph
             nodes[i + len].prev = int(i);
             nodes[i + len].length = int(len);
             nodes[i + len].offset = offset;
-            nodes[i + len].cost = cost;
         }
     };
 
@@ -137,8 +136,7 @@ struct compression_graph
     // otherwise it is a back reference.
     struct node
     {
-        // Here, cost is only for debugging purposes
-        int length = 0, offset = 0, cost = 0;
+        int length = 0, offset = 0;
         // Sum of costs leading to this node
         int weight = INT_MAX;
         // Next and previous nodes
@@ -456,22 +454,22 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
     {
         // The transition information is in the _next_ node
         auto const &t = graph.nodes[graph.next(i)];
+        auto oldpos = pos; (void)oldpos;
 
         if (t.length == 1)
         {
             int n = mtf.find(input[i]);
             int bits = compress_bits[n >> 4];
-            TRACE("%04x [%d%+d] $%d\n", int(i), t.cost, 2 * bits - 2 - t.cost, uint8_t(input[i]));
 
             put_bits(bits - 2, ((1 << (bits - 3)) - 1));
             put_bits(bits, n - (1 << bits) + 16);
             mtf.get(n);
+            TRACE("%04x [%d] $%d\n", int(i), int(pos - oldpos), uint8_t(input[i]));
         }
         else
         {
             int len = t.length - 3;
             int off = t.offset - 1;
-            TRACE("%04x [%d] %d@-%d\n", int(i), t.cost, t.length, t.offset);
 
             if (off < 32)
                 put_bits(8, 0x6 | (off << 3));
@@ -485,6 +483,7 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
                 put_bits(3, std::min(len, 7));
                 len -= 7;
             }
+            TRACE("%04x [%d] %d@-%d\n", int(i), int(pos - oldpos), t.length, t.offset);
         }
     }
 
