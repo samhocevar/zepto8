@@ -72,8 +72,8 @@ struct move_to_front
     }
 
     // Push a character and return its previous index, allowing the caller to compute the cost
-    // of the operation. This operation can be undone by op_pop().
-    int op_push(uint8_t ch)
+    // of the operation. This operation can be undone by pop_op().
+    int push_op(uint8_t ch)
     {
         int n = find(ch);
         get(n);
@@ -81,8 +81,8 @@ struct move_to_front
         return n;
     }
 
-    // Undo an op_push() operation
-    void op_pop()
+    // Undo an push_op() operation
+    void pop_op()
     {
         std::rotate(state.begin(), state.begin() + 1, state.begin() + ops.top() + 1);
         ops.pop();
@@ -91,6 +91,61 @@ struct move_to_front
 private:
     std::array<uint8_t, 256> state;
     std::stack<uint8_t> ops;
+};
+
+// The transitions between characters is a directed acyclic graph with weights equal to the
+// cost in bits of each encoding. We can solve single-source shortest path on it to find a
+// very good solution to the compression problem.
+struct compression_graph
+{
+    compression_graph(size_t input_length)
+      : nodes(input_length + 1)
+    {
+        nodes[0].weight = 0;
+    }
+
+    // Add a vertex between two nodes
+    void add_vertex(size_t i, size_t len, int offset, int cost)
+    {
+        if (nodes[i].weight + cost < nodes[i + len].weight)
+        {
+            nodes[i + len].weight = nodes[i].weight + cost;
+            nodes[i + len].prev = int(i);
+            nodes[i + len].length = int(len);
+            nodes[i + len].offset = offset;
+            nodes[i + len].cost = cost;
+        }
+    };
+
+    void compute_path()
+    {
+        // Link every predecessor to their successor in the transition array
+        for (int i = int(nodes.size() - 1); ; )
+        {
+            int prev = nodes[i].prev;
+            if (prev < 0)
+                break;
+            nodes[prev].next = i;
+            i = prev;
+        }
+    }
+
+    int& prev(size_t i) { return nodes[i].prev; }
+    int& next(size_t i) { return nodes[i].next; }
+
+    // Describe a transition between two characters; if length is 1 we emit a single character,
+    // otherwise it is a back reference.
+    struct node
+    {
+        // Here, cost is only for debugging purposes
+        int length = 0, offset = 0, cost = 0;
+        // Sum of costs leading to this node
+        int weight = INT_MAX;
+        // Next and previous nodes
+        int next = -1, prev = -1;
+    };
+
+    std::vector<node> nodes;
 };
 
 std::string code::decompress(uint8_t const *input)
@@ -141,7 +196,6 @@ static std::string pxa_decompress(uint8_t const *input)
 {
     size_t length = input[4] * 256 + input[5];
     size_t compressed = input[6] * 256 + input[7];
-    assert(compressed <= sizeof(pico8::memory::code));
 
     size_t pos = size_t(8) * 8; // stream position in bits
     auto get_bits = [&](size_t count) -> uint32_t
@@ -260,35 +314,7 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
         }
     };
 
-    // Describe a transition between two characters; if length is 1 we emit a single character,
-    // otherwise it is a back reference.
-    struct node
-    {
-        // Here, cost is only for debugging purposes
-        int length = 0, offset = 0, cost = 0;
-        // Sum of costs leading to this node
-        int weight = INT_MAX;
-        // Next and previous nodes
-        int next = -1, prev = -1;
-    };
-
-    // The transitions between characters is a directed acyclic graph with weights equal to the
-    // cost in bits of each encoding. We can solve single-source shortest path on it to find a
-    // very good solution to the compression problem.
-    std::vector<node> nodes(input.length() + 1);
-    nodes[0].weight = 0;
-
-    auto relax_node = [&nodes](size_t i, size_t len, int offset, int cost)
-    {
-        if (nodes[i].weight + cost < nodes[i + len].weight)
-        {
-            nodes[i + len].weight = nodes[i].weight + cost;
-            nodes[i + len].prev = int(i);
-            nodes[i + len].length = int(len);
-            nodes[i + len].offset = offset;
-            nodes[i + len].cost = cost;
-        }
-    };
+    compression_graph graph(input.length());
 
     // Create suffix array, inverse suffix array, and LCP array for input. The LCP array has an
     // extra leading zero value for convenience, so lcp[n] stores the number of leading characters
@@ -300,16 +326,15 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
     auto lcp = std::vector<size_t>(sar.size() + 1);
     sar.longest_common_prefix_array(lcp.begin() + 1);
 
-    // Keep track of the operations done on the MtF structure so we can undo them.
     move_to_front mtf;
 
     // First pass: estimate costs in bits for each node
     for (size_t i = 0; i < input.length(); ++i)
     {
-        // If the last transition to here was a back reference, roll back the MtF state to a
+        // If the best transition to here is a back reference, roll back the MtF state to a
         // node lying on the shortest path. Such a node always exists (in the worst case it’s
         // the origin).
-        if (i != size_t(nodes[i].prev + 1))
+        if (i != size_t(graph.prev(i) + 1))
         {
             std::stack<size_t> path;
             size_t left = i, right = i;
@@ -319,16 +344,16 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
                 if (left > right)
                 {
                     path.push(left);
-                    left = nodes[left].prev;
+                    left = graph.prev(left);
                 }
-                else if (right == i || right == size_t(nodes[right].prev + 1))
+                else if (right == i || right == size_t(graph.prev(right) + 1))
                 {
-                    mtf.op_pop();
+                    mtf.pop_op();
                     --right;
                 }
                 else
                 {
-                    right = nodes[right].prev;
+                    right = graph.prev(right);
                 }
             }
             while (left != right);
@@ -337,7 +362,7 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
             while (path.size())
             {
                 if (path.top() == left + 1)
-                    mtf.op_push(input[left]);
+                    mtf.push_op(input[left]);
                 left = path.top();
                 path.pop();
             }
@@ -345,9 +370,9 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
 
         // Cost of emitting a single character. This is not the actual cost because the MtF state
         // depends on what graph nodes we come from, but I can’t find a better way for now.
-        int n = mtf.op_push(input[i]);
+        int n = mtf.push_op(input[i]);
         int cost = 2 * compress_bits[n >> 4] - 2;
-        relax_node(i, 1, -1, cost);
+        graph.add_vertex(i, 1, -1, cost);
 
         // Cost of emitting a back reference. We find the current suffix in the suffix array by
         // using the inverse suffix array, and proceed to scan in both directions for compatible
@@ -414,7 +439,7 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
             // references of lengths 10 and 8 cost 35 bits, but lengths 9 and 9 cost 32 bits, so
             // the greedy approach is not always optimal.
             for (size_t len = current_len; len + 7 >= current_len && len >= 3; --len)
-                relax_node(i, len, offset, cost + int(len - 3) / 7 * 3);
+                graph.add_vertex(i, len, offset, cost + int(len - 3) / 7 * 3);
 
             // We can’t do better than a reference of offset ≤ 32 because no subsequent attempt
             // can beat current_len.
@@ -423,23 +448,14 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
         }
     }
 
-    // Link every predecessor to their successor in the transition array
-    for (int i = int(input.length()); ; )
-    {
-        int prev = nodes[i].prev;
-        if (prev < 0)
-            break;
-        nodes[prev].next = i;
-        i = prev;
-    }
-
-    // Emit the final compression bitstream
+    // Compute shortest path and emit the final compression bitstream
+    graph.compute_path();
     mtf.reset();
 
-    for (int i = 0; nodes[i].next >= 0; i = nodes[i].next)
+    for (int i = 0; graph.next(i) >= 0; i = graph.next(i))
     {
         // The transition information is in the _next_ node
-        auto const &t = nodes[nodes[i].next];
+        auto const &t = graph.nodes[graph.next(i)];
 
         if (t.length == 1)
         {

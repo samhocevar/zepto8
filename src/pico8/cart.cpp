@@ -132,7 +132,7 @@ bool cart::load_js(std::string const &filename)
         for (size_t i = 0; i < bytes.size(); ++i)
         {
             uint32_t x;
-            JSValue val = JS_GetPropertyUint32(ctx, bin, i);
+            JSValue val = JS_GetPropertyUint32(ctx, bin, uint32_t(i));
             if (JS_IsUndefined(val) || JS_ToUint32(ctx, &x, val))
                 break;
             bytes[i] = uint8_t(x);
