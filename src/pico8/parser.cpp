@@ -42,22 +42,6 @@ struct parse_state
     size_t m_blank_line = 1, m_blank_byte = 1;
 };
 
-template<typename Rule>
-using selector = pegtl::parse_tree::selector<
-    Rule,
-    pegtl::parse_tree::store_content::on<
-        keyword,
-        name,
-        numeral,
-        literal_string,
-        unary_operators,
-        operators_nine,
-        operators_eight,
-        operators_six
-        >,
-    pegtl::parse_tree::remove_content::on<
-        > >;
-
 // Special rule to disallow line breaks when matching special
 // PICO-8 syntax (the one-line if(...)... construct)
 template<bool B>
@@ -142,6 +126,81 @@ bool code::parse(std::string const &s)
     }
     return false;
 }
+
+//
+// Parse tree support
+//
+
+struct transform_expr
+  : pegtl::parse_tree::apply< transform_expr >
+{
+    template< typename Node, typename... States >
+    static void transform( std::unique_ptr< Node >& n, States&&... )
+    {
+        // Collapse if only one child
+        if (n->children.size() == 1)
+        {
+            n = std::move(n->children.back());
+            return;
+        }
+    }
+};
+
+template<typename Rule>
+struct selector : pegtl::parse_tree::selector<
+    Rule,
+    pegtl::parse_tree::store_content::on<
+        // statement
+        assignments,
+            assignment_variable_list,
+            expr_list_must,
+        compound_statement,
+            compound_op,
+        short_print,
+        if_do_statement,
+        short_if_statement,
+        short_while_statement,
+        function_call,
+        label_statement,
+        key_break,
+        goto_statement,
+        do_statement,
+        while_statement,
+        repeat_statement,
+        if_statement,
+        for_statement,
+        function_definition,
+        local_statement,
+        // others
+        variable,
+        keyword,
+        name,
+        numeral,
+        bracket_expr,
+        literal_string,
+        unary_operators,
+        operators_nine,
+        operators_eight,
+        operators_six,
+        operators_two
+        >,
+    transform_expr::on<
+        expr_eleven,
+        expr_nine,
+        expr_eight,
+        expr_seven,
+        expr_six,
+        expr_five,
+        expr_four,
+        expr_three,
+        expr_two,
+        expr_one,
+        expression
+        >,
+    pegtl::parse_tree::remove_content::on<
+        > >
+{
+};
 
 std::string code::ast(std::string const &s)
 {

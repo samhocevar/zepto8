@@ -266,24 +266,24 @@ int main(int argc, char **argv)
         break;
 
     case mode::stats: {
+        printf("file_name: %s\n", in.c_str());
         cart.load(in);
-        printf("Tokens: ? / 8192\n");
-        printf("Code size: %d / 65535\n", (int)cart.get_code().size());
+        printf("token_count: ? [8192]\n");
+        printf("code_size: %d [65535]\n", (int)cart.get_code().size());
         auto const &original_code = cart.get_rom().code;
         if (original_code[0] == '\0' && original_code[1] == 'p'
              && original_code[2] == 'x'  && original_code[3] == 'a')
         {
-            printf("Original compressed size: %d / %d\n",
+            printf("stored_code_size: %d [%d]\n",
                int(original_code[6] * 256 + original_code[7]), int(sizeof(z8::pico8::memory::code)));
         }
-        printf("Compressed code size: %d / %d\n",
+        printf("compressed_code_size: %d [%d]\n",
                int(cart.get_compressed_code().size()), int(sizeof(z8::pico8::memory::code)));
 
         auto &code = cart.get_code();
-        if (z8::pico8::code::parse(code))
-            printf("Code is valid\n");
-        else
-            printf("Code has syntax errors\n");
+        bool valid = z8::pico8::code::parse(code);
+        printf("valid_code: %s\n", valid ? "true" : "false");
+        printf("\n");
         break;
     }
     case mode::listlua:
