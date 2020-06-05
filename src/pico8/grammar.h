@@ -7,6 +7,7 @@
 #include <lol/pegtl>
 #include <lol/3rdparty/pegtl/include/tao/pegtl/contrib/analyze.hpp>
 #include <lol/3rdparty/pegtl/include/tao/pegtl/contrib/raw_string.hpp>
+#include <lol/3rdparty/pegtl/include/tao/pegtl/contrib/uint8.hpp>
 
 #if WITH_PICO8
 namespace z8::pico8
@@ -218,7 +219,14 @@ namespace lua53
    template< typename R >
    struct pad : tao::pegtl::pad< R, sep > {};
 
+#if WITH_PICO8
+   using identifier_first = tao::pegtl::uint8::mask_ranges< 0xff, 0x10, 0x1f, 0x7f, 0xff, 'A', 'Z', 'a', 'z', '_', '_' >;
+   using identifier_second = tao::pegtl::uint8::mask_ranges< 0xff, 0x10, 0x1f, 0x7f, 0xff, 'A', 'Z', 'a', 'z', '_', '_', '0', '9' >;
+   using identifier = tao::pegtl::seq< identifier_first, tao::pegtl::star< identifier_second > >;
+   struct name : tao::pegtl::seq< tao::pegtl::not_at< keyword >, identifier > {};
+#else
    struct name : tao::pegtl::seq< tao::pegtl::not_at< keyword >, tao::pegtl::identifier > {};
+#endif
 
    struct single : tao::pegtl::one< 'a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '"', '\'', '0', '\n' > {};
    struct spaces : tao::pegtl::seq< tao::pegtl::one< 'z' >, tao::pegtl::star< tao::pegtl::space > > {};
@@ -421,10 +429,11 @@ namespace lua53
    // -- is equivalent to: IF (NOT B) THEN I=1 J=2 END
    // -- note that the condition must be surrounded by brackets.
    //
-   // From Sam’s observations:
+   // From Sam’s observations, this is valid:
+   //  for i=0,9 do if(i>5) print(i) end
    //
-   //  for i=0,9 do if(i>5) print(i) end    -- this is valid
-   //  for i=0,9 do if(i>5) for j=0,9 do if(j>5) print(j) end end   -- so is this
+   // But this is no longer valid as of 0.2.0i:
+   //  for i=0,9 do if(i>5) for j=0,9 do if(j>5) print(j) end end
    //
    // Parsing strategy is to match “if”, verify that this is not a standard
    // “if-then”, temporarily disable CRLF, match “if (expression)”, then match
