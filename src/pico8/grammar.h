@@ -98,15 +98,6 @@ namespace lua53
    // right padding is used.
 
 #if WITH_PICO8
-   // Use this helper class to ensure we parse rule R with no risk
-   // of backtracking. For some rules (such as assignments vs.
-   // function calls) it’s really difficult to disambiguate without
-   // rewriting a lot of the grammar. We don’t really care about
-   // performance, and backtracking messes with our code analysis,
-   // so this is probably the best course of action.
-   template< typename R >
-   struct disable_backtracking : tao::pegtl::seq< tao::pegtl::at< R >, R > {};
-
    // This rule will toggle a special state where line breaks can be
    // forbidden within a rule.
    template<bool B>
@@ -288,11 +279,7 @@ namespace lua53
 
    struct table_field_one : tao::pegtl::if_must< tao::pegtl::one< '[' >, seps, expression, seps, tao::pegtl::one< ']' >, seps, tao::pegtl::one< '=' >, seps, expression > {};
    struct table_field_two : tao::pegtl::if_must< tao::pegtl::seq< name, seps, op_one< '=', '=' > >, seps, expression > {};
-#if WITH_PICO8
-   struct table_field : tao::pegtl::sor< table_field_one, disable_backtracking< table_field_two >, expression > {};
-#else
    struct table_field : tao::pegtl::sor< table_field_one, table_field_two, expression > {};
-#endif
    struct table_field_list : tao::pegtl::list_tail< table_field, tao::pegtl::one< ',', ';' >, sep > {};
    struct table_constructor : tao::pegtl::if_must< tao::pegtl::one< '{' >, tao::pegtl::pad_opt< table_field_list, sep >, tao::pegtl::one< '}' > > {};
 
@@ -543,15 +530,13 @@ namespace lua53
 
    struct semicolon : tao::pegtl::one< ';' > {};
    struct statement : tao::pegtl::sor< semicolon,
+                                       assignments,
 #if WITH_PICO8
-                                       disable_backtracking< assignments >,
-                                       disable_backtracking< compound_statement >,
+                                       compound_statement,
                                        short_print,
-                                       disable_backtracking< if_do_statement >,
+                                       if_do_statement,
                                        short_if_statement,
                                        short_while_statement,
-#else
-                                       assignments,
 #endif
                                        function_call,
                                        label_statement,
