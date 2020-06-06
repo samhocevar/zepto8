@@ -22,8 +22,8 @@
 
 // The cart class
 // ——————————————
-// Represents a PICO-8 cartridge. Can load and unpack .p8 and .p8.png files,
-// so that the VM can then load their content into memory.
+// Represents a PICO-8 cartridge. Can load and unpack .p8 and .p8.png files, but also .lua
+// and .js (from a PICO-8 web export). The VM can then load their content into memory.
 
 namespace z8::pico8
 {
@@ -64,6 +64,7 @@ public:
 private:
     bool load_png(std::string const &filename);
     bool load_p8(std::string const &filename);
+    bool load_lua(std::string const &filename);
     bool load_js(std::string const &filename);
 
     void set_bin(std::vector<uint8_t> const &data);

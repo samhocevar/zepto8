@@ -45,6 +45,9 @@ bool cart::load(std::string const &filename)
     if (lol::ends_with(lol::tolower(filename), ".p8") && load_p8(filename))
         return true;
 
+    if (lol::ends_with(lol::tolower(filename), ".lua") && load_lua(filename))
+        return true;
+
     if (lol::ends_with(lol::tolower(filename), ".png") && load_png(filename))
         return true;
 
@@ -89,6 +92,33 @@ bool cart::load_png(std::string const &filename)
     img.unlock(pixels);
 
     set_bin(bytes);
+    return true;
+}
+
+bool cart::load_lua(std::string const &filename)
+{
+    namespace fs = std::filesystem;
+
+    // Read file
+    std::string code;
+    auto path = fs::path(filename);
+    try
+    {
+        auto const size = fs::file_size(path);
+        std::ifstream f(path, std::ios::in | std::ios::binary);
+        code.resize(size);
+        f.read(code.data(), size);
+        f.close();
+    }
+    catch (std::exception &)
+    {
+        return false;
+    }
+
+    // PICO-8 saves some symbols in the .p8 file as Emoji/Unicode characters
+    // but the runtime expects 8-bit characters instead.
+    m_code = charset::utf8_to_pico8(code);
+    memset(&m_rom, 0, sizeof(m_rom));
     return true;
 }
 
