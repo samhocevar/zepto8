@@ -482,22 +482,22 @@ namespace lua53
 
 #if WITH_PICO8
    struct compound_var : variable {};
-   struct compound_op : tao::pegtl::sor< tao::pegtl::string< '+', '=' >,
-                                         tao::pegtl::string< '-', '=' >,
-                                         tao::pegtl::string< '*', '=' >,
-                                         tao::pegtl::string< '/', '=' >,
-                                         tao::pegtl::string< '%', '=' >,
-                                         tao::pegtl::string< '^', '=' >,
-                                         tao::pegtl::string< '\\', '=' >,
-                                         tao::pegtl::string< '&', '=' >,
-                                         tao::pegtl::string< '|', '=' >,
-                                         tao::pegtl::string< '^', '^', '=' >,
-                                         tao::pegtl::string< '<', '<', '=' >,
-                                         tao::pegtl::string< '>', '>', '=' >,
-                                         tao::pegtl::string< '>', '>', '>', '=' >,
-                                         tao::pegtl::string< '>', '>', '<', '=' >,
-                                         tao::pegtl::string< '<', '<', '>', '=' >,
-                                         tao::pegtl::string< '.', '.', '=' > > {};
+   struct compound_operators : tao::pegtl::sor< tao::pegtl::string< '+', '=' >,
+                                                tao::pegtl::string< '-', '=' >,
+                                                tao::pegtl::string< '*', '=' >,
+                                                tao::pegtl::string< '/', '=' >,
+                                                tao::pegtl::string< '%', '=' >,
+                                                tao::pegtl::string< '^', '=' >,
+                                                tao::pegtl::string< '\\', '=' >,
+                                                tao::pegtl::string< '&', '=' >,
+                                                tao::pegtl::string< '|', '=' >,
+                                                tao::pegtl::string< '^', '^', '=' >,
+                                                tao::pegtl::string< '<', '<', '=' >,
+                                                tao::pegtl::string< '>', '>', '=' >,
+                                                tao::pegtl::string< '>', '>', '>', '=' >,
+                                                tao::pegtl::string< '>', '>', '<', '=' >,
+                                                tao::pegtl::string< '<', '<', '>', '=' >,
+                                                tao::pegtl::string< '.', '.', '=' > > {};
    // We could use one_line_seq to try to emulate the PICO-8 parser: it seems
    // to first validate the syntax on a single line, but still allow multiline
    // code at runtime. For instance this is not valid:
@@ -513,7 +513,7 @@ namespace lua53
    // hacks, for instance eating that last comma. Most of them were reported
    // to https://www.lexaloffle.com/bbs/?tid=29750
    struct compound_body_trail : tao::pegtl::one< ',' > {};
-   struct compound_body_one : tao::pegtl::seq< compound_var, seps, compound_op, seps, expression > {};
+   struct compound_body_one : tao::pegtl::seq< compound_var, seps, compound_operators, seps, expression > {};
    struct compound_body : tao::pegtl::sor< one_line_seq< compound_body_one, compound_body_trail >,
                                            compound_body_one > {};
    struct compound_statement : tao::pegtl::seq< tao::pegtl::opt< key_local, seps >, compound_body > {};

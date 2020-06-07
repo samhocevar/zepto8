@@ -37,7 +37,7 @@ namespace z8::pico8
 
 struct parse_state
 {
-    int m_disable_crlf = 0;
+    int nocrlf = 0;
     // Track leading blanks at each start of line
     size_t m_blank_line = 1, m_blank_byte = 1;
 };
@@ -55,7 +55,7 @@ struct disable_crlf
               typename Input, typename... States >
     static bool match(Input &, parse_state &f, States &&...)
     {
-        f.m_disable_crlf += B ? 1 : -1;
+        f.nocrlf += B ? 1 : -1;
         return true;
     }
 };
@@ -70,7 +70,7 @@ struct sep
               typename Input, typename... States >
     static bool match(Input &in, parse_state &f, States &&...st)
     {
-        if (f.m_disable_crlf > 0)
+        if (f.nocrlf > 0)
             return sep_horiz::match(in);
 
         auto byte = in.position().byte_in_line;
@@ -106,11 +106,10 @@ struct at_sol
 
 bool code::parse(std::string const &s)
 {
-    parse_state p;
     pegtl::string_input<> in(s, "p8");
     try
     {
-        pegtl::parse<grammar>(in, p);
+        pegtl::parse<grammar>(in, parse_state{});
         return true;
     }
     catch (pegtl::parse_error const &e)
@@ -150,27 +149,6 @@ template<typename Rule>
 struct selector : pegtl::parse_tree::selector<
     Rule,
     pegtl::parse_tree::store_content::on<
-        // statement
-        assignments,
-            assignment_variable_list,
-            expr_list_must,
-        compound_statement,
-            compound_op,
-        short_print,
-        if_do_statement,
-        short_if_statement,
-        short_while_statement,
-        function_call,
-        label_statement,
-        key_break,
-        goto_statement,
-        do_statement,
-        while_statement,
-        repeat_statement,
-        if_statement,
-        for_statement,
-        function_definition,
-        local_statement,
         // others
         variable,
         keyword,
@@ -179,6 +157,7 @@ struct selector : pegtl::parse_tree::selector<
         bracket_expr,
         literal_string,
         unary_operators,
+        compound_operators,
         operators_nine,
         operators_eight,
         operators_six,
@@ -198,17 +177,37 @@ struct selector : pegtl::parse_tree::selector<
         expression
         >,
     pegtl::parse_tree::remove_content::on<
+        // statement :=
+        assignments,
+            assignment_variable_list,
+            expr_list_must,
+        compound_statement,
+            // compound_operators,
+        short_print,
+        if_do_statement,
+        short_if_statement,
+        short_while_statement,
+        function_call,
+        label_statement,
+        key_break,
+        goto_statement,
+        do_statement,
+        while_statement,
+        repeat_statement,
+        if_statement,
+        for_statement,
+        function_definition,
+        local_statement
         > >
 {
 };
 
 std::string code::ast(std::string const &s)
 {
-    parse_state p;
     pegtl::string_input<> in(s, "p8");
     try
     {
-        const auto root = pegtl::parse_tree::parse<grammar, selector, pegtl::nothing>(in, p);
+        const auto root = pegtl::parse_tree::parse<grammar, selector, pegtl::nothing>(in, parse_state{});
         pegtl::parse_tree::print_dot(std::cout, *root);
     }
     catch (pegtl::parse_error const &e)
