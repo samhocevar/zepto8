@@ -64,6 +64,7 @@
   <ItemGroup>
     <ClCompile Include="bios.cpp" />
     <ClCompile Include="pico8\api.cpp" />
+    <ClCompile Include="pico8\ast.cpp" />
     <ClCompile Include="pico8\cart.cpp" />
     <ClCompile Include="pico8\code.cpp" />
     <ClCompile Include="pico8\gfx.cpp" />

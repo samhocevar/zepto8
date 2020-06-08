@@ -5,6 +5,9 @@
     <ClCompile Include="pico8\api.cpp">
       <Filter>pico8</Filter>
     </ClCompile>
+    <ClCompile Include="pico8\ast.cpp">
+      <Filter>pico8</Filter>
+    </ClCompile>
     <ClCompile Include="pico8\cart.cpp">
       <Filter>pico8</Filter>
     </ClCompile>

@@ -98,10 +98,34 @@ namespace lua53
    // right padding is used.
 
 #if WITH_PICO8
+   struct parse_state
+   {
+       // Allow to disable CRLF within a rule when > 0
+       int nocrlf = 0;
+
+       // Track leading blanks at each start of line
+       size_t blank_line = 1, blank_byte = 1;
+
+       // Count tokens
+       int tokens = 0;
+   };
+
    // This rule will toggle a special state where line breaks can be
    // forbidden within a rule.
-   template<bool B>
-   struct disable_crlf;
+   template<bool B> struct disable_crlf
+   {
+      using subs_t = tao::pegtl::type_list<>;
+
+      template< tao::pegtl::apply_mode, tao::pegtl::rewind_mode,
+                template< typename ... > class Action,
+                template< typename ... > class Control,
+                typename Input, typename... States >
+      static bool match(Input &, parse_state &ps, States &&...)
+      {
+         ps.nocrlf += B ? 1 : -1;
+         return true;
+      }
+   };
 
    // Convenience rule to match a sequence on a single line
    template< typename... R >
@@ -142,9 +166,40 @@ namespace lua53
    struct cpp_comment : tao::pegtl::disable< tao::pegtl::two< '/' >, short_comment > {};
 
    // We need to be able to switch separator parsing to single-line
-   struct sep_normal : tao::pegtl::sor< tao::pegtl::ascii::space, comment, cpp_comment > {};
-   struct sep_horiz : tao::pegtl::ascii::blank {};
-   struct sep;
+   struct sep_vertical : tao::pegtl::sor< tao::pegtl::one< '\r', '\n' >, comment, cpp_comment > {};
+   struct sep_horizontal : tao::pegtl::seq< tao::pegtl::not_at< sep_vertical >, tao::pegtl::ascii::space > {};
+
+   // Separator matching rule. Due to the context-aware nature of the PICO-8 grammar, this rule
+   // is a bit complex. When disable_crlf<> is active, it only matches sep_horizontal. Otherwise
+   // it will also try to match sep_vertical first.
+   struct sep
+   {
+      using subs_t = tao::pegtl::type_list< sep_vertical, sep_horizontal >;
+
+      template< tao::pegtl::apply_mode A, tao::pegtl::rewind_mode R,
+                template< typename ... > class Action,
+                template< typename ... > class Control,
+                typename Input, typename... States >
+      static bool match(Input &in, parse_state &ps, States &&...st)
+      {
+         if (ps.nocrlf == 0 && sep_vertical::match<A, R, Action, Control>(in, ps, st...))
+         {
+            ps.blank_byte = in.position().byte_in_line;
+            ps.blank_line = in.position().line;
+            return true;
+         }
+
+         auto byte = in.position().byte_in_line;
+         auto line = in.position().line;
+         bool ret = sep_horizontal::match<A, R, Action, Control>(in, ps, st...);
+         if (ret && byte == ps.blank_byte && line == ps.blank_line)
+         {
+            ps.blank_byte = in.position().byte_in_line;
+            ps.blank_line = in.position().line;
+         }
+         return ret;
+      }
+   };
 #else
    struct sep : tao::pegtl::sor< tao::pegtl::ascii::space, comment > {};
 #endif
@@ -341,7 +396,8 @@ namespace lua53
    // PICO-8 has extra operators such as “<<>” or “^^” so we need to
    // disambiguate more carefully when matching. Also all binary operators
    // have a compound assignment version, so avoid matching “=”.
-   struct expr_eleven : tao::pegtl::seq< expr_twelve, seps, tao::pegtl::opt< op_one< '^', '^', '=' >, seps, expr_ten, seps > > {};
+   struct operators_eleven : op_one< '^', '^', '=' > {};
+   struct expr_eleven : tao::pegtl::seq< expr_twelve, seps, tao::pegtl::opt< operators_eleven, seps, expr_ten, seps > > {};
    struct unary_apply : tao::pegtl::if_must< unary_operators, seps, expr_ten, seps > {};
    struct expr_ten : tao::pegtl::sor< unary_apply, expr_eleven > {};
    struct operators_nine : tao::pegtl::sor< op_one< '/', '/', '=' >, // “/” but not “//” or “/=”
@@ -349,21 +405,23 @@ namespace lua53
                                             op_one< '*', '=' >,      // “*” but not “*=”
                                             op_one< '%', '=' > > {}; // “%” but not “%=”
    struct expr_nine : left_assoc< expr_ten, operators_nine > {};
-   // Prevent “--” from matching two consecutive “-” when comments
-   // and CRLF are disabled.
    struct operators_eight : tao::pegtl::sor< op_one< '-', '-', '=' >, // “-” but not “--” or “-=”
                                              op_one< '+', '=' > > {}; // “+” but not “+=”
    struct expr_eight : left_assoc< expr_nine, operators_eight > {};
-   struct expr_seven : right_assoc< expr_eight, op_two< '.', '.', '.', '=' > > {}; // “..” but not “...” or “..=”
+   struct operators_seven : op_two< '.', '.', '.', '=' > {}; // “..” but not “...” or “..=”
+   struct expr_seven : right_assoc< expr_eight, operators_seven > {};
    struct operators_six : tao::pegtl::sor< op_three< '<', '<', '>', '=' >, // “<<>” but not “<<>=”
                                            op_three< '>', '>', '<', '=' >, // “>><” but not “>><=”
                                            op_three< '>', '>', '>', '=' >, // “>>>” but not “>>>=”
                                            op_two< '<', '<', '=' >,        // “<<” but not “<<=”
                                            op_two< '>', '>', '=' > > {};   // “>>” but not “>>=”
    struct expr_six : left_assoc< expr_seven, operators_six > {};
-   struct expr_five : left_assoc< expr_six, op_one< '&', '=' > > {};       // “&” but not “&=”
-   struct expr_four : left_assoc< expr_five, op_two< '^', '^', '=' > > {}; // “^^” but not “^^=”
-   struct expr_three : left_assoc< expr_four, op_one< '|', '=' > > {};     // “|” but not “|=”
+   struct operators_five : op_one< '&', '=' > {}; // “&” but not “&=”
+   struct expr_five : left_assoc< expr_six, operators_five > {};
+   struct operators_four : op_two< '^', '^', '=' > {}; // “^^” but not “^^=”
+   struct expr_four : left_assoc< expr_five, operators_four > {};
+   struct operators_three : op_one< '|', '=' > {}; // “|” but not “|=”
+   struct expr_three : left_assoc< expr_four, operators_three > {};
 #else
    struct expr_eleven : tao::pegtl::seq< expr_twelve, seps, tao::pegtl::opt< tao::pegtl::one< '^' >, seps, expr_ten, seps > > {};
    struct unary_apply : tao::pegtl::if_must< unary_operators, seps, expr_ten, seps > {};
@@ -432,7 +490,7 @@ namespace lua53
    // We also support “if (...) ... else” which does not do what the developer
    // thought, because “else” is ignored. Found in cartridge 14948 at least.
    // It is implemented by making short_if_tail optional after “else”.
-   struct not_at_if_then : tao::pegtl::not_at< tao::pegtl::seq< seps, expression, seps, key_then > > {};
+   struct not_at_expr_then : tao::pegtl::not_at< tao::pegtl::seq< seps, expression, seps, key_then > > {};
 
    struct short_if_tail_two : tao::pegtl::if_must< key_return, statement_return > {};
    struct short_if_tail_one : tao::pegtl::seq< statement, seps,
@@ -441,7 +499,7 @@ namespace lua53
    struct short_if_tail : tao::pegtl::seq< seps, tao::pegtl::sor< short_if_tail_two, short_if_tail_one > > {};
    struct short_if_body : tao::pegtl::seq< short_if_tail, seps, tao::pegtl::opt< key_else, seps, tao::pegtl::opt< short_if_tail > > > {};
 
-   struct short_if_statement : tao::pegtl::seq< key_if, not_at_if_then,
+   struct short_if_statement : tao::pegtl::seq< key_if, not_at_expr_then,
                                                 one_line_seq< seps, tao::pegtl::try_catch< bracket_expr >, seps, short_if_body > > {};
 
    struct short_while_body : tao::pegtl::seq< statement, seps,
@@ -452,6 +510,7 @@ namespace lua53
                                                                  seps,
                                                                  short_while_body > > {};
 
+#if 0
    // Undocumented feature: if (...) do
    //
    // This is actually a side effect of the short if statements; the code
@@ -460,17 +519,33 @@ namespace lua53
    //
    // FIXME: rework this so as to not require backtracking
    struct if_do_trail : key_do {};
-   struct if_do_statement : tao::pegtl::seq< key_if, not_at_if_then,
+   struct if_do_statement : tao::pegtl::seq< key_if, not_at_expr_then,
                                              // The “do” must be at end of line or at a comment
                                              one_line_seq< seps, tao::pegtl::try_catch< bracket_expr >, seps, if_do_trail, seps, tao::pegtl::sor< tao::pegtl::at< comment >, tao::pegtl::eolf > >,
                                              // Same as the end of the actual “if” statement
                                              statement_list< at_elseif_else_end >, seps, tao::pegtl::until< tao::pegtl::sor< else_statement, key_end >, elseif_statement, seps > > {};
+#endif
 
    // Undocumented feature: short print
    //
    // If a line starts with “?” then the rest of the line is used as arguments to the print()
    // function. The line can start with whitespace; struct at_sol takes care of that.
-   struct short_print : tao::pegtl::seq< struct at_sol,
+   struct at_sol
+   {
+      using subs_t = tao::pegtl::type_list<>;
+
+      template< tao::pegtl::apply_mode, tao::pegtl::rewind_mode,
+                template< typename ... > class Action,
+                template< typename ... > class Control,
+                typename Input, typename... States >
+      static bool match(Input &in, parse_state &f, States &&...)
+      {
+         return f.blank_line == in.position().line
+                 && f.blank_byte == in.position().byte_in_line;
+      }
+   };
+
+   struct short_print : tao::pegtl::seq< at_sol,
                                          tao::pegtl::one< '?' >,
                                          one_line_seq< seps, tao::pegtl::try_catch< expr_list_must >, seps >,
                                          tao::pegtl::at< tao::pegtl::sor< tao::pegtl::eolf, comment, cpp_comment > > > {};
@@ -509,13 +584,10 @@ namespace lua53
    // However this is valid, too:
    //   a += (b
    //        + c)
-   // There are also several other bugs that we try to tackle using a few
-   // hacks, for instance eating that last comma. Most of them were reported
-   // to https://www.lexaloffle.com/bbs/?tid=29750
-   struct compound_body_trail : tao::pegtl::one< ',' > {};
-   struct compound_body_one : tao::pegtl::seq< compound_var, seps, compound_operators, seps, expression > {};
-   struct compound_body : tao::pegtl::sor< one_line_seq< compound_body_one, compound_body_trail >,
-                                           compound_body_one > {};
+   // There are also several other bugs that we used to try to tackle using a few hacks, for
+   // instance eating a trailing comma, but I eventually decided against it. Most of them were
+   // reported to https://www.lexaloffle.com/bbs/?tid=29750
+   struct compound_body : tao::pegtl::seq< compound_var, seps, compound_operators, seps, expression > {};
    struct compound_statement : tao::pegtl::seq< tao::pegtl::opt< key_local, seps >, compound_body > {};
 #endif
    struct assignment_variable_list : tao::pegtl::list_must< variable, tao::pegtl::one< ',' >, sep > {};
@@ -528,17 +600,27 @@ namespace lua53
    struct local_variables : tao::pegtl::if_must< name_list_must, seps, tao::pegtl::opt< assignments_one > > {};
    struct local_statement : tao::pegtl::if_must< key_local, seps, tao::pegtl::sor< local_function, local_variables > > {};
 
+   template< typename... Rule >
+   using ensure = tao::pegtl::seq< tao::pegtl::at< Rule... >, Rule... >;
+
    struct semicolon : tao::pegtl::one< ';' > {};
    struct statement : tao::pegtl::sor< semicolon,
-                                       assignments,
 #if WITH_PICO8
-                                       compound_statement,
+                                       // These three have conflicting prefixes
+                                       ensure< assignments >,
+                                       ensure< function_call >,
+                                       ensure< compound_statement >,
                                        short_print,
+#if 0
                                        if_do_statement,
-                                       short_if_statement,
-                                       short_while_statement,
 #endif
+                                       // These two conflict with the non-short versions
+                                       ensure< short_if_statement >,
+                                       ensure< short_while_statement >,
+#else
+                                       assignments,
                                        function_call,
+#endif
                                        label_statement,
                                        key_break,
                                        goto_statement,

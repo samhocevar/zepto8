@@ -66,7 +66,7 @@ static void usage()
 #else
     printf("       z8tool run [--headless] <cart>\n");
 #endif
-    printf("       z8tool --dither [--hicolor] [--error-diffusion] <image> [-o <file>]\n");
+    printf("       z8tool dither [--hicolor] [--error-diffusion] <image> [-o <file>]\n");
     printf("       z8tool --compress [--raw <num>] [--skip <num>]\n");
     printf("       z8tool --splore <image>\n");
 }
@@ -233,11 +233,11 @@ int main(int argc, char **argv)
 
     auto dither =
     (
-        lol::cli::required("--dither").set(run_mode, mode::dither),
+        lol::cli::command("dither").set(run_mode, mode::dither),
         lol::cli::option("--hicolor").set(hicolor, true),
         lol::cli::option("--error-diffusion").set(error_diffusion, true),
-        lol::cli::value("image").set(in),
-        lol::cli::option("-o") & lol::cli::value("output", out)
+        //lol::cli::option("-o") & lol::cli::value("output", out)
+        lol::cli::value("image").set(in)
     );
 
     auto compress =
@@ -268,8 +268,11 @@ int main(int argc, char **argv)
     case mode::stats: {
         printf("file_name: %s\n", in.c_str());
         cart.load(in);
-        printf("token_count: ? [8192]\n");
-        printf("code_size: %d [65535]\n", (int)cart.get_code().size());
+        auto &code = cart.get_code();
+        int tokens = z8::pico8::code::count_tokens(code);
+
+        printf("token_count: %d [8192]\n", tokens);
+        printf("code_size: %d [65535]\n", int(code.size()));
         auto const &original_code = cart.get_rom().code;
         if (original_code[0] == '\0' && original_code[1] == 'p'
              && original_code[2] == 'x'  && original_code[3] == 'a')
@@ -280,9 +283,6 @@ int main(int argc, char **argv)
         printf("compressed_code_size: %d [%d]\n",
                int(cart.get_compressed_code().size()), int(sizeof(z8::pico8::memory::code)));
 
-        auto &code = cart.get_code();
-        bool valid = z8::pico8::code::parse(code);
-        printf("valid_code: %s\n", valid ? "true" : "false");
         printf("\n");
         break;
     }

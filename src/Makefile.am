@@ -150,7 +150,7 @@ libzepto8_a_SOURCES = \
     pico8/vm.cpp pico8/vm.h \
     pico8/pico8.h pico8/memory.h pico8/grammar.h \
     pico8/cart.cpp pico8/cart.h \
-    pico8/private.cpp pico8/gfx.cpp pico8/code.cpp \
+    pico8/private.cpp pico8/gfx.cpp pico8/code.cpp pico8/ast.cpp \
     pico8/parser.cpp pico8/render.cpp pico8/sfx.cpp \
     pico8/api.cpp \
     \

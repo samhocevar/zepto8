@@ -16,8 +16,6 @@
 
 #include <lol/vector>
 #include <lol/pegtl>
-#include <lol/3rdparty/pegtl/include/tao/pegtl/contrib/parse_tree.hpp>
-#include <lol/3rdparty/pegtl/include/tao/pegtl/contrib/parse_tree_to_dot.hpp>
 #include <lol/msg>
 
 #include <string>  // std::string
@@ -27,90 +25,89 @@
 #define WITH_PICO8 1
 #include "grammar.h"
 
-using lol::ivec2;
-using lol::ivec3;
-
 using namespace tao;
 
 namespace z8::pico8
 {
 
-struct parse_state
-{
-    int nocrlf = 0;
-    // Track leading blanks at each start of line
-    size_t m_blank_line = 1, m_blank_byte = 1;
-};
+template<typename R> static int token_counter = 0;
 
-// Special rule to disallow line breaks when matching special
-// PICO-8 syntax (the one-line if(...)... construct)
-template<bool B>
-struct disable_crlf
-{
-    using subs_t = pegtl::type_list<>;
+// Most keywords cost 1 token
+template<> int token_counter<key_and>      = 1;
+template<> int token_counter<key_break>    = 1;
+template<> int token_counter<key_do>       = 1;
+template<> int token_counter<key_else>     = 1;
+template<> int token_counter<key_elseif>   = 1;
+template<> int token_counter<key_end>      = 0; // “end” is free
+template<> int token_counter<key_false>    = 1;
+template<> int token_counter<key_for>      = 1;
+template<> int token_counter<key_function> = 1;
+template<> int token_counter<key_goto>     = 1;
+template<> int token_counter<key_if>       = 1;
+template<> int token_counter<key_in>       = 1;
+template<> int token_counter<key_local>    = 0; // “local” is free
+template<> int token_counter<key_nil>      = 1;
+template<> int token_counter<key_not>      = 0; // “not” already appears in unary_operators
+template<> int token_counter<key_or>       = 1;
+template<> int token_counter<key_repeat>   = 1;
+template<> int token_counter<key_return>   = 1;
+template<> int token_counter<key_then>     = 1;
+template<> int token_counter<key_true>     = 1;
+template<> int token_counter<key_until>    = 1;
+template<> int token_counter<key_while>    = 1;
 
-    template< pegtl::apply_mode, pegtl::rewind_mode,
-              template< typename ... > class Action,
-              template< typename ... > class Control,
-              typename Input, typename... States >
-    static bool match(Input &, parse_state &f, States &&...)
+// Most terminals cost 1 token
+template<> int token_counter<name>           = 1;
+template<> int token_counter<literal_string> = 1;
+template<> int token_counter<numeral>        = 1;
+template<> int token_counter<semicolon>      = 0;
+template<> int token_counter<tao::pegtl::ellipsis> = 1;
+template<> int token_counter<table_constructor> = 1; // the “{}”
+template<> int token_counter<table_field_one>   = 2; // the “[]” and “=” in “[x]=1”
+template<> int token_counter<table_field_two>   = 1; // the “=” in “x=1”
+template<> int token_counter<function_body>     = 1; // the “()”
+template<> int token_counter<bracket_expr>      = 1; // the “()”
+template<> int token_counter<function_args_one> = 1; // the “()”
+template<> int token_counter<variable_tail_one> = 1; // the “[]” in “a[b]”
+template<> int token_counter<variable_tail_two> = 0; // the “.” in “a.b” is free
+template<> int token_counter<function_call_tail_one> = 0; // the “:” in “a:b()” is free
+template<> int token_counter<short_print>       = 1; // the “?” in “?12,3,5”
+template<> int token_counter<for_statement_one> = 1; // the “=” in “for x=1,2 do end”
+template<> int token_counter<for_statement_two> = 0; // no additional cost
+template<> int token_counter<assignments_one>   = 1; // the “=” in “a,b,c = 2,3,4”
+
+template<> int token_counter<operators_eleven> = 1; // “^”
+template<> int token_counter<operators_nine>   = 1; // “/” “\” etc.
+template<> int token_counter<operators_eight>  = 1; // “-” “+”
+template<> int token_counter<operators_seven>  = 1; // “..”
+template<> int token_counter<operators_six>    = 1; // “<<” “>>” etc.
+template<> int token_counter<operators_five>   = 1; // “&”
+template<> int token_counter<operators_four>   = 1; // “^^”
+template<> int token_counter<operators_three>  = 1; // “|”
+template<> int token_counter<operators_two>    = 1; // “==” “<=” etc.
+
+template<> int token_counter<unary_operators>    = 1; // FIXME: “-2” should count as only one
+template<> int token_counter<compound_operators> = 1;
+
+template<typename R> struct tokenise_action
+{
+    template<typename Input>
+    static void apply(const Input &, parse_state &ps)
     {
-        f.nocrlf += B ? 1 : -1;
-        return true;
+        //if (token_counter<R>)
+        //    printf(" +%d: %s\n", token_counter<R>, std::string(in.string()).c_str());
+        ps.tokens += token_counter<R>;
     }
 };
 
-struct sep
-{
-    using subs_t = pegtl::type_list< sep_horiz, sep_normal >;
-
-    template< pegtl::apply_mode A, pegtl::rewind_mode R,
-              template< typename ... > class Action,
-              template< typename ... > class Control,
-              typename Input, typename... States >
-    static bool match(Input &in, parse_state &f, States &&...st)
-    {
-        if (f.nocrlf > 0)
-            return sep_horiz::match(in);
-
-        auto byte = in.position().byte_in_line;
-        auto line = in.position().line;
-        bool ret = sep_normal::match<A, R, Action, Control>(in, f, st...);
-        if (ret)
-        {
-            if ((byte == f.m_blank_byte && line == f.m_blank_line)
-                 || line != in.position().line)
-            {
-                f.m_blank_byte = in.position().byte_in_line;
-                f.m_blank_line = in.position().line;
-            }
-        }
-        return ret;
-    }
-};
-
-struct at_sol
-{
-    using subs_t = pegtl::type_list<>;
-
-    template< pegtl::apply_mode, pegtl::rewind_mode,
-              template< typename ... > class Action,
-              template< typename ... > class Control,
-              typename Input, typename... States >
-    static bool match(Input &in, parse_state &f, States &&...)
-    {
-        return f.m_blank_line == in.position().line
-                && f.m_blank_byte == in.position().byte_in_line;
-    }
-};
-
-bool code::parse(std::string const &s)
+int code::count_tokens(std::string const &s)
 {
     pegtl::string_input<> in(s, "p8");
     try
     {
-        pegtl::parse<grammar>(in, parse_state{});
-        return true;
+        parse_state ps;
+        pegtl::parse<grammar, tokenise_action>(in, ps);
+        return ps.tokens;
     }
     catch (pegtl::parse_error const &e)
     {
@@ -123,105 +120,7 @@ bool code::parse(std::string const &s)
     {
         lol::msg::error("parse error: %s\n", e.what());
     }
-    return false;
-}
-
-//
-// Parse tree support
-//
-
-struct transform_expr
-  : pegtl::parse_tree::apply< transform_expr >
-{
-    template< typename Node, typename... States >
-    static void transform( std::unique_ptr< Node >& n, States&&... )
-    {
-        // Collapse if only one child
-        if (n->children.size() == 1)
-        {
-            n = std::move(n->children.back());
-            return;
-        }
-    }
-};
-
-template<typename Rule>
-struct selector : pegtl::parse_tree::selector<
-    Rule,
-    pegtl::parse_tree::store_content::on<
-        // others
-        variable,
-        keyword,
-        name,
-        numeral,
-        bracket_expr,
-        literal_string,
-        unary_operators,
-        compound_operators,
-        operators_nine,
-        operators_eight,
-        operators_six,
-        operators_two
-        >,
-    transform_expr::on<
-        expr_eleven,
-        expr_nine,
-        expr_eight,
-        expr_seven,
-        expr_six,
-        expr_five,
-        expr_four,
-        expr_three,
-        expr_two,
-        expr_one,
-        expression
-        >,
-    pegtl::parse_tree::remove_content::on<
-        // statement :=
-        assignments,
-            assignment_variable_list,
-            expr_list_must,
-        compound_statement,
-            // compound_operators,
-        short_print,
-        if_do_statement,
-        short_if_statement,
-        short_while_statement,
-        function_call,
-        label_statement,
-        key_break,
-        goto_statement,
-        do_statement,
-        while_statement,
-        repeat_statement,
-        if_statement,
-        for_statement,
-        function_definition,
-        local_statement
-        > >
-{
-};
-
-std::string code::ast(std::string const &s)
-{
-    pegtl::string_input<> in(s, "p8");
-    try
-    {
-        const auto root = pegtl::parse_tree::parse<grammar, selector, pegtl::nothing>(in, parse_state{});
-        pegtl::parse_tree::print_dot(std::cout, *root);
-    }
-    catch (pegtl::parse_error const &e)
-    {
-        auto const pos = e.positions().front();
-        std::cerr << e.what() << '\n'
-                  << in.line_at(pos) << '\n'
-                  << std::setw(pos.byte_in_line) << '^' << '\n';
-    }
-    catch (std::exception const &e)
-    {
-        std::cerr << e.what() << '\n';
-    }
-    return "";
+    return -1;
 }
 
 } // namespace z8::pico8
