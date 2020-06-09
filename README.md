@@ -42,3 +42,7 @@ The resulting data can be decompressed using `unz8()` and displayed in PICO-8:
     local image = unz8(data)
     for i=1,#image do poke4(24572+4*i,image[i]) end
 
+# Documentation
+
+ - the [PICO-8 language](doc/PICO-8-language.md)
+
