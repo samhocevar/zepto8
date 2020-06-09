@@ -17,7 +17,8 @@
 namespace z8
 {
 
-void dither(std::string const &src, std::string const &out, bool hicolor, bool error_diffusion);
+void dither(std::string const &src, std::string const &out, std::string const &palette,
+            bool hicolor, bool error_diffusion);
 
 } // namespace z8
 

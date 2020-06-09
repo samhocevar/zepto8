@@ -179,7 +179,7 @@ int main(int argc, char **argv)
     lol::sys::init(argc, argv);
 
     mode run_mode = mode::none;
-    std::string in, out, data;
+    std::string in, out, data, palette;
     size_t raw = 0, skip = 0;
     bool hicolor = false;
     bool error_diffusion = false;
@@ -234,6 +234,7 @@ int main(int argc, char **argv)
     auto dither =
     (
         lol::cli::command("dither").set(run_mode, mode::dither),
+        //lol::cli::option("--palette", palette),
         lol::cli::option("--hicolor").set(hicolor, true),
         lol::cli::option("--error-diffusion").set(error_diffusion, true),
         //lol::cli::option("-o") & lol::cli::value("output", out)
@@ -361,7 +362,7 @@ int main(int argc, char **argv)
     }
 
     case mode::dither:
-        z8::dither(in, out, hicolor, error_diffusion);
+        z8::dither(in, out, palette, hicolor, error_diffusion);
         break;
 
     case mode::compress: {

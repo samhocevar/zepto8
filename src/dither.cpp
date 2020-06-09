@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2018 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -14,11 +14,12 @@
 #   include "config.h"
 #endif
 
-#include <string>
-#include <vector>
-#include <algorithm>
+#include <string> // std::string
+#include <vector> // std::vector
+#include <array>  // std::array
 
 #include <lol/engine.h> // lol::image
+#include <lol/color>    // lol::color
 #include <lol/msg>      // lol::msg
 
 #include "zepto8.h"
@@ -29,19 +30,99 @@
 namespace z8
 {
 
-void dither(std::string const &src, std::string const &out, bool hicolor, bool error_diffusion)
+struct ditherer
 {
+    ditherer(std::string const &palette)
+    {
+        // Generate list of available colors using palette argument
+        if (palette == "classic")
+            for (uint8_t i = 0; i < 16; ++i)
+                colors.push_back(i);
+        else if (palette == "hidden")
+            for (uint8_t i = 16; i < 32; ++i)
+                colors.push_back(i);
+        else if (palette == "best" || palette == "")
+            for (uint8_t i = 0; i < 32; ++i)
+                colors.push_back(i);
+        else
+        {
+            for (auto const &c : lol::split(palette, ","))
+            {
+                uint8_t i = std::atoi(c.c_str()) & 0x8f;
+                colors.push_back(i < 16 ? i : i - 128 + 32);
+            }
+        }
 
-    std::vector<lol::vec3> colors;
+        // Add at least a few elements
+        if (colors.size() < 2)
+            colors.push_back(7);
+        if (colors.size() < 2)
+            colors.push_back(0);
+
+        // Sort palette by luminance
+        std::sort(colors.begin(), colors.end(), compare_colors);
+    }
+
+    // Number of colours
+    size_t count() { return colors.size(); }
+
+    // Return the nth colour (PICO-8 value 0…31)
+    lol::vec3 get_color(uint8_t n)
+    {
+        return pico8::palette::get(colors[n]).rgb;
+    }
+
+    // Remove the least used color using a histogram
+    void reduce_palette(std::vector<size_t> const &hist)
+    {
+        size_t best = 0;
+        for (size_t i = 1; i < hist.size(); ++i)
+            if (hist[i] < hist[best])
+                best = i;
+
+        //auto c = lol::dot(lol::ivec3(get_color(best) * 255.99f), lol::ivec3(0x1, 0x100, 0x10000));
+        //printf("Remove color %d (#%06x), used for %d pixels\n", colors[best], c, int(hist[best]));
+        lol::remove_at(colors, best);
+    }
+
+    // Return best color index from the list of available ones
+    uint8_t best_color_index(lol::vec3 color)
+    {
+        float best_dist = FLT_MAX;
+        int best = -1;
+        for (size_t i = 0; i < colors.size(); ++i)
+        {
+            // FIXME: this works in sRGB space
+            float dist = lol::distance(get_color(i), color);
+            if (dist < best_dist)
+            {
+                best = i;
+                best_dist = dist;
+            }
+        }
+
+        return best;
+    }
+
+private:
+    static int compare_colors(uint8_t a, uint8_t b)
+    {
+        // Convert sRGB to RGB, then to YUV, and use Y component
+        auto ca = lol::color::srgb_to_rgb(pico8::palette::get(a).rgb);
+        auto cb = lol::color::srgb_to_rgb(pico8::palette::get(b).rgb);
+        return lol::color::rgb_to_yuv(ca)[0] > lol::color::rgb_to_yuv(cb)[0];
+    }
+
+    std::vector<uint8_t> colors;
+};
+
+void dither(std::string const &src, std::string const &palette, std::string const &out,
+            bool hicolor, bool error_diffusion)
+{
+    struct ditherer d(palette);
+
+#if 0
     std::vector<uint8_t> indices;
-
-    for (int i = 0; i < 16; ++i)
-        colors.push_back(pico8::palette::get(i).rgb);
-
-    // Fix gamma (kinda)
-    for (auto &color : colors)
-        color *= color;
-
     if (hicolor)
     {
         // Add colour combinations that aren’t too awful
@@ -53,23 +134,12 @@ void dither(std::string const &src, std::string const &out, bool hicolor, bool e
                     indices.push_back(i * 16 + j);
                 }
     }
-
-#if 0
-    for (int i = 0; i < 16; ++i)
-    {
-    printf("  d: %02x %02x %02x  f: %f %f %f\n",
-       pico8::palette::get8(i).r,
-       pico8::palette::get8(i).g,
-       pico8::palette::get8(i).b,
-       pico8::palette::get(i).r,
-       pico8::palette::get(i).g,
-       pico8::palette::get(i).b);
-    }
 #endif
 
-    /* Load images */
+    // Load image
     lol::image im;
     im.load(src);
+    im = im.Resize(lol::ivec2(128,128), lol::ResampleAlgorithm::Bicubic);
 
     lol::ivec2 size(im.size());
 
@@ -83,51 +153,37 @@ void dither(std::string const &src, std::string const &out, bool hicolor, bool e
 #endif
 
     // Slight blur
-//    im = im.Resize(size * 2, ResampleAlgorithm::Bicubic)
-//           .Resize(size, ResampleAlgorithm::Bresenham);
+    im = im.Resize(size * 3, lol::ResampleAlgorithm::Bicubic)
+           .Resize(size, lol::ResampleAlgorithm::Bresenham);
+    //im = im.Contrast(0.1f);
 
     lol::msg::info("image size %d×%d\n", size.x, size.y);
 
     lol::image dst(size);
     std::vector<uint8_t> pixels;
 
-    //auto kernel = lol::image::kernel::halftone(lol::ivec2(6));
+    //auto kernel = lol::image::kernel::halftone(lol::ivec2(8));
     //auto kernel = lol::image::kernel::blue_noise(lol::ivec2(64));
     auto kernel = lol::image::kernel::bayer(lol::ivec2(32));
+    auto original_image = im;
 
-    auto closest = [& colors](lol::vec3 color) -> int
+    for (;;)
     {
-        float best_dist = FLT_MAX;
-        int best = -1;
-        for (int i = 0; i < (int)colors.size(); ++i)
-        {
-            float dist = lol::distance(colors[i], color);
-            if (dist < best_dist)
-            {
-                best = i;
-                best_dist = dist;
-            }
-        }
+        im = original_image;
+        pixels.clear();
 
-        return best;
-    };
-
-    std::map<uint32_t, int[DEPTH]> luts;
-
-    /* Dither image for first destination */
-    lol::array2d<lol::vec4> &curdata = im.lock2d<lol::PixelFormat::RGBA_F32>();
-    lol::array2d<lol::vec4> &dstdata = dst.lock2d<lol::PixelFormat::RGBA_F32>();
-    for (int j = 0; j < size.y; ++j)
-    {
+        lol::array2d<lol::vec4> &curdata = im.lock2d<lol::PixelFormat::RGBA_F32>();
+        lol::array2d<lol::vec4> &dstdata = dst.lock2d<lol::PixelFormat::RGBA_F32>();
+        for (int j = 0; j < size.y; ++j)
         for (int i = 0; i < size.x; ++i)
         {
             lol::vec3 pixel = curdata[i][j].rgb;
             uint8_t nearest = 0;
 
-            if (error_diffusion)
+            if (error_diffusion || d.count() > 16)
             {
-                nearest = closest(pixel);
-                auto error = lol::vec4(pixel - colors[nearest], 0.f) / 18.f;
+                nearest = d.best_color_index(pixel);
+                auto error = lol::vec4(pixel - d.get_color(nearest), 0.f) / 18.f;
                 if (i < size.x - 1)
                     curdata[i + 1][j] += 7.f * error;
                 if (j < size.y - 1)
@@ -141,45 +197,54 @@ void dither(std::string const &src, std::string const &out, bool hicolor, bool e
             }
             else
             {
-                uint32_t key = lol::dot(lol::ivec3(pixel * 255.99f), lol::ivec3(0x1, 0x100, 0x10000));
-
-                if (luts.find(key) == luts.end())
+                // Dither pixel DEPTH times with error diffusion and build a histogram
+                std::vector<size_t> histogram(d.count(), 0);
+                auto candidate = pixel;
+                for (int n = 0; n < DEPTH; ++n)
                 {
-                    // Dither pixel DEPTH times with error diffusion
-                    int buffer[DEPTH];
-                    auto candidate = pixel;
-                    for (int n = 0; n < DEPTH; ++n)
-                    {
-                        buffer[n] = closest(candidate);
-                        candidate = pixel + 7.f / 16 * (candidate - colors[buffer[n]]);
-                    }
-
-                    // Sort results by luminance
-                    std::sort(buffer, buffer + DEPTH, [& colors](int a, int b)
-                    {
-                        return lol::dot(colors[a] - colors[b], lol::vec3(1)) > 0;
-                    });
-                    memcpy(luts[key], buffer, sizeof(buffer));
+                    auto c = d.best_color_index(candidate);
+                    ++histogram[c];
+                    // FIXME: make the 0.5 here configurable
+                    candidate = pixel + 0.9f * (candidate - d.get_color(c));
                 }
 
-                // Pick the final color using a dithering kernel
-                int *found = luts[key];
-                nearest = found[(int)(kernel[i % kernel.sizes().x][j % kernel.sizes().y] * DEPTH)];
+                // If colors are sorted by luminance, we just accumulate the histogram
+                // values and stop when the threshold is hit.
+                size_t threshold = size_t(kernel[i % kernel.sizes().x][j % kernel.sizes().y] * DEPTH);
+                for (size_t n = 0, total = 0; n < d.count(); ++n)
+                {
+                    total += histogram[n];
+                    if (total > threshold)
+                    {
+                        nearest = n;
+                        break;
+                    }
+                }
             }
 
             pixels.push_back(nearest);
+            dstdata[i][j] = lol::vec4(d.get_color(nearest), 255.f);
         }
+
+        im.unlock2d(curdata);
+        dst.unlock2d(dstdata);
+
+        // Trim unused colors
+        if (d.count() <= 16)
+            break;
+
+        std::vector<size_t> histogram(d.count(), 0);
+        for (uint8_t p : pixels)
+            ++histogram[p];
+        d.reduce_palette(histogram);
     }
 
-    im.unlock2d(curdata);
-    dst.unlock2d(dstdata);
-
-#if 0
+#if 1
     /* Save image */
-    //dst = dst.Resize(size * 4, ResampleAlgorithm::Bresenham);
-    dst.save(argv[4]);
-#endif
-
+    dst = dst.Resize(size * 3, lol::ResampleAlgorithm::Bresenham);
+    dst.save("test.png");
+#else
+    // TODO: write cart
     std::vector<uint8_t> rawdata;
     rawdata.resize(hicolor ? pixels.size() : pixels.size() / 2);
     for (int j = 0; j < size.y; ++j)
@@ -208,6 +273,7 @@ void dither(std::string const &src, std::string const &out, bool hicolor, bool e
     fwrite(rawdata.data(), 1, rawdata.size(), s);
     if (out.length())
         fclose(s);
+#endif
 }
 
 } // namespace z8
