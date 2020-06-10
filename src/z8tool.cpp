@@ -366,7 +366,7 @@ int main(int argc, char **argv)
         {
             if (skip > 0)
                 output.erase(output.begin(), output.begin() + std::min(skip, output.size()));
-            std::cout << z8::encode59(output) << '\n';
+            std::cout << z8::encode49(output) << '\n';
         }
         break;
     }

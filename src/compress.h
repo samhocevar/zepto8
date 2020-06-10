@@ -20,7 +20,7 @@ namespace z8
 {
 
 std::vector<uint8_t> compress(std::vector<uint8_t> &input);
-std::string encode59(std::vector<uint8_t> const &v);
+std::string encode49(std::vector<uint8_t> const &v);
 
 } // namespace z8
 
