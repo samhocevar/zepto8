@@ -85,10 +85,11 @@ void test()
         float ratio1 = float(size[1]) / steps / chars * 100.f;
         printf("n %d\tbest %.2f%% %.2fms\tfast %.2f%% %.2fms\n", as, ratio0, time0, ratio1, time1);
     }
-#elif 1
+#elif 0
     int const foo[] = { 2, 4, 8, 10, 16, 26, 41, 48, 64, 85, 112, 128, 224, 256 };
     //std::vector<int> foo(50, 10);
-    for (int as : foo)
+    for (int as = 2; as < 240; ++as)
+    //for (int as : foo)
     {
         int const steps = 4;
         int bytes = 8192;
@@ -112,7 +113,7 @@ void test()
     }
 #else
     // alphabet size
-    for (int a = 2; a <= 240; ++a)
+    for (int a = 20; a <= 140; ++a)
     {
         float bits = std::log2(float(a));
 
@@ -140,7 +141,7 @@ void test()
             size_t source = 0;
             size_t compressed = 0;
 
-            for (int step = 0; step < 10; ++step)
+            for (int step = 0; step < 100; ++step)
             {
                 std::string data;
                 for (int i = 0; i < nchars; ++i)
@@ -162,7 +163,7 @@ int main(int argc, char **argv)
 {
     lol::sys::init(argc, argv);
 
-    mode run_mode = mode::none;
+    mode run_mode = mode::none, override_mode = mode::none;
     std::string in, out, data, palette;
     size_t raw = 0, skip = 0;
     bool hicolor = false;
@@ -198,10 +199,10 @@ int main(int argc, char **argv)
     auto run = app.add_subcommand("run", "Run a cart in the terminal")
                    ->callback([&]() { run_mode = mode::run; });
 #if HAVE_UNISTD_H
-    run->add_flag_function("--telnet", [&](int64_t) { run_mode = mode::telnet; },
+    run->add_flag_function("--telnet", [&](int64_t) { override_mode = mode::telnet; },
                             "Act as telnet server");
 #endif
-    run->add_flag_function("--headless", [&](int64_t) { run_mode = mode::headless; },
+    run->add_flag_function("--headless", [&](int64_t) { override_mode = mode::headless; },
                             "Run without any output");
     run->add_option("cart", in, "Cartridge to load")->required();;
 
@@ -232,6 +233,9 @@ int main(int argc, char **argv)
         ->callback([&]() { run_mode = mode::test; });
 
     CLI11_PARSE(app, argc, argv);
+
+    if (override_mode != mode::none)
+        run_mode = override_mode;
 
     // Most commands manipulate a cart, so get it right now
     z8::pico8::cart cart;
