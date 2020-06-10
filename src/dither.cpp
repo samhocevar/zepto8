@@ -38,9 +38,6 @@ struct ditherer
         if (palette == "classic")
             for (uint8_t i = 0; i < 16; ++i)
                 colors.push_back(i);
-        else if (palette == "hidden")
-            for (uint8_t i = 16; i < 32; ++i)
-                colors.push_back(i);
         else if (palette == "best" || palette == "")
             for (uint8_t i = 0; i < 32; ++i)
                 colors.push_back(i);
@@ -116,7 +113,7 @@ private:
     std::vector<uint8_t> colors;
 };
 
-void dither(std::string const &src, std::string const &palette, std::string const &out,
+void dither(std::string const &src, std::string const &out, std::string const &palette,
             bool hicolor, bool error_diffusion)
 {
     struct ditherer d(palette);

@@ -26,33 +26,22 @@ int main(int argc, char **argv)
 {
     lol::sys::init(argc, argv);
 
-    std::string cart;
-    bool has_cart = false;
+    std::optional<std::string> cart;
 
-    auto opts =
-    (
-        lol::cli::option("-V", "--version").call([]()
-            { std::cout << PACKAGE_VERSION << '\n'; exit(EXIT_SUCCESS); })
-            % "output version information and exit",
-        lol::cli::opt_value("cart", cart).set(has_cart, true)
-    );
+    lol::cli::app opts("zepto8");
+    opts.add_option("cart", cart, "cartridge");
+    opts.set_version_flag("-V,--version", PACKAGE_VERSION);
 
-    auto success = lol::cli::parse(argc, argv, opts);
-
-    if (!success)
-    {
-        std::cout << lol::cli::usage_lines(opts, argv[0]) << '\n';
-        return EXIT_FAILURE;
-    }
+    CLI11_PARSE(opts, argc, argv);
 
     lol::ivec2 win_size(1280, 768);
-    lol::Application app("zepto-8", win_size, 60.0f);
+    lol::Application app("zepto8 IDE", win_size, 60.0f);
 
     auto ide = new z8::ide();
 
-    if (has_cart)
+    if (cart)
     {
-        ide->load(cart);
+        ide->load(*cart);
     }
 
     app.Run();

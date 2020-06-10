@@ -55,22 +55,6 @@ enum class mode
     splore,
 };
 
-static void usage()
-{
-    printf("Usage: z8tool stats <cart>\n");
-    printf("       z8tool convert <cart> [--data <file>] <output.p8|output.p8.png|output.bin>\n");
-    printf("       z8tool listlua <cart>\n");
-    printf("       z8tool printast <cart>\n");
-#if HAVE_UNISTD_H
-    printf("       z8tool run [--headless|--telnet] <cart>\n");
-#else
-    printf("       z8tool run [--headless] <cart>\n");
-#endif
-    printf("       z8tool dither [--hicolor] [--error-diffusion] <image> [-o <file>]\n");
-    printf("       z8tool --compress [--raw <num>] [--skip <num>]\n");
-    printf("       z8tool --splore <image>\n");
-}
-
 void test()
 {
 #if 0
@@ -184,78 +168,70 @@ int main(int argc, char **argv)
     bool hicolor = false;
     bool error_diffusion = false;
 
-    auto help = lol::cli::required("-h", "--help").call([]()
-                    { ::usage(); exit(EXIT_SUCCESS); });
+    lol::cli::app app("z8tool");
 
-    auto commands0 =
-    (
-        (
-            lol::cli::command("test").set(run_mode, mode::test)
-        )
-    );
+    // Compatibility with p8tool
+    app.add_subcommand("stats", "Print statistics about a cart")
+        ->callback([&]() { run_mode = mode::stats; })
+        ->add_option("cart", in, "Cartridge to load")->required();
 
-    auto commands1 =
-    (
-        (
-            // p8tool interface
-            lol::cli::command("stats").set(run_mode, mode::stats) |
-            lol::cli::command("listlua").set(run_mode, mode::listlua) |
-            lol::cli::command("luamin").set(run_mode, mode::luamin) |
-            lol::cli::command("printast").set(run_mode, mode::printast) |
-            // custom interface
-            ( lol::cli::command("run").set(run_mode, mode::run),
+    app.add_subcommand("listlua", "Extract Lua code from a cart")
+        ->callback([&]() { run_mode = mode::listlua; })
+        ->add_option("cart", in, "Cartridge to load")->required();
+
+    app.add_subcommand("luamin", "Minify the Lua code of a cart")
+        ->callback([&]() { run_mode = mode::luamin; })
+        ->add_option("cart", in, "Cartridge to load")->required();
+
+    app.add_subcommand("printast", "Print an abstract syntax tree of the code of a cart")
+        ->callback([&]() { run_mode = mode::printast; })
+        ->add_option("cart", in, "Cartridge to load")->required();
+
+    // Exists as writep8 in p8tool
+    auto convert = app.add_subcommand("convert", "Convert a cart to a different format")
+                       ->callback([&]() { run_mode = mode::convert; });
+    convert->add_option("--data", data, "Binary file to store in the data section");
+    convert->add_option("cart", in, "Source cartridge")->required();
+    convert->add_option("output", out, "Destination cartridge")->required();
+
+    // Not in p8tool
+    auto run = app.add_subcommand("run", "Run a cart in the terminal")
+                   ->callback([&]() { run_mode = mode::run; });
 #if HAVE_UNISTD_H
-              lol::cli::option("--telnet").set(run_mode, mode::telnet),
+    run->add_flag_function("--telnet", [&](int64_t) { run_mode = mode::telnet; },
+                            "Act as telnet server");
 #endif
-              lol::cli::option("--headless").set(run_mode, mode::headless)
-            )
-        ),
-        lol::cli::value("cart", in)
-    );
+    run->add_flag_function("--headless", [&](int64_t) { run_mode = mode::headless; },
+                            "Run without any output");
+    run->add_option("cart", in, "Cartridge to load")->required();;
 
-    auto commands2 =
-    (
-        (
-            // not from p8tool (it has writep8 instead)
-            lol::cli::command("convert").set(run_mode, mode::convert)
-        ),
-        lol::cli::option("--data") & lol::cli::value("file", data),
-        lol::cli::value("cart", in),
-        lol::cli::value("output", out)
-    );
+#if 0
+    // TODO: splore
+    auto splore = app.add_subcommand("splore", "XXXXX")
+                      ->callback([&]() { run_mode = mode::splore; });
+    splore->add_option("-o", out, "file")->required();
+#endif
 
-    auto other =
-    (
-        lol::cli::required("--splore").set(run_mode, mode::splore),
-        lol::cli::value("cart", in),
-        lol::cli::option("-o") & lol::cli::value("file", out)
-    );
+    // Dither an image
+    auto dither = app.add_subcommand("dither", "Convert image to a PICO-8 friendly format")
+                      ->callback([&]() { run_mode = mode::dither; });
+    dither->add_option("-p,--palette", palette, "List of palette indices, or 'best', or 'classic'")
+          ->type_name("<string>");
+    dither->add_flag("--hicolor", hicolor, "High color mode");
+    dither->add_flag("--error-diffusion", error_diffusion, "Use Floyd-Steinberg error diffusion");
+    dither->add_option("image", in, "Image to load")->required();
 
-    auto dither =
-    (
-        lol::cli::command("dither").set(run_mode, mode::dither),
-        //lol::cli::option("--palette", palette),
-        lol::cli::option("--hicolor").set(hicolor, true),
-        lol::cli::option("--error-diffusion").set(error_diffusion, true),
-        //lol::cli::option("-o") & lol::cli::value("output", out)
-        lol::cli::value("image").set(in)
-    );
+    // Compress a file
+    auto compress = app.add_subcommand("compress", "Compress a stream of data")
+                      ->callback([&]() { run_mode = mode::compress; });
+    compress->add_option("--skip", skip, "Number of source bytes to skip");
+    compress->add_option("--raw", raw, "Number of raw bytes to store");
 
-    auto compress =
-    (
-        lol::cli::required("--compress").set(run_mode, mode::compress),
-        lol::cli::option("--raw") & lol::cli::value("num", raw),
-        lol::cli::option("--skip") & lol::cli::value("num", skip)
-    );
+    // Internal test suite
+    app.add_subcommand("test", "Run the test suite")
+        ->callback([&]() { run_mode = mode::test; });
 
-    auto commands = commands0 | commands1 | commands2 | other | dither | compress;
-    auto success = lol::cli::parse(argc, argv, help | commands);
-
-    if (!success)
-    {
-        usage();
-        return EXIT_FAILURE;
-    }
+    CLI11_PARSE(app, argc, argv);
 
     // Most commands manipulate a cart, so get it right now
     z8::pico8::cart cart;
@@ -403,7 +379,6 @@ int main(int argc, char **argv)
     }
 #endif
     default:
-        usage();
         return EXIT_FAILURE;
     }
 

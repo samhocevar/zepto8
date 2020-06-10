@@ -27,35 +27,50 @@ int main(int argc, char **argv)
 {
     lol::sys::init(argc, argv);
 
-    std::string cart;
-    bool has_cart = false;
-
-    auto opts =
-    (
-        lol::cli::option("-V", "--version").call([]()
-            { std::cout << PACKAGE_VERSION << '\n'; exit(EXIT_SUCCESS); })
-            % "output version information and exit",
-        lol::cli::opt_value("cart", cart).set(has_cart, true)
-    );
-
-    auto success = lol::cli::parse(argc, argv, opts);
-
-    if (!success)
-    {
-        std::cout << lol::cli::usage_lines(opts, argv[0]) << '\n';
-        return EXIT_FAILURE;
-    }
-
+    std::optional<std::string> cart;
     lol::ivec2 win_size(144 * 4, 144 * 4);
-    lol::Application app("zepto-8", win_size, 60.0f);
 
-    bool is_raccoon = has_cart && lol::ends_with(cart, ".rcn.json");
+    lol::cli::app opts("zepto8");
+    opts.set_version_flag("-V,--version", PACKAGE_VERSION);
+    opts.add_option("cart", cart, "Load a cartridge")->type_name("<cart>");
+
+    opts.add_option("-width", win_size.x, "Set the window width")->type_name("<int>");
+    opts.add_option("-height", win_size.y, "Set the window height")->type_name("<int>");
+    // -window n
+    // -volume n
+    // -joystick n
+    // -pixel_perfect n
+    // -preblit_scale n
+    // -draw_rect x,y,w,h
+    opts.add_option("-run", cart, "Load and run a cartridge")->type_name("<cart>");
+    // -x filename
+    // -export param_str
+    // -p param_str
+    // -splore
+    // -home path
+    // -root_path path
+    // -desktop path
+    // -screenshot_scale n
+    // -gif_scale n
+    // -gif_len n
+    // -gui_theme n
+    // -timeout n
+    // -software_blit n
+    // -foreground_sleep_ms n
+    // -background_sleep_ms n
+    // -accept_future n
+
+    CLI11_PARSE(opts, argc, argv);
+
+    lol::Application app("zepto8", win_size, 60.0f);
+
+    bool is_raccoon = cart && lol::ends_with(*cart, ".rcn.json");
 
     z8::player *player = new z8::player(false, is_raccoon);
 
-    if (has_cart)
+    if (cart)
     {
-        player->load(cart);
+        player->load(*cart);
         player->run();
     }
 
