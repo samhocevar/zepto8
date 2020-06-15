@@ -199,7 +199,7 @@ static std::string pxa_decompress(uint8_t const *input)
     auto get_bits = [&](size_t count) -> uint32_t
     {
         uint32_t n = 0;
-        for (size_t i = 0; i < count; ++i, ++pos)
+        for (size_t i = 0; i < count && pos < compressed * 8; ++i, ++pos)
             n |= ((input[pos >> 3] >> (pos & 0x7)) & 0x1) << i;
         return n;
     };
@@ -230,14 +230,27 @@ static std::string pxa_decompress(uint8_t const *input)
             int nbits = get_bits(1) ? get_bits(1) ? 5 : 10 : 15;
             int offset = get_bits(nbits) + 1;
 
-            int n, len = 3;
-            do
-                len += (n = get_bits(3));
-            while (n == 7);
+            if (nbits == 10 && offset == 1)
+            {
+                uint8_t ch = get_bits(8);
+                while (ch)
+                {
+                    ret.push_back(char(ch));
+                    ch = get_bits(8);
+                }
+                TRACE("%04x [%d] #%d\n", int(ret.size()), int(pos-oldpos), int(pos-oldpos-21) / 8);
+            }
+            else
+            {
+                int n, len = 3;
+                do
+                    len += (n = get_bits(3));
+                while (n == 7);
 
-            TRACE("%04x [%d] %d@-%d\n", int(ret.size()), int(pos-oldpos), len, offset);
-            for (int i = 0; i < len; ++i)
-                ret.push_back(ret[ret.size() - offset]);
+                TRACE("%04x [%d] %d@-%d\n", int(ret.size()), int(pos-oldpos), len, offset);
+                for (int i = 0; i < len; ++i)
+                    ret.push_back(ret[ret.size() - offset]);
+                }
         }
     }
 
