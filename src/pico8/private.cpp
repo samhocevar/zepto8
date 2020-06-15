@@ -52,7 +52,7 @@ std::regex charset::static_init()
     // codepoints, e.g. ⬇️ is U+2B07 (down arrow) + U+FE0F (variation
     // selector-16).
     static char const utf8_chars[] =
-        "\0\1\2\3\4\5\6\a\b\t\n\v\f\r\16\17▮■□⁙⁘‖◀▶「」¥•、。゛゜"
+        "\0¹²³⁴⁵⁶⁷⁸\t\nᵇᶜ\rᵉᶠ▮■□⁙⁘‖◀▶「」¥•、。゛゜"
         " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNO"
         "PQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~○"
         "█▒🐱⬇️░✽●♥☉웃⌂⬅️😐♪🅾️◆…➡️★⧗⬆️ˇ∧❎▤▥あいうえおか"
