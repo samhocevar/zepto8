@@ -18,7 +18,7 @@
 #include <lol/msg>      // lol::msg
 #include <lol/utils>    // lol::ends_with
 #include <lol/pegtl>
-#include <regex>
+#include <regex>        // std::regex_replace
 #include <filesystem>
 #include <fstream>
 
@@ -114,6 +114,9 @@ bool cart::load_lua(std::string const &filename)
     {
         return false;
     }
+
+    // Remove CRLF for internal consistency
+    code = std::regex_replace(code, std::regex("\r\n"), "\n");
 
     // PICO-8 saves some symbols in the .p8 file as Emoji/Unicode characters
     // but the runtime expects 8-bit characters instead.
@@ -331,8 +334,8 @@ struct p8_reader::action<p8_reader::r_data>
     {
         if (r.m_current_section == section::lua)
         {
-            // Copy the code verbatim
-            r.m_code += in.string();
+            // Copy the code but remove CRLF for internal consistency
+            r.m_code += std::regex_replace(in.string(), std::regex("\r\n"), "\n");
         }
         else
         {
