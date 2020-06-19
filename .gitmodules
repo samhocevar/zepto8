@@ -1,19 +1,39 @@
 [submodule "lolengine"]
 	path = src/3rdparty/lolengine
-	url = ../../lolengine/lolengine.git
+	url = https://github.com/lolengine/lolengine
+	branch = master
+	update = merge
+
 [submodule "wiki"]
 	path = wiki
-	url = ../../samhocevar/zepto8.wiki.git
+	url = https://github.com/samhocevar/zepto8.wiki
+	branch = master
+	update = merge
+
 [submodule "z8lua"]
 	path = src/3rdparty/z8lua
-	url = ../../samhocevar/z8lua.git
+	url = https://github.com/samhocevar/z8lua
 	branch = zepto8
+	update = merge
+	upstream = https://github.com/lua/lua
+
 [submodule "imgui-club"]
 	path = src/3rdparty/imgui-club
-	url = ../../samhocevar/fork-imgui-club.git
+	url = https://github.com/samhocevar/fork-imgui-club
+	branch = master
+	update = merge
+	upstream = https://github.com/ocornut/imgui_club
+
 [submodule "zep"]
 	path = src/3rdparty/zep
-	url = ../../samhocevar/fork-zep.git
+	url = https://github.com/samhocevar/fork-zep
+	branch = zepto8/experiments
+	update = merge
+	upstream = https://github.com/cmaughan/zep
+
 [submodule "quickjs"]
 	path = src/3rdparty/quickjs
-	url = ../../samhocevar/fork-quickjs.git
+	url = https://github.com/samhocevar/fork-quickjs
+	branch = task/msvc-support
+	update = merge
+	upstream = https://github.com/horhof/quickjs
