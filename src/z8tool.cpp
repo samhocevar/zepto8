@@ -57,7 +57,7 @@ enum class mode
 
 void test()
 {
-#if 0
+#if 1
     int const foo[] = { 2, 4, 8, 10, 16, 26, 41, 48, 64, 85, 112, 128, 224, 256 };
     for (int as : foo)
     {
@@ -113,7 +113,8 @@ void test()
     }
 #else
     // alphabet size
-    for (int a = 20; a <= 140; ++a)
+    //for (int a = 20; a <= 256; ++a)
+    for (int a = 200; a <= 256; ++a)
     {
         float bits = std::log2(float(a));
 
@@ -145,7 +146,18 @@ void test()
             {
                 std::string data;
                 for (int i = 0; i < nchars; ++i)
-                    data += char(0x10 + lol::rand(a));
+                {
+                    auto ch = char(255 - lol::rand(a));
+                    switch (ch)
+                    {
+                        case '\\': data += "\\\\"; break;
+                        case '"': data += "\\\""; break;
+                        case '\r': data += "\\r"; break;
+                        case '\n': data += "\\n"; break;
+                        case '\0': data += "\\0"; break;
+                        default: data += ch; break;
+                    }
+                }
 
                 source += bytes;
                 compressed += z8::pico8::code::compress(data, z8::pico8::code::format::pxa).size();

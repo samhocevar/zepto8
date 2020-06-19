@@ -27,7 +27,7 @@ namespace z8::pico8
 
 enum
 {
-    PICO8_VERSION = 24,
+    PICO8_VERSION = 25,
 };
 
 enum

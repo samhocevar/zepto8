@@ -64,7 +64,7 @@ struct move_to_front
         return state.front();
     }
 
-    // Find index of a given character
+    // Find index of a given byte in the structure
     int find(uint8_t ch)
     {
         auto val = std::find(state.begin(), state.end(), ch);
@@ -104,7 +104,8 @@ struct compression_graph
         nodes[0].weight = 0;
     }
 
-    // Add a vertex between two nodes
+    // Add a vertex between two nodes. The vertex is not really added: since we parse the graph
+    // in topological order we can instead immediately relax the weight of the target node.
     void add_vertex(size_t i, size_t len, int offset, int cost)
     {
         if (nodes[i].weight + cost < nodes[i + len].weight)
@@ -137,10 +138,13 @@ struct compression_graph
     struct node
     {
         int length = 0, offset = 0;
-        // Sum of costs leading to this node
+        // Sum of costs leading to this node, in 10ths of bit
         int weight = INT_MAX;
         // Next and previous nodes
         int next = -1, prev = -1;
+        // Bidirectional Kadane
+        int min_start = 0, min_sum = 0;
+        int max_start = 0, max_sum = 0;
     };
 
     std::vector<node> nodes;
@@ -187,6 +191,12 @@ std::vector<uint8_t> code::compress(std::string const &input,
     }
 }
 
+static std::string printable(char ch)
+{
+    return (ch >= 0x20 && ch < 0x7f) ? lol::format("$%d '%c'", uint8_t(ch), ch)
+                                     : lol::format("$%d", uint8_t(ch));
+}
+
 static uint8_t const *compress_lut = nullptr;
 static char const *decompress_lut = "\n 0123456789abcdefghijklmnopqrstuvwxyz!#%(){}[]<>+=/*:;.,~_";
 
@@ -222,7 +232,7 @@ static std::string pxa_decompress(uint8_t const *input)
             uint8_t ch = mtf.get(n);
             if (!ch)
                 break;
-            TRACE("%04x [%d] $%d\n", int(ret.size()), int(pos-oldpos), ch);
+            TRACE("%04x [%d] %s\n", int(ret.size()), int(pos-oldpos), printable(ch).c_str());
             ret.push_back(char(ch));
         }
         else
@@ -296,7 +306,6 @@ static std::string legacy_decompress(uint8_t const *input)
     return std::regex_replace(ret, junk, "");
 }
 
-
 static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
 {
     static int compress_bits[16] =
@@ -339,12 +348,23 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
 
     move_to_front mtf;
 
-    // First pass: estimate costs in bits for each node
+    // First pass: gather stats about single character emission costs
+    std::vector<int> stats_cost(256), stats_count(256);
+    for (uint8_t ch : input)
+    {
+        int n = mtf.find(ch);
+        mtf.get(n);
+        stats_cost[ch] += 20 * compress_bits[n >> 4] - 20;
+        stats_count[ch] += 1;
+    }
+    mtf.reset();
+
+    // Second pass: estimate costs in bits for each node
     for (size_t i = 0; i < input.length(); ++i)
     {
-        // If the best transition to here is a back reference, roll back the MtF state to a
-        // node lying on the shortest path. Such a node always exists (in the worst case it’s
-        // the origin).
+        // If the best transition to here is a back reference or a stored block, roll back the
+        // MtF state to a node lying on the shortest path. Such a node always exists (in the
+        // worst case it’s the origin).
         if (i != size_t(graph.prev(i) + 1))
         {
             std::stack<size_t> path;
@@ -379,10 +399,41 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
             }
         }
 
-        // Cost of emitting a single character. This is not the actual cost because the MtF state
-        // depends on what graph nodes we come from, but I can’t find a better way for now.
+        if (i > 0)
+        {
+            auto &cur_node = graph.nodes[i];
+            auto &prev_node = graph.nodes[graph.prev(i)];
+
+            // Compute the cost of reaching this node versus emitting 8 bits per character
+            // since the last largest sum array start.
+            int delta = graph.prev(i) == i + 1 ? stats_cost[i] / stats_count[i] - 80
+                      : (cur_node.weight - prev_node.weight) - 80 * (i - graph.prev(i));
+
+            int max_sum = prev_node.max_sum + delta;
+            cur_node.max_start = max_sum > 0 ? prev_node.max_start : i;
+            cur_node.max_sum = std::max(0, max_sum);
+
+            int min_sum = prev_node.min_sum + delta;
+            cur_node.min_start = min_sum < 0 ? prev_node.min_start : i;
+            cur_node.min_sum = std::min(0, min_sum);
+
+            // Worst case for the next node delta is +6 (emitting a single character with 14 bits),
+            // so if the current max sum is 16 or larger, it may be interesting to emit a raw block
+            // (has a delta of +21). So add a vertex!
+            // FIXME: experiment shows that emitting a raw block is not always best, because of
+            // the impact on the MtF state. We could do statistics on the number of bytes lost
+            // to suboptimal MtF state and add them as a penalty to the cost below.
+            if (cur_node.max_sum >= 160 && i + 1 < input.length())
+            {
+                int count = int(i + 1 - cur_node.max_start);
+                graph.add_vertex(cur_node.max_start, count, -1, 210 + 80 * count);
+            }
+        }
+
+        // Cost of emitting a single character. This is the correct cost because we properly
+        // rolled back the MtF state just before.
         int n = mtf.push_op(input[i]);
-        int cost = 2 * compress_bits[n >> 4] - 2;
+        int cost = 20 * compress_bits[n >> 4] - 20;
         graph.add_vertex(i, 1, -1, cost);
 
         // Cost of emitting a back reference. We find the current suffix in the suffix array by
@@ -425,7 +476,7 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
                 continue;
 
             int offset = int(i - j);
-            cost = 11;
+            cost = 110;
 
             // If we already emitted one of these back reference lengths, there is no need to
             // do it again because any other back reference can be shorter. The gain here is an
@@ -435,14 +486,14 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
                 if (done1024)
                     continue;
                 done1024 = true;
-                cost = 20;
+                cost = 200;
             }
             else if (offset > 32)
             {
                 if (done32)
                     continue;
                 done32 = done1024 = true;
-                cost = 16;
+                cost = 160;
             }
 
             // We try to emit a back reference of size L, but also of sizes L-1, L-2… down to L-7.
@@ -450,7 +501,7 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
             // references of lengths 10 and 8 cost 35 bits, but lengths 9 and 9 cost 32 bits, so
             // the greedy approach is not always optimal.
             for (size_t len = current_len; len + 7 >= current_len && len >= 3; --len)
-                graph.add_vertex(i, len, offset, cost + int(len - 3) / 7 * 3);
+                graph.add_vertex(i, len, offset, cost + int(len - 3) / 7 * 30);
 
             // We can’t do better than a reference of offset ≤ 32 because no subsequent attempt
             // can beat current_len.
@@ -459,7 +510,7 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
         }
     }
 
-    // Compute shortest path and emit the final compression bitstream
+    // Third pass: compute shortest path and emit the final compression bitstream
     graph.compute_path();
     mtf.reset();
 
@@ -471,16 +522,28 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
 
         if (t.length == 1)
         {
+            // Single character
             int n = mtf.find(input[i]);
             int bits = compress_bits[n >> 4];
 
             put_bits(bits - 2, ((1 << (bits - 3)) - 1));
             put_bits(bits, n - (1 << bits) + 16);
             mtf.get(n);
-            TRACE("%04x [%d] $%d\n", int(i), int(pos - oldpos), uint8_t(input[i]));
+            TRACE("%04x Δ%+d [%d] %s\n", int(i), int(pos - oldpos - 8), int(pos - oldpos),
+                                         printable(input[i]).c_str());
+        }
+        else if (t.offset == -1)
+        {
+            // Raw block
+            put_bits(13, 0x2);
+            for (int j = 0; j < t.length; ++j)
+                put_bits(8, input[i + j]);
+            put_bits(8, 0x0);
+            TRACE("%04x Δ%+d [%d] #%d\n", int(i), 21, int(pos - oldpos), t.length);
         }
         else
         {
+            // Back reference
             int len = t.length - 3;
             int off = t.offset - 1;
 
@@ -496,7 +559,7 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
                 put_bits(3, std::min(len, 7));
                 len -= 7;
             }
-            TRACE("%04x [%d] %d@-%d\n", int(i), int(pos - oldpos), t.length, t.offset);
+            TRACE("%04x Δ%+d [%d] %d@-%d\n", int(i), int(pos - oldpos - 8 * t.length), int(pos - oldpos), t.length, t.offset);
         }
     }
 
