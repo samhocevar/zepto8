@@ -17,6 +17,7 @@
 #include <lol/engine.h> // lol::Application
 #include <lol/cli>  // lol::cli
 #include <iostream> // std::cout
+#include <optional> // std::optional
 
 #include "zepto8.h"
 #include "player.h"
