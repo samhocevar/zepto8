@@ -14,8 +14,9 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h> // lol::File, lol::net
-#include <lol/msg>
+#include <lol/engine.h> // lol::net
+#include <lol/msg>      // lol::msg
+#include <lol/file>     // lol::file
 
 #include <algorithm>  // std::min
 #include <filesystem>
@@ -197,7 +198,6 @@ tup<bool, bool, std::string> vm::private_download(opt<std::string> str)
             return std::make_tuple(true, false, std::string("no cart info found"));
 
         // Write cart info
-        lol::File file;
 #if _WIN32
         std::string cache_dir = lol::sys::getenv("APPDATA");
 #else
@@ -212,12 +212,8 @@ tup<bool, bool, std::string> vm::private_download(opt<std::string> str)
         std::string nfo_path = cache_dir + "/" + mid + ".nfo";
         download_state.cart_path = cache_dir + "/" + lid + ".p8.png";
 
-        file.Open(nfo_path, lol::FileAccess::Write);
-        if (file.IsValid())
-        {
-            file.Write(download_state.client.get_result());
-            file.Close();
-        }
+        if (!lol::file::write(nfo_path, download_state.client.get_result()))
+            return std::make_tuple(true, false, "can't save nfo file");
 
         // Download cart
         download_state.client.get(host + "/bbs/get_cart.php?cat=7&lid=" + lid);
@@ -229,24 +225,18 @@ tup<bool, bool, std::string> vm::private_download(opt<std::string> str)
         if (download_state.client.get_status() != lol::net::http::status::pending)
             download_state.step = 4;
         break;
-    case 4: {
+    case 4:
         // Step 4: bail out if errors, load cart otherwise
         if (download_state.client.get_status() != lol::net::http::status::success)
             return std::make_tuple(true, false, std::string("error downloading cart"));
 
-        lol::File file;
         // Save cart
-        file.Open(download_state.cart_path, lol::FileAccess::Write, true);
-        if (file.IsValid())
-        {
-            file.Write(download_state.client.get_result());
-            file.Close();
-        }
+        if (!lol::file::write(download_state.cart_path, download_state.client.get_result()))
+            return std::make_tuple(true, false, "can't save cart file");
 
         // Load cart
         m_cart.load(download_state.cart_path);
         return std::make_tuple(true, true, std::string());
-    }
     default:
         break;
     }

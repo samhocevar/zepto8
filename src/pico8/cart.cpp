@@ -15,12 +15,11 @@
 #endif
 
 #include <lol/engine.h> // lol::image
+#include <lol/file>     // lol::file
 #include <lol/msg>      // lol::msg
 #include <lol/utils>    // lol::ends_with
 #include <lol/pegtl>
 #include <regex>        // std::regex_replace
-#include <filesystem>
-#include <fstream>
 
 extern "C" {
 #include "3rdparty/quickjs/quickjs.h"
@@ -97,23 +96,10 @@ bool cart::load_png(std::string const &filename)
 
 bool cart::load_lua(std::string const &filename)
 {
-    namespace fs = std::filesystem;
-
     // Read file
     std::string code;
-    auto path = fs::path(filename);
-    try
-    {
-        auto const size = fs::file_size(path);
-        std::ifstream f(path, std::ios::in | std::ios::binary);
-        code.resize(size);
-        f.read(code.data(), size);
-        f.close();
-    }
-    catch (std::exception &)
-    {
+    if (!lol::file::read(lol::sys::get_data_path(filename), code))
         return false;
-    }
 
     // Remove CRLF for internal consistency
     code = std::regex_replace(code, std::regex("\r\n"), "\n");
@@ -127,23 +113,10 @@ bool cart::load_lua(std::string const &filename)
 
 bool cart::load_js(std::string const &filename)
 {
-    namespace fs = std::filesystem;
-
     // Read file
     std::string code;
-    auto path = fs::path(filename);
-    try
-    {
-        auto const size = fs::file_size(path);
-        std::ifstream f(path, std::ios::in | std::ios::binary);
-        code.resize(size);
-        f.read(code.data(), size);
-        f.close();
-    }
-    catch (std::exception &)
-    {
+    if (!lol::file::read(lol::sys::get_data_path(filename), code))
         return false;
-    }
 
     // Find cart data
     auto start = code.find("[", code.find("var _cartdat="));
@@ -392,22 +365,10 @@ private:
 bool cart::load_p8(std::string const &filename)
 {
     std::string s;
-    lol::File f;
-    for (auto const &candidate : lol::sys::get_path_list(filename))
-    {
-        f.Open(candidate, lol::FileAccess::Read);
-        if (f.IsValid())
-        {
-            s = f.ReadString();
-            f.Close();
-
-            msg::debug("loaded file %s\n", candidate.c_str());
-            break;
-        }
-    }
-
-    if (s.length() == 0)
+    if (!lol::file::read(lol::sys::get_data_path(filename), s))
         return false;
+
+    msg::debug("loaded file %s\n", filename.c_str());
 
     p8_reader reader;
     reader.parse(s.c_str());

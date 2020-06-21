@@ -14,8 +14,8 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h> // lol::File
 #include <lol/cli>    // lol::cli
+#include <lol/file>   // lol::file
 #include <lol/msg>    // lol::msg
 #include <lol/utils>  // lol::ends_with
 #include <lol/thread> // lol::timer
@@ -300,22 +300,13 @@ int main(int argc, char **argv)
         if (data.length())
         {
             std::string s;
-            lol::File f;
-            for (auto const &candidate : lol::sys::get_path_list(data))
+            if (lol::file::read(lol::sys::get_data_path(data), s))
             {
-                f.Open(candidate, lol::FileAccess::Read);
-                if (f.IsValid())
-                {
-                    s = f.ReadString();
-                    f.Close();
-
-                    lol::msg::debug("loaded file %s (%d bytes, max %d)\n",
-                                    candidate.c_str(), int(s.length()), 0x4300);
-                    break;
-                }
+                lol::msg::debug("loaded file %s (%d bytes, max %d)\n",
+                                data.c_str(), int(s.length()), 0x4300);
+                using std::min;
+                memcpy(&cart.get_rom(), s.c_str(), min(s.length(), size_t(0x4300)));
             }
-            using std::min;
-            memcpy(&cart.get_rom(), s.c_str(), min(s.length(), size_t(0x4300)));
         }
 
         if (lol::ends_with(out, ".bin"))

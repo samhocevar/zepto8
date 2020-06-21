@@ -15,6 +15,7 @@
 #endif
 
 #include <lol/engine.h> // lol::gui
+#include <lol/file>     // lol::file::read
 #include <lol/utils>    // lol::ends_with
 #include <lol/dialogs>  // pfd::message etc.
 #include <lol/vector>   // lol::ivec2 etc.
@@ -132,21 +133,13 @@ void ide::tick_game(float seconds)
         }
         char_ranges.push_back(0);
 
-        // Initialize BIOS
-        for (auto const &file : lol::sys::get_path_list(filename))
+        // Initialize PICO-8 font
+        std::string font;
+        if (lol::file::read(lol::sys::get_data_path(filename), font))
         {
-            lol::File f;
-            f.Open(file, lol::FileAccess::Read);
-            bool exists = f.IsValid();
-            f.Close();
-
-            if (exists)
-            {
-                auto &io = ImGui::GetIO();
-                m_fonts[m_scale] = io.Fonts->AddFontFromFileTTF(file.c_str(), 6.0f * m_scale, nullptr, char_ranges.data());
-                lol::gui::refresh_fonts();
-                break;
-            }
+            auto &io = ImGui::GetIO();
+            m_fonts[m_scale] = io.Fonts->AddFontFromFileTTF(font.c_str(), 6.0f * m_scale, nullptr, char_ranges.data());
+            lol::gui::refresh_fonts();
         }
 
 #if CUSTOM_FONT

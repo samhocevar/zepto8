@@ -417,6 +417,10 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
             cur_node.min_start = min_sum < 0 ? prev_node.min_start : i;
             cur_node.min_sum = std::min(0, min_sum);
 
+            // If min_sum is too low, forget about emitting a raw block
+            if (cur_node.min_sum < -210)
+                cur_node.max_sum = 0;
+
             // Worst case for the next node delta is +6 (emitting a single character with 14 bits),
             // so if the current max sum is 16 or larger, it may be interesting to emit a raw block
             // (has a delta of +21). So add a vertex!
@@ -426,7 +430,7 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
             if (cur_node.max_sum >= 160 && i + 1 < input.length())
             {
                 int count = int(i + 1 - cur_node.max_start);
-                graph.add_vertex(cur_node.max_start, count, -1, 210 + 80 * count);
+                graph.add_vertex(cur_node.max_start, count, -1, 210 + 80 * count + 1000 / count);
             }
         }
 

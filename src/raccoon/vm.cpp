@@ -14,7 +14,8 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h> // lol::sys, lol::File
+#include <lol/engine.h> // lol::sys
+#include <lol/file>   // lol::file::read
 #include <lol/vector> // lol::u8vec4
 #include <lol/msg>    // lol::msg
 
@@ -51,22 +52,10 @@ vm::~vm()
 void vm::load(std::string const &file)
 {
     std::string s;
-    lol::File f;
-    for (auto const &candidate : lol::sys::get_path_list(file))
-    {
-        f.Open(candidate, lol::FileAccess::Read);
-        if (f.IsValid())
-        {
-            s = f.ReadString();
-            f.Close();
-
-            lol::msg::debug("loaded file %s\n", candidate.c_str());
-            break;
-        }
-    }
-
-    if (s.length() == 0)
+    if (!lol::file::read(lol::sys::get_data_path(file), s))
         return;
+
+    lol::msg::debug("loaded file %s\n", file.c_str());
 
     JSValue bin = JS_ParseJSON(m_ctx, s.c_str(), s.length(), file.c_str());
     if (JS_IsException(bin))
