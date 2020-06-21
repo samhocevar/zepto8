@@ -277,7 +277,7 @@ struct memory
         return screen.get(x, y);
     }
 
-    ~memory() {}
+    ~memory() = default;
 };
 
 // Check type sizes
