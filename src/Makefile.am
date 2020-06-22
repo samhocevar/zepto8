@@ -2,12 +2,18 @@
 include $(top_srcdir)/src/3rdparty/lolengine/build/autotools/common.am
 
 bin_PROGRAMS = ../zepto8 ../z8dev ../z8tool ../z8lua
+libretro_LTLIBRARIES = libretro-zepto8.la
 noinst_LIBRARIES = $(static_libs)
 
 static_libs = libzepto8.a libz8lua.a libquickjs.a
 
-libzepto8_adir = $(datarootdir)/zepto8
 ___z8devdir = $(datarootdir)/zepto8
+libzepto8_adir = $(datarootdir)/zepto8
+libretrodir = $(datarootdir)/libretro
+
+#
+# zepto8: the emulator
+#
 
 ___zepto8_SOURCES = \
     zepto8.cpp \
@@ -24,6 +30,20 @@ ___zepto8_LDFLAGS += --preload-file pico8/bios.p8 \
 endif
 
 EXTRA_DIST += zepto8.vcxproj
+
+#
+# libretro-zepto8: RetroArch core
+#
+
+libretro_zepto8_la_SOURCES = \
+    libretro.cpp
+libretro_zepto8_la_DEPENDENCIES = $(static_libs) @LOL_DEPS@
+libretro_zepto8_la_CPPFLAGS = -I3rdparty/libretro-common/include \
+                              $(AM_CPPFLAGS)
+
+#
+# z8dev: the IDE prototype
+#
 
 # FIXME: move player.cpp / player.h into a separate library?
 ___z8dev_SOURCES = \
@@ -111,6 +131,10 @@ endif
 
 EXTRA_DIST += $(___z8dev_DATA) z8dev.vcxproj
 
+#
+# z8tool: multi purpose tool
+#
+
 ___z8tool_SOURCES = \
     z8tool.cpp \
     splore.cpp splore.h \
@@ -130,6 +154,10 @@ ___z8tool_DEPENDENCIES = $(static_libs) @LOL_DEPS@
 EXTRA_DIST += zlib/deflate.c zlib/trees.c
 EXTRA_DIST += z8tool.vcxproj
 
+#
+# z8lua: our modified Lua interpreter
+#
+
 ___z8lua_SOURCES = \
     3rdparty/z8lua/lua.c dummy.cpp \
     $(NULL)
@@ -138,6 +166,10 @@ ___z8lua_LDFLAGS = libz8lua.a $(lua_ldflags)
 ___z8lua_DEPENDENCIES = libz8lua.a
 
 EXTRA_DIST += z8lua.vcxproj
+
+#
+# libzepto8: core library used by all programs
+#
 
 libzepto8_a_SOURCES = \
     zepto8.h \
@@ -162,6 +194,10 @@ libzepto8_a_DATA = pico8/bios.p8
 libzepto8_a_CPPFLAGS = $(AM_CPPFLAGS)
 
 EXTRA_DIST += $(libzepto8_a_DATA) libzepto8.vcxproj
+
+#
+# libz8lua: z8lua library used by all programs
+#
 
 libz8lua_a_SOURCES = \
     3rdparty/z8lua/lapi.c 3rdparty/z8lua/lcode.c 3rdparty/z8lua/ldebug.c \
@@ -193,6 +229,12 @@ lua_cflags += -DLUA_USE_READLINE
 lua_ldflags += -lreadline
 endif
 
+EXTRA_DIST += libz8lua.vcxproj
+
+#
+# libquickjs: QuickJS library used by all programs
+#
+
 libquickjs_a_SOURCES = \
     3rdparty/quickjs/quickjs.c 3rdparty/quickjs/quickjs.h \
     3rdparty/quickjs/quickjs-atom.h 3rdparty/quickjs/quickjs-opcode.h \
@@ -209,6 +251,4 @@ libquickjs_a_CPPFLAGS = \
     -Wno-unused-parameter -Wno-sign-compare
 
 EXTRA_DIST += libquickjs.vcxproj
-
-EXTRA_DIST += libz8lua.vcxproj
 

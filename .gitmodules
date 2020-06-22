@@ -37,3 +37,9 @@
 	branch = task/msvc-support
 	update = merge
 	upstream = https://github.com/horhof/quickjs
+
+[submodule "libretro-common"]
+	path = src/3rdparty/libretro-common
+	url = https://github.com/libretro/libretro-common
+	branch = master
+	update = merge
