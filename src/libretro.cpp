@@ -15,6 +15,7 @@
 #endif
 
 #include <lol/msg> // lol::msg
+#include <array>   // std::array
 #include <cstring> // std::memset
 #include <memory>  // std::shared_ptr
 #include <vector>  // std::vector
@@ -23,6 +24,7 @@
 #include "pico8/vm.h"
 #include "pico8/pico8.h"
 #include "raccoon/vm.h"
+
 #include "libretro.h"
 
 #define EXPORT extern "C" RETRO_API
@@ -35,6 +37,7 @@ static retro_environment_t enviro_cb;
 static retro_input_poll_t input_poll_cb;
 static retro_input_state_t input_state_cb;
 
+// Global core state
 static bool is_raccoon;
 static std::shared_ptr<z8::vm_base> vm;
 static lol::array2d<lol::u8vec4> fb32;
@@ -48,30 +51,11 @@ EXPORT void retro_set_environment(retro_environment_t cb)
     enviro_cb(RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME, &no_rom);
 }
 
-EXPORT void retro_set_video_refresh(retro_video_refresh_t cb)
-{
-    video_cb = cb;
-}
-
-EXPORT void retro_set_audio_sample(retro_audio_sample_t cb)
-{
-    audio_cb = cb;
-}
-
-EXPORT void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb)
-{
-    audio_batch_cb = cb;
-}
-
-EXPORT void retro_set_input_poll(retro_input_poll_t cb)
-{
-    input_poll_cb = cb;
-}
-
-EXPORT void retro_set_input_state(retro_input_state_t cb)
-{
-    input_state_cb = cb;
-}
+EXPORT void retro_set_video_refresh(retro_video_refresh_t cb) { video_cb = cb; }
+EXPORT void retro_set_audio_sample(retro_audio_sample_t cb) { audio_cb = cb; }
+EXPORT void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb) { audio_batch_cb = cb; }
+EXPORT void retro_set_input_poll(retro_input_poll_t cb) { input_poll_cb = cb; }
+EXPORT void retro_set_input_state(retro_input_state_t cb) { input_state_cb = cb; }
 
 EXPORT void retro_init()
 {
@@ -97,7 +81,7 @@ EXPORT void retro_get_system_info(struct retro_system_info *info)
     memset(info, 0, sizeof(*info));
     info->library_name = "zepto8";
     info->library_version = PACKAGE_VERSION;
-    info->valid_extensions = "p8|png|rcn.json";
+    info->valid_extensions = "p8|p8.png|rcn.json";
     info->need_fullpath = true; // we load our own carts for now
 }
 
@@ -124,14 +108,29 @@ EXPORT void retro_reset()
 {
 }
 
+static std::array<int, 7> buttons
+{
+    RETRO_DEVICE_ID_JOYPAD_LEFT,
+    RETRO_DEVICE_ID_JOYPAD_RIGHT,
+    RETRO_DEVICE_ID_JOYPAD_UP,
+    RETRO_DEVICE_ID_JOYPAD_DOWN,
+    RETRO_DEVICE_ID_JOYPAD_A,
+    RETRO_DEVICE_ID_JOYPAD_B,
+    RETRO_DEVICE_ID_JOYPAD_START,
+};
+
 EXPORT void retro_run()
 {
     // Update input
+    input_poll_cb();
+    for (int n = 0; n < 8; ++n)
+        for (int k = 0; k < 7; ++k)
+            vm->button(8 * n + k, input_state_cb(n, RETRO_DEVICE_JOYPAD, 0, buttons[k]));
 
     // Step VM
     vm->step(1.f / 60);
 
-    // Render video, convert to RGB565
+    // Render video, convert to RGB565, send back to frontend
     vm->render(fb32.data());
     for (int y = 0; y < 128; ++y)
     for (int x = 0; x < 128; ++x)
