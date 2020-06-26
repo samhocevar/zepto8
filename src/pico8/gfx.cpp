@@ -714,6 +714,7 @@ void vm::api_ovalfill(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
 opt<uint8_t> vm::api_pal(opt<uint8_t> c0, opt<uint8_t> c1, uint8_t p)
 {
     auto &ds = m_ram.draw_state;
+    auto &hw = m_ram.hw_state;
 
     if (!c0 || !c1)
     {
@@ -723,6 +724,7 @@ opt<uint8_t> vm::api_pal(opt<uint8_t> c0, opt<uint8_t> c1, uint8_t p)
         {
             ds.draw_palette[i] = i | (i ? 0x00 : 0x10);
             ds.screen_palette[i] = i;
+            hw.raster.palette[i] = 0;
         }
         ds.fillp[0] = 0;
         ds.fillp[1] = 0;
@@ -731,11 +733,12 @@ opt<uint8_t> vm::api_pal(opt<uint8_t> c0, opt<uint8_t> c1, uint8_t p)
     }
     else
     {
-        uint8_t &data = (p & 1) ? ds.screen_palette[*c0 & 0xf]
-                                : ds.draw_palette[*c0 & 0xf];
+        uint8_t &data = (p == 2) ? hw.raster.palette[*c0 & 0xf]
+                      : (p == 1) ? ds.screen_palette[*c0 & 0xf]
+                                 : ds.draw_palette[*c0 & 0xf];
         uint8_t prev = data;
 
-        if (p & 1)
+        if (p == 1 || p == 2)
             data = *c1 & 0xff;
         else
             data = (data & 0x10) | (*c1 & 0xf); // Transparency bit is preserved

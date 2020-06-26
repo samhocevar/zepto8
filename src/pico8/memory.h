@@ -297,22 +297,19 @@ struct memory
         int c = screen.get(x, y);
 
         // Apply raster mode
-        if (mode & 0x40)
+        if (hw_state.raster.mode == 0x10)
         {
-            if (hw_state.raster.mode == 0x10)
+            // Raster mode: alternate palette
+            if (hw_state.raster.bits[y])
+                return hw_state.raster.palette[c];
+        }
+        else if ((hw_state.raster.mode & 0x30) == 0x30)
+        {
+            // Raster mode: gradient
+            if ((hw_state.raster.mode & 0x0f) == c)
             {
-                // Raster mode: alternate palette
-                if (hw_state.raster.bits[y])
-                    return hw_state.raster.palette[c];
-            }
-            else if ((hw_state.raster.mode & 0x30) == 0x30)
-            {
-                // Raster mode: gradient
-                if ((hw_state.raster.mode & 0x0f) == c)
-                {
-                    int c2 = (y / 8 + (hw_state.raster.bits[y] ? 1 : 0)) % 16;
-                    return hw_state.raster.palette[c2];
-                }
+                int c2 = (y / 8 + (hw_state.raster.bits[y] ? 1 : 0)) % 16;
+                return hw_state.raster.palette[c2];
             }
         }
 
