@@ -24,16 +24,13 @@ namespace z8::pico8
 
 void vm::render(lol::u8vec4 *screen) const
 {
-    auto &ds = m_ram.draw_state;
-
     // Cannot use a 256-value LUT because data access will be
     // very random due to rotation, flip, stretch etc.
-    lol::u8vec4 lut[16];
-    for (int n = 0; n < 16; ++n)
+    lol::u8vec4 lut[128 + 16];
+    for (int c = 0; c < 16; ++c)
     {
-        int c = ds.screen_palette[n];
-        // Bit 0x80 activates the second half of the palette
-        lut[n] = palette::get8((c & 0xf) | ((c & 0x80) >> 3));
+        lut[c] = palette::get8(c);
+        lut[128 + c] = palette::get8(16 + c);
     }
 
     for (int y = 0; y < 128; ++y)

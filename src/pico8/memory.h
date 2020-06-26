@@ -14,6 +14,7 @@
 
 #include <lol/vector> // lol::u8vec2
 #include <algorithm>  // std::swap
+#include <bitset>     // std::bitset
 #include <cassert>    // assert
 
 #include "zepto8.h"
@@ -167,12 +168,26 @@ struct hw_state
     // 0x5f5e: bitplane selector
     uint8_t bit_mask;
 
-    // 0x5f5f—0x5f80: undocumented
-    uint8_t undocumented3[33];
+#pragma pack(push,1)
+    struct
+    {
+        // 0x5f5f: raster mode
+        uint8_t mode;
+
+        // 0x5f60—0x5f70: raster palette
+        uint8_t palette[16];
+
+        // 0x5f70—0x5f80: raster bits
+        std::bitset<128> bits;
+    }
+    raster;
+#pragma pack(pop)
 };
 
 struct memory
 {
+    memory() {}
+
     // This union handles the gfx/map shared section
     union
     {
@@ -256,25 +271,53 @@ struct memory
     // Hardware pixel accessor
     uint8_t pixel(int x, int y) const
     {
-        // Get screen mode, ignoring bit 0x40
-        uint8_t const mode = draw_state.screen_mode & ~0x40;
+        // Get screen mode
+        uint8_t const &mode = draw_state.screen_mode;
 
-        // Rotation modes (0x84 to 0x87)
+        // Apply screen mode (rotation, mirror, flip…)
         if ((mode & 0xbc) == 0x84)
         {
+            // Rotation modes (0x84 to 0x87)
             if (mode & 1)
                 std::swap(x, y);
-            return screen.get(mode & 2 ? 127 - x : x,
-                              ((mode + 1) & 2) ? 127 - y : y);
+            x = mode & 2 ? 127 - x : x;
+            y = ((mode + 1) & 2) ? 127 - y : y;
+        }
+        else
+        {
+            // Other modes
+            x = (mode & 0xbd) == 0x05 ? std::min(x, 127 - x) // mirror
+              : (mode & 0xbd) == 0x01 ? x / 2                // stretch
+              : (mode & 0xbd) == 0x81 ? 127 - x : x;         // flip
+            y = (mode & 0xbe) == 0x06 ? std::min(y, 127 - y) // mirror
+              : (mode & 0xbe) == 0x02 ? y / 2                // stretch
+              : (mode & 0xbe) == 0x82 ? 127 - y : y;         // flip
         }
 
-        x = (mode & 0xbd) == 0x05 ? std::min(x, 127 - x) // mirror
-          : (mode & 0xbd) == 0x01 ? x / 2                // stretch
-          : (mode & 0xbd) == 0x81 ? 127 - x : x;         // flip
-        y = (mode & 0xbe) == 0x06 ? std::min(y, 127 - y) // mirror
-          : (mode & 0xbe) == 0x02 ? y / 2                // stretch
-          : (mode & 0xbe) == 0x82 ? 127 - y : y;         // flip
-        return screen.get(x, y);
+        int c = screen.get(x, y);
+
+        // Apply raster mode
+        if (mode & 0x40)
+        {
+            if (hw_state.raster.mode == 0x10)
+            {
+                // Raster mode: alternate palette
+                if (hw_state.raster.bits[y])
+                    return hw_state.raster.palette[c];
+            }
+            else if ((hw_state.raster.mode & 0x30) == 0x30)
+            {
+                // Raster mode: gradient
+                if ((hw_state.raster.mode & 0x0f) == c)
+                {
+                    int c2 = (y / 8 + (hw_state.raster.bits[y] ? 1 : 0)) % 16;
+                    return hw_state.raster.palette[c2];
+                }
+            }
+        }
+
+        // Apply screen palette
+        return draw_state.screen_palette[c];
     }
 
     ~memory() = default;
