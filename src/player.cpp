@@ -98,14 +98,14 @@ player::player(bool is_embedded, bool is_raccoon)
 
     // FIXME: the image gets deleted by TextureImage class, it
     // does not seem right to me.
-    auto img = new lol::image(lol::ivec2(128, 128));
+    auto img = new lol::old_image(lol::ivec2(128, 128));
     img->unlock(img->lock<lol::PixelFormat::RGBA_8>()); // ensure RGBA_8 is present
-    m_tile = lol::TileSet::create("tile", new lol::image(*img), lol::ivec2(128, 128), lol::ivec2(1, 1));
+    m_tile = lol::TileSet::create("tile", new lol::old_image(*img), lol::ivec2(128, 128), lol::ivec2(1, 1));
 
 #if 0
-    img = new lol::image(lol::ivec2(128, 32));
+    img = new lol::old_image(lol::ivec2(128, 32));
     img->unlock(img->lock<lol::PixelFormat::RGBA_8>()); // ensure RGBA_8 is present
-    m_font_tile = lol::TileSet::create("font", new lol::image(*img), lol::ivec2(128, 32), lol::ivec2(1, 1));
+    m_font_tile = lol::TileSet::create("font", new lol::old_image(*img), lol::ivec2(128, 32), lol::ivec2(1, 1));
 #endif
 
     /* Allocate memory */

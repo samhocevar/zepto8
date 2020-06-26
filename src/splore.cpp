@@ -14,7 +14,7 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h> // lol::image
+#include <lol/engine.h> // lol::old_image
 
 #include <string>
 
@@ -29,7 +29,7 @@ using lol::PixelFormat;
 bool splore::dump(std::string const &filename)
 {
     // Open cartridge as PNG image
-    lol::image img;
+    lol::old_image img;
     img.load(filename);
     lol::ivec2 size = img.size();
 

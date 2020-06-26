@@ -18,7 +18,7 @@
 #include <vector> // std::vector
 #include <array>  // std::array
 
-#include <lol/engine.h> // lol::image
+#include <lol/engine.h> // lol::old_image
 #include <lol/color>    // lol::color
 #include <lol/msg>      // lol::msg
 
@@ -134,7 +134,7 @@ void dither(std::string const &src, std::string const &out, std::string const &p
 #endif
 
     // Load image
-    lol::image im;
+    lol::old_image im;
     im.load(src);
     im = im.Resize(lol::ivec2(128,128), lol::ResampleAlgorithm::Bicubic);
 
@@ -156,12 +156,12 @@ void dither(std::string const &src, std::string const &out, std::string const &p
 
     lol::msg::info("image size %d×%d\n", size.x, size.y);
 
-    lol::image dst(size);
+    lol::old_image dst(size);
     std::vector<uint8_t> pixels;
 
-    //auto kernel = lol::image::kernel::halftone(lol::ivec2(8));
-    //auto kernel = lol::image::kernel::blue_noise(lol::ivec2(64));
-    auto kernel = lol::image::kernel::bayer(lol::ivec2(32));
+    //auto kernel = lol::old_image::kernel::halftone(lol::ivec2(8));
+    //auto kernel = lol::old_image::kernel::blue_noise(lol::ivec2(64));
+    auto kernel = lol::old_image::kernel::bayer(lol::ivec2(32));
     auto original_image = im;
 
     for (;;)

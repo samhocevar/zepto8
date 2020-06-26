@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <lol/engine.h> // lol::image
+#include <lol/engine.h> // lol::old_image
 
 #include <vector> // std::vector
 #include <string> // std::string
@@ -59,7 +59,7 @@ public:
     std::vector<uint8_t> get_compressed_code() const;
     std::vector<uint8_t> get_bin() const;
     std::string get_p8() const;
-    lol::image get_png() const;
+    lol::old_image get_png() const;
 
 private:
     bool load_png(std::string const &filename);

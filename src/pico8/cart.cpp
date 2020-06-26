@@ -14,7 +14,7 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h> // lol::image
+#include <lol/engine.h> // lol::old_image
 #include <lol/file>     // lol::file
 #include <lol/msg>      // lol::msg
 #include <lol/utils>    // lol::ends_with
@@ -59,7 +59,7 @@ bool cart::load(std::string const &filename)
 bool cart::load_png(std::string const &filename)
 {
     // Open cartridge as PNG image
-    lol::image img;
+    lol::old_image img;
     img.load(filename);
     ivec2 size = img.size();
 
@@ -464,9 +464,9 @@ bool cart::load_p8(std::string const &filename)
     return true;
 }
 
-lol::image cart::get_png() const
+lol::old_image cart::get_png() const
 {
-    lol::image ret;
+    lol::old_image ret;
     ret.load("data/blank.png");
 
     ivec2 size = ret.size();
