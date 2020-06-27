@@ -38,7 +38,7 @@ struct ditherer
         if (palette == "classic")
             for (uint8_t i = 0; i < 16; ++i)
                 colors.push_back(i);
-        else if (palette == "best" || palette == "")
+        else if (palette == "best" || palette == "all" || palette == "")
             for (uint8_t i = 0; i < 32; ++i)
                 colors.push_back(i);
         else
@@ -50,6 +50,9 @@ struct ditherer
             }
         }
 
+        if (palette == "all")
+            max_color_count = 32;
+
         // Add at least a few elements
         if (colors.size() < 2)
             colors.push_back(7);
@@ -60,8 +63,11 @@ struct ditherer
         std::sort(colors.begin(), colors.end(), compare_colors);
     }
 
-    // Number of colours
+    // Current number of colours
     size_t count() { return colors.size(); }
+
+    // Desired number of colours
+    size_t max_count() { return max_color_count; }
 
     // Return the nth colour (PICO-8 value 0…31)
     lol::vec3 get_color(uint8_t n)
@@ -111,6 +117,7 @@ private:
     }
 
     std::vector<uint8_t> colors;
+    size_t max_color_count = 16;
 };
 
 void dither(std::string const &src, std::string const &out, std::string const &palette,
@@ -150,8 +157,8 @@ void dither(std::string const &src, std::string const &out, std::string const &p
 #endif
 
     // Slight blur
-    im = im.Resize(size * 3, lol::ResampleAlgorithm::Bicubic)
-           .Resize(size, lol::ResampleAlgorithm::Bresenham);
+    //im = im.Resize(size * 3, lol::ResampleAlgorithm::Bicubic)
+    //       .Resize(size, lol::ResampleAlgorithm::Bresenham);
     //im = im.Contrast(0.1f);
 
     lol::msg::info("image size %d×%d\n", size.x, size.y);
@@ -169,15 +176,15 @@ void dither(std::string const &src, std::string const &out, std::string const &p
         im = original_image;
         pixels.clear();
 
-        lol::array2d<lol::vec4> &curdata = im.lock2d<lol::PixelFormat::RGBA_F32>();
-        lol::array2d<lol::vec4> &dstdata = dst.lock2d<lol::PixelFormat::RGBA_F32>();
+        auto &curdata = im.lock2d<lol::PixelFormat::RGBA_F32>();
+        auto &dstdata = dst.lock2d<lol::PixelFormat::RGBA_F32>();
         for (int j = 0; j < size.y; ++j)
         for (int i = 0; i < size.x; ++i)
         {
             lol::vec3 pixel = curdata[i][j].rgb;
             uint8_t nearest = 0;
 
-            if (error_diffusion || d.count() > 16)
+            if (error_diffusion || d.count() > d.max_count())
             {
                 nearest = d.best_color_index(pixel);
                 auto error = lol::vec4(pixel - d.get_color(nearest), 0.f) / 18.f;
@@ -226,8 +233,8 @@ void dither(std::string const &src, std::string const &out, std::string const &p
         im.unlock2d(curdata);
         dst.unlock2d(dstdata);
 
-        // Trim unused colors
-        if (d.count() <= 16)
+        // Exit if finished, otherwise trim unused colors
+        if (d.count() <= d.max_count())
             break;
 
         std::vector<size_t> histogram(d.count(), 0);
