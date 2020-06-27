@@ -487,26 +487,24 @@ void vm::api_line(opt<fix32> arg0, opt<fix32> arg1, opt<fix32> arg2,
     x0 -= ds.camera.x; y0 -= ds.camera.y;
     x1 -= ds.camera.x; y1 -= ds.camera.y;
 
-    if (x0 == x1 && y0 == y1)
+    bool horiz = abs(x1 - x0) >= abs(y1 - y0);
+    int16_t x = x0, y = y0;
+    int16_t dx = x0 <= x1 ? 1 : -1;
+    int16_t dy = y0 <= y1 ? 1 : -1;
+
+    for (;;)
     {
-        set_pixel(x0, y0, color_bits);
-    }
-    else if (abs(x1 - x0) > abs(y1 - y0))
-    {
-        for (int16_t x = x0, y = y0, dx = x0 <= x1 ? 1 : -1; ; )
+        set_pixel(x, y, color_bits);
+
+        if (horiz)
         {
-            set_pixel(x, y, color_bits);
             if (x == x1)
                 break;
             x += dx;
             y = (int16_t)lol::round(lol::mix((double)y0, (double)y1, (double)(x - x0) / (x1 - x0)));
         }
-    }
-    else
-    {
-        for (int16_t x = x0, y = y0, dy = y0 <= y1 ? 1 : -1; ; )
+        else
         {
-            set_pixel(x, y, color_bits);
             if (y == y1)
                 break;
             y += dy;
