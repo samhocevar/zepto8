@@ -514,43 +514,62 @@ void vm::api_line(opt<fix32> arg0, opt<fix32> arg1, opt<fix32> arg2,
 }
 
 void vm::api_tline(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
-                   fix32 mx, fix32 my, opt<fix32> mdx, opt<fix32> mdy)
+                   fix32 mx, fix32 my, opt<fix32> in_mdx, opt<fix32> in_mdy, int16_t layer)
 {
     using std::abs;
-
-    auto msg = lol::format("tline(%d, %d, %d, %d, %f, %f",
-                           x0, y0, x1, y1, float(mx), float(my));
-    if (mdx)
-        msg += lol::format(", %f", float(*mdx));
-    if (mdy)
-        msg += lol::format(", %f", float(*mdy));
-    private_stub(msg + ")\n");
 
     auto &ds = m_ram.draw_state;
 
     x0 -= ds.camera.x; y0 -= ds.camera.y;
     x1 -= ds.camera.x; y1 -= ds.camera.y;
 
-    if (x0 == x1 && y0 == y1)
+    bool horiz = abs(x1 - x0) >= abs(y1 - y0);
+    int16_t x = x0, y = y0;
+    int16_t dx = horiz ? x0 <= x1 ? 1 : -1 : 0;
+    int16_t dy = horiz ? 0 : y0 <= y1 ? 1 : -1;
+
+    // mdx, mdy default to 1/8, 0
+    fix32 mdx = in_mdx ? *in_mdx : fix32::frombits(0x2000);
+    fix32 mdy = in_mdy ? *in_mdy : fix32(0);
+
+    // Retrieve masks for wrap-around and subtract 0x0.0001
+    fix32 xmask = fix32(ds.tline.mask.x) - fix32::frombits(1);
+    fix32 ymask = fix32(ds.tline.mask.y) - fix32::frombits(1);
+
+    for (;;)
     {
-        set_pixel(x0, y0, 0); // FIXME
-    }
-    else if (abs(x1 - x0) >= abs(y1 - y0))
-    {
-        for (int16_t x = x0, y = y0, dx = x0 <= x1 ? 1 : -1; ; )
+        // Find sprite in memory
+        int sx = (ds.tline.offset.x + int(mx)) & 0x7f;
+        int sy = (ds.tline.offset.y + int(my)) & 0x3f;
+        uint8_t sprite = m_ram.map[128 * sy + sx];
+        uint8_t bits = m_ram.gfx_props[sprite];
+
+        // If found, draw pixel
+        if (sprite && (!layer || (bits & layer)))
         {
-            set_pixel(x, y, 0); // FIXME
+            int col = m_ram.gfx.get(sprite % 16 * 8 + (int(mx << 3) & 0x7),
+                                    sprite / 16 * 8 + (int(my << 3) & 0x7));
+            if ((ds.draw_palette[col] & 0x10) == 0)
+            {
+                uint32_t color_bits = (ds.draw_palette[col] & 0xf) << 16;
+                set_pixel(x, y, color_bits);
+            }
+        }
+
+        // Advance source coordinats
+        mx = (mx & ~xmask) | ((mx + mdx) & xmask);
+        my = (my & ~ymask) | ((my + mdy) & ymask);
+
+        // Advance destination coordinates
+        if (horiz)
+        {
             if (x == x1)
                 break;
             x += dx;
             y = (int16_t)lol::round(lol::mix((double)y0, (double)y1, (double)(x - x0) / (x1 - x0)));
         }
-    }
-    else
-    {
-        for (int16_t x = x0, y = y0, dy = y0 <= y1 ? 1 : -1; ; )
+        else
         {
-            set_pixel(x, y, 0); // FIXME
             if (y == y1)
                 break;
             y += dy;

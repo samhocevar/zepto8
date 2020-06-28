@@ -181,7 +181,7 @@ private:
                   int16_t dx, int16_t dy, opt<int16_t> in_dw,
                   opt<int16_t> in_dh, bool flip_x, bool flip_y);
     void api_tline(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
-                   fix32 mx, fix32 my, opt<fix32> mdx, opt<fix32> mdy);
+                   fix32 mx, fix32 my, opt<fix32> mdx, opt<fix32> mdy, int16_t layers);
 
     // Sound
     void api_music(int16_t pattern, int16_t fade_len, int16_t mask);
@@ -249,6 +249,7 @@ public:
             { "sset",     bind<&vm::api_sset>() },
             { "spr",      bind<&vm::api_spr>() },
             { "sspr",     bind<&vm::api_sspr>() },
+            { "tline",    bind<&vm::api_tline>() },
 
             { "music", bind<&vm::api_music>() },
             { "sfx",   bind<&vm::api_sfx>() },

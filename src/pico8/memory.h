@@ -134,11 +134,29 @@ struct draw_state
     // 0x5f31—0x5f35: fill pattern
     uint8_t fillp[2], fillp_trans, fillp_flag;
 
-    // 0x5f35—0x5f3b: undocumented
-    uint8_t undocumented3[6];
-
-    // 0x5f3b: next polyline will not draw (0x1)
+    // 0x5f35: next polyline will not draw (0x1)
     uint8_t polyline_flag;
+
+    // 0x5f36—0x5f38: undocumented
+    uint8_t undocumented3[2];
+
+    struct
+    {
+        // 0x5f38—0x5f3c: tline mask
+#if __GNUC__
+        struct { uint8_t x, y; } mask;
+#else
+        lol::u8vec2 mask;
+#endif
+
+        // 0x5f3a—0x5f3c: tline offset
+#if __GNUC__
+        struct { uint8_t x, y; } offset;
+#else
+        lol::u8vec2 offset;
+#endif
+    }
+    tline;
 
     // 0x5f3c—0x5f40: polyline current point coordinates
 #if __GNUC__
