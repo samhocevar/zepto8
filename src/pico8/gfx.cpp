@@ -488,9 +488,14 @@ void vm::api_line(opt<fix32> arg0, opt<fix32> arg1, opt<fix32> arg2,
     x1 -= ds.camera.x; y1 -= ds.camera.y;
 
     bool horiz = abs(x1 - x0) >= abs(y1 - y0);
-    int16_t x = x0, y = y0;
     int16_t dx = x0 <= x1 ? 1 : -1;
     int16_t dy = y0 <= y1 ? 1 : -1;
+
+    // Clamping helps with performance even if pixels are clipped later
+    int16_t x = lol::clamp(int(x0), -1, 128);
+    int16_t y = lol::clamp(int(y0), -1, 128);
+    int16_t xend = lol::clamp(int(x1), -1, 128);
+    int16_t yend = lol::clamp(int(y1), -1, 128);
 
     for (;;)
     {
@@ -498,14 +503,14 @@ void vm::api_line(opt<fix32> arg0, opt<fix32> arg1, opt<fix32> arg2,
 
         if (horiz)
         {
-            if (x == x1)
+            if (x == xend)
                 break;
             x += dx;
             y = (int16_t)lol::round(lol::mix((double)y0, (double)y1, (double)(x - x0) / (x1 - x0)));
         }
         else
         {
-            if (y == y1)
+            if (y == yend)
                 break;
             y += dy;
             x = (int16_t)lol::round(lol::mix((double)x0, (double)x1, (double)(y - y0) / (y1 - y0)));
@@ -516,17 +521,9 @@ void vm::api_line(opt<fix32> arg0, opt<fix32> arg1, opt<fix32> arg2,
 void vm::api_tline(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
                    fix32 mx, fix32 my, opt<fix32> in_mdx, opt<fix32> in_mdy, int16_t layer)
 {
-    using std::abs;
+    using std::abs, std::min;
 
     auto &ds = m_ram.draw_state;
-
-    x0 -= ds.camera.x; y0 -= ds.camera.y;
-    x1 -= ds.camera.x; y1 -= ds.camera.y;
-
-    bool horiz = abs(x1 - x0) >= abs(y1 - y0);
-    int16_t x = x0, y = y0;
-    int16_t dx = horiz ? x0 <= x1 ? 1 : -1 : 0;
-    int16_t dy = horiz ? 0 : y0 <= y1 ? 1 : -1;
 
     // mdx, mdy default to 1/8, 0
     fix32 mdx = in_mdx ? *in_mdx : fix32::frombits(0x2000);
@@ -536,9 +533,32 @@ void vm::api_tline(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
     fix32 xmask = fix32(ds.tline.mask.x) - fix32::frombits(1);
     fix32 ymask = fix32(ds.tline.mask.y) - fix32::frombits(1);
 
+    x0 -= ds.camera.x; y0 -= ds.camera.y;
+    x1 -= ds.camera.x; y1 -= ds.camera.y;
+
+    bool horiz = abs(x1 - x0) >= abs(y1 - y0);
+    int16_t dx = horiz ? x0 <= x1 ? 1 : -1 : 0;
+    int16_t dy = horiz ? 0 : y0 <= y1 ? 1 : -1;
+
+    // Clamping helps with performance even if pixels are clipped later
+    int16_t x = lol::clamp(int(x0), -1, 128);
+    int16_t y = lol::clamp(int(y0), -1, 128);
+    int16_t xend = lol::clamp(int(x1), -1, 128);
+    int16_t yend = lol::clamp(int(y1), -1, 128);
+
+    // Advance texture coordinates; do it in steps to avoid overflows
+    int16_t delta = abs(horiz ? x - x0 : y - y0);
+    while (delta)
+    {
+        int16_t step = min(int16_t(8192), delta);
+        mx = (mx & ~xmask) | ((mx + mdx * fix32(step)) & xmask);
+        my = (my & ~ymask) | ((my + mdy * fix32(step)) & ymask);
+        delta -= step;
+    }
+
     for (;;)
     {
-        // Find sprite in memory
+        // Find sprite in map memory
         int sx = (ds.tline.offset.x + int(mx)) & 0x7f;
         int sy = (ds.tline.offset.y + int(my)) & 0x3f;
         uint8_t sprite = m_ram.map[128 * sy + sx];
@@ -556,21 +576,21 @@ void vm::api_tline(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
             }
         }
 
-        // Advance source coordinats
+        // Advance source coordinates
         mx = (mx & ~xmask) | ((mx + mdx) & xmask);
         my = (my & ~ymask) | ((my + mdy) & ymask);
 
         // Advance destination coordinates
         if (horiz)
         {
-            if (x == x1)
+            if (x == xend)
                 break;
             x += dx;
             y = (int16_t)lol::round(lol::mix((double)y0, (double)y1, (double)(x - x0) / (x1 - x0)));
         }
         else
         {
-            if (y == y1)
+            if (y == yend)
                 break;
             y += dy;
             x = (int16_t)lol::round(lol::mix((double)x0, (double)x1, (double)(y - y0) / (y1 - y0)));
