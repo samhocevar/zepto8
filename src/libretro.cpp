@@ -14,11 +14,12 @@
 #   include "config.h"
 #endif
 
-#include <lol/msg> // lol::msg
-#include <array>   // std::array
-#include <cstring> // std::memset
-#include <memory>  // std::shared_ptr
-#include <vector>  // std::vector
+#include <lol/msg>    // lol::msg
+#include <lol/narray> // lol::array2d
+#include <array>      // std::array
+#include <cstring>    // std::memset
+#include <memory>     // std::shared_ptr
+#include <vector>     // std::vector
 
 #include "zepto8.h"
 #include "pico8/vm.h"
@@ -134,7 +135,7 @@ EXPORT void retro_run()
     vm->render(fb32.data());
     for (int y = 0; y < 128; ++y)
     for (int x = 0; x < 128; ++x)
-        fb16[x][y] = uint16_t(lol::dot(lol::ivec3(fb32[x][y].rgb) / lol::ivec3(8, 4, 8),
+        fb16(x, y) = uint16_t(lol::dot(lol::ivec3(fb32(x, y).rgb) / lol::ivec3(8, 4, 8),
                                        lol::ivec3(2048, 32, 1)));
     video_cb(fb16.data(), 128, 128, 2 * 128);
 
