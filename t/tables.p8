@@ -143,6 +143,36 @@ fixture 'hole 1,2,*'
     add(t,4) -- {1,2,4}
     test_equal(t[3],4)
 
+fixture 'add at 1'
+    t={1,2,3}
+    add(t,4,1)
+    test_equal(t[1],4)
+    test_equal(t[2],1)
+
+fixture 'add at -10'
+    t={1,2,3}
+    add(t,4,-10)
+    test_equal(t[1],4)
+    test_equal(t[2],1)
+
+fixture 'add at #t'
+    t={1,2,3}
+    add(t,4,#t)
+    test_equal(t[3],4)
+    test_equal(t[4],3)
+
+fixture 'add at #t+1'
+    t={1,2,3}
+    add(t,4,#t+1)
+    test_equal(t[3],3)
+    test_equal(t[4],4)
+
+fixture 'add at #t+10'
+    t={1,2,3}
+    add(t,4,#t+10)
+    test_equal(t[3],3)
+    test_equal(t[4],4)
+
 --
 -- Check that all() works properly
 --
