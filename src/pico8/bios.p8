@@ -1,5 +1,5 @@
 pico-8 cartridge // http://www.pico-8.com
-version 16
+version 25
 __lua__
 --
 --  ZEPTO-8 — Fantasy console emulator
@@ -87,8 +87,14 @@ end
 -- It looks like table.insert() would work here but we also try to mimic
 -- the PICO-8 error messages:
 --  add("") → attempt to index local 'c' (a string value)
-function add(c, x)
-    if (c != nil) c[#c+1]=x return x
+function add(c, x, i)
+    if c != nil then
+        -- insert at i if specified, otherwise append
+        i=i and mid(1,i\1,#c+1) or #c+1
+        for j=#c,i,-1 do c[j+1]=c[j] end
+        c[i]=x
+        return x
+    end
 end
 
 function del(c,v)
@@ -103,6 +109,15 @@ function del(c,v)
     end
 end
 
+function deli(c,i)
+    if c != nil then
+        -- delete at i if specified, otherwise at the end
+        i=i and mid(1,i\1,#c) or #c
+        local v=c[i]
+        for j=i,#c-1 do c[j]=c[j+1] end
+        return v
+    end
+end
 
 function all(c)
     if (c==nil or #c==0) return function() end
