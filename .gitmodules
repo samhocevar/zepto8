@@ -43,3 +43,9 @@
 	url = https://github.com/libretro/libretro-common
 	branch = master
 	update = merge
+
+[submodule "lodepng"]
+	path = src/3rdparty/lodepng
+	url = https://github.com/lvandeve/lodepng
+	branch = master
+	update = merge

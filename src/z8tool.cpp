@@ -316,9 +316,9 @@ int main(int argc, char **argv)
             f.write((char const *)bin.data(), bin.size());
         }
         else if (lol::ends_with(out, ".png"))
-            cart.get_png().save(out);
+            cart.save_png(out);
         else
-            std::ofstream(out) << cart.get_p8();
+            cart.save_p8(out);
 
         break;
 

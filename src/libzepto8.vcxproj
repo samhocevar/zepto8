@@ -62,6 +62,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="3rdparty\lodepng\lodepng.cpp" />
     <ClCompile Include="bios.cpp" />
     <ClCompile Include="pico8\api.cpp" />
     <ClCompile Include="pico8\ast.cpp" />
@@ -79,6 +80,7 @@
     <ClCompile Include="vm.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="3rdparty\lodepng\lodepng.h" />
     <ClInclude Include="bindings/js.h" />
     <ClInclude Include="bindings/lua.h" />
     <ClInclude Include="pico8\cart.h" />

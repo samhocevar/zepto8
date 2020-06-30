@@ -14,13 +14,16 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h> // lol::old_image
-#include <lol/file>     // lol::file
-#include <lol/msg>      // lol::msg
-#include <lol/utils>    // lol::ends_with
-#include <lol/pegtl>
-#include <regex>        // std::regex_replace
+#include <fstream>   // std::ofstream
+#include <lol/file>  // lol::file
+#include <lol/msg>   // lol::msg
+#include <lol/utils> // lol::ends_with
+#include <lol/pegtl> // pegtl::*
+#include <regex>     // std::regex_replace
 
+#include <lol/sys/init.h> // lol::sys::get_data_path
+
+#include "3rdparty/lodepng/lodepng.h"
 extern "C" {
 #include "3rdparty/quickjs/quickjs.h"
 }
@@ -59,14 +62,17 @@ bool cart::load(std::string const &filename)
 bool cart::load_png(std::string const &filename)
 {
     // Open cartridge as PNG image
-    lol::old_image img;
-    img.load(filename);
-    ivec2 size = img.size();
+    std::vector<uint8_t> image;
+    unsigned int width, height;
+    unsigned int error = lodepng::decode(image, width, height, filename);
 
-    if (size.x * size.y != 160 * 205)
+    if (error)
         return false;
 
-    u8vec4 const *pixels = img.lock<PixelFormat::RGBA_8>();
+    if (width * height != 160 * 205)
+        return false;
+
+    u8vec4 const *pixels = (u8vec4 const *)image.data();
 
     // Retrieve cartridge data from lower image bits
     std::vector<uint8_t> bytes(sizeof(m_rom) + 5);
@@ -77,18 +83,16 @@ bool cart::load_png(std::string const &filename)
     }
 
     // Retrieve label from image pixels
-    if (size.x >= LABEL_WIDTH + LABEL_X && size.y >= LABEL_HEIGHT + LABEL_Y)
+    if (width >= LABEL_WIDTH + LABEL_X && height >= LABEL_HEIGHT + LABEL_Y)
     {
         m_label.resize(LABEL_WIDTH * LABEL_HEIGHT);
         for (int y = 0; y < LABEL_HEIGHT; ++y)
         for (int x = 0; x < LABEL_WIDTH; ++x)
         {
-            lol::u8vec4 p = pixels[(y + LABEL_Y) * size.x + (x + LABEL_X)];
+            lol::u8vec4 p = pixels[(y + LABEL_Y) * width + (x + LABEL_X)];
             m_label[y * LABEL_WIDTH + x] = palette::best(p, 32);
         }
     }
-
-    img.unlock(pixels);
 
     set_bin(bytes);
     return true;
@@ -464,39 +468,50 @@ bool cart::load_p8(std::string const &filename)
     return true;
 }
 
-lol::old_image cart::get_png() const
+bool cart::save_png(std::string const &filename) const
 {
-    lol::old_image ret;
-    ret.load("data/blank.png");
+    // Open blank cartridge
+    std::vector<uint8_t> image;
+    unsigned int width, height;
+    unsigned int error = lodepng::decode(image, width, height,
+                                         lol::sys::get_data_path("data/blank.png"));
+    if (error != 0)
+    {
+        lol::msg::error("cannot load blank cart: %s\n", lodepng_error_text(error));
+        return false;
+    }
 
-    ivec2 size = ret.size();
+    u8vec4 *pixels = (u8vec4 *)image.data();
 
-    u8vec4 *pixels = ret.lock<PixelFormat::RGBA_8>();
-
-    /* Apply label */
+    // Apply label
     if (m_label.size() >= LABEL_WIDTH * LABEL_HEIGHT)
     {
         for (int y = 0; y < LABEL_HEIGHT; ++y)
         for (int x = 0; x < LABEL_WIDTH; ++x)
         {
             uint8_t col = m_label[y * LABEL_WIDTH + x] & 0x1f;
-            pixels[(y + LABEL_Y) * size.x + (x + LABEL_X)] = palette::get8(col);
+            pixels[(y + LABEL_Y) * width + (x + LABEL_X)] = palette::get8(col);
         }
     }
 
-    /* Create ROM data */
+    // Create ROM data
     std::vector<uint8_t> const &rom = get_bin();
 
-    /* Write ROM to lower image bits */
+    // Write ROM to lower image bits
     for (size_t n = 0; n < rom.size(); ++n)
     {
         u8vec4 p(rom[n] & 0x30, rom[n] & 0x0c, rom[n] & 0x03, rom[n] & 0xc0);
         pixels[n] = pixels[n] / 4 * 4 + p / u8vec4(16, 4, 1, 64);
     }
 
-    ret.unlock(pixels);
+    error = lodepng::encode(filename, image, width, height);
+    if (error != 0)
+    {
+        lol::msg::error("cannot save cart: %s\n", lodepng_error_text(error));
+        return false;
+    }
 
-    return ret;
+    return true;
 }
 
 std::vector<uint8_t> cart::get_compressed_code() const
@@ -528,7 +543,7 @@ std::vector<uint8_t> cart::get_bin() const
     return ret;
 }
 
-std::string cart::get_p8() const
+bool cart::save_p8(std::string const &filename) const
 {
     std::string ret = "pico-8 cartridge // http://www.pico-8.com\n";
     ret += lol::format("version %d\n", PICO8_VERSION);
@@ -652,7 +667,8 @@ std::string cart::get_p8() const
 
     ret += '\n';
 
-    return ret;
+    std::ofstream(filename) << ret;
+    return true;
 }
 
 } // namespace z8::pico8

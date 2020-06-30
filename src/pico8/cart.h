@@ -58,8 +58,8 @@ public:
 
     std::vector<uint8_t> get_compressed_code() const;
     std::vector<uint8_t> get_bin() const;
-    std::string get_p8() const;
-    lol::old_image get_png() const;
+    bool save_p8(std::string const &filename) const;
+    bool save_png(std::string const &filename) const;
 
 private:
     bool load_png(std::string const &filename);

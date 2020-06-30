@@ -189,6 +189,8 @@ libzepto8_a_SOURCES = \
     raccoon/vm.cpp raccoon/vm.h \
     raccoon/memory.h raccoon/font.h \
     raccoon/api.cpp \
+    \
+    3rdparty/lodepng/lodepng.cpp 3rdparty/lodepng/lodepng.h \
     $(NULL)
 libzepto8_a_DATA = pico8/bios.p8
 libzepto8_a_CPPFLAGS = $(AM_CPPFLAGS)

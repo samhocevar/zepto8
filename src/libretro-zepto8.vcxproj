@@ -57,7 +57,6 @@
     <ClCompile Include="libretro.cpp" />
   </ItemGroup>
   <Import Project="$(LolDir)build\msbuild\lol-core.props" />
-  <Import Project="$(LolDir)build\msbuild\lol-lua.props" />
   <ItemGroup>
     <ProjectReference Include="libquickjs.vcxproj">
       <Project>{5168dfab-3b54-4caa-8654-da760bc53b74}</Project>
