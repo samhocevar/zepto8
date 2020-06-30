@@ -790,6 +790,11 @@ var<bool, int16_t> vm::api_btnp(opt<int16_t> n, int16_t p)
     return bits;
 }
 
+void vm::api_serial(int16_t chan, int16_t address, int16_t len)
+{
+    private_stub(lol::format("serial(0x%4x, 0x%4x, 0x%4x)", chan, address, len));
+}
+
 //
 // Deprecated
 //

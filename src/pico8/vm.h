@@ -143,6 +143,7 @@ private:
     void api_update_buttons();
     var<bool, int16_t> api_btn(opt<int16_t> n, int16_t p);
     var<bool, int16_t> api_btnp(opt<int16_t> n, int16_t p);
+    void api_serial(int16_t chan, int16_t address, int16_t len);
 
     // Text
     tup<uint8_t, uint8_t, uint8_t> api_cursor(uint8_t x, uint8_t y, opt<uint8_t> c);
