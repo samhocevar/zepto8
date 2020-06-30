@@ -153,7 +153,7 @@ private:
     void api_circ(int16_t x, int16_t y, int16_t r, opt<fix32> c);
     void api_circfill(int16_t x, int16_t y, int16_t r, opt<fix32> c);
     tup<uint8_t, uint8_t, uint8_t, uint8_t> api_clip(int16_t x, int16_t y,
-                                                     int16_t w, opt<int16_t> h);
+                                                     int16_t w, opt<int16_t> h, bool intersect);
     void api_cls(uint8_t c);
     uint8_t api_color(opt<uint8_t> c);
     fix32 api_fillp(fix32 fillp);

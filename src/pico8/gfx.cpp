@@ -350,9 +350,14 @@ void vm::api_circfill(int16_t x, int16_t y, int16_t r, opt<fix32> c)
     }
 }
 
-tup<uint8_t, uint8_t, uint8_t, uint8_t> vm::api_clip(int16_t x, int16_t y, int16_t w, opt<int16_t> h)
+tup<uint8_t, uint8_t, uint8_t, uint8_t> vm::api_clip(int16_t x, int16_t y,
+                                                     int16_t w, opt<int16_t> h, bool intersect)
 {
-    uint8_t x1 = 0, y1 = 0, x2 = 128, y2 = 128;
+    auto &ds = m_ram.draw_state;
+    uint8_t x1 = intersect ? ds.clip.x1 : 0;
+    uint8_t y1 = intersect ? ds.clip.y1 : 0;
+    uint8_t x2 = intersect ? ds.clip.x2 : 128;
+    uint8_t y2 = intersect ? ds.clip.y2 : 128;
 
     // All three arguments are required for the non-default behaviour
     if (h)
@@ -363,7 +368,6 @@ tup<uint8_t, uint8_t, uint8_t, uint8_t> vm::api_clip(int16_t x, int16_t y, int16
         y1 = uint8_t(std::max(int16_t(y1), y));
     }
 
-    auto &ds = m_ram.draw_state;
     std::swap(ds.clip.x1, x1);
     std::swap(ds.clip.y1, y1);
     std::swap(ds.clip.x2, x2);
