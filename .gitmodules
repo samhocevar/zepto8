@@ -34,7 +34,7 @@
 [submodule "quickjs"]
 	path = src/3rdparty/quickjs
 	url = https://github.com/samhocevar/fork-quickjs
-	branch = task/msvc-support
+	branch = zepto8
 	update = merge
 	upstream = https://github.com/horhof/quickjs
 
