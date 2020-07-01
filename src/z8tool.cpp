@@ -266,7 +266,7 @@ int main(int argc, char **argv)
 
         printf("token_count: %d [8192]\n", tokens);
         printf("code_size: %d [65535]\n", int(code.size()));
-        auto const &original_code = cart.get_rom().code;
+        auto const &original_code = cart.get_rom().code();
         if (original_code[0] == '\0' && original_code[1] == 'p'
              && original_code[2] == 'x'  && original_code[3] == 'a')
         {

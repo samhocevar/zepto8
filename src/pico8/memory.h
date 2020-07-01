@@ -32,7 +32,7 @@ namespace z8::pico8
 {
 
 // We use uint16_t instead of uint8_t because note::instrument overlaps two bytes.
-struct note
+struct note_t
 {
     uint16_t key : 6;
     uint16_t instrument : 3;
@@ -43,9 +43,9 @@ struct note
     uint16_t effect : 4;
 };
 
-struct sfx
+struct sfx_t
 {
-    note notes[32];
+    note_t notes[32];
 
     // 0: editor mode
     // 1: speed (1-255)
@@ -57,7 +57,7 @@ struct sfx
     uint8_t loop_end;
 };
 
-struct song
+struct song_t
 {
     union
     {
@@ -81,7 +81,11 @@ struct song
     uint8_t sfx(int n) const;
 };
 
-struct draw_state
+struct code_t : std::array<uint8_t, 0x3d00>
+{
+};
+
+struct draw_state_t
 {
     // 0x5f00—0x5f20: palette information (draw palette, screen palette)
     uint8_t draw_palette[16];
@@ -103,18 +107,10 @@ struct draw_state
     uint8_t pen;
 
     // 0x5f26—0x5f28: text cursor coordinates
-#if __GNUC__
-    struct { uint8_t x, y; } cursor;
-#else
     lol::u8vec2 cursor;
-#endif
 
     // 0x5f28—0x5f2c: camera coordinates
-#if __GNUC__
-    struct { int16_t x, y; } camera;
-#else
     lol::i16vec2 camera;
-#endif
 
     // 0x5f2c: screen mode (double width, etc.)
     uint8_t screen_mode;
@@ -143,30 +139,18 @@ struct draw_state
     struct
     {
         // 0x5f38—0x5f3c: tline mask
-#if __GNUC__
-        struct { uint8_t x, y; } mask;
-#else
         lol::u8vec2 mask;
-#endif
 
         // 0x5f3a—0x5f3c: tline offset
-#if __GNUC__
-        struct { uint8_t x, y; } offset;
-#else
         lol::u8vec2 offset;
-#endif
     }
     tline;
 
     // 0x5f3c—0x5f40: polyline current point coordinates
-#if __GNUC__
-    struct { int16_t x, y; } polyline;
-#else
     lol::i16vec2 polyline;
-#endif
 };
 
-struct hw_state
+struct hw_state_t
 {
     // 0x5f40—0x5f44: sound channel effects
     uint8_t half_rate, reverb, distort, lowpass;
@@ -204,8 +188,6 @@ struct hw_state
 
 struct memory
 {
-    memory() {}
-
     // This union handles the gfx/map shared section
     union
     {
@@ -243,35 +225,39 @@ struct memory
     uint8_t gfx_props[0x100];
 
     // 64 songs
-    struct song song[0x40];
+    song_t song[0x40];
 
     // 64 SFX samples
-    struct sfx sfx[0x40];
+    sfx_t sfx[0x40];
 
+    // A cart will have the code section at the same place as user_data. Cannot use a
+    // nameless union here because we’re aliased with hw_state which has constructors.
+
+    // Runtime PICO-8 memory
     union
     {
-        // A cart will have the code section here
-        uint8_t code[0x3d00];
-
-        // Runtime PICO-8 memory
         struct
         {
-            uint8_t user_data[0x1b00];
+            inline auto operator()() { return reinterpret_cast<code_t &>(*this); }
+            inline auto &operator()() const { return reinterpret_cast<code_t const &>(*this); }
+        }
+        code;
 
-            uint8_t persistent[0x100];
-
-            // Draw state
-            struct draw_state draw_state;
-
-            // Hardware state
-            struct hw_state hw_state;
-
-            uint8_t gpio_pins[0x80];
-
-            // The screen
-            u4mat2<128, 128> screen;
-        };
+        uint8_t user_data[0x1b00];
     };
+
+    uint8_t persistent[0x100];
+
+    // Draw state
+    draw_state_t draw_state;
+
+    // Hardware state
+    hw_state_t hw_state;
+
+    uint8_t gpio_pins[0x80];
+
+    // The screen
+    u4mat2<128, 128> screen;
 
     // Standard accessors
     inline uint8_t &operator[](int n)
@@ -339,13 +325,15 @@ struct memory
 };
 
 // Check type sizes
-static_assert(sizeof(sfx) == 68, "pico8::sfx has incorrect size");
+static_assert(sizeof(sfx_t) == 68, "pico8::sfx has incorrect size");
+static_assert(sizeof(code_t) == 0x3d00, "pico8::code_t has incorrect size");
+
 
 // Check all section offsets and sizes
 #define static_check_section(name, offset, size) \
     static_assert(offsetof(memory, name) == offset, \
                   "pico8::memory::"#name" should have offset "#offset); \
-    static_assert(sizeof(memory::name) == size, \
+    static_assert((sizeof(memory::name) == size) || (size == -1), \
                   "pico8::memory::"#name" should have size "#size);
 
 static_check_section(gfx,        0x0000, 0x2000);
@@ -354,7 +342,7 @@ static_check_section(map,        0x2000, 0x1000);
 static_check_section(gfx_props,  0x3000,  0x100);
 static_check_section(song,       0x3100,  0x100);
 static_check_section(sfx,        0x3200, 0x1100);
-static_check_section(code,       0x4300, 0x3d00);
+static_check_section(code,       0x4300,     -1);
 static_check_section(user_data,  0x4300, 0x1b00);
 static_check_section(persistent, 0x5e00,  0x100);
 static_check_section(draw_state, 0x5f00,   0x40);
@@ -365,6 +353,5 @@ static_check_section(screen,     0x6000, 0x2000);
 
 // Final sanity check
 static_assert(sizeof(memory) == 0x8000, "pico8::memory should have size 0x8000");
-
 
 }

@@ -57,7 +57,7 @@ static std::string key_to_name(float key)
 }
 #endif
 
-uint8_t song::sfx(int n) const
+uint8_t song_t::sfx(int n) const
 {
     assert(n >= 0 && n <= 3);
     return data[n] & 0x7f;
@@ -132,7 +132,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
 
         int const index = m_state.channels[chan].sfx;
         assert(index >= 0 && index < 64);
-        struct sfx const &sfx = m_ram.sfx[index];
+        sfx_t const &sfx = m_ram.sfx[index];
 
         // Speed must be 1—255 otherwise the SFX is invalid
         int const speed = max(1, (int)sfx.speed);

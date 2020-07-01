@@ -171,7 +171,7 @@ void cart::set_bin(std::vector<uint8_t> const &bytes)
     int minor = (vbytes[1] << 24) | (vbytes[2] << 16) | (vbytes[3] << 8) | vbytes[4];
 
     // Retrieve code, with optional decompression
-    m_code = code::decompress(m_rom.code);
+    m_code = code::decompress(m_rom.code().data());
 
     msg::debug("version: %d.%d code: %d chars\n", version, minor, (int)m_code.length());
 
