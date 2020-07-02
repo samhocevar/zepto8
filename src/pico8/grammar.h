@@ -398,8 +398,9 @@ namespace lua53
    // have a compound assignment version, so avoid matching “=”.
    struct operators_eleven : op_one< '^', '^', '=' > {};
    struct expr_eleven : tao::pegtl::seq< expr_twelve, seps, tao::pegtl::opt< operators_eleven, seps, expr_ten, seps > > {};
+   struct free_unary_apply : tao::pegtl::if_must< tao::pegtl::seq< tao::pegtl::one< '-', '~' >, tao::pegtl::at< numeral > >, expr_ten, seps > {};
    struct unary_apply : tao::pegtl::if_must< unary_operators, seps, expr_ten, seps > {};
-   struct expr_ten : tao::pegtl::sor< unary_apply, expr_eleven > {};
+   struct expr_ten : tao::pegtl::sor< free_unary_apply, unary_apply, expr_eleven > {};
    struct operators_nine : tao::pegtl::sor< op_one< '/', '/', '=' >, // “/” but not “//” or “/=”
                                             op_one< '\\', '=' >,     // “\” but not “\=”
                                             op_one< '*', '=' >,      // “*” but not “*=”
