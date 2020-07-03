@@ -370,7 +370,8 @@ namespace lua53
    struct right_assoc : tao::pegtl::seq< S, seps, tao::pegtl::opt_must< O, seps, right_assoc< S, O > > > {};
 
 #if WITH_PICO8
-   struct free_unary_operators : tao::pegtl::seq< tao::pegtl::one< '-', '~' >, tao::pegtl::at< numeral > > {};
+   struct free_unary_operators : tao::pegtl::seq< tao::pegtl::one< '-', '~' >,
+                                                  tao::pegtl::at< tao::pegtl::digit > > {};
    struct unary_operators : tao::pegtl::sor< free_unary_operators,
                                              op_one< '-', '-', '=' >, // “-” but not “--” or “-=”
                                              op_one< '%', '=' >,      // “%” but not “%=”
