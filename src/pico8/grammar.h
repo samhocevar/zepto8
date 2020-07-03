@@ -133,6 +133,9 @@ namespace lua53
                                           tao::pegtl::sor< tao::pegtl::try_catch< tao::pegtl::seq< R... > >,
                                                            tao::pegtl::seq< disable_crlf< false >, tao::pegtl::failure > >,
                                           disable_crlf< false > > {};
+
+   // Convenience rule to make sure the subtree is ignored from AST; useful with at<>
+   template< typename... R > struct silent_at : tao::pegtl::at< R... > {};
 #endif
 
    // clang-format off
@@ -370,10 +373,11 @@ namespace lua53
    struct right_assoc : tao::pegtl::seq< S, seps, tao::pegtl::opt_must< O, seps, right_assoc< S, O > > > {};
 
 #if WITH_PICO8
+   // Unary operators immediately followed by a numeral (without spaces) cost zero tokens, so we
+   // need to treat them specially when counting tokens.
    struct free_unary_operators : tao::pegtl::seq< tao::pegtl::one< '-', '~' >,
-                                                  tao::pegtl::at< tao::pegtl::digit > > {};
-   struct unary_operators : tao::pegtl::sor< free_unary_operators,
-                                             op_one< '-', '-', '=' >, // “-” but not “--” or “-=”
+                                                  silent_at< numeral > > {};
+   struct unary_operators : tao::pegtl::sor< op_one< '-', '-', '=' >, // “-” but not “--” or “-=”
                                              op_one< '%', '=' >,      // “%” but not “%=”
                                              tao::pegtl::one< '@' >,  // “@”
                                              tao::pegtl::one< '$' >,  // “$”
@@ -401,7 +405,9 @@ namespace lua53
    // have a compound assignment version, so avoid matching “=”.
    struct operators_eleven : op_one< '^', '^', '=' > {};
    struct expr_eleven : tao::pegtl::seq< expr_twelve, seps, tao::pegtl::opt< operators_eleven, seps, expr_ten, seps > > {};
-   struct unary_apply : tao::pegtl::if_must< unary_operators, seps, expr_ten, seps > {};
+   struct unary_apply : tao::pegtl::if_must< tao::pegtl::sor< unary_operators,
+                                                              free_unary_operators >,
+                                             seps, expr_ten, seps > {};
    struct expr_ten : tao::pegtl::sor< unary_apply, expr_eleven > {};
    struct operators_nine : tao::pegtl::sor< op_one< '/', '/', '=' >, // “/” but not “//” or “/=”
                                             op_one< '\\', '=' >,     // “\” but not “\=”
@@ -603,8 +609,10 @@ namespace lua53
    struct local_variables : tao::pegtl::if_must< name_list_must, seps, tao::pegtl::opt< assignments_one > > {};
    struct local_statement : tao::pegtl::if_must< key_local, seps, tao::pegtl::sor< local_function, local_variables > > {};
 
-   template< typename... Rule >
-   using ensure = tao::pegtl::seq< tao::pegtl::at< Rule... >, Rule... >;
+#if WITH_PICO8
+   template< typename... R >
+   using ensure = tao::pegtl::seq< silent_at< R... >, R... >;
+#endif
 
    struct semicolon : tao::pegtl::one< ';' > {};
    struct statement : tao::pegtl::sor< semicolon,

@@ -35,8 +35,7 @@ namespace z8::pico8
 // Parse tree support
 //
 
-struct transform_expr
-  : pegtl::parse_tree::apply< transform_expr >
+struct transform_expr : pegtl::parse_tree::apply< transform_expr >
 {
     template< typename Node, typename... States >
     static void transform( std::unique_ptr< Node >& n, States&&... )
@@ -50,63 +49,76 @@ struct transform_expr
     }
 };
 
-template<typename Rule>
-struct ast_selector : pegtl::parse_tree::selector<
-    Rule,
-    pegtl::parse_tree::store_content::on<
-        // others
-        variable,
-        keyword,
-        name,
-        numeral,
-        bracket_expr,
-        literal_string,
-        unary_operators,
-        compound_operators,
-        operators_nine,
-        operators_eight,
-        operators_six,
-        operators_two
-        >,
-    transform_expr::on<
-        expr_eleven,
-        expr_nine,
-        expr_eight,
-        expr_seven,
-        expr_six,
-        expr_five,
-        expr_four,
-        expr_three,
-        expr_two,
-        expr_one,
-        expression
-        >,
-    pegtl::parse_tree::remove_content::on<
-        // statement :=
-        assignments,
-            assignment_variable_list,
-            expr_list_must,
-        compound_statement,
-            // compound_operators,
-        short_print,
+using store_selector = pegtl::parse_tree::store_content::on<
+    // others
+    variable,
+    keyword,
+    name,
+    numeral,
+    bracket_expr,
+    literal_string,
+    unary_operators,
+    compound_operators,
+    operators_nine,
+    operators_eight,
+    operators_six,
+    operators_two
+>;
+
+using transform_selector = transform_expr::on<
+    expr_eleven,
+    expr_nine,
+    expr_eight,
+    expr_seven,
+    expr_six,
+    expr_five,
+    expr_four,
+    expr_three,
+    expr_two,
+    expr_one,
+    expression
+>;
+
+using remove_selector = pegtl::parse_tree::remove_content::on<
+    // statement :=
+    assignments,
+        assignment_variable_list,
+        expr_list_must,
+    compound_statement,
+        // compound_operators,
+    short_print,
 #if 0
-        if_do_statement,
+    if_do_statement,
 #endif
-        short_if_statement,
-        short_while_statement,
-        function_call,
-        label_statement,
-        key_break,
-        goto_statement,
-        do_statement,
-        while_statement,
-        repeat_statement,
-        if_statement,
-        for_statement,
-        function_definition,
-        local_statement
-        > >
+    short_if_statement,
+    short_while_statement,
+    function_call,
+    label_statement,
+    key_break,
+    goto_statement,
+    do_statement,
+    while_statement,
+    repeat_statement,
+    if_statement,
+    for_statement,
+    function_definition,
+    local_statement
+>;
+
+// The global AST selector
+template<typename Rule>
+struct ast_selector : pegtl::parse_tree::selector< Rule,
+    store_selector, transform_selector, remove_selector > {};
+
+// Special rule: discard a whole subtree
+template< typename... Rule >
+struct ast_selector< silent_at< Rule... > > : std::true_type
 {
+    template< typename Node, typename... States >
+    static void transform( std::unique_ptr< Node >& n, States&&... )
+    {
+        n.reset();
+    }
 };
 
 std::string code::ast(std::string const &s)
