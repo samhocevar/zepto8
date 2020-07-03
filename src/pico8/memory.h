@@ -14,6 +14,7 @@
 
 #include <lol/vector> // lol::u8vec2
 #include <algorithm>  // std::swap
+#include <array>      // std::array
 #include <bitset>     // std::bitset
 #include <cassert>    // assert
 
