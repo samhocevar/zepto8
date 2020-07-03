@@ -271,10 +271,10 @@ int main(int argc, char **argv)
              && original_code[2] == 'x'  && original_code[3] == 'a')
         {
             printf("stored_code_size: %d [%d]\n",
-               int(original_code[6] * 256 + original_code[7]), int(sizeof(z8::pico8::memory::code)));
+               int(original_code[6] * 256 + original_code[7]), int(sizeof(cart.get_rom().code())));
         }
         printf("compressed_code_size: %d [%d]\n",
-               int(cart.get_compressed_code().size()), int(sizeof(z8::pico8::memory::code)));
+               int(cart.get_compressed_code().size()), int(sizeof(cart.get_rom().code())));
 
         printf("\n");
         break;
