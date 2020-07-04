@@ -9,5 +9,5 @@ This is all experimental.
  - [`z8tool`](doc/z8tool.md), a utility toolkit
  - `z8dev` is an experimental IDE and does not work yet
  - the [PICO-8 language](doc/PICO-8-language.md)
- - [porting zepto8 to other platforms](doc/porting.md)
+ - [zepto8 ports to other platforms](doc/ports.md)
 
