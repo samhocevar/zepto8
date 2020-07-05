@@ -3,12 +3,14 @@ include $(top_srcdir)/src/3rdparty/lolengine/build/autotools/common.am
 
 bin_PROGRAMS = ../zepto8 ../z8dev ../z8tool ../z8lua
 libretro_LTLIBRARIES = libretro-zepto8.la
-noinst_LIBRARIES = $(static_libs)
 
-static_libs = libzepto8.a libz8lua.a libquickjs.a
+# Convenience libraries; need to be marked noinst
+noinst_LTLIBRARIES = $(static_libs)
+
+static_libs = libzepto8.la libz8lua.la libquickjs.la
 
 ___z8devdir = $(datarootdir)/zepto8
-libzepto8_adir = $(datarootdir)/zepto8
+libzepto8_ladir = $(datarootdir)/zepto8
 libretrodir = $(datarootdir)/libretro
 
 #
@@ -22,12 +24,12 @@ ___zepto8_SOURCES = \
 ___zepto8_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
                      $(AM_CPPFLAGS)
-___zepto8_LDFLAGS = $(static_libs) -ldl $(AM_LDFLAGS)
-___zepto8_DEPENDENCIES = $(static_libs) @LOL_DEPS@
+___zepto8_LDFLAGS = -ldl $(AM_LDFLAGS)
 if LOL_USE_EMSCRIPTEN
 ___zepto8_LDFLAGS += --preload-file pico8/bios.p8 \
                      --shell-file template.html
 endif
+___zepto8_LDADD = libzepto8.la
 
 EXTRA_DIST += zepto8.vcxproj
 
@@ -37,9 +39,9 @@ EXTRA_DIST += zepto8.vcxproj
 
 libretro_zepto8_la_SOURCES = \
     libretro.cpp
-libretro_zepto8_la_DEPENDENCIES = $(static_libs) @LOL_DEPS@
 libretro_zepto8_la_CPPFLAGS = -I3rdparty/libretro-common/include \
                               $(AM_CPPFLAGS)
+libretro_zepto8_la_LIBADD = libzepto8.la
 
 #
 # z8dev: the IDE prototype
@@ -58,13 +60,13 @@ ___z8dev_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                     -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
                     -I3rdparty/zep/include \
                     $(AM_CPPFLAGS)
-___z8dev_LDFLAGS = $(static_libs) $(AM_LDFLAGS)
-___z8dev_DEPENDENCIES = $(static_libs) @LOL_DEPS@
+___z8dev_LDFLAGS = $(AM_LDFLAGS)
 ___z8dev_DATA = unz8.p8
 if LOL_USE_EMSCRIPTEN
 ___z8dev_LDFLAGS += --preload-file pico8/bios.p8 --preload-file data/zepto8.ttf \
                     --shell-file template.html
 endif
+___z8dev_LDADD = libzepto8.la
 
 3rdparty_sources = \
     3rdparty/imgui-club/imgui_memory_editor/imgui_memory_editor.h \
@@ -148,8 +150,8 @@ ___z8tool_CPPFLAGS = -DLOL_CONFIG_SOLUTIONDIR=\"$(abs_top_srcdir)\" \
                      -DLOL_CONFIG_PROJECTDIR=\"$(abs_srcdir)\" \
                      -Izlib -DGZ8 -DZ_SOLO -DNO_GZIP -DHAVE_MEMCPY -Dlocal= \
                      $(AM_CPPFLAGS)
-___z8tool_LDFLAGS = $(static_libs) -ldl $(AM_LDFLAGS)
-___z8tool_DEPENDENCIES = $(static_libs) @LOL_DEPS@
+___z8tool_LDFLAGS = -ldl $(AM_LDFLAGS)
+___z8tool_LDADD = libzepto8.la
 
 EXTRA_DIST += zlib/deflate.c zlib/trees.c
 EXTRA_DIST += z8tool.vcxproj
@@ -162,8 +164,8 @@ ___z8lua_SOURCES = \
     3rdparty/z8lua/lua.c dummy.cpp \
     $(NULL)
 ___z8lua_CPPFLAGS = -xc++ -Iz8lua $(lua_cflags) $(AM_CPPFLAGS) $(AM_CXXFLAGS)
-___z8lua_LDFLAGS = libz8lua.a $(lua_ldflags)
-___z8lua_DEPENDENCIES = libz8lua.a
+___z8lua_LDFLAGS = $(lua_ldflags)
+___z8lua_LDADD = libz8lua.la
 
 EXTRA_DIST += z8lua.vcxproj
 
@@ -171,7 +173,7 @@ EXTRA_DIST += z8lua.vcxproj
 # libzepto8: core library used by all programs
 #
 
-libzepto8_a_SOURCES = \
+libzepto8_la_SOURCES = \
     zepto8.h \
     vm.cpp \
     bios.cpp bios.h \
@@ -192,16 +194,17 @@ libzepto8_a_SOURCES = \
     \
     3rdparty/lodepng/lodepng.cpp 3rdparty/lodepng/lodepng.h \
     $(NULL)
-libzepto8_a_DATA = pico8/bios.p8
-libzepto8_a_CPPFLAGS = $(AM_CPPFLAGS)
+libzepto8_la_DATA = pico8/bios.p8
+libzepto8_la_LIBADD = @LOL_DEPS@ libz8lua.la libquickjs.la
+libzepto8_la_CPPFLAGS = $(AM_CPPFLAGS)
 
-EXTRA_DIST += $(libzepto8_a_DATA) libzepto8.vcxproj
+EXTRA_DIST += $(libzepto8_la_DATA) libzepto8.vcxproj
 
 #
 # libz8lua: z8lua library used by all programs
 #
 
-libz8lua_a_SOURCES = \
+libz8lua_la_SOURCES = \
     3rdparty/z8lua/lapi.c 3rdparty/z8lua/lcode.c 3rdparty/z8lua/ldebug.c \
     3rdparty/z8lua/ldo.c 3rdparty/z8lua/ldump.c 3rdparty/z8lua/lfunc.c \
     3rdparty/z8lua/lgc.c 3rdparty/z8lua/llex.c 3rdparty/z8lua/lmem.c \
@@ -222,7 +225,7 @@ libz8lua_a_SOURCES = \
     3rdparty/z8lua/ltests.h 3rdparty/z8lua/ltm.h 3rdparty/z8lua/luaconf.h \
     3rdparty/z8lua/lua.h 3rdparty/z8lua/lualib.h 3rdparty/z8lua/lundump.h \
     3rdparty/z8lua/lvm.h 3rdparty/z8lua/lzio.h 3rdparty/z8lua/eris.h
-libz8lua_a_CPPFLAGS = $(lua_cflags) $(AM_CPPFLAGS) $(AM_CXXFLAGS)
+libz8lua_la_CPPFLAGS = $(lua_cflags) $(AM_CPPFLAGS) $(AM_CXXFLAGS)
 
 lua_cflags = -xc++ -I3rdparty/z8lua -DLUA_USE_POSIX -DLUA_USE_STRTODHEX
 lua_ldflags =
@@ -237,7 +240,7 @@ EXTRA_DIST += libz8lua.vcxproj
 # libquickjs: QuickJS library used by all programs
 #
 
-libquickjs_a_SOURCES = \
+libquickjs_la_SOURCES = \
     3rdparty/quickjs/quickjs.c 3rdparty/quickjs/quickjs.h \
     3rdparty/quickjs/quickjs-atom.h 3rdparty/quickjs/quickjs-opcode.h \
     3rdparty/quickjs/list.h \
@@ -247,7 +250,7 @@ libquickjs_a_SOURCES = \
     3rdparty/quickjs/libunicode.c 3rdparty/quickjs/libunicode.h \
     3rdparty/quickjs/libunicode-table.h \
     3rdparty/quickjs/cutils.c 3rdparty/quickjs/cutils.h
-libquickjs_a_CPPFLAGS = \
+libquickjs_la_CPPFLAGS = \
     -I3rdparty/quickjs -D_GNU_SOURCE -DCONFIG_VERSION=\"2019-08-18\" \
     $(AM_CPPFLAGS) $(AM_CFLAGS) \
     -Wno-unused-parameter -Wno-sign-compare
