@@ -375,7 +375,7 @@ namespace lua53
 #if WITH_PICO8
    // Unary operators immediately followed by a numeral (without spaces) cost zero tokens, so we
    // need to treat them specially when counting tokens.
-   struct free_unary_operators : tao::pegtl::seq< tao::pegtl::one< '-', '~' >,
+   struct free_unary_operators : tao::pegtl::seq< tao::pegtl::one< '-', '~' >, // “-” or “~”
                                                   silent_at< numeral > > {};
    struct unary_operators : tao::pegtl::sor< op_one< '-', '-', '=' >, // “-” but not “--” or “-=”
                                              op_one< '%', '=' >,      // “%” but not “%=”
@@ -566,22 +566,22 @@ namespace lua53
 
 #if WITH_PICO8
    struct compound_var : variable {};
-   struct compound_operators : tao::pegtl::sor< tao::pegtl::string< '+', '=' >,
-                                                tao::pegtl::string< '-', '=' >,
-                                                tao::pegtl::string< '*', '=' >,
-                                                tao::pegtl::string< '/', '=' >,
-                                                tao::pegtl::string< '%', '=' >,
-                                                tao::pegtl::string< '^', '=' >,
-                                                tao::pegtl::string< '\\', '=' >,
-                                                tao::pegtl::string< '&', '=' >,
-                                                tao::pegtl::string< '|', '=' >,
-                                                tao::pegtl::string< '^', '^', '=' >,
-                                                tao::pegtl::string< '<', '<', '=' >,
-                                                tao::pegtl::string< '>', '>', '=' >,
-                                                tao::pegtl::string< '>', '>', '>', '=' >,
-                                                tao::pegtl::string< '>', '>', '<', '=' >,
-                                                tao::pegtl::string< '<', '<', '>', '=' >,
-                                                tao::pegtl::string< '.', '.', '=' > > {};
+   struct compop : tao::pegtl::sor< tao::pegtl::string< '+', '=' >,
+                                    tao::pegtl::string< '-', '=' >,
+                                    tao::pegtl::string< '*', '=' >,
+                                    tao::pegtl::string< '/', '=' >,
+                                    tao::pegtl::string< '%', '=' >,
+                                    tao::pegtl::string< '^', '=' >,
+                                    tao::pegtl::string< '\\', '=' >,
+                                    tao::pegtl::string< '&', '=' >,
+                                    tao::pegtl::string< '|', '=' >,
+                                    tao::pegtl::string< '^', '^', '=' >,
+                                    tao::pegtl::string< '<', '<', '=' >,
+                                    tao::pegtl::string< '>', '>', '=' >,
+                                    tao::pegtl::string< '>', '>', '>', '=' >,
+                                    tao::pegtl::string< '>', '>', '<', '=' >,
+                                    tao::pegtl::string< '<', '<', '>', '=' >,
+                                    tao::pegtl::string< '.', '.', '=' > > {};
    // We could use one_line_seq to try to emulate the PICO-8 parser: it seems
    // to first validate the syntax on a single line, but still allow multiline
    // code at runtime. For instance this is not valid:
@@ -596,7 +596,7 @@ namespace lua53
    // There are also several other bugs that we used to try to tackle using a few hacks, for
    // instance eating a trailing comma, but I eventually decided against it. Most of them were
    // reported to https://www.lexaloffle.com/bbs/?tid=29750
-   struct compound_body : tao::pegtl::seq< compound_var, seps, compound_operators, seps, expression > {};
+   struct compound_body : tao::pegtl::seq< compound_var, seps, compop, seps, expression > {};
    struct compound_statement : tao::pegtl::seq< tao::pegtl::opt< key_local, seps >, compound_body > {};
 #endif
    struct assignment_variable_list : tao::pegtl::list_must< variable, tao::pegtl::one< ',' >, sep > {};

@@ -121,6 +121,19 @@ struct ast_selector< silent_at< Rule... > > : std::true_type
     }
 };
 
+struct chunk {};
+
+template<>
+struct ast_selector< grammar > : std::true_type
+{
+    template< typename Node, typename... States >
+    static void transform( std::unique_ptr< Node >& n, States&&... )
+    {
+        for (auto &c : n->children)
+            c->template set_type<chunk>();
+    }
+};
+
 std::string code::ast(std::string const &s)
 {
     pegtl::string_input<> in(s, "p8");

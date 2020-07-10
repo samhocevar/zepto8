@@ -137,7 +137,7 @@ private:
 
     std::string m_code;
     std::string m_name, m_link, m_host;
-    int m_version = -1;
+    int32_t m_version = -1;
 
     memory m_rom;
     memory m_ram;
