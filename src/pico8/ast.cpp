@@ -58,7 +58,7 @@ using store_selector = pegtl::parse_tree::store_content::on<
     bracket_expr,
     literal_string,
     unary_operators,
-    compound_operators,
+    compop,
     operators_nine,
     operators_eight,
     operators_six,
@@ -85,7 +85,7 @@ using remove_selector = pegtl::parse_tree::remove_content::on<
         assignment_variable_list,
         expr_list_must,
     compound_statement,
-        // compound_operators,
+        // compop,
     short_print,
 #if 0
     if_do_statement,

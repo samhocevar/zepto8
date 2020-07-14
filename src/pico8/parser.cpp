@@ -88,7 +88,7 @@ template<> int token_counter<operators_two>    = 1; // “==” “<=” etc.
 
 template<> int token_counter<free_unary_operators> = -1; // “-2” counts as one, “- 2” counts as two
 template<> int token_counter<unary_operators>      = 1;
-template<> int token_counter<compound_operators>   = 1;
+template<> int token_counter<compop>               = 1;
 
 template<typename R> struct tokenise_action
 {
