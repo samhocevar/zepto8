@@ -50,6 +50,9 @@ EXPORT void retro_set_environment(retro_environment_t cb)
     // We can run without a cartridge
     bool no_rom = true;
     enviro_cb(RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME, &no_rom);
+    // Looks good to me
+    char const *system_dir;
+    enviro_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_dir);
 }
 
 EXPORT void retro_set_video_refresh(retro_video_refresh_t cb) { video_cb = cb; }
