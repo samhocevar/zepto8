@@ -15,6 +15,7 @@
 #endif
 
 #include <lol/engine.h>  // lol::input
+#include <lol/msg>       // lol::msg
 #include <lol/vector>    // lol::vec2
 #include <lol/transform> // lol::mat4
 #include <lol/color>     // lol::color
@@ -189,6 +190,10 @@ void player::tick_game(float seconds)
         for (auto ch : keyboard->text())
             m_vm->text(ch);
     }
+
+    // Drag-and-drop events
+    if (lol::input::has_dnd())
+        lol::msg::info("dropped file %s\n", lol::input::get_dnd().c_str());
 
     // Step the VM
     m_vm->step(seconds);
