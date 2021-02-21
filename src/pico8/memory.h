@@ -88,20 +88,21 @@ struct code_t : std::array<uint8_t, 0x3d00>
 
 struct custom_font_t
 {
-    // 0x5f60: character width in pixels (can be more than 8, but only 8 pixels are drawn)
+    // 0x5600: character width in pixels (can be more than 8, but only 8 pixels are drawn)
     uint8_t width;
 
-    // 0x5f61: character width for character 128 and above
+    // 0x5601: character width for character 128 and above
     uint8_t extended_width;
 
-    // 0x5f62: character height in pixels
+    // 0x5602: character height in pixels
     uint8_t height;
 
-    // 0x5f63—0x5f65: draw offset x, draw offset y
+    // 0x5603—0x5605: draw offset x, draw offset y
     lol::u8vec2 offset;
 
     uint8_t padding[3];
 
+    // 0x5608—0x5e00: glyph data
     uint8_t glyphs[255][8];
 };
 
@@ -170,6 +171,25 @@ struct draw_state_t
     lol::i16vec2 polyline;
 };
 
+struct print_state_t
+{
+     uint8_t active  : 1;
+     uint8_t padding : 1;
+     uint8_t wide    : 1;
+     uint8_t tall    : 1;
+     uint8_t solid   : 1;
+     uint8_t invert  : 1;
+     uint8_t dotty   : 1;
+     uint8_t custom  : 1;
+
+     uint8_t char_w   : 4;
+     uint8_t char_h   : 4;
+     uint8_t char_w2  : 4;
+     uint8_t tab_w    : 4;
+     uint8_t offset_x : 4;
+     uint8_t offset_y : 4;
+};
+
 struct hw_state_t
 {
     // 0x5f40—0x5f44: sound channel effects
@@ -181,8 +201,11 @@ struct hw_state_t
     // 0x5f4c—0x5f54: button state
     uint8_t btn_state[8];
 
-    // 0x5f54—0x5f5c: undocumented
-    uint8_t undocumented2[8];
+    // 0x5f54—0x5f58: undocumented
+    uint8_t undocumented2[4];
+
+    // 0x5f58—0x5f5c: default attributes for print
+    print_state_t print_state;
 
     // 0x5f5c—0x5f5e: btnp() autorepeat parameters
     uint8_t btnp_delay, btnp_rate;

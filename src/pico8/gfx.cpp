@@ -209,6 +209,7 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
                    opt<fix32> c)
 {
     auto &ds = m_ram.draw_state;
+    auto &font = m_ram.custom_font;
 
     if (!str)
         return;
@@ -222,31 +223,78 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
     uint32_t color_bits = to_color_bits(has_coords ? c : opt_x) & 0xf0000;
     fix32 initial_x = x;
 
+    auto print_state = m_ram.hw_state.print_state;
+
+    int16_t width = 4;
+    int16_t height = 6;
+
     for (uint8_t ch : *str)
     {
-        if (ch == '\n')
+        if (ch == '\0')
+            break;
+
+        switch (ch)
         {
+        case '\n':
             x = initial_x;
-            y += fix32(6.0);
-        }
-        else
-        {
-            int16_t w = ch < 0x80 ? 4 : 8;
-            int offset = ch < 0x80 ? ch : 2 * ch - 0x80;
-            int font_x = offset % 32 * 4;
-            int font_y = offset / 32 * 6;
-
-            for (int16_t dy = 0; dy < 5; ++dy)
-                for (int16_t dx = 0; dx < w; ++dx)
+            y += fix32(height);
+            height = 6;
+            break;
+        case '\r':
+            x = initial_x;
+            break;
+        case 14:
+            print_state.custom = 1;
+            break;
+        case 15:
+            print_state.custom = 0;
+            break;
+        default:
+            {
+                if (print_state.custom)
                 {
-                    int16_t screen_x = (int16_t)x - ds.camera.x + dx;
-                    int16_t screen_y = (int16_t)y - ds.camera.y + dy;
+                    int16_t w = std::min(int(ch < 0x80 ? font.width : font.extended_width), 8);
+                    int16_t h = std::min(int(font.height), 8);
+                    auto &g = font.glyphs[ch - 1];
 
-                    if (m_bios->get_spixel(font_x + dx, font_y + dy))
-                        set_pixel(screen_x, screen_y, color_bits);
+                    for (int16_t dy = 0; dy < h; ++dy)
+                    {
+                        uint8_t gl = g[dy];
+
+                        for (int16_t dx = 0; dx < w; ++dx, gl >>= 1)
+                        {
+                            int16_t screen_x = (int16_t)x - ds.camera.x + dx + font.offset.x;
+                            int16_t screen_y = (int16_t)y - ds.camera.y + dy + font.offset.y;
+
+                            if (gl & 0x1)
+                                set_pixel(screen_x, screen_y, color_bits);
+                        }
+                    }
+
+                    x += fix32(w);
+                    height = std::max(height, int16_t(font.height));
                 }
+                else
+                {
+                    int16_t w = ch < 0x80 ? 4 : 8;
+                    int offset = ch < 0x80 ? ch : 2 * ch - 0x80;
+                    int font_x = offset % 32 * 4;
+                    int font_y = offset / 32 * 6;
 
-            x += fix32(w);
+                    for (int16_t dy = 0; dy < 5; ++dy)
+                        for (int16_t dx = 0; dx < w; ++dx)
+                        {
+                            int16_t screen_x = (int16_t)x - ds.camera.x + dx;
+                            int16_t screen_y = (int16_t)y - ds.camera.y + dy;
+
+                            if (m_bios->get_spixel(font_x + dx, font_y + dy))
+                                set_pixel(screen_x, screen_y, color_bits);
+                        }
+
+                    x += fix32(w);
+                }
+            }
+            break;
         }
     }
 
@@ -261,19 +309,17 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
     }
     else
     {
-        int16_t const lines = 6;
-
         // FIXME: is this affected by the camera?
-        if (y > fix32(116.0))
+        if (y > fix32(128.0 - 2 * height))
         {
             uint8_t *s = m_ram.screen.data[0];
-            memmove(s, s + lines * 64, sizeof(m_ram.screen) - lines * 64);
-            ::memset(s + sizeof(m_ram.screen) - lines * 64, 0, lines * 64);
-            y -= fix32(lines);
+            memmove(s, s + height * 64, sizeof(m_ram.screen) - height * 64);
+            ::memset(s + sizeof(m_ram.screen) - height * 64, 0, height * 64);
+            y -= fix32(height);
         }
 
         ds.cursor.x = (uint8_t)initial_x;
-        ds.cursor.y = (uint8_t)(y + fix32(lines));
+        ds.cursor.y = (uint8_t)(y + fix32(height));
     }
 }
 
