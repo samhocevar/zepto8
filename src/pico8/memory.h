@@ -154,8 +154,11 @@ struct draw_state_t
     // 0x5f35: next polyline will not draw (0x1)
     uint8_t polyline_flag;
 
-    // 0x5f36—0x5f38: undocumented
-    uint8_t undocumented3[2];
+    // 0x5f36: if 0x8, treat sprite 0 as opaque in tline() and map()
+    uint8_t sprite_zero;
+
+    // 0x5f37: if 0x1, do not call reload() when exiting any of the editor modes
+    uint8_t disable_editor_reload;
 
     struct
     {

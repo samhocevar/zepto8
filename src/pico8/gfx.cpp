@@ -615,7 +615,7 @@ void vm::api_tline(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
         uint8_t bits = m_ram.gfx_flags[sprite];
 
         // If found, draw pixel
-        if (sprite && (!layer || (bits & layer)))
+        if ((sprite || ds.sprite_zero == 0x8) && (!layer || (bits & layer)))
         {
             int col = m_ram.gfx.get(sprite % 16 * 8 + (int(mx << 3) & 0x7),
                                     sprite / 16 * 8 + (int(my << 3) & 0x7));
@@ -688,7 +688,7 @@ void vm::api_map(int16_t cel_x, int16_t cel_y, int16_t sx, int16_t sy,
         if (layer && !(bits & layer))
             continue;
 
-        if (sprite)
+        if (sprite || ds.sprite_zero == 0x8)
         {
             int col = m_ram.gfx.get(sprite % 16 * 8 + (src_x + dx) % 8,
                                     sprite / 16 * 8 + (src_y + dy) % 8);
