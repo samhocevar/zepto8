@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2021 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -397,7 +397,7 @@ bool cart::load_p8(std::string const &filename)
                "sfx: %d/%d mus: %d/%d lab: %d/%d\n",
                reader.m_version, (int)m_code.length(),
                (int)gfx.size(), (int)sizeof(m_rom.gfx),
-               (int)gff.size(), (int)sizeof(m_rom.gfx_props),
+               (int)gff.size(), (int)sizeof(m_rom.gfx_flags),
                (int)map.size(), (int)(sizeof(m_rom.map) + sizeof(m_rom.map2)),
                (int)sfx.size() / (4 + 80) * (4 + 64), (int)sizeof(m_rom.sfx),
                (int)mus.size() / 5 * 4, (int)sizeof(m_rom.song),
@@ -406,7 +406,7 @@ bool cart::load_p8(std::string const &filename)
     // The optional second chunk of gfx is contiguous, we can copy it directly
     memcpy(&m_rom.gfx, gfx.data(), std::min(sizeof(m_rom.gfx), gfx.size()));
 
-    memcpy(&m_rom.gfx_props, gff.data(), std::min(sizeof(m_rom.gfx_props), gff.size()));
+    memcpy(&m_rom.gfx_flags, gff.data(), std::min(sizeof(m_rom.gfx_flags), gff.size()));
 
     // Map data + optional second chunk
     memcpy(&m_rom.map, map.data(), std::min(sizeof(m_rom.map), map.size()));
@@ -586,8 +586,8 @@ bool cart::save_p8(std::string const &filename) const
 
     // Export gff section
     int gff_lines = 0;
-    for (int i = 0; i < (int)sizeof(m_rom.gfx_props); ++i)
-        if (m_rom.gfx_props[i] != 0)
+    for (int i = 0; i < (int)sizeof(m_rom.gfx_flags); ++i)
+        if (m_rom.gfx_flags[i] != 0)
             gff_lines = 1 + i / 128;
 
     for (int line = 0; line < gff_lines; ++line)
@@ -596,7 +596,7 @@ bool cart::save_p8(std::string const &filename) const
             ret += "__gff__\n";
 
         for (int i = 0; i < 128; ++i)
-            ret += lol::format("%02x", m_rom.gfx_props[128 * line + i]);
+            ret += lol::format("%02x", m_rom.gfx_flags[128 * line + i]);
 
         ret += '\n';
     }

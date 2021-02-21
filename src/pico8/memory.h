@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2021 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -84,6 +84,25 @@ struct song_t
 
 struct code_t : std::array<uint8_t, 0x3d00>
 {
+};
+
+struct custom_font_t
+{
+    // 0x5f60: character width in pixels (can be more than 8, but only 8 pixels are drawn)
+    uint8_t width;
+
+    // 0x5f61: character width for character 128 and above
+    uint8_t extended_width;
+
+    // 0x5f62: character height in pixels
+    uint8_t height;
+
+    // 0x5f63—0x5f65: draw offset x, draw offset y
+    lol::u8vec2 offset;
+
+    uint8_t padding[3];
+
+    uint8_t glyphs[255][8];
 };
 
 struct draw_state_t
@@ -192,14 +211,17 @@ struct memory
     // This union handles the gfx/map shared section
     union
     {
+        // 0x0—0x1000: gfx
         u4mat2<128, 128> gfx;
 
         struct
         {
             uint8_t padding[0x1000];
 
+            // 0x1000—0x2000: gfx2/map2
             uint8_t map2[0x1000];
 
+            // 0x2000—0x3000: map
             struct
             {
                  // These accessors allow to access map2 as if it was
@@ -223,12 +245,13 @@ struct memory
         };
     };
 
-    uint8_t gfx_props[0x100];
+    // 0x3000—0x3100: gfx flags
+    uint8_t gfx_flags[0x100];
 
-    // 64 songs
+    // 0x3100—0x3200: song (64 songs)
     song_t song[0x40];
 
-    // 64 SFX samples
+    // 0x3200—0x4300: sfx (64 samples)
     sfx_t sfx[0x40];
 
     // A cart will have the code section at the same place as user_data. Cannot use a
@@ -244,20 +267,28 @@ struct memory
         }
         code;
 
-        uint8_t user_data[0x1b00];
+        struct
+        {
+            uint8_t user_data[0x1300];
+
+            // 0x5600—0x5e00: custom font;
+            custom_font_t custom_font;
+        };
     };
 
+    // 0x5e00—0x5f00: persistent cart data
     uint8_t persistent[0x100];
 
-    // Draw state
+    // 0x5f00—0x5f40: draw state
     draw_state_t draw_state;
 
-    // Hardware state
+    // 0x5f40—0x5f80: hardware state
     hw_state_t hw_state;
 
+    // 0x5f80—0x6000: GPIO pins
     uint8_t gpio_pins[0x80];
 
-    // The screen
+    // 0x6000—0x8000: screen (8k)
     u4mat2<128, 128> screen;
 
     // Standard accessors
@@ -340,11 +371,12 @@ static_assert(sizeof(code_t) == 0x3d00, "pico8::code_t has incorrect size");
 static_check_section(gfx,        0x0000, 0x2000);
 static_check_section(map2,       0x1000, 0x1000);
 static_check_section(map,        0x2000, 0x1000);
-static_check_section(gfx_props,  0x3000,  0x100);
+static_check_section(gfx_flags,  0x3000,  0x100);
 static_check_section(song,       0x3100,  0x100);
 static_check_section(sfx,        0x3200, 0x1100);
 static_check_section(code,       0x4300,     -1);
-static_check_section(user_data,  0x4300, 0x1b00);
+static_check_section(user_data,  0x4300, 0x1300);
+static_check_section(custom_font,0x5600,  0x800);
 static_check_section(persistent, 0x5e00,  0x100);
 static_check_section(draw_state, 0x5f00,   0x40);
 static_check_section(hw_state,   0x5f40,   0x40);

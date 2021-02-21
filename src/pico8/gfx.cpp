@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016—2021 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -416,8 +416,8 @@ opt<var<int16_t, bool>> vm::api_fget(opt<int16_t> n, opt<int16_t> f)
         return std::nullopt; // return 0 arguments
 
     int16_t bits = 0;
-    if (*n >= 0 && *n < (int)sizeof(m_ram.gfx_props))
-        bits = m_ram.gfx_props[*n];
+    if (*n >= 0 && *n < (int)sizeof(m_ram.gfx_flags))
+        bits = m_ram.gfx_flags[*n];
 
     if (f)
         return (bool)(bits & (1 << *f)); // return a boolean
@@ -427,10 +427,10 @@ opt<var<int16_t, bool>> vm::api_fget(opt<int16_t> n, opt<int16_t> f)
 
 void vm::api_fset(opt<int16_t> n, opt<int16_t> f, opt<bool> b)
 {
-    if (!n || !f || *n < 0 || *n >= (int16_t)sizeof(m_ram.gfx_props))
+    if (!n || !f || *n < 0 || *n >= (int16_t)sizeof(m_ram.gfx_flags))
         return;
 
-    uint8_t &data = m_ram.gfx_props[*n];
+    uint8_t &data = m_ram.gfx_flags[*n];
 
     if (!b)
         data = (uint8_t)*f;
@@ -566,7 +566,7 @@ void vm::api_tline(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
         int sx = (ds.tline.offset.x + int(mx)) & 0x7f;
         int sy = (ds.tline.offset.y + int(my)) & 0x3f;
         uint8_t sprite = m_ram.map[128 * sy + sx];
-        uint8_t bits = m_ram.gfx_props[sprite];
+        uint8_t bits = m_ram.gfx_flags[sprite];
 
         // If found, draw pixel
         if (sprite && (!layer || (bits & layer)))
@@ -638,7 +638,7 @@ void vm::api_map(int16_t cel_x, int16_t cel_y, int16_t sx, int16_t sy,
             continue;
 
         uint8_t sprite = m_ram.map[128 * cy + cx];
-        uint8_t bits = m_ram.gfx_props[sprite];
+        uint8_t bits = m_ram.gfx_flags[sprite];
         if (layer && !(bits & layer))
             continue;
 
