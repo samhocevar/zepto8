@@ -44,6 +44,7 @@ std::unordered_set<std::string> api::functions =
     "max", "min", "mid", "ceil", "flr", "cos", "sin", "atan2", "sqrt",
     "abs", "sgn", "band", "bor", "bxor", "bnot", "shl", "shr", "lshr",
     "rotl", "rotr", "tostr", "tonum", "srand", "rnd", "ord", "chr",
+    "split",
     // Implemented in the ZEPTO-8 VM
     "run", "menuitem", "reload", "dget", "dset", "peek", "peek2", "peek4",
     "poke", "poke2", "poke4", "memcpy", "memset", "stat", "printh", "extcmd",
