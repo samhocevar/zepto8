@@ -125,12 +125,12 @@ private:
     void api_reload(int16_t in_dst, int16_t in_src, opt<int16_t> in_size);
     fix32 api_dget(int16_t addr);
     void api_dset(int16_t addr, fix32 val);
-    int16_t api_peek(int16_t addr);
-    int16_t api_peek2(int16_t addr);
-    fix32 api_peek4(int16_t addr);
-    void api_poke(int16_t addr, int16_t val);
-    void api_poke2(int16_t addr, int16_t val);
-    void api_poke4(int16_t addr, fix32 val);
+    std::vector<int16_t> api_peek(int16_t addr, opt<int16_t> count);
+    std::vector<int16_t> api_peek2(int16_t addr, opt<int16_t> count);
+    std::vector<fix32> api_peek4(int16_t addr, opt<int16_t> count);
+    void api_poke(int16_t addr, std::vector<int16_t> args);
+    void api_poke2(int16_t addr, std::vector<int16_t> args);
+    void api_poke4(int16_t addr, std::vector<fix32> args);
     void api_memcpy(int16_t dst, int16_t src, int16_t size);
     void api_memset(int16_t dst, uint8_t val, int16_t size);
     fix32 api_rnd(opt<fix32>);

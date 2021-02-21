@@ -379,96 +379,136 @@ void vm::api_reload(int16_t in_dst, int16_t in_src, opt<int16_t> in_size)
 fix32 vm::api_dget(int16_t n)
 {
     // FIXME: cannot be used before cartdata()
-    return n >= 0 && n < 64 ? api_peek4(0x5e00 + 4 * n) : fix32(0);
+    return n >= 0 && n < 64 ? api_peek4(0x5e00 + 4 * n, 1)[0] : fix32(0);
 }
 
 void vm::api_dset(int16_t n, fix32 x)
 {
     // FIXME: cannot be used before cartdata()
     if (n >= 0 && n < 64)
-        api_poke4(0x5e00 + 4 * n, x);
+        api_poke4(0x5e00 + 4 * n, std::vector<fix32> { x });
 }
 
-int16_t vm::api_peek(int16_t addr)
+std::vector<int16_t> vm::api_peek(int16_t addr, opt<int16_t> count)
 {
+    std::vector<int16_t> ret;
     // Note: peek() is the same as peek(0)
-    if (addr < 0 || (int)addr >= (int)sizeof(m_ram))
-        return 0;
-    return m_ram[addr];
-}
+    size_t n = count ? std::max(0, std::min(int(*count), 8192)) : 1;
 
-int16_t vm::api_peek2(int16_t addr)
-{
-    int16_t bits = 0;
-    for (int i = 0; i < 2; ++i)
+    for ( ; ret.size() < n; ++addr)
     {
-        /* This code handles partial reads by adding zeroes */
-        if (addr + i < (int)sizeof(m_ram))
-            bits |= m_ram[addr + i] << (8 * i);
-        else if (addr + i >= (int)sizeof(m_ram))
-            bits |= m_ram[addr + i - (int)sizeof(m_ram)] << (8 * i);
+        int16_t bits = 0;
+        if (addr >= 0 && (int)(addr + n) < (int)sizeof(m_ram))
+            bits = m_ram[addr];
+        ret.push_back(bits);
     }
 
-    return bits;
+    return ret;
 }
 
-fix32 vm::api_peek4(int16_t addr)
+std::vector<int16_t> vm::api_peek2(int16_t addr, opt<int16_t> count)
 {
-    int32_t bits = 0;
-    for (int i = 0; i < 4; ++i)
+    std::vector<int16_t> ret;
+    size_t n = count ? std::max(0, std::min(int(*count), 8192)) : 1;
+
+    for ( ; ret.size() < n; addr += 2)
     {
-        /* This code handles partial reads by adding zeroes */
-        if (addr + i < (int)sizeof(m_ram))
-            bits |= m_ram[addr + i] << (8 * i);
-        else if (addr + i >= (int)sizeof(m_ram))
-            bits |= m_ram[addr + i - (int)sizeof(m_ram)] << (8 * i);
+        int16_t bits = 0;
+        for (int i = 0; i < 2; ++i)
+        {
+            // This code handles partial reads by adding zeroes
+            if (addr + i < (int)sizeof(m_ram))
+                bits |= m_ram[addr + i] << (8 * i);
+            else if (addr + i >= (int)sizeof(m_ram))
+                bits |= m_ram[addr + i - (int)sizeof(m_ram)] << (8 * i);
+        }
+        ret.push_back(bits);
     }
 
-    return fix32::frombits(bits);
+    return ret;
 }
 
-void vm::api_poke(int16_t addr, int16_t val)
+std::vector<fix32> vm::api_peek4(int16_t addr, opt<int16_t> count)
+{
+    std::vector<fix32> ret;
+    size_t n = count ? std::max(0, std::min(int(*count), 8192)) : 1;
+
+    for ( ; ret.size() < n; addr += 4)
+    {
+        int32_t bits = 0;
+        for (int i = 0; i < 4; ++i)
+        {
+            // This code handles partial reads by adding zeroes
+            if (addr + i < (int)sizeof(m_ram))
+                bits |= m_ram[addr + i] << (8 * i);
+            else if (addr + i >= (int)sizeof(m_ram))
+                bits |= m_ram[addr + i - (int)sizeof(m_ram)] << (8 * i);
+        }
+        ret.push_back(fix32::frombits(bits));
+    }
+
+    return ret;
+}
+
+void vm::api_poke(int16_t addr, std::vector<int16_t> args)
 {
     // Note: poke() is the same as poke(0, 0)
-    if (addr < 0 || addr > (int)sizeof(m_ram) - 1)
+    if (args.empty())
+        args.push_back(0);
+
+    if (addr < 0 || addr + args.size() > sizeof(m_ram) - 1)
     {
         runtime_error("bad memory access");
         return;
     }
-    m_ram[addr] = (uint8_t)val;
+
+    for (auto val : args)
+        m_ram[addr++] = (uint8_t)val;
 
     update_registers();
 }
 
-void vm::api_poke2(int16_t addr, int16_t val)
+void vm::api_poke2(int16_t addr, std::vector<int16_t> args)
 {
     // Note: poke2() is the same as poke2(0, 0)
-    if (addr < 0 || addr > (int)sizeof(m_ram) - 2)
+    if (args.empty())
+        args.push_back(0);
+
+    if (addr < 0 || addr + 2 * args.size() > sizeof(m_ram) - 2)
     {
         runtime_error("bad memory access");
         return;
     }
 
-    m_ram[addr + 0] = (uint8_t)val;
-    m_ram[addr + 1] = (uint8_t)((uint16_t)val >> 8);
+    for (auto val : args)
+    {
+        m_ram[addr++] = (uint8_t)val;
+        m_ram[addr++] = (uint8_t)((uint16_t)val >> 8);
+    }
 
     update_registers();
 }
 
-void vm::api_poke4(int16_t addr, fix32 val)
+void vm::api_poke4(int16_t addr, std::vector<fix32> args)
 {
     // Note: poke4() is the same as poke4(0, 0)
-    if (addr < 0 || addr > (int)sizeof(m_ram) - 4)
+    if (args.empty())
+        args.push_back(fix32(0));
+
+    if (addr < 0 || addr + 4 * args.size() > sizeof(m_ram) - 4)
     {
         runtime_error("bad memory access");
         return;
     }
 
-    uint32_t x = (uint32_t)val.bits();
-    m_ram[addr + 0] = (uint8_t)x;
-    m_ram[addr + 1] = (uint8_t)(x >> 8);
-    m_ram[addr + 2] = (uint8_t)(x >> 16);
-    m_ram[addr + 3] = (uint8_t)(x >> 24);
+    for (auto val : args)
+    {
+        uint32_t x = (uint32_t)val.bits();
+        m_ram[addr++] = (uint8_t)x;
+        m_ram[addr++] = (uint8_t)(x >> 8);
+        m_ram[addr++] = (uint8_t)(x >> 16);
+        m_ram[addr++] = (uint8_t)(x >> 24);
+    }
 
     update_registers();
 }

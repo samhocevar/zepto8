@@ -56,6 +56,14 @@ template<typename... T> int lua_push(lua_State *l, std::tuple<T...> const &t)
     return (int)sizeof...(T);
 }
 
+// Boxing an std::vector pushes each value
+template<typename... T> int lua_push(lua_State *l, std::vector<T...> const &v)
+{
+    for (auto &x : v)
+        lua_push(l, x);
+    return (int)v.size();
+}
+
 //
 // Get a standard type from the Lua stack
 //
@@ -74,6 +82,13 @@ template<typename T> void lua_get(lua_State *l, int i, std::optional<T> &arg)
 {
     if (!lua_isnone(l, i))
         arg = lua_get<T>(l, i);
+}
+
+// Unboxing to std::vector unboxes the whole stack
+template<typename T> void lua_get(lua_State *l, int i, std::vector<T> &arg)
+{
+    while (!lua_isnone(l, i))
+        arg.push_back(lua_get<T>(l, i++));
 }
 
 template<typename T> static T lua_get(lua_State *l, int i)
