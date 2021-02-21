@@ -23,6 +23,7 @@ AC_CONFIG_FILES(
  [Makefile
   src/Makefile
   t/Makefile
+  utils/Makefile
   carts/Makefile
 ])
 
