@@ -298,6 +298,13 @@ void vm::mouse(lol::ivec2 coords, int buttons)
     m_state.mouse.x = (double)coords.x;
     m_state.mouse.y = (double)coords.y;
     m_state.mouse.b = (double)buttons;
+
+    if (m_ram.draw_state.mouse_flags.buttons)
+    {
+        m_state.buttons[1][5] += (buttons & 0x1) ? 1 : 0;
+        m_state.buttons[1][4] += (buttons & 0x2) ? 1 : 0;
+        m_state.buttons[1][6] += (buttons & 0x4) ? 1 : 0;
+    }
 }
 
 void vm::text(char ch)
@@ -681,7 +688,7 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
 
     if (id >= 30 && id <= 36)
     {
-        bool devkit_mode = m_ram.draw_state.mouse_flag == 1;
+        bool devkit_mode = m_ram.draw_state.mouse_flags.enabled;
         bool has_text = devkit_mode && m_state.kbd.start != m_state.kbd.stop;
 
         // Undocumented (see http://pico-8.wikia.com/wiki/Stat)

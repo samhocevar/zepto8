@@ -136,11 +136,25 @@ struct draw_state_t
     // 0x5f2c: screen mode (double width, etc.)
     uint8_t screen_mode;
 
-    // 0x5f2d: mouse flag
-    uint8_t mouse_flag;
+    // 0x5f2d: mouse flags
+    struct
+    {
+        uint8_t enabled      : 1;
+        uint8_t buttons      : 1;
+        uint8_t locked       : 1;
+        uint8_t undocumented : 5;
+    }
+    mouse_flags;
 
-    // 0x5f2e: preserve palette at reboot
-    uint8_t palette_flag;
+    // 0x5f2e: preserve flags
+    struct
+    {
+        uint8_t palette       : 1;
+        uint8_t undocumented1 : 4;
+        uint8_t fillp         : 1;
+        uint8_t undocumented2 : 2;
+    }
+    preserve_flags;
 
     // 0x5f2f: undocumented
     uint8_t undocumented2[1];
