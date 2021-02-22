@@ -589,23 +589,23 @@ void vm::update_registers()
 void vm::update_prng()
 {
     auto &prng = m_ram.hw_state.prng;
-    prng.b = prng.a + ((prng.b >> 16) | (prng.b << 16));
-    prng.a += prng.b;
+    prng.a = ((prng.a >> 16) | (prng.a << 16)) + prng.b;
+    prng.b += prng.a;
 }
 
 fix32 vm::api_rnd(opt<fix32> in_range)
 {
     update_prng();
-    uint32_t b = m_ram.hw_state.prng.b;
+    uint32_t a = m_ram.hw_state.prng.a;
     uint32_t range = in_range ? uint32_t(in_range->bits()) : 0x10000;
-    return fix32::frombits(range > 0 ? b % range : 0);
+    return fix32::frombits(range > 0 ? a % range : 0);
 }
 
 void vm::api_srand(fix32 seed)
 {
     auto &prng = m_ram.hw_state.prng;
-    prng.a = seed ? seed.bits() : 0xdeadbeef;
-    prng.b = prng.a ^ 0xbead29ba;
+    prng.b = seed ? seed.bits() : 0xdeadbeef;
+    prng.a = prng.b ^ 0xbead29ba;
     for (int i = 0; i < 32; ++i)
         update_prng();
 }
