@@ -291,6 +291,8 @@ function __z8_run_cart(cart_code)
                 elseif _update then
                     if (do_frame) _update_buttons() _update()
                     do_frame = not do_frame
+                else
+                    _update_buttons()
                 end
                 if (_draw and do_frame) _draw()
                 yield()
