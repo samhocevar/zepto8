@@ -4,7 +4,7 @@ __lua__
 --
 --  ZEPTO-8 — Fantasy console emulator
 --
---  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
+--  Copyright © 2016—2021 Sam Hocevar <sam@hocevar.net>
 --
 --  This program is free software. It comes without any warranty, to
 --  the extent permitted by applicable law. You can redistribute it
@@ -114,7 +114,7 @@ function deli(c,i)
         -- delete at i if specified, otherwise at the end
         i=i and mid(1,i\1,#c) or #c
         local v=c[i]
-        for j=i,#c-1 do c[j]=c[j+1] end
+        for j=i,#c do c[j]=c[j+1] end
         return v
     end
 end
