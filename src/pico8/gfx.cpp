@@ -86,7 +86,9 @@ void vm::set_pixel(int16_t x, int16_t y, uint32_t color_bits)
         return;
 
     uint8_t color = (color_bits >> 16) & 0xf;
-    if ((color_bits >> ((x & 3) + 4 * (y & 3))) & 0x1)
+
+    // This is where the fillp pattern is actually handled
+    if ((color_bits >> (15 - (x & 3) - 4 * (y & 3))) & 0x1)
     {
         if (color_bits & 0x1000000) // Special transparency bit
             return;
