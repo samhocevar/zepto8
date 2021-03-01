@@ -11,3 +11,7 @@ This is all experimental.
  - the [PICO-8 language](doc/PICO-8-language.md)
  - [zepto8 ports to other platforms](doc/ports.md)
 
+## See also
+
+ - [`z8lua`](https://github.com/samhocevar/z8lua)
+ - the [PICO-8](https://www.lexaloffle.com/pico-8.php) fantasy console
