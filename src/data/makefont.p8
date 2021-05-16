@@ -9,15 +9,6 @@ local fillc = 0
 local bg = 1
 local fg = 7
 
--- for old PICO-8 versions
-if not chr then
-  local l1 = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
-  local l2 = "█▒🐱⬇️░✽●♥☉웃⌂⬅️😐♪🅾️◆…➡️★⧗⬆️ˇ∧❎▤▥"
-  function chr(n)
-    return n < 32 and "" or n < 128 and sub(l1,n-31,n-31) or sub(l2,n-127,n-127)
-  end
-end
-
 -- override printh
 old_printh, buffer, printh = printh, "", function(s)
   buffer = buffer..s..'\n'
