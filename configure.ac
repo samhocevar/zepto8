@@ -2,22 +2,22 @@ dnl
 dnl  Configure script for a Lol Engine project
 dnl
 
-AC_INIT(zepto8, 0.0)
+AC_INIT([zepto8], [0.0])
 
 dnl
 dnl  Standard autoconf setup and tools requirements
 dnl
 
-AC_PREREQ(2.50)
+AC_PREREQ(2.69)
 AC_CONFIG_AUX_DIR(.auto)
-AC_CANONICAL_SYSTEM
+AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([subdir-objects no-define tar-ustar silent-rules])
 
 AC_PROG_CXX
-AM_PROG_LIBTOOL
-AC_LIBTOOL_CXX
+LT_INIT
+LT_LANG([C++])
 
-AC_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
 
 AC_CONFIG_FILES(
  [Makefile
