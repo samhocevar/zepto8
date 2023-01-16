@@ -54,6 +54,9 @@
     <ClCompile Include="3rdparty/zep/src/syntax.cpp">
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
+    <ClCompile Include="3rdparty/zep/src/syntax_markdown.cpp">
+      <Filter>3rdparty\zep</Filter>
+    </ClCompile>
     <ClCompile Include="3rdparty/zep/src/syntax_providers.cpp">
       <Filter>3rdparty\zep</Filter>
     </ClCompile>
@@ -164,6 +167,9 @@
       <Filter>3rdparty\zep</Filter>
     </ClInclude>
     <ClInclude Include="3rdparty/zep/src/syntax.h">
+      <Filter>3rdparty\zep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rdparty/zep/src/syntax_markdown.h">
       <Filter>3rdparty\zep</Filter>
     </ClInclude>
     <ClInclude Include="3rdparty/zep/src/syntax_providers.h">

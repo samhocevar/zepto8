@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 
     CLI11_PARSE(opts, argc, argv);
 
-    lol::Application app("zepto8", win_size, 60.0f);
+    auto app = lol::app::init("zepto8", win_size, 60.0f);
 
     bool is_raccoon = cart && lol::ends_with(*cart, ".rcn.json");
 
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
         player->run();
     }
 
-    app.Run();
+    app->run();
 
     return EXIT_SUCCESS;
 }

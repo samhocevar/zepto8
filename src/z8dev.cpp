@@ -36,7 +36,7 @@ int main(int argc, char **argv)
     CLI11_PARSE(opts, argc, argv);
 
     lol::ivec2 win_size(1280, 768);
-    lol::Application app("zepto8 IDE", win_size, 60.0f);
+    auto app = lol::app::init("zepto8 IDE", win_size, 60.0f);
 
     auto ide = new z8::ide();
 
@@ -45,7 +45,7 @@ int main(int argc, char **argv)
         ide->load(*cart);
     }
 
-    app.Run();
+    app->run();
 
     return EXIT_SUCCESS;
 }

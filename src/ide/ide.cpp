@@ -138,7 +138,7 @@ void ide::tick_game(float seconds)
         if (lol::file::read(lol::sys::get_data_path(filename), font))
         {
             auto &io = ImGui::GetIO();
-            m_fonts[m_scale] = io.Fonts->AddFontFromFileTTF(font.c_str(), 6.0f * m_scale, nullptr, char_ranges.data());
+            m_fonts[m_scale] = io.Fonts->AddFontFromMemoryTTF((void *)font.c_str(), font.size(), 6.0f * m_scale, nullptr, char_ranges.data());
             lol::gui::refresh_fonts();
         }
 

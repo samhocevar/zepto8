@@ -143,7 +143,7 @@ void player::tick_game(float seconds)
     lol::WorldEntity::tick_game(seconds);
 
     // Aspect ratio
-    m_win_size = lol::Video::GetSize();
+    m_win_size = lol::video::size();
     m_scale = (float)std::min(m_win_size.x / SCREEN_WIDTH, m_win_size.y / SCREEN_HEIGHT);
     m_screen_pos = lol::ivec2((lol::vec2(m_win_size) - lol::vec2(SCREEN_WIDTH * m_scale, SCREEN_HEIGHT * m_scale)) / 2.f);
     m_scenecam->SetProjection(lol::mat4::ortho(0.f, (float)m_win_size.x, 0.f, (float)m_win_size.y, -100.f, 100.f));

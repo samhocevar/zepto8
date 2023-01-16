@@ -57,13 +57,15 @@ class zep_filesystem : public Zep::IZepFileSystem
 public:
     virtual std::string Read(const Zep::ZepPath& filePath) override { return ""; }
     virtual bool Write(const Zep::ZepPath& filePath, const void* pData, size_t size) override { return true; }
-    virtual Zep::ZepPath GetSearchRoot(const Zep::ZepPath& start, bool& foundGit) const { return start; }
+    virtual Zep::ZepPath GetSearchRoot(const Zep::ZepPath& start, bool& foundGit) const override { return start; }
+    virtual Zep::ZepPath GetConfigPath() const override { return ""; }
     virtual const Zep::ZepPath& GetWorkingDirectory() const override { return m_cwd; }
     virtual void SetWorkingDirectory(const Zep::ZepPath& path) override { }
+    virtual void SetFlags(uint32_t flags) override { }
     virtual bool IsDirectory(const Zep::ZepPath& path) const override { return false; }
     virtual bool IsReadOnly(const Zep::ZepPath& path) const override { return false; }
     virtual bool Exists(const Zep::ZepPath& path) const override { return path == BUFFER_NAME; }
-    virtual bool MakeDirectories(const Zep::ZepPath& path) { return false; }
+    virtual bool MakeDirectories(const Zep::ZepPath& path) override { return false; }
 
     // A callback API for scaning
     virtual void ScanDirectory(const Zep::ZepPath& path, std::function<bool(const Zep::ZepPath& path, bool& dont_recurse)> fnScan) const override
@@ -86,7 +88,7 @@ class editor_impl : public Zep::ZepEditor_ImGui
 {
 public:
     editor_impl()
-        : Zep::ZepEditor_ImGui("", Zep::ZepEditorFlags::DisableThreads, new zep_filesystem())
+        : Zep::ZepEditor_ImGui(Zep::ZepPath(), Zep::NVec2f(1.f), Zep::ZepEditorFlags::DisableThreads, new zep_filesystem())
     {}
 
     virtual ~editor_impl()
@@ -166,7 +168,7 @@ void text_editor::render()
     if (m_fontsize != ImGui::GetFontSize())
     {
         m_fontsize = ImGui::GetFontSize();
-        m_impl->GetDisplay().InvalidateCharCache();
+        m_impl->GetDisplay().GetFont(Zep::ZepTextType::Text).InvalidateCharCache();
     }
 
     if (ImGui::IsWindowFocused())

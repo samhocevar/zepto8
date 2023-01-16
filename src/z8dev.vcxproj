@@ -54,6 +54,7 @@
     <ClCompile Include="3rdparty/zep/src/commands.cpp" />
     <ClCompile Include="3rdparty/zep/src/display.cpp" />
     <ClCompile Include="3rdparty/zep/src/editor.cpp" />
+    <ClCompile Include="3rdparty/zep/src/glyph_iterator.cpp" />
     <ClCompile Include="3rdparty/zep/src/indexer.cpp" />
     <ClCompile Include="3rdparty/zep/src/keymap.cpp" />
     <ClCompile Include="3rdparty/zep/src/line_widgets.cpp" />
@@ -65,9 +66,11 @@
     <ClCompile Include="3rdparty/zep/src/mode_standard.cpp" />
     <ClCompile Include="3rdparty/zep/src/mode_tree.cpp" />
     <ClCompile Include="3rdparty/zep/src/mode_vim.cpp" />
+    <ClCompile Include="3rdparty/zep/src/range_markers.cpp" />
     <ClCompile Include="3rdparty/zep/src/scroller.cpp" />
     <ClCompile Include="3rdparty/zep/src/splits.cpp" />
     <ClCompile Include="3rdparty/zep/src/syntax.cpp" />
+    <ClCompile Include="3rdparty/zep/src/syntax_markdown.cpp" />
     <ClCompile Include="3rdparty/zep/src/syntax_providers.cpp" />
     <ClCompile Include="3rdparty/zep/src/syntax_rainbow_brackets.cpp" />
     <ClCompile Include="3rdparty/zep/src/syntax_tree.cpp" />
@@ -88,6 +91,7 @@
     <ClInclude Include="3rdparty/zep/src/editor.h" />
     <ClInclude Include="3rdparty/zep/src/filesystem.h" />
     <ClInclude Include="3rdparty/zep/src/gap_buffer.h" />
+    <ClInclude Include="3rdparty/zep/src/glyph_iterator.h" />
     <ClInclude Include="3rdparty/zep/src/imgui/console_imgui.h" />
     <ClInclude Include="3rdparty/zep/src/imgui/display_imgui.h" />
     <ClInclude Include="3rdparty/zep/src/imgui/editor_imgui.h" />
@@ -105,9 +109,11 @@
     <ClInclude Include="3rdparty/zep/src/mode_search.h" />
     <ClInclude Include="3rdparty/zep/src/mode_standard.h" />
     <ClInclude Include="3rdparty/zep/src/mode_vim.h" />
+    <ClInclude Include="3rdparty/zep/src/range_markers.h" />
     <ClInclude Include="3rdparty/zep/src/scroller.h" />
     <ClInclude Include="3rdparty/zep/src/splits.h" />
     <ClInclude Include="3rdparty/zep/src/syntax.h" />
+    <ClInclude Include="3rdparty/zep/src/syntax_markdown.h" />
     <ClInclude Include="3rdparty/zep/src/syntax_providers.h" />
     <ClInclude Include="3rdparty/zep/src/syntax_rainbow_brackets.h" />
     <ClInclude Include="3rdparty/zep/src/tab_window.h" />
