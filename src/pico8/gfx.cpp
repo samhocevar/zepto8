@@ -346,7 +346,7 @@ void vm::api_circ(int16_t x, int16_t y, int16_t r, opt<fix32> c)
     x -= ds.camera.x;
     y -= ds.camera.y;
     uint32_t color_bits = to_color_bits(c);
-
+    // seems to come from https://rosettacode.org/wiki/Bitmap/Midpoint_circle_algorithm#BASIC256
     for (int16_t dx = r, dy = 0, err = 0; dx >= dy; )
     {
         set_pixel(x + dx, y + dy, color_bits);
@@ -359,13 +359,14 @@ void vm::api_circ(int16_t x, int16_t y, int16_t r, opt<fix32> c)
         set_pixel(x + dx, y - dy, color_bits);
 
         dy += 1;
-        err += 1 + 2 * dy;
-        // XXX: original Bresenham has a different test, but
-        // this one seems to match PICO-8 better.
-        if (2 * (err - dx) > r + 1)
+        if (err < r - 1)
+        {
+            err += 1 + 2 * dy;
+        }
+        else
         {
             dx -= 1;
-            err += 1 - 2 * dx;
+            err += 1 + 2 * (dy-dx);
         }
     }
 }
@@ -377,7 +378,7 @@ void vm::api_circfill(int16_t x, int16_t y, int16_t r, opt<fix32> c)
     x -= ds.camera.x;
     y -= ds.camera.y;
     uint32_t color_bits = to_color_bits(c);
-
+    // seems to come from https://rosettacode.org/wiki/Bitmap/Midpoint_circle_algorithm#BASIC256
     for (int16_t dx = r, dy = 0, err = 0; dx >= dy; )
     {
         /* Some minor overdraw here, but nothing serious */
@@ -387,13 +388,14 @@ void vm::api_circfill(int16_t x, int16_t y, int16_t r, opt<fix32> c)
         vline(x + dy, y - dx, y + dx, color_bits);
 
         dy += 1;
-        err += 1 + 2 * dy;
-        // XXX: original Bresenham has a different test, but
-        // this one seems to match PICO-8 better.
-        if (2 * (err - dx) > r + 1)
+        if (err < r - 1)
+        {
+            err += 1 + 2 * dy;
+        }
+        else
         {
             dx -= 1;
-            err += 1 - 2 * dx;
+            err += 1 + 2 * (dy - dx);
         }
     }
 }
