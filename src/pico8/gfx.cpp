@@ -381,11 +381,11 @@ void vm::api_circfill(int16_t x, int16_t y, int16_t r, opt<fix32> c)
     // seems to come from https://rosettacode.org/wiki/Bitmap/Midpoint_circle_algorithm#BASIC256
     for (int16_t dx = r, dy = 0, err = 0; dx >= dy; )
     {
-        /* Some minor overdraw here, but nothing serious */
+        // Some minor overdraw here when dx == 0 or dx == dy, but nothing serious
         hline(x - dx, x + dx, y - dy, color_bits);
         hline(x - dx, x + dx, y + dy, color_bits);
-        vline(x - dy, y - dx, y + dx, color_bits);
-        vline(x + dy, y - dx, y + dx, color_bits);
+        hline(x - dy, x + dy, y - dx, color_bits);
+        hline(x - dy, x + dy, y + dx, color_bits);
 
         dy += 1;
         if (err < r - 1)
