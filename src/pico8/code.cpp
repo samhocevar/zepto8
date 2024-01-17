@@ -275,7 +275,7 @@ static std::string legacy_decompress(uint8_t const *input)
     size_t length = input[4] * 256 + input[5];
 
     ret.resize(0);
-    for (size_t i = 8; i < sizeof(pico8::memory::code) && ret.length() < length; ++i)
+    for (size_t i = 8; i < sizeof(code_t) && ret.length() < length; ++i)
     {
         if (input[i] >= 0x3c)
         {
