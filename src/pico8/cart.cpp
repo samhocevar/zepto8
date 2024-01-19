@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2021 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -14,6 +14,7 @@
 #   include "config.h"
 #endif
 
+#include <format>    // std::format
 #include <fstream>   // std::ofstream
 #include <lol/file>  // lol::file
 #include <lol/msg>   // lol::msg
@@ -546,7 +547,7 @@ std::vector<uint8_t> cart::get_bin() const
 bool cart::save_p8(std::string const &filename) const
 {
     std::string ret = "pico-8 cartridge // http://www.pico-8.com\n";
-    ret += lol::format("version %d\n", PICO8_VERSION);
+    ret += std::format("version {}\n", int(PICO8_VERSION));
 
     ret += "__lua__\n";
     ret += z8::pico8::charset::pico8_to_utf8(get_code());
@@ -565,7 +566,7 @@ bool cart::save_p8(std::string const &filename) const
             ret += "__gfx__\n";
 
         for (int i = 0; i < 64; ++i)
-            ret += lol::format("%02x", uint8_t(m_rom.gfx.data[line][i] * 0x101 / 0x10));
+            ret += std::format("{:02x}", uint8_t(m_rom.gfx.data[line][i] * 0x101 / 0x10));
 
         ret += '\n';
     }
@@ -596,7 +597,7 @@ bool cart::save_p8(std::string const &filename) const
             ret += "__gff__\n";
 
         for (int i = 0; i < 128; ++i)
-            ret += lol::format("%02x", m_rom.gfx_flags[128 * line + i]);
+            ret += std::format("{:02x}", m_rom.gfx_flags[128 * line + i]);
 
         ret += '\n';
     }
@@ -617,7 +618,7 @@ bool cart::save_p8(std::string const &filename) const
             ret += "__map__\n";
 
         for (int i = 0; i < 128; ++i)
-            ret += lol::format("%02x", m_rom.map[128 * line + i]);
+            ret += std::format("{:02x}", m_rom.map[128 * line + i]);
 
         ret += '\n';
     }
@@ -634,14 +635,14 @@ bool cart::save_p8(std::string const &filename) const
             ret += "__sfx__\n";
 
         uint8_t const *data = (uint8_t const *)&m_rom.sfx[line];
-        ret += lol::format("%02x%02x%02x%02x", data[64], data[65], data[66], data[67]);
+        ret += std::format("{:02x}{:02x}{:02x}{:02x}", data[64], data[65], data[66], data[67]);
         for (int j = 0; j < 64; j += 2)
         {
             int pitch = data[j] & 0x3f;
             int instrument = ((data[j + 1] << 2) & 0x4) | (data[j] >> 6);
             int volume = (data[j + 1] >> 1) & 0x7;
             int effect = (data[j + 1] >> 4) & 0xf;
-            ret += lol::format("%02x%1x%1x%1x", pitch, instrument, volume, effect);
+            ret += std::format("{:02x}{:1x}{:1x}{:1x}", pitch, instrument, volume, effect);
         }
 
         ret += '\n';
@@ -660,9 +661,8 @@ bool cart::save_p8(std::string const &filename) const
 
         auto const &song = m_rom.song[line];
         int const flags = song.start | (song.loop << 1) | (song.stop << 2) | (song.mode << 3);
-        ret += lol::format("%02x %02x%02x%02x%02x\n", flags,
-                           song.sfx(0), song.sfx(1),
-                           song.sfx(2), song.sfx(3));
+        ret += std::format("{:02x} {:02x}{:02x}{:02x}{:02x}\n", flags,
+                           song.sfx(0), song.sfx(1), song.sfx(2), song.sfx(3));
     }
 
     ret += '\n';

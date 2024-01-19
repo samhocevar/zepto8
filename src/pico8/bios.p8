@@ -4,7 +4,7 @@ __lua__
 --
 --  ZEPTO-8 — Fantasy console emulator
 --
---  Copyright © 2016—2021 Sam Hocevar <sam@hocevar.net>
+--  Copyright © 2016–2024 Sam Hocevar <sam@hocevar.net>
 --
 --  This program is free software. It comes without any warranty, to
 --  the extent permitted by applicable law. You can redistribute it
@@ -380,7 +380,7 @@ function __z8_boot_sequence()
                           local a = {0,0,12,0,0,0,13,7,11,0,14,7,7,7,10,0,15,7,9,0,0,0,8,0,0}
                           for j=0,#a-1 do pset(41+j%5,2+j/5,a[j+1]) end end,
         [45] = function() color(6) print("\n\n\nzepto-8 0.0.0 alpha") end,
-        [50] = function() print("(c) 2016-20 sam hocevar et al.\n") end,
+        [50] = function() print("(c) 2016-24 sam hocevar et al.\n") end,
         [52] = function() print("type help for help\n") end,
     }
 

@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -20,6 +20,7 @@
 
 #include <algorithm>  // std::min
 #include <filesystem>
+#include <format>     // std::format
 #include <chrono>
 #include <ctime>
 #include <cassert>
@@ -247,7 +248,7 @@ tup<bool, bool, std::string> vm::private_download(opt<std::string> str)
 bool vm::private_load(std::string name)
 {
     // Load cart from a file
-    private_stub(lol::format("load(%s)", name.c_str()));
+    private_stub(std::format("load({})", name));
     return true;
 }
 
@@ -771,7 +772,7 @@ void vm::api_printh(rich_string str, opt<std::string> filename, opt<bool> overwr
 void vm::api_extcmd(std::string cmd)
 {
     if (cmd == "label" || cmd == "screen" || cmd == "rec" || cmd == "video")
-        private_stub(lol::format("extcmd(%s)\n", cmd.c_str()));
+        private_stub(std::format("extcmd({})\n", cmd));
 }
 
 //
@@ -839,7 +840,7 @@ var<bool, int16_t> vm::api_btnp(opt<int16_t> n, int16_t p)
 
 void vm::api_serial(int16_t chan, int16_t address, int16_t len)
 {
-    private_stub(lol::format("serial(0x%4x, 0x%4x, 0x%4x)", chan, address, len));
+    private_stub(std::format("serial(0x{:4x}, 0x{:4x}, 0x{:4x})", chan, address, len));
 }
 
 //

@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2021 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -15,7 +15,6 @@
 #endif
 
 #include <lol/math>  // lol::round, lol::mix
-#include <lol/utils> // lol::format
 #include <algorithm> // std::swap
 #include <cmath>     // std::min, std::max
 

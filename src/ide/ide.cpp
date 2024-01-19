@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -14,6 +14,7 @@
 #   include "config.h"
 #endif
 
+#include <format>
 #include <lol/engine.h> // lol::gui
 #include <lol/file>     // lol::file::read
 #include <lol/utils>    // lol::ends_with
@@ -341,7 +342,7 @@ void ide::render_toolbar()
         ImGui::PushID(i);
         ImGui::PushStyleColor(ImGuiCol_Button, pico8::palette::get(i));
         ImGui::PushStyleColor(ImGuiCol_Text, pico8::palette::get(i < 6 ? 7 : 0));
-        ImGui::Button(lol::format("%2d", i).c_str());
+        ImGui::Button(std::format("{:2d}", i).c_str());
         ImGui::SameLine();
         ImGui::PopStyleColor(2);
         ImGui::PopID();

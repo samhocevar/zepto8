@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -14,8 +14,8 @@
 #   include "config.h"
 #endif
 
+#include <format>    // std::format
 #include <lol/math>  // lol::clamp, lol::mix
-#include <lol/utils> // lol::format
 #include <algorithm> // std::max
 #include <cmath>     // std::fabs, std::fmod, std::floor
 #include <cassert>   // assert
@@ -53,7 +53,7 @@ static std::string key_to_name(float key)
 
     char const *note = lut[(int)key % 12 * 3];
     int const octave = (int)key / 12;
-    return lol::format("%s%d", note, octave);
+    return std::format("{}{}", note, octave);
 }
 #endif
 
@@ -264,7 +264,7 @@ void vm::getaudio(int chan, void *in_buffer, int in_bytes)
             "\x22\x56\0\0" /* byte rate */ "\x02\0" /* block align (2) */
             "\x10\0" /* bits per sample (16) */ "data"
             "\xc0\xc1\x08\00" /* bytes in data */;
-        exports[chan] = fopen(lol::format("/tmp/zepto8_%d.wav", chan).c_str(), "w+");
+        exports[chan] = fopen(std::format("/tmp/zepto8_{}.wav", chan).c_str(), "w+");
         fwrite(header, 44, 1, exports[chan]);
     }
     fwrite(buffer, samples, 1, exports[chan]);

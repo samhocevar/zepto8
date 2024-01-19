@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -19,7 +19,6 @@
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING 1
 
 #include <lol/msg>   // lol::msg
-#include <lol/utils> // lol::format
 
 #include <locale>
 #include <string>
@@ -152,7 +151,7 @@ opt<bool> vm::private_cartdata(opt<std::string> str)
     }
 
     m_cartdata = *str;
-    private_stub(lol::format("cartdata(\"%s\")", m_cartdata.c_str()));
+    private_stub(std::format("cartdata(\"{}\")", m_cartdata));
     return false;
 }
 

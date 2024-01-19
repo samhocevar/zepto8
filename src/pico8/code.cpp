@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -20,6 +20,7 @@
 
 #include <lol/algo/suffix_array> // lol::suffix_array
 #include <unordered_map> // std::unordered_map
+#include <format>  // std::format
 #include <lol/msg> // lol::msg
 #include <cstring> // std::memchr
 #include <regex>   // std::regex
@@ -193,8 +194,8 @@ std::vector<uint8_t> code::compress(std::string const &input,
 
 static std::string printable(char ch)
 {
-    return (ch >= 0x20 && ch < 0x7f) ? lol::format("$%d '%c'", uint8_t(ch), ch)
-                                     : lol::format("$%d", uint8_t(ch));
+    return (ch >= 0x20 && ch < 0x7f) ? std::format("${:d} '{:c}'", uint8_t(ch), ch)
+                                     : std::format("${:d}", uint8_t(ch));
 }
 
 static uint8_t const *compress_lut = nullptr;
