@@ -611,6 +611,8 @@ fix32 vm::api_rnd(opt<fix32> in_range)
 
 void vm::api_srand(fix32 seed)
 {
+    // PICO-8 removes the seed’s MSB
+    seed &= fix32::frombits(0x7fffffff);
     auto &prng = m_ram.hw_state.prng;
     prng.b = seed ? seed.bits() : 0xdeadbeef;
     prng.a = prng.b ^ 0xbead29ba;
@@ -686,6 +688,12 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
 
     if (id == 26)
         return int16_t(m_state.music.offset * m_state.music.speed);
+
+    if (id == 29)
+    {
+        // Undocumented, but PICO-8 calls codo_count_joysticks() here
+        return int16_t(0);
+    }
 
     if (id >= 30 && id <= 36)
     {
