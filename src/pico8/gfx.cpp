@@ -43,7 +43,7 @@ uint32_t vm::to_color_bits(opt<fix32> c)
         fix32 col = *c;
         ds.pen = (col.bits() >> 16) & 0xff;
 
-        if (col.bits() & 0x10000000 && ds.fillp_flag) // 0x5f34
+        if (col.bits() & 0x1000'0000 && ds.fillp_flag) // 0x5f34
         {
             ds.fillp[0] = col.bits();
             ds.fillp[1] = col.bits() >> 8;
@@ -89,7 +89,7 @@ void vm::set_pixel(int16_t x, int16_t y, uint32_t color_bits)
     // This is where the fillp pattern is actually handled
     if ((color_bits >> (15 - (x & 3) - 4 * (y & 3))) & 0x1)
     {
-        if (color_bits & 0x1000000) // Special transparency bit
+        if (color_bits & 0x100'0000) // Special transparency bit
             return;
         color = (color_bits >> 20) & 0xf;
     }
@@ -221,7 +221,7 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
     fix32 x = has_coords ? *opt_x : fix32(ds.cursor.x);
     fix32 y = has_coords ? *opt_y : fix32(ds.cursor.y);
     // FIXME: we ignore fillp here, but should we set it in to_color_bits()?
-    uint32_t color_bits = to_color_bits(has_coords ? c : opt_x) & 0xf0000;
+    uint32_t color_bits = to_color_bits(has_coords ? c : opt_x) & 0xf'0000;
     fix32 initial_x = x;
 
     auto print_state = m_ram.hw_state.print_state;
