@@ -56,7 +56,7 @@ std::unordered_set<std::string> api::functions =
     "cocreate", "coresume", "costatus", "yield", "trace", "stop",
     "count", "add", "sub", "foreach", "all", "del", "deli", "t", "dget",
     "dset", "cartdata", "load", "save", "info", "abort", "folder",
-    "resume", "reboot", "dir", "ls", "flip", "mapdraw", "__z8_pause_menu", "menuitem"
+    "resume", "reboot", "dir", "ls", "flip", "mapdraw", "menuitem"
 };
 
 } // namespace z8::pico8
