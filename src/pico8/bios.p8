@@ -341,7 +341,7 @@ function __z8_tick()
         ret, err = coresume(__z8_loop)
 
         -- do not use btnp as it's not necessarily updated this frame (if 30fps)
-        local prev_btn=__z8_menu.pausebtn
+        local prev_btn=__z8_menu.pause_btn
         __z8_menu.pause_btn = btn(6)
         if __z8_menu.pause_btn and not prev_btn then
             if peek(0x5f30) == 1 then
