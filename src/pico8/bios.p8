@@ -20,6 +20,7 @@ __lua__
 __z8_stopped = false
 __z8_load_code = load
 __z8_persist_delay = 0
+__z8_paused = false
 
 
 -- Backward compatibility for old PICO-8 versions
@@ -134,6 +135,87 @@ end
 
 function foreach(c, f)
      for v in all(c) do f(v) end
+end
+
+
+-- pause menu
+
+__z8_menu={cursor=0,optioncursor=0,items={},inoption=false}
+function menuitem(index, label, callback)
+    if index<1 or index>5 then return end
+    if label==nil then
+        __z8_menu.items[index]=nil
+    else
+        __z8_menu.items[index]={l=label,c=callback}
+    end
+end
+
+function __z8_pause_menu()
+    -- todo: freeze pico 8 time() when paused?
+    -- todo: eat the btnp event when closing menu, so game doesn't react to it?
+    local entries={}
+    local wintitle="pause"
+    local forcestay=false
+    local cursor=0
+    if __z8_menu.inoption then -- option sub menu
+        wintitle="options"
+        forcestay=true -- option sub menu cannot close the menu
+        add(entries, {l="sound:on",c=function () end})
+        add(entries, {l="volume",c=function () end})
+        add(entries, {l="back",c=function (e) if e==112 then __z8_menu.inoption=false end end})
+
+        if (btnp(2)) __z8_menu.optioncursor-=1
+        if (btnp(3)) __z8_menu.optioncursor+=1
+        if (#entries>0) __z8_menu.optioncursor = (__z8_menu.optioncursor+#entries)%#entries
+        
+        cursor=__z8_menu.optioncursor
+    else
+        add(entries, {l="continue",c=function () end})
+        for i=1,5 do
+            if __z8_menu.items[i] then
+                add(entries, __z8_menu.items[i])
+            end
+        end
+        add(entries, {l="options",c=function (e) if e==112 then __z8_menu.inoption=true __z8_menu.optioncursor=0 end return true end})
+        add(entries, {l="reset cart"})
+
+        if (btnp(2)) __z8_menu.cursor-=1
+        if (btnp(3)) __z8_menu.cursor+=1
+        if (#entries>0) __z8_menu.cursor = (__z8_menu.cursor+#entries)%#entries
+        
+        cursor=__z8_menu.cursor
+    end
+
+    local px,py,sx,sy=24,56-#entries*4,79,16+#entries*8
+    rectfill(px-1,py-1,px+sx+1,py+sy+1,0)
+    rect(px,py,px+sx,py+sy,7)
+    print(wintitle,px+sx/2-#wintitle*2,py+4,7)
+    local bx,by=px+14,py+14
+    for i=1,#entries do
+        local sel=cursor+1==i
+        if (sel) pset(bx-4,by+2,7)
+        print(entries[i].l,bx + (sel and 1 or 0),by,sel and 7 or 5)
+        by+=8
+    end
+
+    local stay=true
+    if cursor>=0 and cursor<#entries then
+        local cur=entries[cursor+1]
+        local action=btnp(4) or btnp(5) or btnp(6)
+        if cur.c then
+            if action then -- activate button
+                stay = cur.c(112)
+            elseif btnp(0) then -- left button
+                cur.c(1)
+            elseif btnp(1) then -- right button
+                cur.c(2)
+            end
+        elseif action then -- quit when pressing if no callback
+            stay=false
+        end
+    end
+
+    return forcestay or stay
 end
 
 sub = string.sub
@@ -285,16 +367,27 @@ function __z8_run_cart(cart_code)
         if _update or _update60 or _draw then
             local do_frame = true
             while true do
-                if _update60 then
+                if __z8_paused then
                     _update_buttons()
-                    _update60()
-                elseif _update then
-                    if (do_frame) _update_buttons() _update()
-                    do_frame = not do_frame
+                    if not __z8_pause_menu() then
+                        __z8_paused = false
+                    end
                 else
-                    _update_buttons()
+                    if _update60 then
+                        _update_buttons()
+                        _update60()
+                    elseif _update then
+                        if (do_frame) _update_buttons() _update()
+                        do_frame = not do_frame
+                    else
+                        _update_buttons()
+                    end
+                    if (_draw and do_frame) _draw()
+
+                    if btnp(6) and do_frame then
+                        __z8_paused = true
+                    end
                 end
-                if (_draw and do_frame) _draw()
                 yield()
             end
         end

@@ -46,7 +46,7 @@ std::unordered_set<std::string> api::functions =
     "rotl", "rotr", "tostr", "tonum", "srand", "rnd", "ord", "chr",
     "split",
     // Implemented in the ZEPTO-8 VM
-    "run", "menuitem", "reload", "dget", "dset", "peek", "peek2", "peek4",
+    "run", "reload", "dget", "dset", "peek", "peek2", "peek4",
     "poke", "poke2", "poke4", "memcpy", "memset", "stat", "printh", "extcmd",
     "_update_buttons", "btn", "btnp", "cursor", "camera", "circ", "circfill",
     "clip", "cls", "color", "fillp", "fget", "fset", "line", "map", "mget",
@@ -56,7 +56,7 @@ std::unordered_set<std::string> api::functions =
     "cocreate", "coresume", "costatus", "yield", "trace", "stop",
     "count", "add", "sub", "foreach", "all", "del", "deli", "t", "dget",
     "dset", "cartdata", "load", "save", "info", "abort", "folder",
-    "resume", "reboot", "dir", "ls", "flip", "mapdraw",
+    "resume", "reboot", "dir", "ls", "flip", "mapdraw", "__z8_pause_menu", "menuitem"
 };
 
 } // namespace z8::pico8

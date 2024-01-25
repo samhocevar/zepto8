@@ -332,11 +332,6 @@ void vm::api_run()
     lua_pcall(m_sandbox_lua, 1, 0, 0);
 }
 
-void vm::api_menuitem()
-{
-    private_stub("menuitem");
-}
-
 void vm::api_reload(int16_t in_dst, int16_t in_src, opt<int16_t> in_size)
 {
     using std::min;
