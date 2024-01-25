@@ -367,27 +367,16 @@ function __z8_run_cart(cart_code)
         if _update or _update60 or _draw then
             local do_frame = true
             while true do
-                if __z8_paused then
+                if _update60 then
                     _update_buttons()
-                    if not __z8_pause_menu() then
-                        __z8_paused = false
-                    end
+                    _update60()
+                elseif _update then
+                    if (do_frame) _update_buttons() _update()
+                    do_frame = not do_frame
                 else
-                    if _update60 then
-                        _update_buttons()
-                        _update60()
-                    elseif _update then
-                        if (do_frame) _update_buttons() _update()
-                        do_frame = not do_frame
-                    else
-                        _update_buttons()
-                    end
-                    if (_draw and do_frame) _draw()
-
-                    if btnp(6) and do_frame then
-                        __z8_paused = true
-                    end
+                    _update_buttons()
                 end
+                if (_draw and do_frame) _draw()
                 yield()
             end
         end
@@ -423,7 +412,19 @@ end
 -- FIXME: this function is quite a mess
 function __z8_tick()
     if (costatus(__z8_loop) == "dead") return -1
-    ret, err = coresume(__z8_loop)
+
+    if __z8_paused then
+        _update_buttons()
+        if not __z8_pause_menu() then
+            __z8_paused = false
+        end
+    else
+        ret, err = coresume(__z8_loop)
+
+        if btnp(6) then
+            __z8_paused = true
+        end
+    end
 
     -- XXX: test eris persistence
     __z8_persist_delay += 1
