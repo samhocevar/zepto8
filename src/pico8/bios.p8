@@ -340,8 +340,15 @@ function __z8_tick()
     else
         ret, err = coresume(__z8_loop)
 
-        if btnp(6) then
-            __z8_paused = true
+        -- do not use btnp as it's not necessarily updated this frame (if 30fps)
+        local prev_btn=__z8_menu.pausebtn
+        __z8_menu.pause_btn = btn(6)
+        if __z8_menu.pause_btn and not prev_btn then
+            if peek(0x5f30) == 1 then
+                poke(0x5f30,0)
+            else
+                __z8_paused = true
+            end
         end
     end
 
@@ -369,7 +376,7 @@ end
 -- pause menu
 --
 
-__z8_menu={cursor=0,optioncursor=0,items={},inoption=false}
+__z8_menu={cursor=0, optioncursor=0, items={}, inoption=false, pause_btn=false}
 function menuitem(index, label, callback)
     if index<1 or index>5 then return end
     if label==nil then
