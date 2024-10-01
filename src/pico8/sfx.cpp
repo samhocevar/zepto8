@@ -224,9 +224,10 @@ void vm::update_sfx_state(state::sfx_state& cur_sfx, state::synth_param &new_syn
     }
 }
 
-void vm::get_audio(void *inbuffer, size_t in_frames)
+void vm::get_audio(void *inbuffer, size_t in_bytes)
 {
     int16_t* buffer = (int16_t*)inbuffer;
+    int const in_frames = in_bytes / 2;
 
     using std::fabs, std::fmod, std::floor, std::max;
 
@@ -425,10 +426,10 @@ void vm::get_audio(void *inbuffer, size_t in_frames)
         {
             sample = (sample - (sample < 0 ? 0x1000: 0)) / 0x1000 * 0x1249;
         }
-        channel_mix += sample * 0.25;
+        channel_mix += sample;
     }
         
-        buffer[i] = (int16_t)(channel_mix);
+        buffer[i] = (int16_t)(std::clamp(channel_mix, -32767.9f, 32767.9f));
     }
 
 #if DEBUG_EXPORT_WAV

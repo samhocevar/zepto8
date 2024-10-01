@@ -253,7 +253,7 @@ u4mat2<128, 128> const &vm::get_front_screen() const
 
 void vm::get_audio(void* buffer, size_t frames)
 {
-    memset(buffer, 0, sizeof(int16_t) * frames);
+    memset(buffer, 0, frames);
 }
 
 std::tuple<uint8_t *, size_t> vm::ram()
