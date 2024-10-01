@@ -91,10 +91,10 @@ player::player(bool is_embedded, bool is_raccoon)
     lol::Ticker::Ref(m_scenecam);
 
     // Register audio callbacks
-    for (int i = 0; i < 4; ++i)
     {
-        auto f = m_vm->get_streamer(i);
-        m_streams[i] = lol::audio::start_streaming(f, lol::audio::format::sint16le, 22050, 1);
+        using namespace std::placeholders;
+        std::function<void(void*, int)> f = std::bind(&vm_base::get_audio, m_vm, _1, _2);
+        m_stream = lol::audio::start_streaming(f, lol::audio::format::sint16le, 22050, 1);
     }
 
     // FIXME: the image gets deleted by TextureImage class, it
@@ -120,8 +120,7 @@ player::~player()
     lol::TileSet::destroy(m_font_tile);
 #endif
 
-    for (int i = 0; i < 4; ++i)
-        lol::audio::stop_streaming(i);
+    lol::audio::stop_streaming(m_stream);
 
     lol::Scene& scene = lol::Scene::GetScene();
     lol::Ticker::Unref(m_scenecam);

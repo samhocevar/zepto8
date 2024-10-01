@@ -678,21 +678,29 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
     if (id >= 12 && id <= 15)
         return int16_t(0); // TODO (pause menu)
 
-    if (id >= 16 && id <= 19)
-        return m_state.channels[id & 3].sfx;
 
-    if (id >= 20 && id <= 23)
-        return m_state.channels[id & 3].sfx == -1 ? fix32(-1)
-                    : fix32((int)m_state.channels[id & 3].offset);
+    // two audio stats blocks
+    if ((id >= 16 && id <= 26) || (id >= 46 && id <= 56))
+    {
+        int16_t audio_id = (id <= 26) ? id : id - 30;
+        if (audio_id >= 16 && audio_id <= 19)
+            return m_state.channels[audio_id & 3].main_sfx.sfx;
 
-    if (id == 24)
-        return int16_t(m_state.music.pattern);
+        if (audio_id >= 20 && audio_id <= 23)
+            return m_state.channels[audio_id & 3].main_sfx.sfx == -1 ? fix32(-1)
+            : fix32((int)m_state.channels[audio_id & 3].main_sfx.offset);
 
-    if (id == 25)
-        return int16_t(m_state.music.count);
+        if (audio_id == 24)
+            return int16_t(m_state.music.pattern);
 
-    if (id == 26)
-        return int16_t(m_state.music.offset * m_state.music.speed);
+        if (audio_id == 25)
+            return int16_t(m_state.music.count);
+
+        if (audio_id == 26)
+            return int16_t(m_state.music.offset);
+    }
+    if (id == 57)
+        return m_state.music.pattern != -1;
 
     if (id == 29)
     {

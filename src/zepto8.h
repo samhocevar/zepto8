@@ -99,7 +99,7 @@ public:
     virtual std::string const &get_code() const = 0;
 
     // Audio streaming
-    virtual std::function<void(void *, int)> get_streamer(int channel) = 0;
+    virtual void get_audio(void* buffer, size_t frames) = 0;
 
     // IO
     virtual void button(int index, int state) = 0;

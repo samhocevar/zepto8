@@ -40,7 +40,7 @@ public:
     virtual u4mat2<128, 128> const & get_front_screen() const;
     virtual int get_ansi_color(uint8_t c) const;
 
-    virtual std::function<void(void *, int)> get_streamer(int channel);
+    virtual void get_audio(void* buffer, size_t frames) override;
 
     virtual void button(int index, int state);
     virtual void mouse(lol::ivec2 coords, int buttons);

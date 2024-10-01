@@ -59,7 +59,7 @@ private:
     float m_scale;
 
     // Audio
-    int m_streams[4];
+    int m_stream;
 
     lol::Camera *m_scenecam;
     lol::TileSet *m_tile;

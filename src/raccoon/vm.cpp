@@ -251,9 +251,9 @@ u4mat2<128, 128> const &vm::get_front_screen() const
     return m_ram.screen;
 }
 
-std::function<void(void *, int)> vm::get_streamer(int channel)
+void vm::get_audio(void* buffer, size_t frames)
 {
-    return [](void *, int) {};
+    memset(buffer, 0, sizeof(int16_t) * frames);
 }
 
 std::tuple<uint8_t *, size_t> vm::ram()

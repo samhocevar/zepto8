@@ -38,10 +38,8 @@ struct note_t
     uint16_t key : 6;
     uint16_t instrument : 3;
     uint16_t volume : 3;
-    // FIXME: there is an actual extra bit for the effect but I don’t
-    // know what it’s for: PICO-8 documentation says 0…7, not 0…15
-    // Update: maybe this is used for the new SFX instrument feature?
-    uint16_t effect : 4;
+    uint16_t effect : 3;
+    uint16_t custom : 1;
 };
 
 struct sfx_t

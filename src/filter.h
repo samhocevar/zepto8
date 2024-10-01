@@ -12,31 +12,33 @@
 
 #pragma once
 
-#include "pico8/vm.h"
+#include "zepto8.h"
 
 namespace z8
 {
 
 //
-// A waveform generator
+// Biquad filter
 //
 
-class synth
+class filter
 {
 public:
-    enum
+    enum class type
     {
-        INST_TRIANGLE   = 0, // Triangle signal
-        INST_TILTED_SAW = 1, // Slanted triangle
-        INST_SAW        = 2, // Sawtooth
-        INST_SQUARE     = 3, // Square signal
-        INST_PULSE      = 4, // Asymmetric square signal
-        INST_ORGAN      = 5, // Some triangle stuff again
-        INST_NOISE      = 6,
-        INST_PHASER     = 7,
+        lpf, hpf, lowshelf, highshelf
     };
 
-    static float waveform(pico8::state::synth_param &params);
+    filter(type t, float freq, float q, float gain);
+
+    void init(type t, float freq, float q, float gain);
+    float run(float input);
+
+    float c1, c2, c3, c4, c5;
+    float linput = 0;
+    float llinput = 0;
+    float loutput = 0;
+    float lloutput = 0;
 };
 
 } // namespace z8

@@ -64,6 +64,7 @@
   <ItemGroup>
     <ClCompile Include="3rdparty\lodepng\lodepng.cpp" />
     <ClCompile Include="bios.cpp" />
+    <ClCompile Include="filter.cpp" />
     <ClCompile Include="pico8\api.cpp" />
     <ClCompile Include="pico8\ast.cpp" />
     <ClCompile Include="pico8\cart.cpp" />
@@ -83,6 +84,7 @@
     <ClInclude Include="3rdparty\lodepng\lodepng.h" />
     <ClInclude Include="bindings/js.h" />
     <ClInclude Include="bindings/lua.h" />
+    <ClInclude Include="filter.h" />
     <ClInclude Include="pico8\cart.h" />
     <ClInclude Include="pico8\grammar.h" />
     <ClInclude Include="pico8\memory.h" />

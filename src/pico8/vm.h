@@ -22,6 +22,7 @@
 #include "pico8/cart.h"
 #include "pico8/memory.h"
 #include "3rdparty/z8lua/lua.h"
+#include "filter.h"
 
 namespace z8 { class player; }
 
@@ -39,34 +40,72 @@ struct rich_string : public std::string {};
 struct state
 {
     // Input
-    int buttons[2][64];
-    struct { fix32 x, y, b; } mouse;
+    int buttons[3][64];
+    float axes[8][2];
+    struct { fix32 x, y, b, lb, rx, ry, ac, s[3]; } mouse;
     struct { int start = 0, stop = 0; char chars[256]; } kbd;
+    struct { fix32 x, y, z; } rotation;
 
     // Audio states: one music and four audio channels
     struct music
     {
-        int16_t count = 0;
+        int16_t count = -1;
         int16_t pattern = -1;
-        int8_t master = -1;
-        uint8_t mask = 0xf;
-        uint8_t speed = 0;
-        float volume = 0.f;
-        float volume_step = 0.f;
-        float offset = 0.f;
+        uint8_t mask = 0;
+        float volume_music = 0.5f;
+        float volume_sfx = 0.5f;
+        float fade_volume = 0.f;
+        float fade_volume_step = 0.f;
+        double offset = -1;
+        float length = 0;
     }
     music;
 
-    struct channel
+    struct synth_param
+    {
+        uint8_t instrument = 0;
+        bool custom = false;
+        uint8_t filters = 0;
+        uint8_t key = 0;
+        float freq = 0;
+        float volume = 0;
+        float phi = 0;
+        float last_advance = 0;
+        float last_sample = 0;
+        bool is_music = false;
+    };
+
+    struct sfx_state
     {
         int16_t sfx = -1;
-        float offset = 0;
-        float phi = 0;
+        double offset = 0;
+        double time = 0;
+        int8_t prev_key = 0;
+        float prev_vol = 0;
+    };
+
+    struct channel
+    {
+        sfx_state main_sfx;
+        sfx_state custom_sfx;
+
+        int16_t sfx_music = -1;
+        float length = 0;
         bool can_loop = true;
         bool is_music = false;
 
-        int8_t prev_key = 0;
-        float prev_vol = 0;
+        synth_param last_synth;
+        synth_param fade_synth;
+        float fade = 0.0f;
+        uint8_t last_main_instrument = 0;
+        uint8_t last_main_key = 0;
+
+        int reverb_index = 0;
+        float reverb_2[366] = {};
+        float reverb_4[732] = {};
+
+        filter damp1 = filter(filter::type::highshelf, 2400.0f, 1.0f, -6.0f);
+        filter damp2 = filter(filter::type::highshelf, 1000.0f, 1.0f, -12.0f);
     }
     channels[4];
 };
@@ -91,7 +130,7 @@ public:
 
     virtual void render(lol::u8vec4 *screen) const;
 
-    virtual std::function<void(void *, int)> get_streamer(int channel);
+    virtual void get_audio(void* buffer, size_t frames) override;
 
     virtual void button(int index, int state);
     virtual void mouse(lol::ivec2 coords, int buttons);
@@ -278,10 +317,12 @@ private:
     void hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits);
     void vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits);
 
-    void getaudio(int channel, void *buffer, int bytes);
+    float get_synth_sample(state::synth_param& params);
+    void update_sfx_state(state::sfx_state& cur_sfx, state::synth_param& new_synth, float freq_factor, float length, bool is_music, bool can_loop, bool half_rate, double inv_frames_per_second);
     void update_registers();
     void update_prng();
     void set_music_pattern(int pattern);
+    void launch_sfx(int16_t sfx, int16_t chan, float offset, float length, bool is_music);
 
 public:
     // TODO: try to get rid of this
@@ -292,6 +333,8 @@ private:
     cart m_cart;
     memory m_ram;
     state m_state;
+
+    bool m_in_pause = false;
 
     // Files
     std::string m_cartdata;

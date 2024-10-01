@@ -405,7 +405,7 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
             bool sfx_playing[4] = {};
             for (uint8_t audio_channel = 0; audio_channel <= 3; ++audio_channel)
             {
-                int16_t csfx = m_state.channels[audio_channel].sfx;
+                int16_t csfx = m_state.channels[audio_channel].main_sfx.sfx;
                 if (csfx == -1)
                 {
                     if (sfx_channel < 0) sfx_channel = audio_channel;

@@ -40,14 +40,10 @@
     </ClCompile>
     <ClCompile Include="synth.cpp" />
     <ClCompile Include="vm.cpp" />
+    <ClCompile Include="3rdparty\lodepng\lodepng.cpp" />
+    <ClCompile Include="filter.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bindings\js.h">
-      <Filter>bindings</Filter>
-    </ClInclude>
-    <ClInclude Include="bindings\lua.h">
-      <Filter>bindings</Filter>
-    </ClInclude>
     <ClInclude Include="pico8\cart.h">
       <Filter>pico8</Filter>
     </ClInclude>
@@ -74,6 +70,10 @@
     <ClInclude Include="raccoon\font.h">
       <Filter>raccoon</Filter>
     </ClInclude>
+    <ClInclude Include="3rdparty\lodepng\lodepng.h" />
+    <ClInclude Include="bindings/js.h" />
+    <ClInclude Include="bindings/lua.h" />
+    <ClInclude Include="filter.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="bindings">
