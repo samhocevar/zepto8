@@ -246,7 +246,7 @@ std::string const &vm::get_code() const
     return m_code;
 }
 
-u4mat2<128, 128> const &vm::get_screen() const
+u4mat2<128, 128> const &vm::get_front_screen() const
 {
     return m_ram.screen;
 }

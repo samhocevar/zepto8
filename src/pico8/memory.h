@@ -48,11 +48,11 @@ struct sfx_t
 {
     note_t notes[32];
 
-    // 0: editor mode
+    // 0: filters + editor flag
     // 1: speed (1-255)
     // 2: loop start
     // 3: loop end
-    uint8_t editor_mode;
+    uint8_t filters;
     uint8_t speed;
     uint8_t loop_start;
     uint8_t loop_end;
@@ -119,8 +119,8 @@ struct draw_state_t
     }
     clip;
 
-    // 0x5f24: undocumented
-    uint8_t undocumented1[1];
+    // 0x5f24: position of the cursor after a newline
+    uint8_t print_start_x;
 
     // 0x5f25: pen colors
     //  0x0f — default colour
@@ -156,8 +156,8 @@ struct draw_state_t
     }
     preserve_flags;
 
-    // 0x5f2f: undocumented
-    uint8_t undocumented2[1];
+    // 0x5f2f: if 1 pause music, if 2 don't pause in menu
+    uint8_t pause_music;
 
     // 0x5f30: block pause menu flag
     uint8_t pause_flag;
@@ -168,8 +168,19 @@ struct draw_state_t
     // 0x5f35: next polyline will not draw (0x1)
     uint8_t polyline_flag;
 
-    // 0x5f36: if 0x8, treat sprite 0 as opaque in tline() and map()
-    uint8_t sprite_zero;
+    // 0x5f36:
+    struct
+    {
+        uint8_t multi_screen : 1; // TODO
+        uint8_t undocumented1 : 1;
+        uint8_t no_newlines : 1;
+        uint8_t sprite_zero : 1; // treat sprite 0 as opaque in tline() and map()struct
+        uint8_t undocumented2 : 1;
+        uint8_t dampen_PCM : 1; // TODO
+        uint8_t no_printscroll : 1;
+        uint8_t char_wrap : 1; // TODO
+    }
+    misc_features;
 
     // 0x5f37: if 0x1, do not call reload() when exiting any of the editor modes
     uint8_t disable_editor_reload;
@@ -218,8 +229,8 @@ struct hw_state_t
     // 0x5f4c—0x5f54: button state
     uint8_t btn_state[8];
 
-    // 0x5f54—0x5f58: undocumented
-    uint8_t undocumented2[4];
+    // 0x5f54-0x5f58: sprite sheet mapping
+    uint8_t mapping_spritesheet, mapping_screen, mapping_map, mapping_map_width;
 
     // 0x5f58—0x5f5c: default attributes for print
     print_state_t print_state;
@@ -342,6 +353,16 @@ struct memory
     {
         assert(n >= 0 && n < (int)sizeof(memory));
         return ((uint8_t const *)this)[n];
+    }
+
+    inline u4mat2<128, 128> const& get_gfx() const
+    {
+        return hw_state.mapping_spritesheet == 0x60 ? screen : gfx;
+    }
+
+    inline u4mat2<128, 128>& get_gfx()
+    {
+        return const_cast<u4mat2<128, 128> &>(std::as_const(*this).get_gfx());
     }
 
     // Hardware pixel accessor

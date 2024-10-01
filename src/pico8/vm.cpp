@@ -110,9 +110,19 @@ std::string const &vm::get_code() const
     return m_cart.get_code();
 }
 
-u4mat2<128, 128> const &vm::get_screen() const
+u4mat2<128, 128> const& vm::get_front_screen() const
 {
     return m_ram.screen;
+}
+
+u4mat2<128, 128> const& vm::get_current_screen() const
+{
+    return m_ram.screen;
+}
+
+u4mat2<128, 128>& vm::get_current_screen()
+{
+    return const_cast<u4mat2<128, 128> &>(std::as_const(*this).get_current_screen());
 }
 
 std::tuple<uint8_t *, size_t> vm::ram()

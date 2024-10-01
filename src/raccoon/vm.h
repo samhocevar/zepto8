@@ -37,7 +37,7 @@ public:
     virtual void render(lol::u8vec4 *screen) const;
 
     virtual std::string const &get_code() const;
-    virtual u4mat2<128, 128> const &get_screen() const;
+    virtual u4mat2<128, 128> const & get_front_screen() const;
     virtual int get_ansi_color(uint8_t c) const;
 
     virtual std::function<void(void *, int)> get_streamer(int channel);

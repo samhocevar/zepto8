@@ -453,7 +453,7 @@ bool cart::load_p8(std::string const &filename)
             m_rom.sfx[i].notes[j].effect = ins & 0xf;
         }
 
-        m_rom.sfx[i].editor_mode = sfx[i * (4 + 32 * 5 / 2) + 0];
+        m_rom.sfx[i].filters     = sfx[i * (4 + 32 * 5 / 2) + 0];
         m_rom.sfx[i].speed       = sfx[i * (4 + 32 * 5 / 2) + 1];
         m_rom.sfx[i].loop_start  = sfx[i * (4 + 32 * 5 / 2) + 2];
         m_rom.sfx[i].loop_end    = sfx[i * (4 + 32 * 5 / 2) + 3];

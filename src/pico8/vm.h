@@ -84,7 +84,9 @@ public:
     virtual bool step(float seconds);
 
     virtual std::string const &get_code() const;
-    virtual u4mat2<128, 128> const &get_screen() const;
+    virtual u4mat2<128, 128> const & get_front_screen() const;
+    u4mat2<128, 128> const& get_current_screen() const;
+    u4mat2<128, 128>& get_current_screen();
     virtual int get_ansi_color(uint8_t c) const;
 
     virtual void render(lol::u8vec4 *screen) const;
@@ -185,7 +187,7 @@ private:
 
     // Sound
     void api_music(int16_t pattern, int16_t fade_len, int16_t mask);
-    void api_sfx(int16_t sfx, opt<int16_t> in_chan, int16_t offset);
+    void api_sfx(int16_t sfx, opt<int16_t> in_chan, int16_t offset, int16_t length);
 
     // Deprecated
     fix32 api_time();
@@ -267,6 +269,9 @@ private:
     uint8_t get_pixel(int16_t x, int16_t y) const;
 
     uint32_t to_color_bits(opt<fix32> c);
+    uint32_t raw_to_bits(uint8_t c) const;
+
+    void scrool_screen(int16_t scroll_amount);
 
     void set_pixel(int16_t x, int16_t y, uint32_t color_bits);
 

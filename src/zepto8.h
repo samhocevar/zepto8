@@ -86,7 +86,7 @@ public:
 
     // Rendering
     virtual void render(lol::u8vec4 *screen) const = 0;
-    virtual u4mat2<128, 128> const &get_screen() const = 0;
+    virtual u4mat2<128, 128> const &get_front_screen() const = 0;
     virtual int get_ansi_color(uint8_t c) const = 0;
     // FIXME: get_ansi_color() should be get_rgb(), and render()
     // should be removed in favour of a generic function that

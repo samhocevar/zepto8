@@ -34,7 +34,7 @@ void vm_base::print_ansi(lol::ivec2 term_size,
 
     printf("\x1b[?25l"); // hide cursor
 
-    auto &screen = get_screen();
+    auto &screen = get_front_screen();
 
     for (int y = 0; y < 2 * min(64, term_size.y); y += 2)
     {

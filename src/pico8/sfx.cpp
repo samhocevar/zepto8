@@ -351,7 +351,7 @@ void vm::set_music_pattern(int pattern)
     }
 }
 
-void vm::api_sfx(int16_t sfx, opt<int16_t> in_chan, int16_t offset)
+void vm::api_sfx(int16_t sfx, opt<int16_t> in_chan, int16_t offset, int16_t length)
 {
     // SFX index: valid values are 0..63 for actual samples,
     // -1 to stop sound on a channel, -2 to stop looping on a channel
