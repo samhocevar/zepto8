@@ -144,8 +144,8 @@ struct compression_graph
         // Next and previous nodes
         int next = -1, prev = -1;
         // Bidirectional Kadane
-        int min_start = 0, min_sum = 0;
-        int max_start = 0, max_sum = 0;
+        size_t min_start = 0, max_start = 0;
+        int min_sum = 0, max_sum = 0;
     };
 
     std::vector<node> nodes;
@@ -408,7 +408,7 @@ static std::vector<uint8_t> pxa_compress(std::string const& input, bool fast)
             // Compute the cost of reaching this node versus emitting 8 bits per character
             // since the last largest sum array start.
             int delta = graph.prev(i) == i + 1 ? stats_cost[i] / stats_count[i] - 80
-                      : (cur_node.weight - prev_node.weight) - 80 * (i - graph.prev(i));
+                      : (cur_node.weight - prev_node.weight) - 80 * int(i - graph.prev(i));
 
             int max_sum = prev_node.max_sum + delta;
             cur_node.max_start = max_sum > 0 ? prev_node.max_start : i;
@@ -592,8 +592,7 @@ static std::vector<uint8_t> legacy_compress(std::string const &input)
     // Ensure the compression LUT is initialised
     if (!compress_lut)
     {
-        uint8_t *tmp = new uint8_t[256];
-        memset(tmp, 0, 256);
+        static uint8_t tmp[256] = { 0 };
         for (int i = 0; i < 0x3b; ++i)
             tmp[(uint8_t)decompress_lut[i]] = i + 1;
         compress_lut = tmp;

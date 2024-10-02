@@ -363,55 +363,6 @@ struct memory
         return const_cast<u4mat2<128, 128> &>(std::as_const(*this).get_gfx());
     }
 
-    // Hardware pixel accessor
-    uint8_t pixel(int x, int y) const
-    {
-        // Get screen mode
-        uint8_t const &mode = draw_state.screen_mode;
-
-        // Apply screen mode (rotation, mirror, flip…)
-        if ((mode & 0xbc) == 0x84)
-        {
-            // Rotation modes (0x84 to 0x87)
-            if (mode & 1)
-                std::swap(x, y);
-            x = mode & 2 ? 127 - x : x;
-            y = ((mode + 1) & 2) ? 127 - y : y;
-        }
-        else
-        {
-            // Other modes
-            x = (mode & 0xbd) == 0x05 ? std::min(x, 127 - x) // mirror
-              : (mode & 0xbd) == 0x01 ? x / 2                // stretch
-              : (mode & 0xbd) == 0x81 ? 127 - x : x;         // flip
-            y = (mode & 0xbe) == 0x06 ? std::min(y, 127 - y) // mirror
-              : (mode & 0xbe) == 0x02 ? y / 2                // stretch
-              : (mode & 0xbe) == 0x82 ? 127 - y : y;         // flip
-        }
-
-        int c = screen.get(x, y);
-
-        // Apply raster mode
-        if (hw_state.raster.mode == 0x10)
-        {
-            // Raster mode: alternate palette
-            if (hw_state.raster.bits[y])
-                return hw_state.raster.palette[c];
-        }
-        else if ((hw_state.raster.mode & 0x30) == 0x30)
-        {
-            // Raster mode: gradient
-            if ((hw_state.raster.mode & 0x0f) == c)
-            {
-                int c2 = (y / 8 + (hw_state.raster.bits[y] ? 1 : 0)) % 16;
-                return hw_state.raster.palette[c2];
-            }
-        }
-
-        // Apply screen palette
-        return draw_state.screen_palette[c];
-    }
-
     ~memory() = default;
 };
 

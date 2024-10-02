@@ -19,8 +19,10 @@ __lua__
 --
 __z8_stopped = false
 __z8_load_code = load
-__z8_persist_delay = 0
+__z8_cart_running = false
 __z8_paused = false
+__z8_frame_hold = false
+__z8_button_updated = false
 
 
 -- Backward compatibility for old PICO-8 versions
@@ -167,6 +169,11 @@ function __z8_strlen(s)
     return #string.gsub(s, '[\128-\255]', 'XX')
 end
 
+function dir()
+    return pack(__dir())
+end
+ls = dir
+
 -- Stubs for unimplemented functions
 local function stub(s)
     return function(a) __stub(s.."("..(a and '"'..tostr(a)..'"' or "")..")") end
@@ -177,18 +184,25 @@ abort = stub("abort")
 folder = stub("folder")
 resume = stub("resume")
 reboot = stub("reboot")
-dir = stub("dir")
-ls = dir
 
--- All flip() does for now is yield so that the C++ VM gets a chance
--- to draw something even if Lua is in an infinite loop
+function _update_buttons()
+    if(not __z8_button_updated) __buttons()
+    __z8_button_updated = true
+end
+
 function flip()
+    if(not __z8_button_updated) yield() -- this is a bit of a hack, we want to now if an _update has been called, if not we revert to 30fps
+    __z8_frame_hold = false
     _update_buttons()
     yield()
 end
 
+function holdframe()
+    __z8_frame_hold = true
+end
+
 -- Load a cart from file or URL
-function load(arg)
+function load(arg, breadcrumb, params)
     local finished, success, msg
     if string.match(arg, '^#') then
         color(6)
@@ -202,17 +216,18 @@ function load(arg)
         end
     else
         color(14)
-        print('not implemented yet')
-        success, msg = __load(arg), ""
+        success, msg = __load(arg, breadcrumb, params), ""
     end
     if success then
         print('ok')
+        return true
     else
         color(14)
         print('failed')
         local x,y = cursor()
         cursor(0, y)
         print(msg)
+        return false
     end
 end
 
@@ -277,34 +292,58 @@ function __z8_reset_state()
 end
 
 function __z8_reset_cartdata()
+    __z8_menu.items = {}
+    __z8_menu.cursor = 0
     __cartdata(nil)
+end
+
+__z8_is_inside_main_loop=false
+function _set_mainloop_exists(v)
+    __z8_is_inside_main_loop=v
 end
 
 function __z8_run_cart(cart_code)
     local glue_code = [[--
         if (_init) _init()
         if _update or _update60 or _draw then
-            local do_frame = true
             while true do
                 if _update60 then
                     _update_buttons()
+                    _mainloop=_update60
+                    _set_mainloop_exists(true)
                     _update60()
-                elseif _update then
-                    if (do_frame) _update_buttons() _update()
-                    do_frame = not do_frame
+                    _mainloop=nil
+                    _set_mainloop_exists(false)
                 else
+                    yield() -- yield each other frame
                     _update_buttons()
+                    if _update then
+                        _mainloop=_update
+                        _set_mainloop_exists(true)
+                        _update()
+                        _mainloop=nil
+                        _set_mainloop_exists(false)
+                    end
                 end
-                if (_draw and do_frame) _draw()
-                yield()
+                if _draw then
+                    holdframe()
+                    _mainloop=_draw
+                    _set_mainloop_exists(true)
+                    _draw()
+                    _mainloop=nil
+                    _set_mainloop_exists(false)
+                    flip()
+                else
+                    yield()
+                end
             end
         end
     ]]
 
     __z8_loop = cocreate(function()
 
-        -- First reload cart into memory
-        memset(0, 0, 0x8000)
+        __init_ram()
+        -- reload cart into memory
         reload()
 
         __z8_reset_state()
@@ -319,9 +358,12 @@ function __z8_run_cart(cart_code)
                                         create_sandbox())
         if not code then
             color(14) print('syntax error')
+            poke(0x5f36, 0x80) -- activate word wrap
             color(6) print(ex)
             error()
         end
+
+        __z8_cart_running = true
 
         -- Run cart code
         code()
@@ -332,36 +374,31 @@ end
 function __z8_tick()
     if (costatus(__z8_loop) == "dead") return -1
 
+    __z8_button_updated = false
+    __set_pause(__z8_paused)
     if __z8_paused then
         _update_buttons()
         if not __z8_pause_menu() then
+            __mask_buttons()
             __z8_paused = false
         end
+        __z8_frame_hold = false
     else
         ret, err = coresume(__z8_loop)
 
         -- do not use btnp as it's not necessarily updated this frame (if 30fps)
         local prev_btn = __z8_menu.pause_btn
         __z8_menu.pause_btn = btn(6)
-        if __z8_menu.pause_btn and not prev_btn then
+        if btn(6) and not prev_btn and __z8_cart_running then
             if peek(0x5f30) == 1 then
+                __mask_buttons()
                 poke(0x5f30, 0)
             else
-                __z8_paused = true
+                __z8_enter_pause()
             end
         end
     end
-
-    -- XXX: test eris persistence
-    __z8_persist_delay += 1
-    if __z8_persist_delay > 30 and btnp(13) then
-        __z8_persist_delay = 0
-        if backup then
-            __z8_loop = unpersist(backup)
-        else
-            backup = persist(__z8_loop)
-        end
-    end
+    if(not __z8_frame_hold) __end_render()
 
     if __z8_stopped then
         __z8_stopped = false -- FIXME: what now?
@@ -376,69 +413,141 @@ end
 -- pause menu
 --
 
-__z8_menu = { cursor=0, optioncursor=0, items={}, inoption=false, pause_btn=false }
+__z8_menu = { cursor=0, optioncursor=0, items={}, inoption=false, pause_btn=false, pause_act=false, in_menu_item=-1 }
 function menuitem(index, label, callback)
+    if (__z8_menu.in_menu_item > 0 and index==nil) index = __z8_menu.in_menu_item -- calling from inside menuitem callback
     if index < 1 or index > 5 then return end
     if label == nil then
         __z8_menu.items[index] = nil
     else
+        -- if called from inside a menu item and no callback, keep same callback
+        if (__z8_menu.in_menu_item == index and callback==nil) callback = __z8_menu.items[index].c
         __z8_menu.items[index] = {l=label, c=callback}
     end
 end
 
+function __z8_update_gauge(e,st)
+    if(e==1) extcmd(st.."_down")
+    if(e==2) extcmd(st.."_up")
+end
+
+function __z8_draw_gauge(st,x,y)
+    for i=0,7 do
+        local bx=x+30+i*4
+        local sy=stat(st.data)*8>i and 2 or 0
+        rectfill(bx,y+2-sy,bx+2,y+2+sy,7)
+    end
+end
+
+function __z8_update_filter(e)
+    if e==1 then
+		extcmd("z8_filter_prev")
+	else
+    	extcmd("z8_filter_next")
+	end
+end
+
+function __z8_draw_filter(st,x,y)
+    print(stat(142),x+30,y)
+end
+
+function __z8_update_fullscreen(e)
+    local cur = stat(143)
+    extcmd("z8_window_fullscreen "..tostr(1-cur))
+end
+
+function __z8_draw_fullscreen(st,x,y)
+    print(stat(143)==0 and stat(210) or stat(211),x+30,y)
+end
+
+function __z8_enter_pause()
+    __mask_buttons()
+    __z8_paused = true
+    __z8_menu.cursor = 0
+end
+
 function __z8_pause_menu()
     -- todo: freeze pico 8 time() when paused?
-    -- todo: eat the btnp event when closing menu, so game doesn't react to it?
+    -- todo: eat the btnp event when closing menu, so we can use press instead of release btn event with the game reacting to it?
     local entries = {}
-    local wintitle = "pause"
+    local wintitle = stat(200) -- pause
     local forcestay = false
     local cursor = 0
+    local is_pc = stat(145)=="pc"
     if __z8_menu.inoption then -- option sub menu
-        wintitle = "options"
+        wintitle = stat(201) -- options
         forcestay = true -- option sub menu cannot close the menu
-        add(entries, { l = "sound:on", c = function () end })
-        add(entries, { l = "volume", c = function () end })
-        add(entries, { l = "back", c = function (e) if e == 112 then __z8_menu.inoption = false end end })
+        add(entries, { l = stat(202), c = function (e) __z8_update_gauge(e,"z8_volume_music") end, d = __z8_draw_gauge, data=140})
+        add(entries, { l = stat(203), c = function (e) __z8_update_gauge(e,"z8_volume_sfx") end, d = __z8_draw_gauge, data=141})
+        if is_pc then
+            add(entries, { l = stat(204), c = __z8_update_fullscreen, d = __z8_draw_fullscreen})
+        end
+        -- add(entries, { l = stat(205), c = __z8_update_filter, d = __z8_draw_filter})
+        add(entries, { l = stat(206), c = function (e) if e == 112 then __z8_menu.inoption = false end end })
 
         if (btnp(2)) __z8_menu.optioncursor -= 1
         if (btnp(3)) __z8_menu.optioncursor += 1
         if (#entries>0) __z8_menu.optioncursor = (__z8_menu.optioncursor + #entries) % #entries
-        
+
         cursor = __z8_menu.optioncursor
     else
-        add(entries, { l = "continue", c = function () end })
+        add(entries, { l = stat(207), c = function () end }) -- continue
         for i = 1,5 do
             if __z8_menu.items[i] then
                 add(entries, __z8_menu.items[i])
             end
         end
-        add(entries, { l = "options", c = function (e) if e == 112 then __z8_menu.inoption = true __z8_menu.optioncursor = 0 end return true end })
-        add(entries, { l = "reset cart" })
+        add(entries, { l = stat(201), c = function (e) if e == 112 then __z8_menu.inoption = true __z8_menu.optioncursor = 0 end return true end })
+        add(entries, { l = stat(208), c = function (e) if e == 112 then run() end end})
+        if is_pc then
+            add(entries, { l = stat(209), c = function (e) if e == 112 then extcmd("z8_app_requestexit") end end})
+        end
+        local bread = stat(100)
+        if bread then
+            add(entries, { l = bread, c = function (e) if e == 112 then extcmd("breadcrumb") end end})
+        end
 
         if (btnp(2)) __z8_menu.cursor -= 1
         if (btnp(3)) __z8_menu.cursor += 1
         if (#entries > 0) __z8_menu.cursor = (__z8_menu.cursor + #entries) % #entries
-        
+
         cursor = __z8_menu.cursor
     end
 
+    clip() camera() pal() color() fillp()
+
     local px, py, sx, sy = 24, 56 - #entries*4, 79, 16 + #entries*8
-    rectfill(px - 1, py - 1, px + sx + 1, py + sy + 1, 0)
+    --rectfill(px - 1, py - 1, px + sx + 1, py + sy + 1, 0)
+    local palpause={0,0,0,0,0,0,1,1,0,1,1,0,0,0,0,1}
+    for y = py - 1, py + sy + 1 do
+        for x = px - 1, px + sx + 1 do
+            -- we use peek as it reads from screen memory, while pset will write to the
+            -- front buffer since we are paused
+            local v1 = peek(0x6000+flr(x/2) + 0x40 * y)
+            local v2 = x%2==0 and band(v1,0xf) or band(lshr(v1,4),0xf)
+            pset(x,y,palpause[v2%16+1])
+        end
+    end
+
     rect(px, py, px + sx, py + sy, 7)
     print(wintitle, px + sx/2 - #wintitle*2, py + 4, 7)
-    local bx, by = px + 14, py + 14
+    local bx, by = px + 5, py + 14
     for i = 1,#entries do
         local sel = cursor + 1 == i
-        if (sel) pset(bx - 4, by + 2, 7)
-        print(entries[i].l, bx + (sel and 1 or 0), by, sel and 7 or 5)
+        if (sel) pset(bx - 2, by + 2, 7)
+        print(sub(entries[i].l,1,16), bx + (sel and 1 or 0), by, sel and 7 or 5)
+        if (entries[i].d) entries[i]:d(bx,by)
         by += 8
     end
 
     local stay = true
+    local prev_act = __z8_menu.pause_act
+    __z8_menu.pause_act = btn(4) or btn(5) or btn(6)
     if cursor >= 0 and cursor < #entries then
         local cur = entries[cursor + 1]
-        local action = btnp(4) or btnp(5) or btnp(6)
+        local action = __z8_menu.pause_act and not prev_act
         if cur.c then
+            __z8_menu.in_menu_item = cursor
             if action then -- activate button
                 stay = cur.c(112)
             elseif btnp(0) then -- left button
@@ -446,6 +555,7 @@ function __z8_pause_menu()
             elseif btnp(1) then -- right button
                 cur.c(2)
             end
+            __z8_menu.in_menu_item = -1
         elseif action then -- quit when pressing if no callback
             stay = false
         end
@@ -687,3 +797,11 @@ __gfx__
 00007000077770000777770000700700007070000700070007000700000007000077770000000700000070000777700000770000000770007700077077000770
 00007000000070000000070000000700007070700700700007000700000070000000070000007000000700000070700000070000000070000000700000700000
 07777700077770000007700000007000070077000777000007777700007700000007700007770000077000000070000007777000007770000007000000070000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00777000007770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+07000700070007000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+77070770770707700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+77000770770077700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+77070770770707700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+07070700070007000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00777000007770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

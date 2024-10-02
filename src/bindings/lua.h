@@ -75,7 +75,17 @@ template<> void lua_get(lua_State *l, int i, fix32 &arg) { arg = lua_tonumber(l,
 template<> void lua_get(lua_State *l, int i, bool &arg) { arg = (bool)lua_toboolean(l, i); }
 template<> void lua_get(lua_State *l, int i, uint8_t &arg) { arg = (uint8_t)lua_tonumber(l, i); }
 template<> void lua_get(lua_State *l, int i, int16_t &arg) { arg = (int16_t)lua_tonumber(l, i); }
-template<> void lua_get(lua_State *l, int n, std::string &arg) { if (lua_isstring(l, n)) arg = lua_tostring(l, n); }
+
+// Unboxing to std::string ensures that inline \0s are preserved
+template<> void lua_get(lua_State *l, int n, std::string &arg)
+{
+    if (lua_isstring(l, n))
+    {
+        size_t len;
+        char const *s = lua_tolstring(l, n, &len);
+        arg.assign(s, len);
+    }
+}
 
 // Unboxing to std::optional checks for lua_isnone() first
 template<typename T> void lua_get(lua_State *l, int i, std::optional<T> &arg)

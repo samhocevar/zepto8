@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -16,6 +16,8 @@
 
 #include <optional>
 #include <variant>
+#include <functional> // std::function
+#include <unordered_map> // std::unordered_map
 
 #include "zepto8.h"
 #include "bios.h"
@@ -110,7 +112,14 @@ struct state
     channels[4];
 };
 
-class vm : z8::vm_base
+struct breadcrumb_path
+{
+    std::string cart_path;
+    std::string title;
+    std::string params;
+};
+
+class vm : public z8::vm_base
 {
     friend class z8::player;
 
@@ -118,26 +127,54 @@ public:
     vm();
     virtual ~vm();
 
-    virtual void load(std::string const &name);
-    virtual void run();
-    virtual bool step(float seconds);
+    virtual void load(std::string const &name) override;
+    virtual void run() override;
+    virtual void reset() override;
+    virtual bool step(float seconds) override;
+    virtual float getTime() override {
+        return api_time();
+    };
 
-    virtual std::string const &get_code() const;
-    virtual u4mat2<128, 128> const & get_front_screen() const;
+    virtual std::string const &get_code() const override;
+    virtual u4mat2<128, 128> const &get_front_screen() const override;
     u4mat2<128, 128> const& get_current_screen() const;
     u4mat2<128, 128>& get_current_screen();
-    virtual int get_ansi_color(uint8_t c) const;
+    virtual lol::ivec2 get_screen_resolution() const override;
 
-    virtual void render(lol::u8vec4 *screen) const;
+    virtual int get_ansi_color(uint8_t c) const override;
 
-    virtual void get_audio(void* buffer, size_t frames) override;
+    virtual void render(lol::u8vec4 *screen) const override;
 
-    virtual void button(int index, int state);
-    virtual void mouse(lol::ivec2 coords, int buttons);
-    virtual void text(char ch);
+    virtual void get_audio(void* inbuffer, size_t in_bytes) override;
 
-    virtual std::tuple<uint8_t *, size_t> ram();
-    virtual std::tuple<uint8_t *, size_t> rom();
+    virtual void button(int player, int index, int state) override;
+    virtual void mouse(lol::ivec2 coords, lol::ivec2 relative, int buttons, int scroll) override;
+    virtual void text(char ch) override;
+    virtual void sixaxis(lol::vec3 angle) override;
+    virtual void axis(int player, float valueX, float valueY) override;
+
+    virtual std::tuple<uint8_t *, size_t> ram() override;
+    virtual std::tuple<uint8_t *, size_t> rom() override;
+
+    virtual void request_exit() override { m_exit_requested = true; };
+    virtual bool is_running() override { return m_is_running; };
+    virtual int get_filter_index() override { return m_filter_index; }
+    virtual int get_fullscreen() override { return m_fullscreen; }
+    virtual void set_fullscreen(int value, bool save = true, bool runCallback = false) override
+    {
+        m_fullscreen = value;
+        if (save)
+            save_config();
+    };
+
+    virtual void set_config_dir(std::string new_path_config_dir) override
+    {
+        m_path_config_dir = new_path_config_dir;
+        load_config();
+    };
+
+    virtual void add_extcmd(std::string const &, std::function<void(std::string const &)>) override;
+    virtual void add_stat(int16_t, std::function<std::any()>) override;
 
 private:
     void runtime_error(std::string str);
@@ -147,7 +184,9 @@ private:
     // Private methods (hidden from the user)
     opt<bool> private_cartdata(opt<std::string> str);
     bool private_is_api(std::string str);
-    bool private_load(std::string str);
+    void private_init_ram();
+    bool private_load(std::string name, opt<std::string> breadcrumb, opt<std::string> params);
+    std::vector<std::string> private_dir();
     void private_stub(std::string str);
 
     // Asynchronous download system (WIP)
@@ -155,19 +194,25 @@ private:
     struct
     {
         int step;
+#if !__NX__
         lol::net::http::client client;
+#endif
         std::string cart_path;
     }
     download_state;
 
     // System
     void api_run();
-    void api_reload(int16_t in_dst, int16_t in_src, opt<int16_t> in_size);
+    void api_reload(int16_t in_dst, int16_t in_src, opt<int16_t> in_size, opt<std::string> filename);
+    void api_cstore(int16_t in_dst, int16_t in_src, opt<int16_t> in_size, opt<std::string> filename);
     fix32 api_dget(int16_t addr);
     void api_dset(int16_t addr, fix32 val);
+    int16_t address_translate(int16_t addr);
+    uint8_t raw_peek(int16_t addr);
     std::vector<int16_t> api_peek(int16_t addr, opt<int16_t> count);
     std::vector<int16_t> api_peek2(int16_t addr, opt<int16_t> count);
     std::vector<fix32> api_peek4(int16_t addr, opt<int16_t> count);
+    void raw_poke(int16_t addr, uint8_t val);
     void api_poke(int16_t addr, std::vector<int16_t> args);
     void api_poke2(int16_t addr, std::vector<int16_t> args);
     void api_poke4(int16_t addr, std::vector<fix32> args);
@@ -177,10 +222,12 @@ private:
     void api_srand(fix32);
     var<bool, int16_t, fix32, std::string, std::nullptr_t> api_stat(int16_t id);
     void api_printh(rich_string str, opt<std::string> filename, opt<bool> overwrite);
-    void api_extcmd(std::string cmd);
+    void api_extcmd(std::string cmdline);
+    void api_map_display(int16_t id);
 
     // I/O
-    void api_update_buttons();
+    void private_buttons();
+    void private_mask_buttons();
     var<bool, int16_t> api_btn(opt<int16_t> n, int16_t p);
     var<bool, int16_t> api_btnp(opt<int16_t> n, int16_t p);
     void api_serial(int16_t chan, int16_t address, int16_t len);
@@ -241,6 +288,7 @@ public:
         {
             { "run",      bind<&vm::api_run>() },
             { "reload",   bind<&vm::api_reload>() },
+            { "cstore",   bind<&vm::api_cstore>() },
             { "dget",     bind<&vm::api_dget>() },
             { "dset",     bind<&vm::api_dset>() },
             { "peek",     bind<&vm::api_peek>() },
@@ -256,8 +304,8 @@ public:
             { "stat",     bind<&vm::api_stat>() },
             { "printh",   bind<&vm::api_printh>() },
             { "extcmd",   bind<&vm::api_extcmd>() },
+            { "_map_display",   bind<&vm::api_map_display>() },
 
-            { "_update_buttons", bind<&vm::api_update_buttons>() },
             { "btn",  bind<&vm::api_btn>() },
             { "btnp", bind<&vm::api_btnp>() },
 
@@ -296,16 +344,25 @@ public:
 
             { "time", bind<&vm::api_time>() },
 
+            { "__buttons",  bind<&vm::private_buttons>() },
+            { "__mask_buttons",  bind<&vm::private_mask_buttons>() },
+            { "__set_pause",  bind<&vm::private_set_pause>() },
+            { "__end_render",  bind<&vm::private_end_render>() },
             { "__cartdata", bind<&vm::private_cartdata>() },
             { "__download", bind<&vm::private_download>() },
             { "__is_api",   bind<&vm::private_is_api>() },
+            { "__init_ram", bind<&vm::private_init_ram>() },
             { "__load",     bind<&vm::private_load>() },
+            { "__dir",      bind<&vm::private_dir>() },
             { "__stub",     bind<&vm::private_stub>() },
         };
     };
 
 private:
     uint8_t get_pixel(int16_t x, int16_t y) const;
+    uint8_t pixel(int x, int y, u4mat2<128, 128> const& screen) const;
+    void private_set_pause(bool pause);
+    void private_end_render();
 
     uint32_t to_color_bits(opt<fix32> c);
     uint32_t raw_to_bits(uint8_t c) const;
@@ -317,12 +374,30 @@ private:
     void hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits);
     void vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits);
 
-    float get_synth_sample(state::synth_param& params);
+    float get_synth_sample(state::synth_param &params);
     void update_sfx_state(state::sfx_state& cur_sfx, state::synth_param& new_synth, float freq_factor, float length, bool is_music, bool can_loop, bool half_rate, double inv_frames_per_second);
     void update_registers();
     void update_prng();
     void set_music_pattern(int pattern);
     void launch_sfx(int16_t sfx, int16_t chan, float offset, float length, bool is_music);
+
+    bool load_cartdata();
+    bool save_cartdata(bool force);
+
+    bool load_cart(cart& target_cart, std::string const& filename);
+    bool save_cart(cart& target_cart, std::string const& filename);
+
+    bool load_config();
+    bool save_config();
+
+    std::string get_path_config();
+    std::string get_path_cstore(std::string cart_name);
+    std::string get_path_save(std::string cart_name);
+    void set_path_active_dir(std::string filename);
+    std::string get_path_active_dir();
+    std::string get_default_carts_dir();
+
+    void fill_metadata(cart& metadata_cart);
 
 public:
     // TODO: try to get rid of this
@@ -333,15 +408,62 @@ private:
     cart m_cart;
     memory m_ram;
     state m_state;
+    u4mat2<128, 128> m_front_buffer;
+    draw_state_t m_front_draw_state;
+    hw_state_t m_front_hw_state;
+
+    int m_filter_index = 0;
+    int m_fullscreen = 1;
+    bool m_pointer_locked = false;
+
+    // multiscreen
+    int m_multiscreen_current = 0;
+    int m_multiscreens_x = 1;
+    int m_multiscreens_y = 1;
+    std::vector<std::shared_ptr<u4mat2<128, 128>>> m_multiscreens;
 
     bool m_in_pause = false;
 
     // Files
     std::string m_cartdata;
+    int m_cartdata_min_frames_between_saves = 360;
+    int m_cartdata_frames_since_last_save = 0;
+    bool m_cartdata_dirty = false;
+
+    // Label & cart title/author
+    std::string m_metadata_title;
+    std::string m_metadata_author;
+    std::string m_metadata_label;
+
+    // breadcrumb and params
+    std::vector<breadcrumb_path> breadcrumbs;
 
     lol::timer m_timer;
     int m_instructions = 0;
+    int m_max_instructions = 300000;
+
+    std::string m_path_active_dir;
+    std::string m_path_config_dir = "zepto-8";
+
+    std::vector<std::string> m_ui_texts = {  "pause"
+                                            ,"options"
+                                            ,"music"
+                                            ,"sfx"
+                                            ,"screen"
+                                            ,"filter"
+                                            ,"back"
+                                            ,"continue"
+                                            ,"reset cart"
+                                            ,"quit"
+                                            ,"windowed"
+                                            ,"full" };
+
+    std::unordered_map<std::string, std::function<void(std::string const&)>> m_extcmds;
+    std::unordered_map<int16_t, std::function<std::any()>> m_stats;
+
+    bool m_watch_file_change = false;
+    bool m_exit_requested = false;
+    bool m_is_running = true;
 };
 
 } // namespace z8::pico8
-

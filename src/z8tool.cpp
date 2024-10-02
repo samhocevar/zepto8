@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -315,10 +315,8 @@ int main(int argc, char **argv)
             auto const &bin = cart.get_bin();
             f.write((char const *)bin.data(), bin.size());
         }
-        else if (lol::ends_with(out, ".png"))
-            cart.save_png(out);
         else
-            cart.save_p8(out);
+            cart.save(out);
 
         break;
 

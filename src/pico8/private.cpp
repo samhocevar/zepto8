@@ -19,6 +19,7 @@
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING 1
 
 #include <lol/msg>   // lol::msg
+#include <lol/utils> // lol::ends_with
 
 #include <locale>
 #include <string>
@@ -40,11 +41,7 @@ std::regex charset::utf8_regex = charset::static_init();
 
 std::regex charset::static_init()
 {
-#if _WIN32 // Work around a Visual Studio CRT bug
-    std::wstring_convert<std::codecvt_utf8<int32_t>, int32_t> cvt;
-#else
     std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> cvt;
-#endif
 
     // The complete PICO-8 charmap, from 0 to 255. We cannot just store
     // codepoints because some emoji glyphs are combinations of several
@@ -152,7 +149,131 @@ opt<bool> vm::private_cartdata(opt<std::string> str)
 
     m_cartdata = *str;
     private_stub(std::format("cartdata(\"{}\")", m_cartdata));
-    return false;
+
+    return load_cartdata();
+}
+
+std::string vm::get_path_config()
+{
+#if __NX__
+    std::string file_path = "save:/";
+#else
+    #if _WIN32
+        std::string base_dir = lol::sys::getenv("APPDATA");
+    #else
+        std::string base_dir = lol::sys::getenv("HOME") + "/.lexaloffle";
+    #endif
+    std::string file_path = base_dir + "/" + m_path_config_dir + "/";
+#endif
+    return file_path + "config.txt";
+}
+
+std::string vm::get_path_cstore(std::string cart_name)
+{
+    // extract name from path
+    size_t found;
+    found = cart_name.find_last_of("/\\");
+    cart_name = cart_name.substr(found);
+
+    // save .p8.png as .p8 (pico 8 do that, not sure why)
+    if (lol::ends_with(lol::tolower(cart_name), ".p8.png"))
+    {
+        cart_name = cart_name.substr(0, cart_name.length() - 4);
+    }
+
+#if __NX__
+    std::string file_path = "save:/";
+#else
+    #if _WIN32
+        std::string base_dir = lol::sys::getenv("APPDATA");
+    #else
+        std::string base_dir = lol::sys::getenv("HOME") + "/.lexaloffle";
+    #endif
+    std::string file_path = base_dir + "/" + m_path_config_dir + "/cstore/";
+#endif
+
+#if !__NX__ && !__SCE__
+    std::error_code code;
+    std::filesystem::create_directories(file_path, code);
+#endif
+    return file_path + cart_name;
+}
+
+std::string vm::get_path_save(std::string cart_name)
+{
+#if __NX__
+    std::string file_path = "save:/";
+#else
+    #if _WIN32
+        std::string base_dir = lol::sys::getenv("APPDATA");
+    #else
+        std::string base_dir = lol::sys::getenv("HOME") + "/.lexaloffle";
+    #endif
+    std::string file_path = base_dir + "/" + m_path_config_dir + "/cdata/";
+#endif
+
+    cart_name += ".p8d.txt";
+
+#if !__NX__ && !__SCE__
+    std::error_code code;
+    std::filesystem::create_directories(file_path, code);
+#endif
+    return file_path + cart_name;
+}
+
+std::string vm::get_default_carts_dir()
+{
+    #if _WIN32
+        std::string base_dir = lol::sys::getenv("APPDATA");
+    #else
+        std::string base_dir = lol::sys::getenv("HOME") + "/.lexaloffle";
+    #endif
+        std::string file_path = base_dir + "/" + m_path_config_dir + "/carts/";
+
+    #if !__NX__ && !__SCE__
+        std::error_code code;
+        std::filesystem::create_directories(file_path, code);
+    #endif
+        return file_path;
+}
+
+std::string vm::get_path_active_dir()
+{
+    if (m_path_active_dir.size() == 0)
+        m_path_active_dir = get_default_carts_dir();
+    return m_path_active_dir;
+}
+
+void vm::set_path_active_dir(std::string filename)
+{
+    size_t found;
+    found = filename.find_last_of("/\\");
+    m_path_active_dir = filename.substr(0, found);
+}
+
+std::vector<std::string> vm::private_dir()
+{
+    std::vector<std::string> files;
+    std::string path = get_path_active_dir();
+    // add directories
+    for (const auto& entry : std::filesystem::directory_iterator(path))
+        if (entry.is_directory())
+            files.push_back(entry.path().filename().string() + "/");
+    // add files
+    for (const auto& entry : std::filesystem::directory_iterator(path))
+        if (!entry.is_directory())
+            files.push_back(entry.path().filename().string());
+    // FIXME: LUA doesn't seems to support returning tupple of more than 32 strings
+    if (files.size() > 32)
+    {
+        files.resize(32);
+    }
+    return files;
+}
+
+void vm::private_set_pause(bool pause)
+{
+    m_in_pause = pause;
 }
 
 } // namespace z8::pico8

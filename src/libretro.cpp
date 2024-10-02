@@ -16,6 +16,7 @@
 
 #include <lol/msg>    // lol::msg
 #include <lol/narray> // lol::array2d
+#include <lol/utils> // lol::ends_with
 #include <array>      // std::array
 #include <cstring>    // std::memset
 #include <memory>     // std::shared_ptr
@@ -64,7 +65,7 @@ EXPORT void retro_set_input_state(retro_input_state_t cb) { input_state_cb = cb;
 EXPORT void retro_init()
 {
     // Allocate framebuffer and VM
-    vm.reset((z8::vm_base *)new z8::pico8::vm());
+    vm = std::make_shared<z8::pico8::vm>();
     fb32.resize(lol::ivec2(128, 128));
     fb16.resize(lol::ivec2(128, 128));
 }
@@ -129,7 +130,7 @@ EXPORT void retro_run()
     input_poll_cb();
     for (int n = 0; n < 8; ++n)
         for (int k = 0; k < 7; ++k)
-            vm->button(8 * n + k, input_state_cb(n, RETRO_DEVICE_JOYPAD, 0, buttons[k]));
+            vm->button(n, k, input_state_cb(n, RETRO_DEVICE_JOYPAD, 0, buttons[k]));
 
     // Step VM
     vm->step(1.f / 60);
@@ -171,10 +172,8 @@ EXPORT void retro_cheat_set(unsigned index, bool enabled, const char *code)
 EXPORT bool retro_load_game(struct retro_game_info const *info)
 {
     is_raccoon = lol::ends_with(info->path, ".rcn.json");
-    if (is_raccoon)
-        vm.reset((z8::vm_base *)new z8::raccoon::vm());
-    else
-        vm.reset((z8::vm_base *)new z8::pico8::vm());
+    is_raccoon ? vm = std::make_shared<z8::raccoon::vm>()
+               : vm = std::make_shared<z8::pico8::vm>();
     vm->load(info->path);
     vm->run();
     return true;

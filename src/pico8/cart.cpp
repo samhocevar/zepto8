@@ -39,12 +39,13 @@ namespace z8::pico8
 using lol::ivec2;
 using lol::msg;
 using lol::u8vec4;
-using lol::PixelFormat;
 
 using namespace tao;
 
 bool cart::load(std::string const &filename)
 {
+    msg::debug("loading file %s\n", filename.c_str());
+
     if (lol::ends_with(lol::tolower(filename), ".p8") && load_p8(filename))
         return true;
 
@@ -62,10 +63,12 @@ bool cart::load(std::string const &filename)
 
 bool cart::load_png(std::string const &filename)
 {
+    init_filename(filename);
+
     // Open cartridge as PNG image
     std::vector<uint8_t> image;
     unsigned int width, height;
-    unsigned int error = lodepng::decode(image, width, height, filename);
+    unsigned int error = lodepng::decode(image, width, height, lol::sys::get_data_path(filename));
 
     if (error)
         return false;
@@ -101,6 +104,8 @@ bool cart::load_png(std::string const &filename)
 
 bool cart::load_lua(std::string const &filename)
 {
+    init_filename(filename);
+
     // Read file
     std::string code;
     if (!lol::file::read(lol::sys::get_data_path(filename), code))
@@ -112,12 +117,16 @@ bool cart::load_lua(std::string const &filename)
     // PICO-8 saves some symbols in the .p8 file as Emoji/Unicode characters
     // but the runtime expects 8-bit characters instead.
     m_code = charset::utf8_to_pico8(code);
+    init_title();
     memset(&m_rom, 0, sizeof(m_rom));
+    init_rom();
     return true;
 }
 
 bool cart::load_js(std::string const &filename)
 {
+    init_filename(filename);
+
     // Read file
     std::string code;
     if (!lol::file::read(lol::sys::get_data_path(filename), code))
@@ -173,11 +182,53 @@ void cart::set_bin(std::vector<uint8_t> const &bytes)
 
     // Retrieve code, with optional decompression
     m_code = code::decompress(m_rom.code().data());
+    init_title();
 
     msg::debug("version: %d.%d code: %d chars\n", version, minor, (int)m_code.length());
 
     // Invalidate code cache
     m_lua.resize(0);
+}
+
+void cart::init_rom()
+{
+    // init music sfx to be disabled
+    for (int i = 0; i < 64; ++i) {
+        m_rom.song[i].sfx0 = 65;
+        m_rom.song[i].sfx1 = 66;
+        m_rom.song[i].sfx2 = 67;
+        m_rom.song[i].sfx3 = 68;
+    }
+}
+
+void cart::init_title()
+{
+    m_title = "";
+    m_author = "";
+
+    if (m_code.substr(0, 2) != "--") return;
+    size_t first = m_code.find('\n');
+    if (first == std::string::npos) return;
+    m_title = m_code.substr(2, first - 2);
+
+    if (m_code.substr(first + 1, 2) != "--") return;
+    size_t second = m_code.find('\n', first + 1);
+    if (second == std::string::npos) return;
+    m_author = m_code.substr(first + 3, second - first - 3);
+}
+
+void cart::init_filename(std::string filename)
+{
+    m_filename = filename;
+    
+#if !__NX__ && !__SCE__
+    m_file_time_init = false;
+    if (std::filesystem::exists(filename))
+    {
+        m_file_time_init = true;
+        m_file_time = std::filesystem::last_write_time(filename);
+    }
+#endif
 }
 
 //
@@ -367,8 +418,11 @@ private:
     char const *m_str;
 };
 
-bool cart::load_p8(std::string const &filename)
+
+bool cart::load_p8(std::string const& filename)
 {
+    init_filename(filename);
+
     std::string s;
     if (!lol::file::read(lol::sys::get_data_path(filename), s))
         return false;
@@ -384,8 +438,9 @@ bool cart::load_p8(std::string const &filename)
     // PICO-8 saves some symbols in the .p8 file as Emoji/Unicode characters
     // but the runtime expects 8-bit characters instead.
     m_code = charset::utf8_to_pico8(reader.m_code);
-
+    init_title();
     memset(&m_rom, 0, sizeof(m_rom));
+    init_rom();
 
     auto const &gfx = reader.m_sections[(int8_t)p8_reader::section::gfx];
     auto const &gff = reader.m_sections[(int8_t)p8_reader::section::gff];
@@ -450,7 +505,8 @@ bool cart::load_p8(std::string const &filename)
             m_rom.sfx[i].notes[j].key = (ins & 0x3f000) >> 12;
             m_rom.sfx[i].notes[j].instrument = (ins & 0x700) >> 8;
             m_rom.sfx[i].notes[j].volume = (ins & 0x70) >> 4;
-            m_rom.sfx[i].notes[j].effect = ins & 0xf;
+            m_rom.sfx[i].notes[j].effect = ins & 0x7;
+            m_rom.sfx[i].notes[j].custom = (ins & 0x800) >> 11;
         }
 
         m_rom.sfx[i].filters     = sfx[i * (4 + 32 * 5 / 2) + 0];
@@ -467,6 +523,78 @@ bool cart::load_p8(std::string const &filename)
     m_lua.resize(0);
 
     return true;
+}
+
+std::string cart::preprocess_code() const
+{
+    // fast path if no include is found in the file
+    size_t found_hashtag = get_code().find("#include ");
+    if (found_hashtag == std::string::npos)
+    {
+        return get_code();
+    }
+
+    // get file base path
+    size_t found_path = m_filename.find_last_of("/\\");
+    std::string include_path = m_filename.substr(0, found_path);
+
+    // TODO: optimize by finding all include points, and only stich code there instead of each line
+    // TODO: skip #include in multiline comment and multiline string
+
+    // handle include of files
+    std::string final_code;
+    std::istringstream iss(get_code());
+    for (std::string line; std::getline(iss, line); )
+    {
+        size_t found_include = line.find("#include ");
+        if (   found_include != std::string::npos
+            && line.find_first_of("\"'") == std::string::npos
+            && line.find("--") == std::string::npos) // verify include is not in string or comment
+        {
+            // local file name
+            std::string filename = line.substr(found_include + 9);
+            std::string include_name = include_path + "/" + filename;
+
+            std::string s;
+            if (!lol::file::read(lol::sys::get_data_path(include_name), s))
+            {
+                lol::msg::error("cannot load include cart: %s\n", include_name.c_str());
+                continue;
+            }
+
+            msg::debug("loaded include file %s\n", include_name.c_str());
+
+            if (filename.ends_with(".p8"))
+            {
+                p8_reader reader;
+                reader.parse(s.c_str());
+                final_code += charset::utf8_to_pico8(reader.m_code) + "\n";
+            }
+            else
+            {
+                final_code += charset::utf8_to_pico8(s) + "\n";
+            }
+        }
+        else
+        {
+            final_code += line + "\n";
+        }
+    }
+
+    return final_code;
+}
+
+bool cart::save(std::string const& filename) const
+{
+    msg::debug("saving file %s\n", filename.c_str());
+
+    if (lol::ends_with(lol::tolower(filename), ".p8") && save_p8(filename))
+        return true;
+
+    if (lol::ends_with(lol::tolower(filename), ".png") && save_png(filename))
+        return true;
+
+    return false;
 }
 
 bool cart::save_png(std::string const &filename) const
@@ -513,6 +641,25 @@ bool cart::save_png(std::string const &filename) const
     }
 
     return true;
+}
+
+void cart::set_from_ram(memory const &ram, int in_dst, int in_src, int in_size)
+{
+    // If writing after the cart, nothing to do
+    if (in_dst > (int)offsetof(memory, code))
+    {
+        return;
+    }
+
+    // Now copy possibly legal data
+    int amount = std::min(in_size, (int)offsetof(memory, code) - in_dst);
+
+    if (amount <= 0)
+    {
+        return;
+    }
+
+    ::memcpy(&m_rom[in_dst], &ram[in_src], amount);
 }
 
 std::vector<uint8_t> cart::get_compressed_code() const
@@ -649,6 +796,7 @@ bool cart::save_p8(std::string const &filename) const
     }
 
     // Export music section
+    // FIXME: only save channels that are not disabled, like pico 8 do?
     int music_lines = 0;
     for (int i = 0; i < (int)sizeof(m_rom.song); ++i)
         if (((uint8_t const *)&m_rom.song)[i] != 0)

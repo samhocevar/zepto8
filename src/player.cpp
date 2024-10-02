@@ -142,9 +142,10 @@ void player::tick_game(float seconds)
     lol::WorldEntity::tick_game(seconds);
 
     // Aspect ratio
+    lol::ivec2 screen_size = m_vm->get_screen_resolution();
     m_win_size = lol::video::size();
-    m_scale = (float)std::min(m_win_size.x / SCREEN_WIDTH, m_win_size.y / SCREEN_HEIGHT);
-    m_screen_pos = lol::ivec2((lol::vec2(m_win_size) - lol::vec2(SCREEN_WIDTH * m_scale, SCREEN_HEIGHT * m_scale)) / 2.f);
+    m_scale = (float)std::min(m_win_size.x / screen_size.x, m_win_size.y / screen_size.y);
+    m_screen_pos = lol::ivec2((lol::vec2(m_win_size) - lol::vec2(screen_size.x * m_scale, screen_size.y * m_scale)) / 2.f);
     m_scenecam->SetProjection(lol::mat4::ortho(0.f, (float)m_win_size.x, 0.f, (float)m_win_size.y, -100.f, 100.f));
 
     auto mouse = lol::input::mouse();
@@ -154,29 +155,32 @@ void player::tick_game(float seconds)
     lol::vec2 mouse_pos(mouse->axis(lol::input::axis::ScreenX),
                         mouse->axis(lol::input::axis::ScreenY));
     int mx = (int)((mouse_pos.x - m_screen_pos.x) / m_scale);
-    int my = SCREEN_HEIGHT - 1 - (int)((mouse_pos.y - m_screen_pos.y) / m_scale);
+    int my = screen_size.y - 1 - (int)((mouse_pos.y - m_screen_pos.y) / m_scale);
     int buttons = (mouse->button(lol::input::button::BTN_Left) ? 1 : 0)
                 + (mouse->button(lol::input::button::BTN_Right) ? 2 : 0)
                 + (mouse->button(lol::input::button::BTN_Middle) ? 4 : 0);
-    m_vm->mouse(lol::ivec2(mx, my), buttons);
+    // TODO mouse
+    lol::ivec2 relative(0, 0);
+    int scroll = 0;
+    m_vm->mouse(lol::ivec2(mx, my), relative, buttons, scroll);
 
     // Joystick events
     if (auto joy = lol::input::joystick(0))
     {
-        m_vm->button(0, joy->button(lol::input::button::BTN_DpadLeft));
-        m_vm->button(1, joy->button(lol::input::button::BTN_DpadRight));
-        m_vm->button(2, joy->button(lol::input::button::BTN_DpadUp));
-        m_vm->button(3, joy->button(lol::input::button::BTN_DpadDown));
-        m_vm->button(4, joy->button(lol::input::button::BTN_A));
-        m_vm->button(5, joy->button(lol::input::button::BTN_B));
-        m_vm->button(6, joy->button(lol::input::button::BTN_Start));
+        m_vm->button(0, 0, joy->button(lol::input::button::BTN_DpadLeft));
+        m_vm->button(0, 1, joy->button(lol::input::button::BTN_DpadRight));
+        m_vm->button(0, 2, joy->button(lol::input::button::BTN_DpadUp));
+        m_vm->button(0, 3, joy->button(lol::input::button::BTN_DpadDown));
+        m_vm->button(0, 4, joy->button(lol::input::button::BTN_A));
+        m_vm->button(0, 5, joy->button(lol::input::button::BTN_B));
+        m_vm->button(0, 6, joy->button(lol::input::button::BTN_Start));
     }
 
     if (!m_embedded)
     {
         // Keyboard events as buttons
         for (auto const &k : m_input_map)
-            m_vm->button(k.second, keyboard->key(k.first));
+            m_vm->button(0, k.second, keyboard->key(k.first));
 
         // Keyboard events as text
         if (keyboard->key_pressed(lol::input::key::SC_Return))
@@ -220,16 +224,34 @@ void player::tick_draw(float seconds, lol::Scene &scene)
 
     if (!m_embedded)
     {
+        lol::ivec2 screen_size = m_vm->get_screen_resolution();
+
+        lol::ivec2 tile_size = m_tile->GetImageSize();
+        if (tile_size.x != screen_size.x || tile_size.y != screen_size.y)
+        {
+            lol::TileSet::destroy(m_tile);
+
+            auto img = new lol::old_image(screen_size);
+            img->unlock(img->lock<lol::PixelFormat::RGBA_8>()); // ensure RGBA_8 is present
+
+            m_tile = lol::TileSet::create("tile", new lol::old_image(*img), screen_size, lol::ivec2(1, 1));
+
+            m_screen.resize(screen_size.x * screen_size.y);
+        }
+
         // Render the VM screen to our buffer
         m_vm->render(m_screen.data());
 
-        // Blit buffer to the texture
-        // FIXME: move this to some kind of memory viewer class?
-        m_tile->GetTexture()->Bind();
-        m_tile->GetTexture()->SetData(m_screen.data());
+        if (m_tile->GetTexture())
+        {
+            // Blit buffer to the texture
+            // FIXME: move this to some kind of memory viewer class?
+            m_tile->GetTexture()->Bind();
+            m_tile->GetTexture()->SetData(m_screen.data());
 
-        scene.get_renderer()->clear_color(lol::color::black);
-        scene.AddTile(m_tile, 0, lol::vec3((float)m_screen_pos.x, (float)m_screen_pos.y, 10.f), lol::vec2(m_scale), 0.f);
+            scene.get_renderer()->clear_color(lol::color::black);
+            scene.AddTile(m_tile, 0, lol::vec3((float)m_screen_pos.x, (float)m_screen_pos.y, 10.f), lol::vec2(m_scale), 0.f);
+        }
     }
 }
 

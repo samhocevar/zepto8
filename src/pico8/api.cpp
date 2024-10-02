@@ -46,17 +46,17 @@ std::unordered_set<std::string> api::functions =
     "rotl", "rotr", "tostr", "tonum", "srand", "rnd", "ord", "chr",
     "split",
     // Implemented in the ZEPTO-8 VM
-    "run", "reload", "dget", "dset", "peek", "peek2", "peek4",
+    "run", "reload", "cstore", "dget", "dset", "peek", "peek2", "peek4",
     "poke", "poke2", "poke4", "memcpy", "memset", "stat", "printh", "extcmd",
-    "_update_buttons", "btn", "btnp", "cursor", "camera", "circ", "circfill",
+    "btn", "btnp", "cursor", "camera", "circ", "circfill",
     "clip", "cls", "color", "fillp", "fget", "fset", "line", "map", "mget",
     "mset", "oval", "ovalfill", "pal", "palt", "pget", "pset", "rect", "rectfill",
-    "serial", "sget", "sset", "spr", "sspr", "music", "sfx", "time", "tline",
+    "serial", "sget", "sset", "spr", "sspr", "music", "sfx", "time", "tline", "_map_display",
     // Implemented in the ZEPTO-8 BIOS
     "cocreate", "coresume", "costatus", "yield", "trace", "stop",
     "count", "add", "sub", "foreach", "all", "del", "deli", "t", "dget",
     "dset", "cartdata", "load", "save", "info", "abort", "folder",
-    "resume", "reboot", "dir", "ls", "flip", "mapdraw", "menuitem"
+    "resume", "reboot", "dir", "ls", "flip", "holdframe", "_update_buttons", "mapdraw", "menuitem", "_set_mainloop_exists"
 };
 
 } // namespace z8::pico8

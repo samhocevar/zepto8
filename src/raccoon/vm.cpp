@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -14,7 +14,7 @@
 #   include "config.h"
 #endif
 
-#include <lol/engine.h> // lol::sys
+#include <lol/sys/init.h> // lol::sys::get_data_path
 #include <lol/file>   // lol::file::read
 #include <lol/vector> // lol::u8vec4
 #include <lol/msg>    // lol::msg
@@ -134,6 +134,11 @@ void vm::load(std::string const &file)
     }
 }
 
+void vm::reset()
+{
+    run();
+}
+
 void vm::run()
 {
     lol::msg::debug("running bin version %d (%s)\n", m_version, m_name.c_str());
@@ -182,13 +187,13 @@ bool vm::step(float /* seconds */)
     return true;
 }
 
-void vm::button(int index, int state)
+void vm::button(int player, int index, int state)
 {
     if (state)
-        m_ram.gamepad.buttons[0] |= 1 << index;
+        m_ram.gamepad.buttons[0] |= 1 << (player * 8 + index);
 }
 
-void vm::mouse(lol::ivec2 coords, int buttons)
+void vm::mouse(lol::ivec2 coords, lol::ivec2 relative, int buttons, int scroll)
 {
 }
 
@@ -251,7 +256,12 @@ u4mat2<128, 128> const &vm::get_front_screen() const
     return m_ram.screen;
 }
 
-void vm::get_audio(void* buffer, size_t frames)
+lol::ivec2 vm::get_screen_resolution() const
+{
+    return lol::ivec2(128, 128);
+}
+
+void vm::get_audio(void *buffer, size_t frames)
 {
     memset(buffer, 0, frames);
 }
@@ -322,4 +332,3 @@ static int eval_buf(JSContext *ctx, std::string const &code,
 }
 
 } // namespace z8::raccoon
-

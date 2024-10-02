@@ -84,6 +84,7 @@
     <ClInclude Include="3rdparty\lodepng\lodepng.h" />
     <ClInclude Include="bindings/js.h" />
     <ClInclude Include="bindings/lua.h" />
+    <ClInclude Include="bios.h" />
     <ClInclude Include="filter.h" />
     <ClInclude Include="pico8\cart.h" />
     <ClInclude Include="pico8\grammar.h" />

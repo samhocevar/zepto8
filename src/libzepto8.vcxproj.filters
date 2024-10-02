@@ -74,6 +74,7 @@
     <ClInclude Include="bindings/js.h" />
     <ClInclude Include="bindings/lua.h" />
     <ClInclude Include="filter.h" />
+    <ClInclude Include="bios.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="bindings">

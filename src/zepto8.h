@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <any> // std::any
 #include <lol/vector> // lol::ivec2
 #include <string>     // std::string
 #include <tuple>      // std::tuple
@@ -80,13 +81,17 @@ public:
     vm_base() = default;
     virtual ~vm_base() = default;
 
-    virtual void load(std::string const &name) = 0;
+    virtual void load(std::string const& name) = 0;
     virtual void run() = 0;
+    virtual void reset() = 0;
     virtual bool step(float seconds) = 0;
+    virtual float getTime() = 0;
 
     // Rendering
-    virtual void render(lol::u8vec4 *screen) const = 0;
-    virtual u4mat2<128, 128> const &get_front_screen() const = 0;
+    virtual void render(lol::u8vec4* screen) const = 0;
+    virtual u4mat2<128, 128> const& get_front_screen() const = 0;
+    virtual lol::ivec2 get_screen_resolution() const = 0;
+
     virtual int get_ansi_color(uint8_t c) const = 0;
     // FIXME: get_ansi_color() should be get_rgb(), and render()
     // should be removed in favour of a generic function that
@@ -102,13 +107,27 @@ public:
     virtual void get_audio(void* buffer, size_t frames) = 0;
 
     // IO
-    virtual void button(int index, int state) = 0;
-    virtual void mouse(lol::ivec2 coords, int buttons) = 0;
+    virtual void button(int player, int index, int state) = 0;
+    virtual void mouse(lol::ivec2 coords, lol::ivec2 relative, int buttons, int scroll) = 0;
     virtual void text(char ch) = 0;
+    virtual void sixaxis(lol::vec3 angle) = 0;
+    virtual void axis(int player, float valueX, float valueY) = 0;
 
     // Memory (TODO: switch to std::span one day…)
     virtual std::tuple<uint8_t *, size_t> ram() = 0;
     virtual std::tuple<uint8_t *, size_t> rom() = 0;
+
+    virtual void request_exit() = 0;
+    virtual bool is_running() = 0;
+
+    virtual int get_filter_index() = 0;
+    virtual int get_fullscreen() = 0;
+    virtual void set_fullscreen(int value, bool save = true, bool runCallback = true) = 0;
+    virtual void set_config_dir(std::string new_path_config_dir) = 0;
+
+    // Extension commands
+    virtual void add_extcmd(std::string const&, std::function<void(std::string const&)>) = 0;
+    virtual void add_stat(int16_t, std::function<std::any()>) = 0;
 
 protected:
     std::unique_ptr<pico8::bios> m_bios; // TODO: get rid of this

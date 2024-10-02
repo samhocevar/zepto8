@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -22,7 +22,7 @@
 namespace z8::raccoon
 {
 
-class vm : z8::vm_base
+class vm : public z8::vm_base
 {
     friend class z8::player;
 
@@ -30,24 +30,40 @@ public:
     vm();
     virtual ~vm();
 
-    virtual void load(std::string const &file);
-    virtual void run();
-    virtual bool step(float seconds);
+    virtual void load(std::string const &file) override;
+    virtual void run() override;
+    virtual void reset() override;
+    virtual bool step(float seconds) override;
+    virtual float getTime() override { return 1.0f; };
 
-    virtual void render(lol::u8vec4 *screen) const;
+    virtual void render(lol::u8vec4 *screen) const override;
 
-    virtual std::string const &get_code() const;
-    virtual u4mat2<128, 128> const & get_front_screen() const;
-    virtual int get_ansi_color(uint8_t c) const;
+    virtual std::string const &get_code() const override;
+    virtual u4mat2<128, 128> const &get_front_screen() const override;
+    virtual lol::ivec2 get_screen_resolution() const override;
+    virtual int get_ansi_color(uint8_t c) const override;
 
-    virtual void get_audio(void* buffer, size_t frames) override;
+    virtual void get_audio(void* inbuffer, size_t in_bytes) override;
 
-    virtual void button(int index, int state);
-    virtual void mouse(lol::ivec2 coords, int buttons);
-    virtual void text(char ch);
+    virtual void button(int player, int index, int state) override;
+    virtual void mouse(lol::ivec2 coords, lol::ivec2 relative, int buttons, int scroll) override;
+    virtual void text(char ch) override;
+    virtual void sixaxis(lol::vec3 angle) override {};
+    virtual void axis(int player, float valueX, float valueY) override {};
 
-    virtual std::tuple<uint8_t *, size_t> ram();
-    virtual std::tuple<uint8_t *, size_t> rom();
+    virtual std::tuple<uint8_t *, size_t> ram() override;
+    virtual std::tuple<uint8_t *, size_t> rom() override;
+
+    virtual bool is_running() override { return true; };
+    virtual void request_exit() override {};
+
+    virtual int get_filter_index() override { return 0; }
+    virtual int get_fullscreen() override { return 0; }
+    virtual void set_config_dir(std::string new_path_config_dir) override {};
+    virtual void set_fullscreen(int value, bool save = true, bool runCallback = false) override {};
+
+    virtual void add_extcmd(std::string const &, std::function<void(std::string const&)>) override {};
+    virtual void add_stat(int16_t, std::function<std::any()>) override {};
 
 private:
     void js_wrap();
@@ -143,5 +159,4 @@ private:
     memory m_ram;
 };
 
-}
-
+} // namespace z8::raccoon
