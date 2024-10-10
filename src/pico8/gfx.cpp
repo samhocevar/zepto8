@@ -1116,10 +1116,12 @@ void vm::api_map(int16_t cel_x, int16_t cel_y, int16_t sx, int16_t sy,
     for (int16_t dy = 0; dy < src_h; ++dy)
     for (int16_t dx = 0; dx < src_w; ++dx)
     {
-        int16_t cx = (src_x + dx) / 8;
-        int16_t cy = (src_y + dy) / 8;
-        if (cx < 0 || cx >= 128 || cy < 0 || cy >= 64)
+        int16_t cx = src_x + dx;
+        int16_t cy = src_y + dy;
+        if (cx < 0 || cx >= 1024 || cy < 0 || cy >= 512)
             continue;
+        cx /= 8;
+        cy /= 8;
 
         uint8_t sprite = m_ram.map[128 * cy + cx];
         uint8_t bits = m_ram.gfx_flags[sprite];
