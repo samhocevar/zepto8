@@ -98,7 +98,10 @@ struct custom_font_t
     // 0x5603—0x5605: draw offset x, draw offset y
     lol::u8vec2 offset;
 
-    uint8_t padding[3];
+    // 0x5605: if true, enable size adjustments (non-monospace fonts) that uses data 0x5608-0x567f
+    uint8_t size_adjustments;
+
+    uint8_t padding[2];
 
     // 0x5608—0x5e00: glyph data
     uint8_t glyphs[255][8];

@@ -628,6 +628,19 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
                 int16_t h = std::min<int16_t>(base_height, default_height);
                 int16_t draw_height = base_height;
 
+                int16_t vertical_offset = 0;
+                // per-character size adjustments
+                if (print_state.custom && font.size_adjustments != 0)
+                {
+                    int16_t addr = 0X5600 + ch / 2;
+                    int8_t adj = m_ram[addr];
+                    if (ch % 2) {
+                        adj >>= 4;
+                    }
+                    draw_width += ((adj & 0x7) + 4) % 8 - 4;
+                    if (adj & 0x8) vertical_offset = 1;
+                }
+
                 height = std::max<int16_t>(height, print_state.tall ? draw_height * 2 : draw_height);
 
                 if (ds.misc_features.char_wrap && x + fix32(draw_width * wide_scale) > wrap_limit)
@@ -653,7 +666,7 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
                 if (print_state.custom)
                 {
                     base_x += font.offset.x;
-                    base_y += font.offset.y;
+                    base_y += font.offset.y + vertical_offset;
                 }
 
                 #if __NX__
