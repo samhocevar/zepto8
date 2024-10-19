@@ -788,6 +788,9 @@ void vm::api_circ(int16_t x, int16_t y, int16_t r, opt<fix32> c)
 
     x -= ds.camera.x;
     y -= ds.camera.y;
+
+    if (x + r < 0 || x - r >= 128 || y + r < 0 || y - r >= 128) return;
+
     uint32_t color_bits = to_color_bits(c);
     // seems to come from https://rosettacode.org/wiki/Bitmap/Midpoint_circle_algorithm#BASIC256
     for (int16_t dx = r, dy = 0, err = 0; dx >= dy; )
@@ -820,6 +823,9 @@ void vm::api_circfill(int16_t x, int16_t y, int16_t r, opt<fix32> c)
 
     x -= ds.camera.x;
     y -= ds.camera.y;
+
+    if (x + r < 0 || x - r >= 128 || y + r < 0 || y - r >= 128) return;
+
     uint32_t color_bits = to_color_bits(c);
     // seems to come from https://rosettacode.org/wiki/Bitmap/Midpoint_circle_algorithm#BASIC256
     for (int16_t dx = r, dy = 0, err = 0; dx >= dy; )
@@ -1178,13 +1184,16 @@ void vm::api_oval(int16_t x0, int16_t y0, int16_t x1, int16_t y1, opt<fix32> c)
     y0 -= ds.camera.y;
     x1 -= ds.camera.x;
     y1 -= ds.camera.y;
-    uint32_t color_bits = to_color_bits(c);
 
     if (x0 > x1)
         std::swap(x0, x1);
 
     if (y0 > y1)
         std::swap(y0, y1);
+
+    if (x1 < 0 || x0 >= 128 || y1 < 0 || y0 >= 128) return;
+
+    uint32_t color_bits = to_color_bits(c);
 
     // FIXME: not elegant at all
     float xc = float(x0 + x1) / 2;
@@ -1228,13 +1237,16 @@ void vm::api_ovalfill(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
     y0 -= ds.camera.y;
     x1 -= ds.camera.x;
     y1 -= ds.camera.y;
+
+    if (y0 > y1)
+        std::swap(y0, y1);
+
+    if (y0 > y1)
+        std::swap(y0, y1);
+
+    if (x1 < 0 || x0 >= 128 || y1 < 0 || y0 >= 128) return;
+
     uint32_t color_bits = to_color_bits(c);
-
-    if (y0 > y1)
-        std::swap(y0, y1);
-
-    if (y0 > y1)
-        std::swap(y0, y1);
 
     // FIXME: not elegant at all
     float xc = float(x0 + x1) / 2;
@@ -1342,13 +1354,16 @@ void vm::api_rect(int16_t x0, int16_t y0, int16_t x1, int16_t y1, opt<fix32> c)
     y0 -= ds.camera.y;
     x1 -= ds.camera.x;
     y1 -= ds.camera.y;
-    uint32_t color_bits = to_color_bits(c);
 
     if (x0 > x1)
         std::swap(x0, x1);
 
     if (y0 > y1)
         std::swap(y0, y1);
+
+    if (x1 < 0 || x0 >= 128 || y1 < 0 || y0 >= 128) return;
+
+    uint32_t color_bits = to_color_bits(c);
 
     hline(x0, x1, y0, color_bits);
     hline(x0, x1, y1, color_bits);
@@ -1369,10 +1384,25 @@ void vm::api_rectfill(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
     y0 -= ds.camera.y;
     x1 -= ds.camera.x;
     y1 -= ds.camera.y;
-    uint32_t color_bits = to_color_bits(c);
 
     if (y0 > y1)
         std::swap(y0, y1);
+
+    if (x0 > x1)
+    {
+        if (x0 < 0 || x1 >= 128) return;
+    }
+    else
+    {
+        if (x1 < 0 || x0 >= 128) return;
+    }
+
+    // clamp to the screen
+
+    if (y0 < -1) y0 = -1;
+    if (y1 > 128) y1 = 128;
+
+    uint32_t color_bits = to_color_bits(c);
 
     for (int16_t y = y0; y <= y1; ++y)
         hline(x0, x1, y, color_bits);
@@ -1402,7 +1432,7 @@ void vm::api_spr(int16_t n, int16_t x, int16_t y, opt<fix32> w,
     int16_t w8 = w ? (int16_t)(*w * fix32(8.0)) : 8;
     int16_t h8 = h ? (int16_t)(*h * fix32(8.0)) : 8;
 
-    if (x + w8 < 0 || x >= 128 || y + h8 < 0 || y >= 128) return;
+    if (x + w8 <= 0 || x >= 128 || y + h8 <= 0 || y >= 128) return;
 
     u4mat2<128, 128>& gfx = m_ram.get_gfx();
     for (int16_t j = 0; j < h8; ++j)
@@ -1433,6 +1463,8 @@ void vm::api_sspr(int16_t sx, int16_t sy, int16_t sw, int16_t sh,
     // Support negative dw and dh by flipping the target rectangle
     if (dw < 0) { dw = -dw; dx -= dw - 1; flip_x = !flip_x; }
     if (dh < 0) { dh = -dh; dy -= dh - 1; flip_y = !flip_y; }
+
+    if (dx + dw <= 0 || dx >= 128 || dy + dh <= 0 || dy >= 128) return;
 
     // Iterate over destination pixels
     // FIXME: maybe clamp if target area is too big?
