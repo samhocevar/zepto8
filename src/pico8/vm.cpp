@@ -1440,11 +1440,15 @@ void vm::api_map_display(int16_t id)
     {
         // tmp: at least 2 horizontal screen
         m_multiscreens_x = std::max(m_multiscreens_x, 2);
-        // tmp: if try to write to screen 2, we have a super wide cart
+        // tmp: if try to write to screen 2, we have at least 2 in height
         if (m_multiscreen_current >= 2)
         {
-            m_multiscreens_x = 4;
-            m_multiscreens_y = 2;
+            m_multiscreens_y = std::max(m_multiscreens_y, 2);
+        }
+        // tmp: if try to write to screen 4, we have a super-wide cart 
+        if (m_multiscreen_current >= 4)
+        {
+            m_multiscreens_x = std::max(m_multiscreens_x, 4);
         }
         int target_screen = m_multiscreen_current - 1;
         while (target_screen >= m_multiscreens.size())
