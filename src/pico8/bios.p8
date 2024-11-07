@@ -201,6 +201,10 @@ function holdframe()
     __z8_frame_hold = true
 end
 
+function _set_fps()
+    -- todo
+end
+
 -- Load a cart from file or URL
 function load(arg, breadcrumb, params)
     local finished, success, msg
