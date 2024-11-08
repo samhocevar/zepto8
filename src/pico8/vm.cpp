@@ -987,8 +987,9 @@ bool vm::save_config()
     return true;
 }
 
-fix32 vm::api_rnd(opt<fix32> in_range)
+fix32 vm::api_private_rnd(opt<fix32> in_range)
 {
+    if (in_range && in_range->bits() == 0) return fix32(0);
     update_prng();
     uint32_t a = m_ram.hw_state.prng.a;
     uint32_t range = in_range ? uint32_t(in_range->bits()) : 0x10000;

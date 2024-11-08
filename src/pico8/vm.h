@@ -218,7 +218,7 @@ private:
     void api_poke4(int16_t addr, std::vector<fix32> args);
     void api_memcpy(int16_t dst, int16_t src, int16_t size);
     void api_memset(int16_t dst, uint8_t val, int16_t size);
-    fix32 api_rnd(opt<fix32>);
+    fix32 api_private_rnd(opt<fix32>);
     void api_srand(fix32);
     var<bool, int16_t, fix32, std::string, std::nullptr_t> api_stat(int16_t id);
     void api_printh(rich_string str, opt<std::string> filename, opt<bool> overwrite);
@@ -299,7 +299,7 @@ public:
             { "poke4",    bind<&vm::api_poke4>() },
             { "memcpy",   bind<&vm::api_memcpy>() },
             { "memset",   bind<&vm::api_memset>() },
-            { "rnd",      bind<&vm::api_rnd>() },
+            { "__rnd",    bind<&vm::api_private_rnd>() },
             { "srand",    bind<&vm::api_srand>() },
             { "stat",     bind<&vm::api_stat>() },
             { "printh",   bind<&vm::api_printh>() },

@@ -139,6 +139,25 @@ function foreach(c, f)
      for v in all(c) do f(v) end
 end
 
+-- this function is necessary because we dont have a select function to know if we have or not a parameter (even a nil parameter)
+function rnd_one_arg(c)
+    if type(c)=="table" then
+        if #c==0 then
+            return nil
+        end
+        return c[flr(__rnd(#c))+1]
+    end
+    return __rnd(c)
+end
+
+function rnd(...)
+    local args = {...}
+    if #args>0 then
+        return rnd_one_arg(...)
+    end
+    return __rnd(...)
+end
+
 sub = string.sub
 pack = table.pack
 unpack = table.unpack
