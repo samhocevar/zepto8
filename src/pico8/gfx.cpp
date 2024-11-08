@@ -1073,7 +1073,7 @@ void vm::api_tline(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
         {
             int col = gfx.get(sprite % 16 * 8 + (int(mx << 3) & 0x7),
                               sprite / 16 * 8 + (int(my << 3) & 0x7));
-            if ((ds.draw_palette[col] & 0x10) == 0)
+            if ((ds.draw_palette[col] & 0xf0) == 0)
             {
                 uint32_t color_bits = (ds.draw_palette[col] & 0xf) << 16;
                 set_pixel(x, y, color_bits);
@@ -1151,7 +1151,7 @@ void vm::api_map(int16_t cel_x, int16_t cel_y, int16_t sx, int16_t sy,
         {
             int col = gfx.get(sprite % 16 * 8 + (src_x + dx) % 8,
                                     sprite / 16 * 8 + (src_y + dy) % 8);
-            if ((ds.draw_palette[col] & 0x10) == 0)
+            if ((ds.draw_palette[col] & 0xf0) == 0)
             {
                 uint32_t color_bits = (ds.draw_palette[col] & 0xf) << 16;
                 set_pixel(sx + dx, sy + dy, color_bits);
@@ -1308,7 +1308,7 @@ var<int16_t, bool> vm::api_palt(opt<int16_t> c, opt<bool> t)
         int16_t prev = 0;
         for (int i = 0; i < 16; ++i)
         {
-            prev |= ((ds.draw_palette[i] & 0x10) >> 4) << (15 - i);
+            prev |= ((ds.draw_palette[i] & 0xf0) != 0 ? 1 : 0) << (15 - i);
             ds.draw_palette[i] &= 0xf;
             // If c is set, set transparency according to the (15 - i)th bit.
             // Otherwise, only color 0 is transparent.
@@ -1441,7 +1441,7 @@ void vm::api_spr(int16_t n, int16_t x, int16_t y, opt<fix32> w,
             int16_t di = flip_x ? w8 - 1 - i : i;
             int16_t dj = flip_y ? h8 - 1 - j : j;
             uint8_t col = gfx.safe_get(n % 16 * 8 + di, n / 16 * 8 + dj);
-            if ((ds.draw_palette[col] & 0x10) == 0)
+            if ((ds.draw_palette[col] & 0xf0) == 0)
             {
                 uint32_t color_bits = (ds.draw_palette[col] & 0xf) << 16;
                 set_pixel(x + i, y + j, color_bits);
@@ -1480,7 +1480,7 @@ void vm::api_sspr(int16_t sx, int16_t sy, int16_t sw, int16_t sh,
         int16_t y = sy + sh * dj / dh;
 
         uint8_t col = gfx.safe_get(x, y);
-        if ((ds.draw_palette[col] & 0x10) == 0)
+        if ((ds.draw_palette[col] & 0xf0) == 0)
         {
             uint32_t color_bits = (ds.draw_palette[col] & 0xf) << 16;
             set_pixel(dx + i, dy + j, color_bits);
