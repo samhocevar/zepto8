@@ -255,7 +255,7 @@ private:
     void api_mset(int16_t x, int16_t y, uint8_t n);
     void api_oval(int16_t x0, int16_t y0, int16_t x1, int16_t y1, opt<fix32> c);
     void api_ovalfill(int16_t x0, int16_t y0, int16_t x1, int16_t y1, opt<fix32> c);
-    opt<uint8_t> api_pal(opt<uint8_t> c0, opt<uint8_t> c1, uint8_t p);
+    opt<uint8_t> api_private_pal(opt<uint8_t> c0, opt<uint8_t> c1, uint8_t p);
     var<int16_t, bool> api_palt(opt<int16_t> c, opt<bool> t);
     fix32 api_pget(int16_t x, int16_t y);
     void api_pset(int16_t x, int16_t y, opt<fix32> c);
@@ -327,7 +327,7 @@ public:
             { "mset",     bind<&vm::api_mset>() },
             { "oval",     bind<&vm::api_oval>() },
             { "ovalfill", bind<&vm::api_ovalfill>() },
-            { "pal",      bind<&vm::api_pal>() },
+            { "__pal",    bind<&vm::api_private_pal>() },
             { "palt",     bind<&vm::api_palt>() },
             { "pget",     bind<&vm::api_pget>() },
             { "pset",     bind<&vm::api_pset>() },

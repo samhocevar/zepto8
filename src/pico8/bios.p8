@@ -158,6 +158,35 @@ function rnd(...)
     return __rnd(...)
 end
 
+function pal_args_1(c0)
+    if type(c0)!="table" then
+        return __pal(c0)
+    end
+    for k,v in pairs(c0) do
+        __pal(k,v)
+    end
+end
+
+function pal_args_2(c0,c1,p)
+    if type(c0)!="table" then
+        return __pal(c0,c1,p)
+    end
+    for k,v in pairs(c0) do
+        __pal(k,v,c1)
+    end
+end
+
+function pal(...)
+    local args = {...}
+    if #args>1 then
+        return pal_args_2(...)
+    end
+    if #args>0 then
+        return pal_args_1(...)
+    end
+    return __pal(...)
+end
+
 sub = string.sub
 pack = table.pack
 unpack = table.unpack

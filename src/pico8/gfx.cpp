@@ -1263,13 +1263,16 @@ void vm::api_ovalfill(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
     }
 }
 
-opt<uint8_t> vm::api_pal(opt<uint8_t> c0, opt<uint8_t> c1, uint8_t p)
+opt<uint8_t> vm::api_private_pal(opt<uint8_t> c0, opt<uint8_t> c1, uint8_t p)
 {
     auto &ds = m_ram.draw_state;
     auto &hw = m_ram.hw_state;
 
     if (!c0 || !c1)
     {
+        // calling with one non-0 parameter don't do anything
+        if (c0 && (*c0)!=0 && !c1) return std::nullopt;
+
         // PICO-8 documentation: “pal() to reset to system defaults (including
         // transparency values and fill pattern)”
         for (int i = 0; i < 16; ++i)
@@ -1295,7 +1298,7 @@ opt<uint8_t> vm::api_pal(opt<uint8_t> c0, opt<uint8_t> c1, uint8_t p)
         else
             data = (data & 0x10) | (*c1 & 0xf); // Transparency bit is preserved
 
-        return prev;
+        return prev%16;
     }
 }
 
