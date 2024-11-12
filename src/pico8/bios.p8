@@ -217,8 +217,8 @@ function __z8_strlen(s)
     return #string.gsub(s, '[\128-\255]', 'XX')
 end
 
-function dir()
-    return pack(__dir())
+function dir(...)
+    return pack(__dir(...))
 end
 ls = dir
 

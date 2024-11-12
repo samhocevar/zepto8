@@ -186,7 +186,7 @@ private:
     bool private_is_api(std::string str);
     void private_init_ram();
     bool private_load(std::string name, opt<std::string> breadcrumb, opt<std::string> params);
-    std::vector<std::string> private_dir();
+    std::vector<std::string> private_dir(opt<std::string> target_dir);
     void private_stub(std::string str);
 
     // Asynchronous download system (WIP)

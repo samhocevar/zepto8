@@ -251,18 +251,22 @@ void vm::set_path_active_dir(std::string filename)
     m_path_active_dir = filename.substr(0, found);
 }
 
-std::vector<std::string> vm::private_dir()
+std::vector<std::string> vm::private_dir(opt<std::string> target_dir)
 {
     std::vector<std::string> files;
     std::string path = get_path_active_dir();
-    // add directories
-    for (const auto& entry : std::filesystem::directory_iterator(path))
-        if (entry.is_directory())
-            files.push_back(entry.path().filename().string() + "/");
-    // add files
-    for (const auto& entry : std::filesystem::directory_iterator(path))
-        if (!entry.is_directory())
-            files.push_back(entry.path().filename().string());
+    if (target_dir) path = path + *target_dir;
+    if (std::filesystem::exists(path))
+    {
+        // add directories
+        for (const auto& entry : std::filesystem::directory_iterator(path))
+            if (entry.is_directory())
+                files.push_back(entry.path().filename().string() + "/");
+        // add files
+        for (const auto& entry : std::filesystem::directory_iterator(path))
+            if (!entry.is_directory())
+                files.push_back(entry.path().filename().string());
+    }
     // FIXME: LUA doesn't seems to support returning tupple of more than 32 strings
     if (files.size() > 32)
     {
