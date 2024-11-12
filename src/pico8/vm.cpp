@@ -1238,6 +1238,8 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
     if (id == 101)
         return nullptr;
 
+    if (id == 124) return "/";
+
     if (id == 130) return m_metadata_title;
     if (id == 131) return m_metadata_author;
     if (id == 132) return m_metadata_label;
