@@ -173,6 +173,11 @@ public:
         load_config();
     };
 
+    virtual void use_default_carts_dir() override
+    {
+        set_path_active_dir(get_default_carts_dir());
+    };
+
     virtual void add_extcmd(std::string const &, std::function<void(std::string const &)>) override;
     virtual void add_stat(int16_t, std::function<std::any()>) override;
 

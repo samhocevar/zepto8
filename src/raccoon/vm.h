@@ -60,6 +60,7 @@ public:
     virtual int get_filter_index() override { return 0; }
     virtual int get_fullscreen() override { return 0; }
     virtual void set_config_dir(std::string new_path_config_dir) override {};
+    virtual void use_default_carts_dir() override {};
     virtual void set_fullscreen(int value, bool save = true, bool runCallback = false) override {};
 
     virtual void add_extcmd(std::string const &, std::function<void(std::string const&)>) override {};

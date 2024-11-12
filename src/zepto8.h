@@ -124,6 +124,7 @@ public:
     virtual int get_fullscreen() = 0;
     virtual void set_fullscreen(int value, bool save = true, bool runCallback = true) = 0;
     virtual void set_config_dir(std::string new_path_config_dir) = 0;
+    virtual void use_default_carts_dir() = 0;
 
     // Extension commands
     virtual void add_extcmd(std::string const&, std::function<void(std::string const&)>) = 0;
