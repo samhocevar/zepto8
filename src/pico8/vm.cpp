@@ -1069,7 +1069,7 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
     //
     //  130      ZEPTO metadata title
     //  131      ZEPTO metadata author
-    //  132      ZEPTO metadata label
+    
     //  140      ZEPTO Audio Volume Music
     //  141      ZEPTO Audio Volume Sfx
     //  142      ZEPTO Filter Name
@@ -1242,8 +1242,7 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
 
     if (id == 130) return m_metadata_title;
     if (id == 131) return m_metadata_author;
-    if (id == 132) return m_metadata_label;
-
+    
     if (id == 140) return fix32(m_state.music.volume_music);
     if (id == 141) return fix32(m_state.music.volume_sfx);
     if (id == 142) return "none";
@@ -1305,22 +1304,20 @@ void vm::api_printh(rich_string str, opt<std::string> filename, opt<bool> overwr
     }
 }
 
-void vm::fill_metadata(cart &metadata_cart)
+void vm::fill_metadata(cart& metadata_cart)
 {
     m_metadata_title = metadata_cart.get_title();
     m_metadata_author = metadata_cart.get_author();
-    m_metadata_label = "";
     std::vector<uint8_t>& label = metadata_cart.get_label();
     if (label.size() >= LABEL_WIDTH * LABEL_HEIGHT)
     {
+        // Direct copy to sprite memory
         for (int y = 0; y < LABEL_HEIGHT; ++y)
-            for (int x = 0; x < LABEL_WIDTH; ++x)
+            for (int x = 0; x < LABEL_WIDTH; x += 2)
             {
                 uint8_t col = label[y * LABEL_WIDTH + x] & 0x1f;
-                // FIXME: this only works for first 16 colors, so extended palette doesn't work
-                char hex[2];
-                std::snprintf(hex, sizeof(hex), "%01x", col%16);
-                m_metadata_label.append(hex);
+                col |= (label[y * LABEL_WIDTH + x + 1] & 0x1f) << 4;
+                m_ram[(x / 2) + y * 64] = col;
             }
     }
 }

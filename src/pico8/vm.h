@@ -433,7 +433,6 @@ private:
     // Label & cart title/author
     std::string m_metadata_title;
     std::string m_metadata_author;
-    std::string m_metadata_label;
 
     // breadcrumb and params
     std::vector<breadcrumb_path> breadcrumbs;
