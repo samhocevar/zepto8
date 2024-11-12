@@ -43,25 +43,104 @@ _realline=line function line(...)_widedraw(_realline,...)end
 
 cartdata("z8_launcher_label")
 
-function find_carts()
-	local allfiles=ls()
-	local filterfiles={}
-	for i=1,#allfiles do
-		local str=allfiles[i]
-		if #str>7 and sub(str,#str-6)==".p8.png" then
-			add(filterfiles,str)
-		elseif #str>3 and sub(str,#str-2)==".p8" then
-			add(filterfiles,str)
-		else
+piledir={}
+curdir=""
+curlist={}
+meta_loaded=false
+
+function find(t,si,c)
+	for i=si,#t do
+		if t[i]==c then
+			return i
 		end
 	end
-	return filterfiles
+	return -1
 end
 
-files = find_carts()
-fidx=max(1,dget(0))
-pb4=false
-meta_loaded=false
+function find_end(t,si,c)
+	for i=#t-si,1,-1 do
+		if t[i]==c then
+			return i
+		end
+	end
+	return -1
+end
+
+function uplist()
+	curdir="/"
+	for i=1,#piledir do
+		curdir..=piledir[i].."/"
+	end
+	curlist=dir(curdir)
+	add(curlist,"../",1)
+	sel=2
+end
+
+function get_start_dir()
+	curlist={}
+	local start=stat(124)
+	local st=2
+	while st<#start do
+		local v=find(start,st,"/")
+		if v<0 then
+			v=#start+1
+		end
+		add(piledir,sub(start,st,v-1))
+		st=v+1
+	end
+end	
+
+get_start_dir()
+uplist()
+
+function load_meta()
+	if not meta_loaded then
+		memset(0,0,0x2000)
+		if #curlist>0 and sel<=#curlist then
+			local dd=curlist[sel]
+			extcmd("z8_load_metadata "..curdir..dd)
+		end
+		meta_loaded = true
+	end
+end
+
+function back_folder()
+	if #piledir>0 and piledir[#piledir]!=".." then
+		deli(piledir,#piledir)
+	end
+end
+
+function _update()
+	if btnp(2) then sel-=1 meta_loaded=false end
+	if btnp(3) then sel+=1 meta_loaded=false end
+	if #curlist>0 then
+		sel=(sel-1)%#curlist+1
+	else
+		sel=1
+	end
+	if btnp(5) then
+		meta_loaded=false
+		back_folder()
+		uplist()
+	end
+	if btnp(4) then
+		if #curlist>0 and sel<=#curlist then
+			meta_loaded=false
+			local dd=curlist[sel]
+			local isdir=dd[#dd]=="/"
+			if isdir then
+				if dd=="../" then
+					back_folder()
+				else
+					add(piledir,sub(dd,1,#dd-1))
+				end
+				uplist()
+			else
+				load(curdir..dd,"back to launcher")
+			end
+		end
+	end
+end
 
 function bprint(t,x,y,c)
 	print(t,x-1,y,1)
@@ -71,51 +150,26 @@ function bprint(t,x,y,c)
 	print(t,x,y,c)
 end
 
-function _update()
-	if btn(4) and not pb4 then
-		if fidx > 0 and fidx <= #files then
-			local str = files[fidx]
-			load(str,"back to launcher")
-		end
-	end
-	if #files>0 then
-		if btnp(2) then fidx-=1 meta_loaded=false end
-		if btnp(3) then fidx+=1 meta_loaded=false end
-		fidx = (fidx-1)%#files+1
-		dset(0,fidx)
-	end
-	pb4=btn(4)
-end
-
 function _draw()
-	if #files>0 then
-		if not meta_loaded then
-			extcmd("z8_load_metadata "..files[fidx])
-			local strlabel = stat(132)
-			---[[
-			for i=0,128*128-1 do
-				local c=0
-				if (i<#strlabel) c=tonum("0x"..sub(strlabel,i+1,i+1))
-				sset(i%128,flr(i/128),c)
-			end
-			--]]
-			meta_loaded = true
-		end
-		cls(1)
-		camera(-64,mid(64,fidx*6,#files*6-52)-64)
-		for i=1,#files do
-			print(files[i],1,1+i*6,fidx==i and 7 or 12)	
-		end
+	load_meta()
 
-		camera(64,0)
-		rectfill(0,0,127,127,0)
-		spr(0,0,0,16,16)
-		bprint(stat(130),4,4,7)
-		bprint(stat(131),4,10,7)
-	else
-		cls(1)
-		print("no files found",10,64,14)
+	camera()
+	cls(1)
+	print(curdir,65,1,7)
+	local base=min(max(sel-10,1),max(1,#curlist-18))
+	for i=base,min(base+19,#curlist) do
+		local dd=curlist[i]
+		local isdir=dd[#dd]=="/"
+		local c=isdir and 4 or 13
+		if(i==sel) c=isdir and 8 or 12
+		print(dd,65,(i-base+1)*6+1,c)
 	end
+
+	camera(64,0)
+	rectfill(0,0,127,127,0)
+	spr(0,0,0,16,16)
+	bprint(stat(130),4,4,7)
+	bprint(stat(131),4,10,7)
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
