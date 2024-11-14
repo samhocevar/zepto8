@@ -575,6 +575,7 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
             case 'b': print_state.padding = command; break;
             case '#': print_state.solid = command; break;
             case 'g': x = initial_x; y = initial_y;  break; // return home
+            case 'h': initial_x = x; initial_y = y;  break; // update home
             case 'j': // absolute cursor
                 if (++chi == str.value().end()) break;
                 x = get_p8scii_value(*chi) * fix32(4);
