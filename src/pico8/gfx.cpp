@@ -1178,6 +1178,8 @@ void vm::api_mset(int16_t x, int16_t y, uint8_t n)
 
 void vm::api_oval(int16_t x0, int16_t y0, int16_t x1, int16_t y1, opt<fix32> c)
 {
+    using std::max;
+
     auto &ds = m_ram.draw_state;
 
     x0 -= ds.camera.x;
@@ -1208,8 +1210,8 @@ void vm::api_oval(int16_t x0, int16_t y0, int16_t x1, int16_t y1, opt<fix32> c)
     };
 
     // Cutoff for slope = 0.5 happens at x = a²/sqrt(a²+b²)
-    float a = float(x1 - x0) / 2;
-    float b = float(y1 - y0) / 2;
+    float a = max(1.0f, float(x1 - x0) / 2);
+    float b = max(1.0f, float(y1 - y0) / 2);
     float cutoff = a / sqrt(1 + b * b / (a * a));
 
     for (float dx = 0; dx <= cutoff; ++dx)
@@ -1218,7 +1220,6 @@ void vm::api_oval(int16_t x0, int16_t y0, int16_t x1, int16_t y1, opt<fix32> c)
         int16_t y = int16_t(round(yc - b / a * sqrt(a * a - dx * dx)));
         plot(x, y);
     }
-
     cutoff = b / sqrt(1 + a * a / (b * b));
     for (float dy = 0; dy < cutoff; ++dy)
     {
@@ -1231,6 +1232,8 @@ void vm::api_oval(int16_t x0, int16_t y0, int16_t x1, int16_t y1, opt<fix32> c)
 void vm::api_ovalfill(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
                       opt<fix32> c)
 {
+    using std::max;
+
     auto &ds = m_ram.draw_state;
 
     x0 -= ds.camera.x;
@@ -1238,8 +1241,8 @@ void vm::api_ovalfill(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
     x1 -= ds.camera.x;
     y1 -= ds.camera.y;
 
-    if (y0 > y1)
-        std::swap(y0, y1);
+    if (x0 > x1)
+        std::swap(x0, x1);
 
     if (y0 > y1)
         std::swap(y0, y1);
@@ -1252,12 +1255,23 @@ void vm::api_ovalfill(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
     float xc = float(x0 + x1) / 2;
     float yc = float(y0 + y1) / 2;
 
-    float a = float(x1 - x0) / 2;
-    float b = float(y1 - y0) / 2;
-    for (int16_t y = int16_t(ceil(yc)); y <= y1; ++y)
+    float a = max(1.0f, float(x1 - x0) / 2);
+    float b = max(1.0f, float(y1 - y0) / 2);
+
+    float cutoff = a / sqrt(1 + b * b / (a * a));
+
+    for (float dx = 0; dx <= cutoff; ++dx)
     {
-        float dy = y - yc;
+        int16_t x = int16_t(ceil(xc + dx));
+        int16_t y = int16_t(round(yc - b / a * sqrt(a * a - dx * dx)));
+        vline(x, int16_t(2 * yc) - y, y, color_bits);
+        vline(int16_t(2 * xc) - x, int16_t(2 * yc) - y, y, color_bits);
+    }
+    cutoff = b / sqrt(1 + a * a / (b * b));
+    for (float dy = 0; dy <= cutoff; ++dy)
+    {
         int16_t x = int16_t(round(xc - a / b * sqrt(b * b - dy * dy)));
+        int16_t y = int16_t(ceil(yc + dy));
         hline(int16_t(2 * xc) - x, x, y, color_bits);
         hline(int16_t(2 * xc) - x, x, int16_t(2 * yc) - y, color_bits);
     }
