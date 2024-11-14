@@ -299,6 +299,9 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
     fix32 decoraction_cursor_x = 0;
     fix32 decoraction_cursor_y = 0;
 
+    bool draw_one_off=false;
+    uint8_t one_off_glyph[8];
+
     for (auto chi = str.value().begin(); chi != str.value().end(); )
     {
         uint8_t ch = *chi;
@@ -564,6 +567,7 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
                 command = false;
                 if (++chi == str.value().end()) break;
             }
+            bool skip_character_draw = true;
             uint8_t style_control = *chi;
             switch (style_control)
             {
@@ -606,9 +610,51 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
                 if (++chi == str.value().end()) break;
                 base_height = get_p8scii_value(*chi);
                 break;
+            case '.':
+            {
+                auto chicp = chi;
+                bool had_issue = false;
+                memset(&one_off_glyph, 0, sizeof(uint8_t) * 8);
+                for (int glyphline = 0; glyphline < 8; ++glyphline)
+                {
+                    if (++chicp == str.value().end()) { had_issue = true; break; }
+                    one_off_glyph[glyphline] = *chicp;
+                }
+                if (!had_issue)
+                {
+                    skip_character_draw = false;
+                    ch = 0;
+                    draw_one_off = true;
+                    chi = chicp;
+                }
+                break;
             }
-            break;
+            case ':':
+            {
+                auto chicp = chi;
+                bool had_issue = false;
+                memset(&one_off_glyph, 0, sizeof(uint8_t)*8);
+                for (int glyphline = 0; glyphline < 16; ++glyphline)
+                {
+                    if (++chicp == str.value().end()) { had_issue = true; break; }
+                    uint8_t curline = get_p8scii_value(*chicp);
+                    if (curline > 15) curline = 0;
+                    one_off_glyph[glyphline / 2] += curline << (glyphline % 2 ? 0 : 4);
+                }
+                if (!had_issue)
+                {
+                    skip_character_draw = false;
+                    ch = 0;
+                    draw_one_off = true;
+                    chi = chicp;
+                }
+                break;
+            }
+            }
+            if (skip_character_draw) break;
+            [[fallthrough]];
         }
+        // case 6 must be just before default, as we sometimes don't break
         default:
             {
                 int16_t wide_scale = print_state.wide ? 2 : 1;
@@ -629,9 +675,21 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
                 int16_t h = std::min<int16_t>(base_height, default_height);
                 int16_t draw_height = base_height;
 
+                if (draw_one_off)
+                {
+                    font_width = 8;
+                    font_extwidth = 8;
+                    font_height = 8;
+                    default_height = 8;
+                    w = 8;
+                    h = 8;
+                    draw_width = 8;
+                    draw_height = 8;
+                }
+
                 int16_t vertical_offset = 0;
                 // per-character size adjustments
-                if (print_state.custom && font.size_adjustments != 0)
+                if (!draw_one_off && print_state.custom && font.size_adjustments != 0)
                 {
                     int16_t addr = 0X5600 + ch / 2;
                     int8_t adj = m_ram[addr];
@@ -642,15 +700,15 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
                     if (adj & 0x8) vertical_offset = 1;
                 }
 
-                height = std::max<int16_t>(height, print_state.tall ? draw_height * 2 : draw_height);
-
-                if (ds.misc_features.char_wrap && x + fix32(draw_width * wide_scale) > wrap_limit)
+                if (ds.misc_features.char_wrap && x + fix32(draw_width) > wrap_limit)
                 {
                     // go new line
                     x = initial_x;
                     y += fix32(height);
                 }
 
+                height = std::max<int16_t>(height, print_state.tall ? draw_height * 2 : draw_height);
+    
                 // check if we need to scroll before each character, so it can fit
                 if (!has_coords && !ds.misc_features.no_printscroll && new_line_at_end)
                 {
@@ -664,7 +722,7 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
 
                 int16_t base_x = (int16_t)x - ds.camera.x + print_state.offset_x;
                 int16_t base_y = (int16_t)y - ds.camera.y + print_state.offset_y;
-                if (print_state.custom)
+                if (!draw_one_off && print_state.custom)
                 {
                     base_x += font.offset.x;
                     base_y += font.offset.y + vertical_offset;
@@ -682,7 +740,7 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
                 }
                 #endif
                     
-                auto& g = font.glyphs[ch - 1];
+                auto& g = draw_one_off ? one_off_glyph : font.glyphs[ch - 1];
 
                 for (int16_t dy = print_state.padding ? -1 : 0; dy < draw_height; ++dy)
                     for (int16_t dx = print_state.padding ? -1 : 0; dx < draw_width; ++dx)
@@ -694,7 +752,7 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
                         if (dy >= 0 && dy < h && dx >= 0 && dx < w)
                         {
                             // inside the font
-                            if (print_state.custom)
+                            if (draw_one_off || print_state.custom)
                             {                
                                 auto font_line = g[dy];
                                 uint8_t gl = font_line >>= dx;
@@ -740,6 +798,8 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
                     x = decoraction_cursor_x;
                     y = decoraction_cursor_y;
                 }
+
+                draw_one_off = false;
             }
             break;
         }
