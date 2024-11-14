@@ -343,15 +343,20 @@ struct memory
     // 0x6000—0x8000: screen (8k)
     u4mat2<128, 128> screen;
 
+    // 0x8000—0x10000: extended map (4x8k)
+    uint8_t extended_map[4][0x2000];
+
     // Standard accessors
     inline uint8_t &operator[](int n)
     {
+        n &= 0xffff;
         assert(n >= 0 && n < (int)sizeof(memory));
         return ((uint8_t *)this)[n];
     }
 
     inline uint8_t const &operator[](int n) const
     {
+        n &= 0xffff;
         assert(n >= 0 && n < (int)sizeof(memory));
         return ((uint8_t const *)this)[n];
     }
@@ -398,6 +403,6 @@ static_check_section(screen,     0x6000, 0x2000);
 #undef static_check_section
 
 // Final sanity check
-static_assert(sizeof(memory) == 0x8000, "pico8::memory should have size 0x8000");
+static_assert(sizeof(memory) == 0x10000, "pico8::memory should have size 0x10000");
 
 }

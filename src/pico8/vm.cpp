@@ -638,8 +638,7 @@ std::vector<int16_t> vm::api_peek(int16_t addr, opt<int16_t> count)
     for ( ; ret.size() < n; ++addr)
     {
         int16_t bits = 0;
-        if (addr >= 0 && (int)(addr + n) < (int)sizeof(m_ram))
-            bits = raw_peek(addr);
+        bits = raw_peek(addr);
         ret.push_back(bits);
     }
 
@@ -656,11 +655,7 @@ std::vector<int16_t> vm::api_peek2(int16_t addr, opt<int16_t> count)
         int16_t bits = 0;
         for (int i = 0; i < 2; ++i)
         {
-            // This code handles partial reads by adding zeroes
-            if (addr + i < (int)sizeof(m_ram))
-                bits |= raw_peek(addr + i) << (8 * i);
-            else if (addr + i >= (int)sizeof(m_ram))
-                bits |= raw_peek(addr + i - (int)sizeof(m_ram)) << (8 * i);
+            bits |= raw_peek(addr + i) << (8 * i);
         }
         ret.push_back(bits);
     }
@@ -678,11 +673,7 @@ std::vector<fix32> vm::api_peek4(int16_t addr, opt<int16_t> count)
         int32_t bits = 0;
         for (int i = 0; i < 4; ++i)
         {
-            // This code handles partial reads by adding zeroes
-            if (addr + i < (int)sizeof(m_ram))
-                bits |= raw_peek(addr + i) << (8 * i);
-            else if (addr + i >= (int)sizeof(m_ram))
-                bits |= raw_peek(addr + i - (int)sizeof(m_ram)) << (8 * i);
+            bits |= raw_peek(addr + i) << (8 * i);
         }
         ret.push_back(fix32::frombits(bits));
     }
@@ -710,12 +701,6 @@ void vm::api_poke(int16_t addr, std::vector<int16_t> args)
     if (args.empty())
         args.push_back(0);
 
-    if (addr < 0 || addr + args.size() > sizeof(m_ram) - 1)
-    {
-        runtime_error("bad memory access");
-        return;
-    }
-
     for (auto val : args)
         raw_poke(addr++, (uint8_t)val);
 
@@ -727,12 +712,6 @@ void vm::api_poke2(int16_t addr, std::vector<int16_t> args)
     // Note: poke2() is the same as poke2(0, 0)
     if (args.empty())
         args.push_back(0);
-
-    if (addr < 0 || addr + 2 * args.size() > sizeof(m_ram) - 2)
-    {
-        runtime_error("bad memory access");
-        return;
-    }
 
     for (auto val : args)
     {
@@ -748,12 +727,6 @@ void vm::api_poke4(int16_t addr, std::vector<fix32> args)
     // Note: poke4() is the same as poke4(0, 0)
     if (args.empty())
         args.push_back(fix32(0));
-
-    if (addr < 0 || addr + 4 * args.size() > sizeof(m_ram) - 4)
-    {
-        runtime_error("bad memory access");
-        return;
-    }
 
     for (auto val : args)
     {
@@ -779,54 +752,20 @@ void vm::api_memcpy(int16_t in_dst, int16_t in_src, int16_t in_size)
     int dst = in_dst & 0xffff;
     int size = in_size & 0xffff;
 
-    // Attempting to write outside the memory area raises an error. Everything
-    // else seems legal, especially reading from anywhere.
-    if (dst < 0 || dst + size > (int)sizeof(m_ram))
-    {
-        lol::msg::info("z8:segv:memcpy(0x%x,0x%x,0x%x)\n", src, dst, size);
-        runtime_error("bad memory access");
-        return;
-    }
-
-    // If source is outside main memory, part of the operation will be
-    // memset(0). But we delay the operation in case the source and the
-    // destination overlap.
-    int delayed_dst = dst, delayed_size = 0;
-    if (src > (int)sizeof(m_ram))
-    {
-        delayed_size = min(size, (int)sizeof(m_ram) - src);
-        dst += delayed_size;
-        src = (src + delayed_size) & 0xffff;
-        size -= delayed_size;
-    }
-
-    // Now copy possibly legal data
-    int amount = min(size, (int)sizeof(m_ram) - src);
     if (src < dst) // copy from the end
     {
-        int16_t addr_dst = dst + amount;
-        int16_t addr_src = src + amount;
-        for (int16_t i = 0; i < amount; ++i)
+        int16_t addr_dst = dst + size;
+        int16_t addr_src = src + size;
+        for (int16_t i = 0; i < size; ++i)
             raw_poke(--addr_dst, raw_peek(--addr_src));
     }
     else
     {
         int16_t addr_dst = dst;
         int16_t addr_src = src;
-        for (int16_t i = 0; i < amount; ++i)
+        for (int16_t i = 0; i < size; ++i)
             raw_poke(addr_dst++, raw_peek(addr_src++));
     }
-    dst += amount;
-    size -= amount;
-
-    // Fill possible zeroes we saved before, and if there is still something
-    // to copy, it’s zeroes again
-    if (delayed_size)
-        for (int16_t i = 0; i < delayed_size; ++i)
-            raw_poke(delayed_dst++, 0);
-    if (size)
-        for (int16_t i = 0; i < size; ++i)
-            raw_poke(dst++, 0);
 
     update_registers();
 }
@@ -835,13 +774,6 @@ void vm::api_memset(int16_t dst, uint8_t val, int16_t size)
 {
     if (size <= 0)
         return;
-
-    if (dst < 0 || dst + size > (int)sizeof(m_ram))
-    {
-        lol::msg::info("z8:segv:memset(0x%x,0x%x,0x%x)\n", dst, val, size);
-        runtime_error("bad memory access");
-        return;
-    }
 
     for (int16_t i = 0; i < size; ++i)
         raw_poke(dst++, val);
