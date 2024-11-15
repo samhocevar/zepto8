@@ -42,6 +42,7 @@
     <ClCompile Include="vm.cpp" />
     <ClCompile Include="3rdparty\lodepng\lodepng.cpp" />
     <ClCompile Include="filter.cpp" />
+    <ClCompile Include="textfile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pico8\cart.h">
@@ -75,6 +76,7 @@
     <ClInclude Include="bindings/lua.h" />
     <ClInclude Include="filter.h" />
     <ClInclude Include="bios.h" />
+    <ClInclude Include="textfile.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="bindings">

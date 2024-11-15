@@ -78,6 +78,7 @@
     <ClCompile Include="raccoon\api.cpp" />
     <ClCompile Include="raccoon\vm.cpp" />
     <ClCompile Include="synth.cpp" />
+    <ClCompile Include="textfile.cpp" />
     <ClCompile Include="vm.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -95,6 +96,7 @@
     <ClInclude Include="raccoon\memory.h" />
     <ClInclude Include="raccoon\vm.h" />
     <ClInclude Include="synth.h" />
+    <ClInclude Include="textfile.h" />
     <ClInclude Include="zepto8.h" />
   </ItemGroup>
   <ItemGroup>

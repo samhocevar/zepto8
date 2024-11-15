@@ -110,7 +110,7 @@ vm::vm()
 
 vm::~vm()
 {
-    save_cartdata(true);
+    save(true);
     lua_close(m_lua);
 }
 
@@ -328,7 +328,7 @@ void vm::private_init_ram()
 
 bool vm::private_load(std::string name, opt<std::string> breadcrumb, opt<std::string> params)
 {
-    save_cartdata(true);
+    save(true);
 
     std::string previous_cart = m_cart.get_filename();
 
@@ -355,7 +355,7 @@ bool vm::private_load(std::string name, opt<std::string> breadcrumb, opt<std::st
 
 void vm::load(std::string const &name)
 {
-    save_cartdata(true);
+    save(true);
 
     set_path_active_dir(name);
     load_cart(m_cart, name);
@@ -413,7 +413,7 @@ bool vm::step(float /* seconds */)
 {
     if (m_exit_requested)
     {
-        save_cartdata(true);
+        save(true);
         m_is_running = false;
         handle_exit_request();
         return false;
@@ -435,7 +435,7 @@ bool vm::step(float /* seconds */)
 
     m_instructions = 0;
 
-    save_cartdata(false);
+    save(false);
 
     if (m_watch_file_change && m_cart.has_file_changed())
     {
@@ -504,7 +504,7 @@ void vm::axis(int player, float valueX, float valueY)
 
 void vm::api_run()
 {
-    save_cartdata(true);
+    save(true);
 
     // Initialise VM state (TODO: check what else to init)
     ::memset(m_state.buttons, 0, sizeof(m_state.buttons));
@@ -704,7 +704,7 @@ int16_t vm::address_translate(int16_t addr)
 
 void vm::raw_poke(int16_t addr, uint8_t val)
 {
-    if (addr >= 0x5e00 && addr < 0x5f00) m_cartdata_dirty = true;
+    if (addr >= 0x5e00 && addr < 0x5f00) m_savefile.set_dirty();
     addr = address_translate(addr);
     m_ram[addr] = (uint8_t)val;
 }
@@ -809,68 +809,28 @@ void vm::update_prng()
     prng.b += prng.a;
 }
 
+bool vm::save(bool force)
+{
+    save_cartdata(force);
+    save_config(force);
+    return true;
+}
+
 bool vm::load_cartdata()
 {
-    // todo: verify cartdata is not empty
-    std::string s;
-    if (!lol::file::read(get_path_save(m_cartdata), s))
-        return false;
-
-    auto ss = std::stringstream(s);
-
-    int j = 0;
-    for (std::string line; std::getline(ss, line, '\n');)
-    {
-        if (j >= 8) break;
-        for (int i = 0; i < 32; ++i)
-        {
-            std::string sub = line.substr(i * 2, 2);
-            unsigned int x = std::stoul(sub, nullptr, 16);
-            int gindex = i + j * 32;
-            // pico 8 store the numbers in reverse order from ram
-            int index = (gindex & ~0x3) + 3 - gindex % 4;
-            m_ram.persistent[index] = x & 0xff;
-        }
-        j++;
-    }
-
-    return true;
+    if (m_cartdata.size() == 0) return false;
+    
+    return m_savefile.read_save(get_path_save(m_cartdata), m_ram.persistent);
 }
 
 bool vm::save_cartdata(bool force)
 {
     if (m_cartdata.size() == 0) return false;
 
-    m_cartdata_frames_since_last_save += 1;
-    if (!force)
-    {
-        if (!m_cartdata_dirty) return true;
-        if (m_cartdata_frames_since_last_save < m_cartdata_min_frames_between_saves) return true;
-    }
-    m_cartdata_frames_since_last_save = 0;
-    m_cartdata_dirty = false;
-
-    std::string content;
-    for (int i = 0; i < 256; ++i)
-    {
-        char hex[3];
-        // pico 8 store the numbers in reverse order from ram
-        int index = (i & ~0x3) + 3 - i % 4;
-        std::snprintf(hex, sizeof(hex), "%02x", m_ram.persistent[index]);
-        content += hex;
-        if (i % 32 == 31)
-        {
-            content += "\n";
-        }
-    }
-
-    // todo: verify cartdata is not empty
-    if (!lol::file::write(get_path_save(m_cartdata), content))
-        return false;
-
+    if (!m_savefile.tick(force)) return true;
+    bool saved = m_savefile.write_save(get_path_save(m_cartdata), m_ram.persistent);
     save_commit();
-
-    return true;
+    return saved;
 }
 
 bool config_parse_256(std::string line, std::string name, float& value)
@@ -920,8 +880,10 @@ bool vm::load_config()
     return true;
 }
 
-bool vm::save_config()
+bool vm::save_config(bool force)
 {
+    if (!m_configfile.tick(force)) return true;
+
     std::string content;
     content += "// :: Audio Settings\n";
     content += config_make_256("sound_volume", m_state.music.volume_sfx);
@@ -1314,32 +1276,32 @@ void vm::api_extcmd(std::string cmdline)
     else if (cmd == "z8_volume_music_up")
     {
         m_state.music.volume_music = std::clamp(m_state.music.volume_music + 0.125f, 0.0f, 1.0f);
-        save_config();
+        m_configfile.set_dirty();
     }
     else if (cmd == "z8_volume_music_down")
     {
         m_state.music.volume_music = std::clamp(m_state.music.volume_music - 0.125f, 0.0f, 1.0f);
-        save_config();
+        m_configfile.set_dirty();
     }
     else if (cmd == "z8_volume_sfx_up")
     {
         m_state.music.volume_sfx   = std::clamp(m_state.music.volume_sfx + 0.125f, 0.0f, 1.0f);
-        save_config();
+        m_configfile.set_dirty();
     }
     else if (cmd == "z8_volume_sfx_down")
     {
         m_state.music.volume_sfx   = std::clamp(m_state.music.volume_sfx - 0.125f, 0.0f, 1.0f);
-        save_config();
+        m_configfile.set_dirty();
     }
     else if (cmd == "z8_filter_prev" && setfilter_callback)
     {
         m_filter_index = setfilter_callback(m_filter_index - 1);
-        save_config();
+        m_configfile.set_dirty();
     }
     else if (cmd == "z8_filter_next" && setfilter_callback)
     {
         m_filter_index = setfilter_callback(m_filter_index + 1);
-        save_config();
+        m_configfile.set_dirty();
     }
     else if (cmd == "z8_window_fullscreen" && setfullscreen_callback)
     {
@@ -1347,7 +1309,7 @@ void vm::api_extcmd(std::string cmdline)
         {
             setfullscreen_callback(std::stoi(args));
             m_fullscreen = std::stoi(args);
-            save_config();
+            m_configfile.set_dirty();
         }
     }
     else if (cmd == "z8_quit_confirmation")
@@ -1370,7 +1332,7 @@ void vm::api_extcmd(std::string cmdline)
         if (breadcrumbs.size() == 0) return;
         breadcrumb_path breadcrumb = breadcrumbs.back();
         breadcrumbs.pop_back();
-        save_cartdata(true);
+        save(true);
         m_cart.load(breadcrumb.cart_path);
         run();
     }

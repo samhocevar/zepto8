@@ -25,6 +25,7 @@
 #include "pico8/memory.h"
 #include "3rdparty/z8lua/lua.h"
 #include "filter.h"
+#include "textfile.h"
 
 namespace z8 { class player; }
 
@@ -164,7 +165,7 @@ public:
     {
         m_fullscreen = value;
         if (save)
-            save_config();
+            m_configfile.set_dirty();
         if (runCallback)
             setfullscreen_callback(value);
     };
@@ -388,6 +389,8 @@ private:
     void set_music_pattern(int pattern);
     void launch_sfx(int16_t sfx, int16_t chan, float offset, float length, bool is_music);
 
+    bool save(bool force);
+
     bool load_cartdata();
     bool save_cartdata(bool force);
 
@@ -395,7 +398,7 @@ private:
     bool save_cart(cart& target_cart, std::string const& filename);
 
     bool load_config();
-    bool save_config();
+    bool save_config(bool force);
 
     std::string get_path_config();
     std::string get_path_cstore(std::string cart_name);
@@ -435,9 +438,8 @@ private:
 
     // Files
     std::string m_cartdata;
-    int m_cartdata_min_frames_between_saves = 640;
-    int m_cartdata_frames_since_last_save = 0;
-    bool m_cartdata_dirty = false;
+    textfile m_savefile;
+    textfile m_configfile;
 
     // Label & cart title/author
     std::string m_metadata_title;
