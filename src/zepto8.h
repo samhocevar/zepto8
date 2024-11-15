@@ -126,6 +126,32 @@ public:
     virtual void set_config_dir(std::string new_path_config_dir) = 0;
     virtual void use_default_carts_dir() = 0;
 
+    std::function<int(int)> setfilter_callback;
+    std::function<std::string(int)> getfiltername_callback;
+
+    //full screen callbacks
+    std::function<void(int)> setfullscreen_callback;
+    std::function<std::string()> getfullscreen_callback;
+    std::function<void(bool)> pointerLock_callback;
+
+    void registerSetFilterCallback(std::function<int(int)> setfilterListener) {
+        setfilter_callback = std::move(setfilterListener);
+    }
+    void registerGetFilterNameCallback(std::function<std::string(int)> getfilternameListener) {
+        getfiltername_callback = std::move(getfilternameListener);
+    }
+    // Register SET fullscreen Callback
+    void registerSetFullscreenCallback(std::function<void(int)> setFullscreenListener) {
+        setfullscreen_callback = std::move(setFullscreenListener);
+    }
+    // Register GET fullscreen Callback
+    void registerGetFullscreenCallback(std::function<std::string()> getFullscreenListener) {
+        getfullscreen_callback = std::move(getFullscreenListener);
+    }
+    void registerPointerLockCallback(std::function<void(bool)> pointerLockListener) {
+        pointerLock_callback = std::move(pointerLockListener);
+    }
+
     // Extension commands
     virtual void add_extcmd(std::string const &, std::function<void(std::string const &)>) = 0;
     virtual void add_stat(int16_t, std::function<std::any()>) = 0;
@@ -141,4 +167,3 @@ enum
 };
 
 } // namespace z8
-

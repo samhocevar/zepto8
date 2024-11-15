@@ -1195,7 +1195,7 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
 
     if (id == 140) return fix32(m_state.music.volume_music);
     if (id == 141) return fix32(m_state.music.volume_sfx);
-    if (id == 142) return "none";
+    if (id == 142) return getfiltername_callback ? getfiltername_callback(m_filter_index) : "none";
     if (id == 143) return m_fullscreen;
     if (id == 149) return m_quit_confirmation;
 
@@ -1330,6 +1330,25 @@ void vm::api_extcmd(std::string cmdline)
     {
         m_state.music.volume_sfx   = std::clamp(m_state.music.volume_sfx - 0.125f, 0.0f, 1.0f);
         save_config();
+    }
+    else if (cmd == "z8_filter_prev" && setfilter_callback)
+    {
+        m_filter_index = setfilter_callback(m_filter_index - 1);
+        save_config();
+    }
+    else if (cmd == "z8_filter_next" && setfilter_callback)
+    {
+        m_filter_index = setfilter_callback(m_filter_index + 1);
+        save_config();
+    }
+    else if (cmd == "z8_window_fullscreen" && setfullscreen_callback)
+    {
+        if (args.length() > 0)
+        {
+            setfullscreen_callback(std::stoi(args));
+            m_fullscreen = std::stoi(args);
+            save_config();
+        }
     }
     else if (cmd == "z8_quit_confirmation")
     {
@@ -1468,7 +1487,7 @@ void vm::private_buttons()
     if (m_pointer_locked != m_ram.draw_state.mouse_flags.locked)
     {
         m_pointer_locked = m_ram.draw_state.mouse_flags.locked;
-        //pointerLock_callback(m_ram.draw_state.mouse_flags.locked);
+        pointerLock_callback(m_ram.draw_state.mouse_flags.locked);
     }
 }
 

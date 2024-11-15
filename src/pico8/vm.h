@@ -165,6 +165,8 @@ public:
         m_fullscreen = value;
         if (save)
             save_config();
+        if (runCallback)
+            setfullscreen_callback(value);
     };
 
     virtual void set_config_dir(std::string new_path_config_dir) override
