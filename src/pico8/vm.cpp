@@ -1174,7 +1174,7 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
 
     if (id == 130) return m_metadata_title;
     if (id == 131) return m_metadata_author;
-    
+
     if (id == 140) return fix32(m_state.music.volume_music);
     if (id == 141) return fix32(m_state.music.volume_sfx);
     if (id == 142) return "none";
@@ -1356,6 +1356,17 @@ void vm::api_extcmd(std::string cmdline)
             {
                 lol::msg::info("ui text parse error: %s\n", e.what());
             }
+        }
+    }
+    else if (cmd == "z8_set_cpu_limit")
+    {
+        if (args.length() > 0)
+        {
+            m_max_instructions = std::stoi(args) * 1000;
+        }
+        else
+        {
+            m_max_instructions = m_default_max_instructions;
         }
     }
     else if (cmd == "label" || cmd == "screen" || cmd == "rec" || cmd == "video")

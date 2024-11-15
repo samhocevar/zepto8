@@ -446,7 +446,8 @@ private:
 
     lol::timer m_timer;
     int m_instructions = 0;
-    int m_max_instructions = 300000;
+    const int m_default_max_instructions = 300000;
+    int m_max_instructions = m_default_max_instructions;
 
     std::string m_path_active_dir;
     std::string m_path_config_dir = "zepto-8";
