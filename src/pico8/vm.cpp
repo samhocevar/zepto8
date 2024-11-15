@@ -1237,7 +1237,7 @@ void vm::api_printh(rich_string str, opt<std::string> filename, opt<bool> overwr
     }
 }
 
-void vm::fill_metadata(cart& metadata_cart)
+void vm::fill_metadata(cart &metadata_cart)
 {
     m_metadata_title = metadata_cart.get_title();
     m_metadata_author = metadata_cart.get_author();
@@ -1246,11 +1246,11 @@ void vm::fill_metadata(cart& metadata_cart)
     {
         // Direct copy to sprite memory
         for (int y = 0; y < LABEL_HEIGHT; ++y)
-            for (int x = 0; x < LABEL_WIDTH; x += 2)
+            for (int x = 0; x < LABEL_WIDTH; x+=2)
             {
                 uint8_t col = label[y * LABEL_WIDTH + x] & 0x1f;
                 col |= (label[y * LABEL_WIDTH + x + 1] & 0x1f) << 4;
-                m_ram[(x / 2) + y * 64] = col;
+                m_ram[(x/2) + y*64] = col;
             }
     }
 }
