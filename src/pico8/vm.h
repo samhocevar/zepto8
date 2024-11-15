@@ -421,6 +421,8 @@ private:
     int m_fullscreen = 1;
     bool m_pointer_locked = false;
 
+    bool m_quit_confirmation = false;
+
     // multiscreen
     int m_multiscreen_current = 0;
     int m_multiscreens_x = 1;

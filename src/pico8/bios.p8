@@ -465,7 +465,7 @@ end
 -- pause menu
 --
 
-__z8_menu = { cursor=0, optioncursor=0, items={}, inoption=false, pause_btn=false, pause_act=false, in_menu_item=-1 }
+__z8_menu = { cursor=0, optioncursor=0, quitcursor=0, items={}, inoption=false, inquitmsg=nil, pause_btn=false, pause_act=false, in_menu_item=-1 }
 function menuitem(index, label, callback)
     if (__z8_menu.in_menu_item > 0 and index==nil) index = __z8_menu.in_menu_item -- calling from inside menuitem callback
     if index < 1 or index > 5 then return end
@@ -526,7 +526,17 @@ function __z8_pause_menu()
     local forcestay = false
     local cursor = 0
     local is_pc = stat(145)=="pc"
-    if __z8_menu.inoption then -- option sub menu
+    if __z8_menu.inquitmsg != nil then -- quit message asking
+        wintitle = __z8_menu.inquitmsg.l
+        add(entries, { l = stat(206), c = function (e) if e == 112 then __z8_menu.inquitmsg = nil return true end end })
+        add(entries, { l = __z8_menu.inquitmsg.l, c = function (e) if e == 112 then __z8_menu.inquitmsg.c(112) __z8_menu.inquitmsg = nil end end })
+        
+        if (btnp(2)) __z8_menu.quitcursor -= 1
+        if (btnp(3)) __z8_menu.quitcursor += 1
+        if (#entries>0) __z8_menu.quitcursor = (__z8_menu.quitcursor + #entries) % #entries
+
+        cursor = __z8_menu.quitcursor
+    elseif __z8_menu.inoption then -- option sub menu
         wintitle = stat(201) -- options
         forcestay = true -- option sub menu cannot close the menu
         add(entries, { l = stat(202), c = function (e) __z8_update_gauge(e,"z8_volume_music") end, d = __z8_draw_gauge, data=140})
@@ -550,13 +560,13 @@ function __z8_pause_menu()
             end
         end
         add(entries, { l = stat(201), c = function (e) if e == 112 then __z8_menu.inoption = true __z8_menu.optioncursor = 0 end return true end })
-        add(entries, { l = stat(208), c = function (e) if e == 112 then run() end end})
-        if is_pc then
-            add(entries, { l = stat(209), c = function (e) if e == 112 then extcmd("z8_app_requestexit") end end})
-        end
+        add(entries, { l = stat(208), c = function (e) if e == 112 then run() end end, ask = true})
         local bread = stat(100)
         if bread then
-            add(entries, { l = bread, c = function (e) if e == 112 then extcmd("breadcrumb") end end})
+            add(entries, { l = bread, c = function (e) if e == 112 then extcmd("breadcrumb") end end, ask = true})
+        end
+        if is_pc then
+            add(entries, { l = stat(209), c = function (e) if e == 112 then extcmd("z8_app_requestexit") end end, ask = true})
         end
 
         if (btnp(2)) __z8_menu.cursor -= 1
@@ -569,6 +579,10 @@ function __z8_pause_menu()
     clip() camera() pal() color() fillp()
 
     local px, py, sx, sy = 24, 56 - #entries*4, 79, 16 + #entries*8
+    if __z8_menu.inquitmsg != nil then
+        py -= 8
+        sy += 16
+    end
     --rectfill(px - 1, py - 1, px + sx + 1, py + sy + 1, 0)
     local palpause={0,0,0,0,0,0,1,1,0,1,1,0,0,0,0,1}
     for y = py - 1, py + sy + 1 do
@@ -582,8 +596,13 @@ function __z8_pause_menu()
     end
 
     rect(px, py, px + sx, py + sy, 7)
-    print(wintitle, px + sx/2 - #wintitle*2, py + 4, 7)
     local bx, by = px + 5, py + 14
+    if __z8_menu.inquitmsg != nil then
+        print("this game require\na manual save\nare you sure?", px + 5, py + 8, 7)
+        by += 18
+    else
+        print(wintitle, px + sx/2 - #wintitle*2, py + 4, 7)
+    end
     for i = 1,#entries do
         local sel = cursor + 1 == i
         if (sel) pset(bx - 2, by + 2, 7)
@@ -601,7 +620,12 @@ function __z8_pause_menu()
         if cur.c then
             __z8_menu.in_menu_item = cursor
             if action then -- activate button
-                stay = cur.c(112)
+                if stat(149) and cur.ask then -- ask before some actions
+                    __z8_menu.quitcursor = 0
+                    __z8_menu.inquitmsg = cur
+                else
+                    stay = cur.c(112)
+                end
             elseif btnp(0) then -- left button
                 cur.c(1)
             elseif btnp(1) then -- right button

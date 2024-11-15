@@ -1179,6 +1179,7 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
     if (id == 141) return fix32(m_state.music.volume_sfx);
     if (id == 142) return "none";
     if (id == 143) return m_fullscreen;
+    if (id == 149) return m_quit_confirmation;
 
     // Gamepads axes values
     if (id == 150) return fix32(m_state.axes[0][0]); // P1 X
@@ -1311,6 +1312,17 @@ void vm::api_extcmd(std::string cmdline)
     {
         m_state.music.volume_sfx   = std::clamp(m_state.music.volume_sfx - 0.125f, 0.0f, 1.0f);
         save_config();
+    }
+    else if (cmd == "z8_quit_confirmation")
+    {
+        if (args.length() > 0)
+        {
+            m_quit_confirmation = args == "true" || args == "1";
+        }
+        else
+        {
+            m_quit_confirmation = false;
+        }
     }
     else if (cmd == "z8_app_requestexit")
     {
