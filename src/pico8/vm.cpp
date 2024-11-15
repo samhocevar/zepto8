@@ -292,6 +292,23 @@ tup<bool, bool, std::string> vm::private_download(opt<std::string> str)
     return std::make_tuple(false, false, std::string());
 }
 
+bool file_exists(std::string filepath)
+{
+    if (std::filesystem::exists(filepath))
+    {
+        return true;
+    }
+    return false;
+}
+
+void save_commit()
+{
+}
+
+void handle_exit_request()
+{
+}
+
 void vm::private_init_ram()
 {
     ::memset(&m_ram, 0, sizeof(m_ram));
@@ -353,12 +370,7 @@ bool vm::load_cart(cart &target_cart, std::string const& filename)
         // goal is that if you make a new version of your cart, it will change hash and so have a separate save
         // also works if you have several cartridge with same file name
         std::string name_cstore = get_path_cstore(filename);
-        bool save_exist = false;
-        if (std::filesystem::exists(name_cstore))
-        {
-            save_exist = true;
-        }
-        if (save_exist)
+        if (file_exists(name_cstore))
         {
             // Load cart from the save file
             auto reload_cart = std::make_shared<cart>();
@@ -375,6 +387,7 @@ bool vm::save_cart(cart& target_cart, std::string const& filename)
     // save in cstore
     std::string name_cstore = get_path_cstore(filename);
     bool success = target_cart.save(name_cstore);
+    save_commit();
     return success;
 }
 
@@ -402,6 +415,7 @@ bool vm::step(float /* seconds */)
     {
         save_cartdata(true);
         m_is_running = false;
+        handle_exit_request();
         return false;
     }
 
@@ -854,6 +868,8 @@ bool vm::save_cartdata(bool force)
     if (!lol::file::write(get_path_save(m_cartdata), content))
         return false;
 
+    save_commit();
+
     return true;
 }
 
@@ -915,6 +931,8 @@ bool vm::save_config()
 
     if (!lol::file::write(get_path_config(), content))
         return false;
+
+    save_commit();
 
     return true;
 }

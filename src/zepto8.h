@@ -1,7 +1,7 @@
 //
 //  ZEPTO-8 — Fantasy console emulator
 //
-//  Copyright © 2016—2020 Sam Hocevar <sam@hocevar.net>
+//  Copyright © 2016–2024 Sam Hocevar <sam@hocevar.net>
 //
 //  This program is free software. It comes without any warranty, to
 //  the extent permitted by applicable law. You can redistribute it
@@ -81,15 +81,15 @@ public:
     vm_base() = default;
     virtual ~vm_base() = default;
 
-    virtual void load(std::string const& name) = 0;
+    virtual void load(std::string const &name) = 0;
     virtual void run() = 0;
     virtual void reset() = 0;
     virtual bool step(float seconds) = 0;
     virtual float getTime() = 0;
 
     // Rendering
-    virtual void render(lol::u8vec4* screen) const = 0;
-    virtual u4mat2<128, 128> const& get_front_screen() const = 0;
+    virtual void render(lol::u8vec4 *screen) const = 0;
+    virtual u4mat2<128, 128> const &get_front_screen() const = 0;
     virtual lol::ivec2 get_screen_resolution() const = 0;
 
     virtual int get_ansi_color(uint8_t c) const = 0;
@@ -127,7 +127,7 @@ public:
     virtual void use_default_carts_dir() = 0;
 
     // Extension commands
-    virtual void add_extcmd(std::string const&, std::function<void(std::string const&)>) = 0;
+    virtual void add_extcmd(std::string const &, std::function<void(std::string const &)>) = 0;
     virtual void add_stat(int16_t, std::function<std::any()>) = 0;
 
 protected:
