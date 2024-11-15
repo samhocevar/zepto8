@@ -467,7 +467,12 @@ private:
     std::unordered_map<std::string, std::function<void(std::string const&)>> m_extcmds;
     std::unordered_map<int16_t, std::function<std::any()>> m_stats;
 
+    
+#ifdef _DEBUG && !__NX__ && !__SCE__
+    bool m_watch_file_change = true;
+#else
     bool m_watch_file_change = false;
+#endif
     bool m_exit_requested = false;
     bool m_is_running = true;
 };
