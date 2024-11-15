@@ -433,7 +433,7 @@ private:
 
     // Files
     std::string m_cartdata;
-    int m_cartdata_min_frames_between_saves = 360;
+    int m_cartdata_min_frames_between_saves = 640;
     int m_cartdata_frames_since_last_save = 0;
     bool m_cartdata_dirty = false;
 
