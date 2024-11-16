@@ -437,6 +437,7 @@ private:
     bool m_in_pause = false;
 
     // Files
+    int m_save_slot = 0;
     std::string m_cartdata;
     textfile m_savefile;
     textfile m_configfile;

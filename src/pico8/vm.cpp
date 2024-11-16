@@ -875,6 +875,7 @@ bool vm::load_config()
         config_parse_256(line, "music_volume", m_state.music.volume_music);
         config_parse_int(line, "filter_index", m_filter_index);
         config_parse_int(line, "fullscreen_method", m_fullscreen);
+        config_parse_int(line, "save_slot", m_save_slot);
     }
 
     return true;
@@ -890,6 +891,7 @@ bool vm::save_config(bool force)
     content += config_make_256("music_volume", m_state.music.volume_music);
     content += config_make_int("filter_index", m_filter_index);
     content += config_make_int("fullscreen_method", m_fullscreen);
+    content += config_make_int("save_slot", m_save_slot);
 
     if (!lol::file::write(get_path_config(), content))
         return false;
@@ -988,6 +990,9 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
     //  143      ZEPTO Fullscreen status
     //  144      ZEPTO Language
     //  145      ZEPTO Platform
+    //  146      ZEPTO Player Number
+    //  147      ZEPTO Save Slot
+    //  149      ZEPTO Want quit confirmation message
     
     //  150..153 Gamepads axes values
     //  160..169 Physical sensors - gyro, magneto,etc.
@@ -1159,6 +1164,7 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
     if (id == 141) return fix32(m_state.music.volume_sfx);
     if (id == 142) return getfiltername_callback ? getfiltername_callback(m_filter_index) : "none";
     if (id == 143) return m_fullscreen;
+    if (id == 147) return m_save_slot;
     if (id == 149) return m_quit_confirmation;
 
     // Gamepads axes values
@@ -1326,6 +1332,18 @@ void vm::api_extcmd(std::string cmdline)
     else if (cmd == "z8_app_requestexit")
     {
         request_exit();
+    }
+    else if (cmd == "z8_save_slot")
+    {
+        if (args.length() > 0)
+        {
+            save_cartdata(true);
+            m_save_slot = std::max(0, std::stoi(args));
+            if (!load_cartdata())
+            {
+                memset(m_ram.persistent, 0, 256);
+            }
+        }
     }
     else if (cmd == "breadcrumb" || cmd == "go_back")
     {

@@ -181,6 +181,12 @@ std::string vm::get_path_cstore(std::string cart_name)
         cart_name = cart_name.substr(0, cart_name.length() - 4);
     }
 
+    std::string save_directory_name = "cstore";
+    if (m_save_slot > 0)
+    {
+        save_directory_name = save_directory_name + "_" + std::to_string(m_save_slot);
+    }
+
 #if __NX__
     std::string file_path = "save:/";
 #else
@@ -189,7 +195,7 @@ std::string vm::get_path_cstore(std::string cart_name)
     #else
         std::string base_dir = lol::sys::getenv("HOME") + "/.lexaloffle";
     #endif
-    std::string file_path = base_dir + "/" + m_path_config_dir + "/cstore/";
+    std::string file_path = base_dir + "/" + m_path_config_dir + "/" + save_directory_name + "/";
 #endif
 
 #if !__NX__ && !__SCE__
@@ -201,6 +207,11 @@ std::string vm::get_path_cstore(std::string cart_name)
 
 std::string vm::get_path_save(std::string cart_name)
 {
+    std::string save_directory_name = "cdata";
+    if (m_save_slot > 0)
+    {
+        save_directory_name = save_directory_name + "_" + std::to_string(m_save_slot);
+    }
 #if __NX__
     std::string file_path = "save:/";
 #else
@@ -209,7 +220,7 @@ std::string vm::get_path_save(std::string cart_name)
     #else
         std::string base_dir = lol::sys::getenv("HOME") + "/.lexaloffle";
     #endif
-    std::string file_path = base_dir + "/" + m_path_config_dir + "/cdata/";
+    std::string file_path = base_dir + "/" + m_path_config_dir + "/" + save_directory_name + "/";
 #endif
 
     cart_name += ".p8d.txt";
