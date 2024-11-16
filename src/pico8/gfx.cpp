@@ -1124,9 +1124,9 @@ void vm::api_tline(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
     for (;;)
     {
         // Find sprite in map memory
-        int sx = (ds.tline.offset.x + int(mx)) & 0x7f;
-        int sy = (ds.tline.offset.y + int(my)) & 0x3f;
-        uint8_t sprite = m_ram.map[128 * sy + sx];
+        int sx = (ds.tline.offset.x + int(mx));
+        int sy = (ds.tline.offset.y + int(my));
+        uint8_t sprite = api_mget(sx, sy);
         uint8_t bits = m_ram.gfx_flags[sprite];
 
         // If found, draw pixel
