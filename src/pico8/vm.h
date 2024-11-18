@@ -382,6 +382,9 @@ private:
     void hline(int16_t x1, int16_t x2, int16_t y, uint32_t color_bits);
     void vline(int16_t x, int16_t y1, int16_t y2, uint32_t color_bits);
 
+    int16_t get_map_size_x();
+    int16_t get_map_size_y(int16_t map_size_x);
+
     float get_synth_sample(state::synth_param &params);
     void update_sfx_state(state::sfx_state& cur_sfx, state::synth_param& new_synth, float freq_factor, float length, bool is_music, bool can_loop, bool half_rate, double inv_frames_per_second);
     void update_registers();

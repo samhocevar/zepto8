@@ -1122,13 +1122,16 @@ void vm::api_tline(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
         delta -= step;
     }
 
+    int16_t map_size_x = get_map_size_x();
+    int16_t map_size_y = get_map_size_y(map_size_x);
+
     u4mat2<128, 128>& gfx = m_ram.get_gfx();
     for (;;)
     {
         // Find sprite in map memory
-        int sx = (ds.tline.offset.x + int(mx)) & 0x7f;
-        int sy = (ds.tline.offset.y + int(my)) & 0x3f;
-        uint8_t sprite = m_ram.map[128 * sy + sx];
+        int sx = (ds.tline.offset.x + int(mx)) % map_size_x;
+        int sy = (ds.tline.offset.y + int(my)) % map_size_y;
+        uint8_t sprite = m_ram.map[map_size_x * sy + sx];
         uint8_t bits = m_ram.gfx_flags[sprite];
 
         // If found, draw pixel
@@ -1165,6 +1168,16 @@ void vm::api_tline(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
     }
 }
 
+int16_t vm::get_map_size_x()
+{
+    return m_ram.hw_state.mapping_map_width == 0 ? 256 : m_ram.hw_state.mapping_map_width;
+}
+
+int16_t vm::get_map_size_y(int16_t map_size_x)
+{
+    return (m_ram.hw_state.mapping_map >= 0x80 ? ((0x100 - m_ram.hw_state.mapping_map) << 8) : 8192) / map_size_x;
+}
+
 // Tested on PICO-8 1.1.12c: fractional part of all arguments is ignored.
 void vm::api_map(int16_t cel_x, int16_t cel_y, int16_t sx, int16_t sy,
                  opt<int16_t> in_cel_w, opt<int16_t> in_cel_h, int16_t layer)
@@ -1174,11 +1187,15 @@ void vm::api_map(int16_t cel_x, int16_t cel_y, int16_t sx, int16_t sy,
     sx -= ds.camera.x;
     sy -= ds.camera.y;
 
+    int16_t map_size_x = get_map_size_x();
+    int16_t map_size_y = get_map_size_y(map_size_x);
+    int16_t map_max_y = m_ram.hw_state.mapping_map >= 0x80 ? map_size_y : map_size_y / 2;
+
     // PICO-8 documentation: “If cel_w and cel_h are not specified,
     // defaults to 128,32”.
     bool no_size = !in_cel_w && !in_cel_h;
-    int16_t src_w = (no_size ? 128 : *in_cel_w) * 8;
-    int16_t src_h = (no_size ? 32 : *in_cel_h) * 8;
+    int16_t src_w = (no_size ? map_size_x : *in_cel_w) * 8;
+    int16_t src_h = (no_size ? map_max_y : *in_cel_h) * 8;
     int16_t src_x = cel_x * 8;
     int16_t src_y = cel_y * 8;
 
@@ -1194,18 +1211,21 @@ void vm::api_map(int16_t cel_x, int16_t cel_y, int16_t sx, int16_t sy,
 
     if (src_h <= 0 || src_w <= 0) return;
 
+    int16_t max_map_x = map_size_x * 8;
+    int16_t max_map_y = map_size_y * 8;
+
     u4mat2<128, 128>& gfx = m_ram.get_gfx();
     for (int16_t dy = 0; dy < src_h; ++dy)
     for (int16_t dx = 0; dx < src_w; ++dx)
     {
         int16_t cx = src_x + dx;
         int16_t cy = src_y + dy;
-        if (cx < 0 || cx >= 1024 || cy < 0 || cy >= 512)
+        if (cx < 0 || cx >= max_map_x || cy < 0 || cy >= max_map_y)
             continue;
         cx /= 8;
         cy /= 8;
 
-        uint8_t sprite = m_ram.map[128 * cy + cx];
+        uint8_t sprite = m_ram.map[map_size_x * cy + cx];
         uint8_t bits = m_ram.gfx_flags[sprite];
         if (layer && !(bits & layer))
             continue;
@@ -1225,18 +1245,24 @@ void vm::api_map(int16_t cel_x, int16_t cel_y, int16_t sx, int16_t sy,
 
 fix32 vm::api_mget(int16_t x, int16_t y)
 {
-    if (x < 0 || x >= 128 || y < 0 || y >= 64)
+    int16_t map_size_x = get_map_size_x();
+    int16_t map_size_y = get_map_size_y(map_size_x);
+
+    if (x < 0 || x >= map_size_x || y < 0 || y >= map_size_y)
         return 0;
 
-    return m_ram.map[128 * y + x];
+    return m_ram.map[map_size_x * y + x];
 }
 
 void vm::api_mset(int16_t x, int16_t y, uint8_t n)
 {
-    if (x < 0 || x >= 128 || y < 0 || y >= 64)
+    int16_t map_size_x = get_map_size_x();
+    int16_t map_size_y = get_map_size_y(map_size_x);
+
+    if (x < 0 || x >= map_size_x || y < 0 || y >= map_size_y)
         return;
 
-    m_ram.map[128 * y + x] = n;
+    m_ram.map[map_size_x * y + x] = n;
 }
 
 void vm::api_oval(int16_t x0, int16_t y0, int16_t x1, int16_t y1, opt<fix32> c)

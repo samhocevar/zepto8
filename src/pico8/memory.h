@@ -280,12 +280,26 @@ struct memory
                  // located after map.
                  inline uint8_t &operator[](int n)
                  {
+                     memory &mem = *(memory*)(b - 0x2000);
+                     if (mem.hw_state.mapping_map >= 0x80)
+                     {
+                         assert(n >= 0 && n < (0x100 - mem.hw_state.mapping_map) << 8);
+                         int offset = mem.hw_state.mapping_map << 8;
+                         return mem[offset + n];
+                     }
                      assert(n >= 0 && n < (int)(sizeof(memory::map) + sizeof(memory::map2)));
                      return b[(n ^ 0x1000) - 0x1000];
                  }
 
                  inline uint8_t const &operator[](int n) const
                  {
+                     memory &mem = *(memory*)(b - 0x2000);
+                     if (mem.hw_state.mapping_map>=0x80)
+                     {
+                         assert(n >= 0 && n < (0x100 - mem.hw_state.mapping_map) << 8);
+                         int offset = mem.hw_state.mapping_map << 8;
+                         return mem[offset + n];
+                     }
                      assert(n >= 0 && n < (int)(sizeof(memory::map) + sizeof(memory::map2)));
                      return b[(n ^ 0x1000) - 0x1000];
                  }
