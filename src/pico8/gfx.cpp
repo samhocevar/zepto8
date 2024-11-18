@@ -237,14 +237,14 @@ void vm::scrool_screen(int16_t scroll_amount)
     ::memset(s + sizeof(get_current_screen()) - scroll_amount * 64, 0, scroll_amount * 64);
 }
 
-void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
+tup<opt<fix32>, opt<fix32> > vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
                    opt<fix32> c)
 {
     auto &ds = m_ram.draw_state;
     auto &font = m_ram.custom_font;
 
     if (!str)
-        return;
+        return std::make_tuple(std::nullopt, std::nullopt); // return 0 arguments
 
     // The presence of y indicates whether mode is print(s,c) or print(s,x,y,c)
     bool has_coords = !!opt_y;
@@ -827,6 +827,8 @@ void vm::api_print(opt<rich_string> str, opt<fix32> opt_x, opt<fix32> opt_y,
     ds.cursor.y = (uint8_t)(y + line_offset);
 
     ds.print_start_x = (uint8_t)initial_x;
+
+    return std::make_tuple(x, y + fix32(height));
 }
 
 //
