@@ -232,6 +232,7 @@ abort = stub("abort")
 folder = stub("folder")
 resume = stub("resume")
 reboot = stub("reboot")
+serial = stub("serial")
 
 function _update_buttons()
     if(not __z8_button_updated) __buttons()

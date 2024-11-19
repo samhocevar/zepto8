@@ -57,7 +57,7 @@ std::unordered_set<std::string> api::functions =
     "count", "add", "sub", "foreach", "all", "del", "deli", "t", "dget",
     "dset", "cartdata", "load", "save", "info", "abort", "folder",
     "resume", "reboot", "dir", "ls", "flip", "holdframe", "_update_buttons", "mapdraw", "menuitem", "_set_mainloop_exists",
-    "_set_fps"
+    "_set_fps", "serial"
 };
 
 } // namespace z8::pico8

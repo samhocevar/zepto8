@@ -1155,6 +1155,9 @@ var<bool, int16_t, fix32, std::string, std::nullptr_t> vm::api_stat(int16_t id)
     if (id == 101)
         return nullptr;
 
+    if (id == 120) return false; // TODO: implement serial
+    if (id == 121) return false; // TODO: implement serial
+    if (id == 120) return false; // TODO: implement serial
     if (id == 124) return "/";
 
     if (id == 130) return m_metadata_title;
