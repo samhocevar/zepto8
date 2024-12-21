@@ -323,7 +323,8 @@ void vm::private_init_ram()
     api_srand(fix32::frombits((int32_t)now.time_since_epoch().count()));
 
     // also reset timer, maybe should be done in a separate function?
-    m_timer.reset();
+    m_time = 0;
+    m_timer_last = std::chrono::steady_clock::now();
 }
 
 bool vm::private_load(std::string name, opt<std::string> breadcrumb, opt<std::string> params)
@@ -411,6 +412,13 @@ void vm::run()
 
 bool vm::step(float /* seconds */)
 {
+    auto time_now = std::chrono::steady_clock::now();
+    if (!m_in_pause)
+    {
+        m_time += std::chrono::duration_cast<std::chrono::duration<double>>(time_now - m_timer_last).count();
+    }
+    m_timer_last = time_now;
+
     if (m_exit_requested)
     {
         save(true);
@@ -1535,7 +1543,7 @@ void vm::api_serial(int16_t chan, int16_t address, int16_t len)
 
 fix32 vm::api_time()
 {
-    return fix32(double(m_timer.poll()));
+    return fix32(m_time);
 }
 
 } // namespace z8::pico8

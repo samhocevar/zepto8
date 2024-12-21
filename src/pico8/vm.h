@@ -452,7 +452,8 @@ private:
     // breadcrumb and params
     std::vector<breadcrumb_path> breadcrumbs;
 
-    lol::timer m_timer;
+    double m_time;
+    std::chrono::steady_clock::time_point m_timer_last;
     int m_instructions = 0;
     const int m_default_max_instructions = 300000;
     int m_max_instructions = m_default_max_instructions;
