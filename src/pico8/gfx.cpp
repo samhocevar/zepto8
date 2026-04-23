@@ -105,8 +105,8 @@ void vm::set_pixel(int16_t x, int16_t y, uint32_t color_bits)
     if (hw.bit_mask)
     {
         uint8_t old = get_current_screen().get(x, y);
-        color = (old & ~(hw.bit_mask & 7))
-              | (color & (hw.bit_mask & 7) & (hw.bit_mask >> 4));
+        color = (old & ~(hw.bit_mask & 0xf))
+              | (color & (hw.bit_mask & 0xf) & (hw.bit_mask >> 4));
     }
 
     get_current_screen().set(x, y, color);
@@ -1595,4 +1595,3 @@ void vm::api_sspr(int16_t sx, int16_t sy, int16_t sw, int16_t sh,
 }
 
 } // namespace z8::pico8
-
